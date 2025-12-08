@@ -164,45 +164,46 @@ export default function Trips() {
   ]
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-4 sm:space-y-6 pb-8 max-w-full overflow-x-hidden">
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-8 rounded-3xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -ml-32 -mb-32"></div>
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
+        <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-24 sm:-mr-48 -mt-24 sm:-mt-48"></div>
+        <div className="absolute bottom-0 left-0 w-32 sm:w-64 h-32 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-16 sm:-ml-32 -mb-16 sm:-mb-32"></div>
         
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
           <div>
-            <div className="flex items-center gap-2 text-blue-300 text-sm mb-2">
-              <Calendar size={14} />
-              <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1 sm:mb-2">
+              <Calendar size={12} />
+              <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold mb-1 sm:mb-2">
               {getGreeting()}, {user?.companyName || 'Admin'}! 👋
             </h1>
-            <p className="text-blue-200">Reyslarni boshqaring va kuzating</p>
+            <p className="text-blue-200 text-xs sm:text-sm">Reyslarni boshqaring va kuzating</p>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button onClick={() => setShowModal(true)} 
-              className="group px-6 py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10">
-              <Plus size={18} /> 
-              Yangi reys
-              <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              className="group px-3 sm:px-6 py-2 sm:py-3 bg-white text-slate-900 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10">
+              <Plus size={16} /> 
+              <span className="hidden sm:inline">Yangi reys</span>
+              <span className="sm:hidden">Qo'shish</span>
+              <ArrowUpRight size={14} className="hidden sm:block group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
           </div>
         </div>
 
         {/* Quick Stats in Header */}
-        <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div className="relative grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8">
           {quickStats.map((item, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                  <item.icon size={18} className="text-white" />
+            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3 md:p-4 border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                  <item.icon size={14} className="text-white sm:w-[18px] sm:h-[18px]" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{item.value}</p>
-                  <p className="text-blue-200 text-xs">{item.label}</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold">{item.value}</p>
+                  <p className="text-blue-200 text-[10px] sm:text-xs">{item.label}</p>
                 </div>
               </div>
             </div>
@@ -211,12 +212,12 @@ export default function Trips() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
         {filterButtons.map(({ value, label }) => (
           <button 
             key={value} 
             onClick={() => setFilter(value)}
-            className={`px-5 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-medium whitespace-nowrap transition-all text-xs sm:text-sm ${
               filter === value
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -228,64 +229,64 @@ export default function Trips() {
       </div>
 
       {/* Trips Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
         {trips.map((trip) => (
           <div 
             key={trip._id}
             onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
-            className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden"
+            className="group bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden"
           >
             {/* Header */}
-            <div className={`bg-gradient-to-r ${statusConfig[trip.status]?.gradient} p-4 text-white`}>
+            <div className={`bg-gradient-to-r ${statusConfig[trip.status]?.gradient} p-3 sm:p-4 text-white`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center font-bold text-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/20 backdrop-blur rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-sm sm:text-lg">
                     {trip.driver?.fullName?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="font-semibold">{trip.driver?.fullName || 'Nomalum'}</p>
-                    <p className="text-white/80 text-sm">{trip.vehicle?.plateNumber}</p>
+                    <p className="font-semibold text-sm sm:text-base">{trip.driver?.fullName || 'Nomalum'}</p>
+                    <p className="text-white/80 text-xs sm:text-sm">{trip.vehicle?.plateNumber}</p>
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-sm font-medium">
+                <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur rounded-full text-xs sm:text-sm font-medium">
                   {statusConfig[trip.status]?.label}
                 </span>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-5">
+            <div className="p-3 sm:p-5">
               {/* Route */}
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="flex flex-col items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div className="w-0.5 h-8 bg-gray-200"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                  <div className="w-0.5 h-6 sm:h-8 bg-gray-200"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{trip.startAddress || 'Boshlanish'}</p>
-                  <p className="text-gray-400 text-sm my-1">↓</p>
-                  <p className="font-medium text-gray-900">{trip.endAddress || 'Tugash'}</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">{trip.startAddress || 'Boshlanish'}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm my-0.5 sm:my-1">↓</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">{trip.endAddress || 'Tugash'}</p>
                 </div>
               </div>
 
               {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Masofa</p>
-                  <p className="font-semibold text-gray-900">{trip.estimatedDistance || '-'} km</p>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+                  <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">Masofa</p>
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base">{trip.estimatedDistance || '-'} km</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Vaqt</p>
-                  <p className="font-semibold text-gray-900">{trip.estimatedDuration || '-'}</p>
+                <div className="bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+                  <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">Vaqt</p>
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base">{trip.estimatedDuration || '-'}</p>
                 </div>
               </div>
 
               {/* Financial - Yangi tizim */}
               {(trip.income?.amountInUSD > 0 || trip.profitUSD !== undefined) && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl">
-                  <Wallet size={18} className="text-blue-600" />
-                  <div className="flex-1 flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg sm:rounded-xl">
+                  <Wallet size={14} className="text-blue-600 sm:w-[18px] sm:h-[18px]" />
+                  <div className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                     {trip.income?.amountInUSD > 0 && (
                       <span className="text-blue-700">
                         <span className="text-gray-500">Daromad:</span> ${trip.income.amountInUSD}
@@ -302,9 +303,9 @@ export default function Trips() {
 
               {/* Eski tizim uchun */}
               {!trip.income?.amountInUSD && (trip.tripBudget > 0 || trip.tripPayment > 0) && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-xl">
-                  <Wallet size={18} className="text-blue-600" />
-                  <div className="flex-1 flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 p-2 sm:p-3 bg-blue-50 rounded-lg sm:rounded-xl">
+                  <Wallet size={14} className="text-blue-600 sm:w-[18px] sm:h-[18px]" />
+                  <div className="flex-1 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                     {trip.tripBudget > 0 && (
                       <span className="text-blue-700">
                         <span className="text-gray-500">Berilgan:</span> {formatMoney(trip.tripBudget)}
@@ -321,14 +322,14 @@ export default function Trips() {
 
               {/* Bonus/Penalty */}
               {(trip.bonusAmount > 0 || trip.penaltyAmount > 0) && (
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-1.5 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
                   {trip.bonusAmount > 0 && (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm font-medium">
                       +{formatMoney(trip.bonusAmount)} bonus
                     </span>
                   )}
                   {trip.penaltyAmount > 0 && (
-                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-red-100 text-red-700 rounded-full text-xs sm:text-sm font-medium">
                       -{formatMoney(trip.penaltyAmount)} jarima
                     </span>
                   )}
@@ -336,38 +337,38 @@ export default function Trips() {
               )}
 
               {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-400">{formatDate(trip.createdAt)}</p>
+              <div className="flex items-center justify-between pt-2 sm:pt-4 border-t border-gray-100">
+                <p className="text-xs sm:text-sm text-gray-400">{formatDate(trip.createdAt)}</p>
                 <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                   {trip.status === 'pending' && (
                     <button 
                       onClick={(e) => handleStart(e, trip._id)} 
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                      className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
                       title="Boshlash"
                     >
-                      <Play size={18} />
+                      <Play size={16} />
                     </button>
                   )}
                   {trip.status === 'in_progress' && (
                     <button 
                       onClick={(e) => openCompleteModal(e, trip)} 
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       title="Tugatish"
                     >
-                      <CheckCircle size={18} />
+                      <CheckCircle size={16} />
                     </button>
                   )}
                   {(trip.status === 'pending' || trip.status === 'in_progress') && (
                     <button 
                       onClick={(e) => handleCancel(e, trip._id)} 
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                       title="Bekor qilish"
                     >
-                      <XCircle size={18} />
+                      <XCircle size={16} />
                     </button>
                   )}
-                  <div className="p-2 text-gray-400 group-hover:text-blue-600 transition">
-                    <ArrowRight size={18} />
+                  <div className="p-1.5 sm:p-2 text-gray-400 group-hover:text-blue-600 transition">
+                    <ArrowRight size={16} />
                   </div>
                 </div>
               </div>
@@ -378,15 +379,15 @@ export default function Trips() {
 
       {/* Empty State */}
       {trips.length === 0 && (
-        <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-          <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Route size={40} className="text-gray-400" />
+        <div className="bg-white rounded-xl sm:rounded-2xl p-8 sm:p-12 text-center border border-gray-100">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Route size={28} className="text-gray-400 sm:w-10 sm:h-10" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Reyslar topilmadi</h3>
-          <p className="text-gray-500 mb-6">Hozircha bu filtrdagi reyslar yoq</p>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Reyslar topilmadi</h3>
+          <p className="text-gray-500 mb-4 sm:mb-6 text-sm">Hozircha bu filtrdagi reyslar yoq</p>
           <button
             onClick={() => setShowModal(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl font-medium text-sm hover:bg-blue-700 transition"
           >
             Birinchi reysni yarating
           </button>

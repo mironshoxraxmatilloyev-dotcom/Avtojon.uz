@@ -1,186 +1,202 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { RefreshCw, Truck, MapPin, Phone, X, Clock, Gauge, Eye, EyeOff } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
 
-// Marker yaratish
-function createMarkerIcon(letter, selected) {
-  const size = selected ? 48 : 38
-  const color = selected ? '#2563eb' : '#22c55e'
+// Shofyor markeri
+const createDriverIcon = (name, isSelected) => {
+  const initial = name?.charAt(0)?.toUpperCase() || '?'
+  const size = isSelected ? 56 : 44
+  const bg = isSelected ? '#2563eb' : '#22c55e'
+  
   return L.divIcon({
     className: 'driver-marker',
-    html: `<div style="
-      width:${size}px;height:${size}px;
-      background:${color};
-      border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      color:white;font-weight:bold;font-size:${selected ? 18 : 14}px;
-      border:3px solid white;
-      box-shadow:0 2px 10px rgba(0,0,0,0.3);
-      ${selected ? 'animation:pulse 1.5s infinite;' : ''}
-    ">${letter}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="
+          width:${size}px;height:${size}px;
+          background:linear-gradient(135deg,${bg},${isSelected ? '#1d4ed8' : '#16a34a'});
+          border-radius:14px;display:flex;align-items:center;justify-content:center;
+          color:white;font-weight:bold;font-size:${isSelected ? 22 : 18}px;
+          border:3px solid white;box-shadow:0 4px 15px ${bg}66;
+          ${isSelected ? 'animation:pulse 2s infinite;' : ''}
+        ">${initial}</div>
+        <div style="
+          background:${bg};color:white;padding:3px 10px;border-radius:10px;
+          font-size:11px;font-weight:600;margin-top:4px;white-space:nowrap;
+          box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        ">${name?.split(' ')[0] || 'Nomalum'}</div>
+      </div>
+    `,
+    iconSize: [70, 90],
+    iconAnchor: [35, 90],
+    popupAnchor: [0, -90]
   })
 }
 
-// Xarita kontroleri - haydovchini kuzatish
-function FollowDriver({ driver, following, onFirstFly }) {
+// Xarita controller - haydovchini kuzatish
+function MapController({ selectedDriver, isTracking, onFirstFly }) {
   const map = useMap()
-  const didFirstFly = useRef(false)
-  const prevDriverId = useRef(null)
+  const hasFlewRef = useRef(false)
+  const lastDriverIdRef = useRef(null)
 
   useEffect(() => {
-    if (!driver?.lastLocation) return
+    if (!selectedDriver?.lastLocation) return
 
-    const { lat, lng } = driver.lastLocation
-
-    // Yangi haydovchi tanlanganda - flyTo
-    if (driver._id !== prevDriverId.current) {
-      prevDriverId.current = driver._id
-      didFirstFly.current = false
+    const { lat, lng } = selectedDriver.lastLocation
+    
+    // Yangi haydovchi tanlanganda - bir marta fly
+    if (selectedDriver._id !== lastDriverIdRef.current) {
+      lastDriverIdRef.current = selectedDriver._id
+      hasFlewRef.current = false
     }
 
-    if (!didFirstFly.current) {
-      // Birinchi marta - animatsiya bilan
+    if (!hasFlewRef.current) {
+      hasFlewRef.current = true
       map.flyTo([lat, lng], 15, { duration: 1.2 })
-      didFirstFly.current = true
-      if (onFirstFly) onFirstFly()
-    } else if (following) {
-      // Kuzatish rejimida - silliq harakatlanish
+      onFirstFly?.()
+    } else if (isTracking) {
+      // Kuzatish rejimida - smooth move
       map.setView([lat, lng], map.getZoom(), { animate: true, duration: 0.5 })
     }
-  }, [driver?._id, driver?.lastLocation?.lat, driver?.lastLocation?.lng, following, map, onFirstFly])
+  }, [selectedDriver?._id, selectedDriver?.lastLocation?.lat, selectedDriver?.lastLocation?.lng, isTracking, map, onFirstFly])
+
+  // Haydovchi tanlanmasa reset
+  useEffect(() => {
+    if (!selectedDriver) {
+      lastDriverIdRef.current = null
+      hasFlewRef.current = false
+    }
+  }, [selectedDriver])
 
   return null
 }
 
-// CSS animatsiya
-const pulseStyle = `
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-  }
-`
-
 export default function LiveMap() {
   const [drivers, setDrivers] = useState([])
-  const [trips, setTrips] = useState([])
+  const [activeTrips, setActiveTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
-  const [following, setFollowing] = useState(true)
-  const mapRef = useRef(null)
+  const [isTracking, setIsTracking] = useState(true)
 
   // Ma'lumotlarni yuklash
-  const loadData = useCallback(async () => {
+  const fetchData = async () => {
     try {
-      const [dRes, tRes] = await Promise.all([
+      const [driversRes, tripsRes] = await Promise.all([
         api.get('/drivers/locations'),
         api.get('/trips/active')
       ])
-      setDrivers(dRes.data.data || [])
-      setTrips(tRes.data.data || [])
-    } catch (e) {
-      console.error('Load error:', e)
+      setDrivers(driversRes.data.data || [])
+      setActiveTrips(tripsRes.data.data || [])
+    } catch (err) {
+      console.error('Fetch error:', err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   useEffect(() => {
-    loadData()
-    const timer = setInterval(loadData, 8000)
-    return () => clearInterval(timer)
-  }, [loadData])
+    fetchData()
+    const interval = setInterval(fetchData, 10000) // 10 sekund
+    return () => clearInterval(interval)
+  }, [])
 
-  // Tanlangan haydovchi
-  const selected = drivers.find(d => d._id === selectedId)
+  const selectedDriver = drivers.find(d => d._id === selectedId)
+  const onlineDrivers = drivers.filter(d => d.lastLocation)
 
-  // Haydovchi tanlash
-  const handleSelect = (driver) => {
+  const handleSelectDriver = (driver) => {
     if (selectedId === driver._id) {
-      // Qayta bosilsa - kuzatishni yoqish
-      setFollowing(true)
+      // Qayta bosilsa - kuzatishni toggle
+      setIsTracking(!isTracking)
     } else {
       setSelectedId(driver._id)
-      setFollowing(true)
+      setIsTracking(true)
     }
   }
 
-  // Yopish
   const handleClose = () => {
     setSelectedId(null)
-    setFollowing(false)
+    setIsTracking(false)
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-screen bg-slate-950">
         <div className="text-center">
-          <Truck className="w-12 h-12 mx-auto mb-3 text-blue-500 animate-bounce" />
-          <p className="text-gray-500">Yuklanmoqda...</p>
+          <Truck className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-bounce" />
+          <p className="text-white">Yuklanmoqda...</p>
         </div>
       </div>
     )
   }
 
-  const onlineCount = drivers.filter(d => d.lastLocation).length
-
   return (
-    <div>
-      <style>{pulseStyle}</style>
-      
+    <div className="h-screen bg-slate-950 flex flex-col">
+      {/* Pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2.5 rounded-xl">
-            <MapPin className="text-white" size={22} />
+      <div className="bg-slate-900 border-b border-slate-800 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+              <MapPin className="text-white" size={24} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                Jonli xarita
+                <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                  LIVE
+                </span>
+              </h1>
+              <p className="text-slate-400 text-sm">
+                {onlineDrivers.length} ta online • {activeTrips.length} ta reysda
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              Jonli xarita
-              <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
-            </h1>
-            <p className="text-sm text-gray-500">
-              {onlineCount} ta online • {trips.length} ta reysda
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={loadData}
-            className="flex items-center gap-2 bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-600 transition"
-          >
-            <RefreshCw size={16} /> Yangilash
-          </button>
-          {selectedId && (
+          <div className="flex gap-3">
             <button 
-              onClick={handleClose}
-              className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              onClick={fetchData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700"
             >
-              <X size={16} /> Yopish
+              <RefreshCw size={18} /> Yangilash
             </button>
-          )}
+            {selectedId && (
+              <button 
+                onClick={handleClose}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+              >
+                <X size={18} /> Yopish
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex gap-4" style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}>
-        
+      {/* Main */}
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="w-72 bg-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div className="bg-slate-700 p-3 flex items-center justify-between">
-            <span className="text-white font-semibold flex items-center gap-2">
-              <Truck size={18} /> Shofyorlar
-            </span>
-            <span className="bg-slate-600 text-white text-sm px-2 py-0.5 rounded-full">
-              {drivers.length}
-            </span>
+        <div className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col">
+          <div className="p-4 border-b border-slate-800">
+            <div className="flex items-center justify-between">
+              <span className="text-white font-semibold flex items-center gap-2">
+                <Truck size={18} /> Shofyorlar
+              </span>
+              <span className="bg-slate-700 text-white px-2 py-1 rounded-lg text-sm">
+                {drivers.length}
+              </span>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {drivers.map(driver => {
               const isSelected = selectedId === driver._id
               const hasLocation = !!driver.lastLocation
@@ -188,41 +204,39 @@ export default function LiveMap() {
               return (
                 <div
                   key={driver._id}
-                  onClick={() => hasLocation && handleSelect(driver)}
-                  className={`rounded-xl p-3 transition-all cursor-pointer ${
-                    isSelected 
-                      ? 'bg-blue-600 ring-2 ring-blue-400' 
-                      : hasLocation 
-                        ? 'bg-slate-700 hover:bg-slate-600' 
-                        : 'bg-slate-700/50 opacity-60 cursor-not-allowed'
+                  onClick={() => hasLocation && handleSelectDriver(driver)}
+                  className={`p-4 rounded-xl transition-all ${
+                    !hasLocation 
+                      ? 'bg-slate-800/50 opacity-50 cursor-not-allowed' 
+                      : isSelected 
+                        ? 'bg-blue-600 cursor-pointer' 
+                        : 'bg-slate-800 hover:bg-slate-700 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      isSelected ? 'bg-blue-500' : hasLocation ? 'bg-green-500' : 'bg-gray-500'
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold ${
+                      isSelected ? 'bg-blue-500' : hasLocation ? 'bg-green-600' : 'bg-slate-600'
                     }`}>
                       {driver.fullName?.charAt(0) || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-white truncate text-sm">{driver.fullName}</p>
-                        <span className={`px-1.5 py-0.5 rounded text-xs whitespace-nowrap ${
-                          driver.status === 'busy' 
-                            ? 'bg-orange-500/20 text-orange-300' 
-                            : 'bg-green-500/20 text-green-300'
-                        }`}>
-                          {driver.status === 'busy' ? 'Reysda' : "Bo'sh"}
-                        </span>
-                      </div>
-                      <p className="text-slate-400 text-xs">{driver.phone}</p>
+                      <p className="text-white font-medium truncate">{driver.fullName}</p>
+                      <p className="text-slate-400 text-sm">{driver.phone}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        driver.status === 'busy' 
+                          ? 'bg-orange-500/20 text-orange-400' 
+                          : 'bg-green-500/20 text-green-400'
+                      }`}>
+                        {driver.status === 'busy' ? 'Reysda' : "Bo'sh"}
+                      </span>
                       {hasLocation && (
-                        <div className="flex gap-2 mt-1 text-xs">
-                          <span className="text-pink-400">±{Math.round(driver.lastLocation.accuracy || 0)}m</span>
-                          <span className="text-blue-400">{Math.round((driver.lastLocation.speed || 0) * 3.6)} km/h</span>
-                        </div>
-                      )}
-                      {!hasLocation && (
-                        <p className="text-gray-500 text-xs mt-1">GPS yo'q</p>
+                        <p className={`text-xs mt-1 ${
+                          driver.lastLocation.accuracy < 100 ? 'text-green-400' : 'text-amber-400'
+                        }`}>
+                          ±{Math.round(driver.lastLocation.accuracy || 0)}m
+                        </p>
                       )}
                     </div>
                   </div>
@@ -233,101 +247,117 @@ export default function LiveMap() {
         </div>
 
         {/* Map */}
-        <div className="flex-1 rounded-xl overflow-hidden relative bg-slate-200">
+        <div className="flex-1 relative">
           <MapContainer 
             center={[41.3, 69.3]} 
             zoom={6} 
             style={{ height: '100%', width: '100%' }}
-            ref={mapRef}
           >
             <TileLayer
               attribution='&copy; OpenStreetMap'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            <MapController 
+              selectedDriver={selectedDriver}
+              isTracking={isTracking}
+            />
 
-            {/* Kuzatish komponenti */}
-            {selected && (
-              <FollowDriver 
-                driver={selected} 
-                following={following}
-              />
-            )}
-
-            {/* Markerlar */}
-            {drivers.filter(d => d.lastLocation).map(driver => (
+            {onlineDrivers.map(driver => (
               <Marker
                 key={driver._id}
                 position={[driver.lastLocation.lat, driver.lastLocation.lng]}
-                icon={createMarkerIcon(driver.fullName?.charAt(0) || '?', selectedId === driver._id)}
+                icon={createDriverIcon(driver.fullName, selectedId === driver._id)}
                 eventHandlers={{
-                  click: () => handleSelect(driver)
+                  click: () => handleSelectDriver(driver)
                 }}
               >
                 <Popup>
-                  <div className="text-center py-1">
-                    <p className="font-bold">{driver.fullName}</p>
-                    <p className="text-gray-500 text-sm">{driver.phone}</p>
-                    <p className="text-xs mt-1">±{Math.round(driver.lastLocation.accuracy || 0)}m</p>
+                  <div className="text-center p-2 min-w-[140px]">
+                    <p className="font-bold text-lg">{driver.fullName}</p>
+                    <p className="text-gray-500">{driver.phone}</p>
+                    <p className={`mt-2 text-sm font-medium ${
+                      driver.status === 'busy' ? 'text-orange-600' : 'text-green-600'
+                    }`}>
+                      {driver.status === 'busy' ? '🚛 Reysda' : "✅ Bo'sh"}
+                    </p>
                   </div>
                 </Popup>
               </Marker>
             ))}
           </MapContainer>
 
-          {/* Info panel */}
-          {selected && (
-            <div className="absolute bottom-3 left-3 right-3 bg-white rounded-xl shadow-lg p-3 z-[1000]">
-              <div className="flex items-center gap-3">
+          {/* Selected driver panel */}
+          {selectedDriver && (
+            <div className="absolute bottom-6 left-6 right-6 bg-white rounded-2xl shadow-2xl p-5 z-[1000]">
+              <div className="flex items-center gap-4">
                 {/* Avatar */}
                 <div className="relative">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
-                    {selected.fullName?.charAt(0) || '?'}
+                  <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                    {selectedDriver.fullName?.charAt(0)}
                   </div>
-                  {following && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+                  {isTracking && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <Eye size={10} className="text-white" />
+                    </span>
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-gray-900">{selected.fullName}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="text-xl font-bold">{selectedDriver.fullName}</h3>
                     <button
-                      onClick={() => setFollowing(!following)}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        following 
+                      onClick={() => setIsTracking(!isTracking)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                        isTracking 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-gray-100 text-gray-600'
                       }`}
                     >
-                      {following ? <Eye size={12} /> : <EyeOff size={12} />}
-                      {following ? 'Kuzatilmoqda' : 'Kuzatish'}
+                      {isTracking ? <Eye size={14} /> : <EyeOff size={14} />}
+                      {isTracking ? 'Kuzatilmoqda' : 'Kuzatish'}
                     </button>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      selected.status === 'busy' 
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedDriver.status === 'busy' 
                         ? 'bg-orange-100 text-orange-700' 
                         : 'bg-green-100 text-green-700'
                     }`}>
-                      {selected.status === 'busy' ? '🚛 Reysda' : "✅ Bo'sh"}
+                      {selectedDriver.status === 'busy' ? '🚛 Reysda' : "✅ Bo'sh"}
                     </span>
                   </div>
                   
-                  <a href={`tel:${selected.phone}`} className="text-blue-600 text-sm flex items-center gap-1">
-                    <Phone size={12} /> {selected.phone}
+                  <a href={`tel:${selectedDriver.phone}`} className="text-blue-600 flex items-center gap-1 mb-2">
+                    <Phone size={14} /> {selectedDriver.phone}
                   </a>
 
-                  {selected.lastLocation && (
-                    <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                      <span><MapPin size={10} className="inline" /> ±{Math.round(selected.lastLocation.accuracy || 0)}m</span>
-                      <span><Gauge size={10} className="inline" /> {Math.round((selected.lastLocation.speed || 0) * 3.6)} km/h</span>
-                      <span><Clock size={10} className="inline" /> {selected.lastLocation.updatedAt ? new Date(selected.lastLocation.updatedAt).toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'}) : '-'}</span>
+                  {selectedDriver.lastLocation && (
+                    <div className="flex gap-4 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <MapPin size={14} className="text-pink-500" />
+                        ±{Math.round(selectedDriver.lastLocation.accuracy || 0)}m
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Gauge size={14} className="text-blue-500" />
+                        {Math.round((selectedDriver.lastLocation.speed || 0) * 3.6)} km/h
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={14} className="text-green-500" />
+                        {selectedDriver.lastLocation.updatedAt 
+                          ? new Date(selectedDriver.lastLocation.updatedAt).toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'})
+                          : '-'
+                        }
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Close */}
-                <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-full">
-                  <X size={18} className="text-gray-400" />
+                <button 
+                  onClick={handleClose}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={24} className="text-gray-400" />
                 </button>
               </div>
             </div>

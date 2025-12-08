@@ -25,14 +25,14 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 overflow-x-hidden">
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-3 left-3 z-50">
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)} 
-          className="p-3 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-all"
+          className="p-2.5 bg-white rounded-xl shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-all"
         >
-          {sidebarOpen ? <X size={22} className="text-gray-700" /> : <Menu size={22} className="text-gray-700" />}
+          {sidebarOpen ? <X size={20} className="text-gray-700" /> : <Menu size={20} className="text-gray-700" />}
         </button>
       </div>
 
@@ -116,8 +116,8 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-72 min-h-screen">
-        <div className="p-6 pt-20 lg:pt-6">
+      <main className="lg:ml-72 min-h-screen w-full lg:w-auto">
+        <div className="p-3 pt-14 sm:p-4 sm:pt-16 lg:p-6 lg:pt-6 max-w-full">
           <Outlet />
         </div>
       </main>
