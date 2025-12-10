@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leaflet map */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+/* Phone Input */
+.react-tel-input .form-control:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.react-tel-input .country-list {
+  border-radius: 12px !important;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.react-tel-input .country-list .country:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark-phone .react-tel-input .country-list {
+  background-color: #1e293b !important;
+}
+
+.dark-phone .react-tel-input .country-list .country {
+  color: #fff !important;
+}
+
+.dark-phone .react-tel-input .country-list .country:hover {
+  background-color: #334155 !important;
+}
+
+.dark-phone .react-tel-input .search-box {
+  background-color: #334155 !important;
+  color: #fff !important;
+}
+
+/* Toast Animations */
+@keyframes enter {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes leave {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+.animate-enter { animation: enter 0.35s ease-out; }
+.animate-leave { animation: leave 0.35s ease-in forwards; }
+
+/* Responsive utilities */
+@layer utilities {
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Mobile map fixes */
+@media (max-width: 640px) {
+  .leaflet-control-zoom { display: none !important; }
+}
+
+
+/* Animate in class */
+.animate-in {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Gradient text animation */
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 4s ease infinite;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.12);
+}
+
+/* Stat card */
+.stat-card {
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.02);
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-icon {
+  transition: transform 0.2s ease;
+}
+
+
+/* Button press */
+.btn-press {
+  transition: transform 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Table row hover */
+.table-row-hover {
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.table-row-hover:hover {
+  background-color: rgba(59, 130, 246, 0.04);
+  transform: translateX(4px);
+}
+
+/* Skeleton shimmer */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.09s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.18s; }
+
+/* Mobile nav */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+}
