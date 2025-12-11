@@ -40,7 +40,8 @@ const GRAPHHOPPER_API_KEY = process.env.GRAPHHOPPER_API_KEY || '';
 // OSRM serverlar ro'yxati (bir nechta zaxira)
 const OSRM_SERVERS = [
   'https://router.project-osrm.org',
-  'https://routing.openstreetmap.de/routed-car'
+  'https://routing.openstreetmap.de/routed-car',
+  'https://routing.openstreetmap.de/routed-truck'
 ];
 
 // Haversine formula
@@ -75,18 +76,28 @@ function createStraightLineRoute(startCoords, endCoords) {
 // OSRM dan marshrut olish
 async function tryOSRM(start, end, serverUrl) {
   const url = `${serverUrl}/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
-  const response = await fetch(url, {
-    headers: { 'User-Agent': 'Avtojon/1.0' },
-    signal: AbortSignal.timeout(8000)
-  });
-  if (!response.ok) return null;
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) return null;
-  const data = await response.json();
-  if (data.code === 'Ok' && data.routes && data.routes[0]) {
-    return data;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 sekund timeout
+  
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Avtojon/1.0' },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) return null;
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) return null;
+    const data = await response.json();
+    if (data.code === 'Ok' && data.routes && data.routes[0]) {
+      return data;
+    }
+    return null;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-  return null;
 }
 
 // GraphHopper dan marshrut olish (bepul API)

@@ -159,13 +159,35 @@ export default function DriverHome() {
             if (activeTrip && activeTrip.startCoords && activeTrip.endCoords) {
                 setTripStartCoords(activeTrip.startCoords)
                 setTripEndCoords(activeTrip.endCoords)
+                
+                console.log('🗺️ Marshrut so\'ralmoqda:', activeTrip.startCoords, '->', activeTrip.endCoords)
                 const route = await getRouteFromAPI(
                     activeTrip.startCoords.lat, activeTrip.startCoords.lng,
                     activeTrip.endCoords.lat, activeTrip.endCoords.lng
                 )
-                if (route) {
+                
+                if (route && route.coordinates && route.coordinates.length > 2) {
+                    console.log('✅ Yo\'l marshruti olindi:', route.coordinates.length, 'nuqta')
                     setRouteCoords(route.coordinates)
                     setRouteInfo({ distance: route.distance, duration: route.duration })
+                } else {
+                    // Fallback - to'g'ri chiziq
+                    console.log('⚠️ Yo\'l marshruti olinmadi, to\'g\'ri chiziq ishlatilmoqda')
+                    setRouteCoords([
+                        [activeTrip.startCoords.lat, activeTrip.startCoords.lng],
+                        [activeTrip.endCoords.lat, activeTrip.endCoords.lng]
+                    ])
+                    // Masofa hisoblash
+                    const dist = Math.round(
+                        6371 * Math.acos(
+                            Math.cos(activeTrip.startCoords.lat * Math.PI / 180) * 
+                            Math.cos(activeTrip.endCoords.lat * Math.PI / 180) * 
+                            Math.cos((activeTrip.endCoords.lng - activeTrip.startCoords.lng) * Math.PI / 180) + 
+                            Math.sin(activeTrip.startCoords.lat * Math.PI / 180) * 
+                            Math.sin(activeTrip.endCoords.lat * Math.PI / 180)
+                        )
+                    )
+                    setRouteInfo({ distance: dist, duration: Math.round(dist / 60 * 60) })
                 }
             } else if (activeTrip) {
                 // Koordinatalar yo'q bo'lsa, manzillardan qidirish
@@ -183,9 +205,12 @@ export default function DriverHome() {
                         setTripEndCoords(end)
                         
                         const route = await getRouteFromAPI(start.lat, start.lng, end.lat, end.lng)
-                        if (route) {
+                        if (route && route.coordinates && route.coordinates.length > 2) {
                             setRouteCoords(route.coordinates)
                             setRouteInfo({ distance: route.distance, duration: route.duration })
+                        } else {
+                            // Fallback
+                            setRouteCoords([[start.lat, start.lng], [end.lat, end.lng]])
                         }
                     }
                 } catch (err) {
