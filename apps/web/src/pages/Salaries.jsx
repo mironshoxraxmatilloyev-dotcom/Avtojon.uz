@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
     Calculator, Check, CreditCard, X, TrendingUp, TrendingDown,
     Wallet, Calendar, ArrowRight, Search, Download, Clock,
-    Banknote, FileText, Eye, Award, AlertCircle, CheckCircle2, User
+    Banknote, FileText, Eye, Award, AlertCircle, CheckCircle2, User, Trash2
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -64,6 +64,17 @@ export default function Salaries() {
         try {
             await api.put(`/salaries/${id}/pay`)
             showToast.success('To\'langan deb belgilandi')
+            fetchData()
+        } catch (error) {
+            showToast.error('Xatolik')
+        }
+    }
+
+    const handleDelete = async (id) => {
+        if (!confirm('Maoshni bekor qilishni xohlaysizmi?')) return
+        try {
+            await api.delete(`/salaries/${id}`)
+            showToast.success('Maosh bekor qilindi')
             fetchData()
         } catch (error) {
             showToast.error('Xatolik')
@@ -250,7 +261,7 @@ export default function Salaries() {
                                     <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
                                         <div className="flex items-center gap-2 mb-2">
                                             <div className="w-7 h-7 bg-purple-200 rounded-lg flex items-center justify-center"><FileText size={14} className="text-purple-600" /></div>
-                                            <p className="text-xs text-gray-400">Reyslar</p>
+                                            <p className="text-xs text-gray-400">Reys haqi ({sal.tripsCount || 0} ta)</p>
                                         </div>
                                         <p className="font-bold text-purple-700 text-lg">{formatMoney(sal.tripsPayment)}</p>
                                     </div>
@@ -296,6 +307,11 @@ export default function Salaries() {
                                     <button onClick={() => setSelectedSalary(sal)} className="px-5 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 flex items-center gap-2">
                                         <Eye size={18} /> Batafsil <ArrowRight size={16} />
                                     </button>
+                                    {sal.status !== 'paid' && (
+                                        <button onClick={() => handleDelete(sal._id)} className="px-4 py-3.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 flex items-center gap-2" title="Bekor qilish">
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -408,8 +424,8 @@ export default function Salaries() {
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center"><FileText size={18} className="text-purple-600" /></div>
                                         <div>
-                                            <span className="font-medium text-gray-700">Reyslar uchun</span>
-                                            <p className="text-xs text-gray-400">{selectedSalary.tripsCount} ta reys</p>
+                                            <span className="font-medium text-gray-700">Reys haqi</span>
+                                            <p className="text-xs text-gray-400">{selectedSalary.tripsCount || 0} ta reys tugatildi</p>
                                         </div>
                                     </div>
                                     <span className="font-bold text-purple-700">{formatMoney(selectedSalary.tripsPayment)} som</span>

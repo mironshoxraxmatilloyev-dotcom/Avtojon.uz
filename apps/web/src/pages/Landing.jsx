@@ -6,7 +6,7 @@ import {
   Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles, Zap,
   CheckCircle, Star, Users, Route, Clock, TrendingUp, Play, ChevronDown
 } from 'lucide-react'
-import { useScrollAnimation, useStaggerAnimation } from '../hooks/useScrollAnimation'
+// import { useScrollAnimation, useStaggerAnimation } from '../hooks/useScrollAnimation'
 
 // Lazy load 3D scene for better performance
 const Scene3D = lazy(() => import('../components/3d/Scene3D'))
@@ -101,9 +101,9 @@ function Card3D({ children, className }) {
 
 export default function Landing() {
   const heroRef = useRef(null)
-  const featuresRef = useStaggerAnimation()
-  const statsRef = useScrollAnimation()
-  const stepsRef = useStaggerAnimation()
+  const featuresRef = useRef(null)
+  const statsRef = useRef(null)
+  const stepsRef = useRef(null)
   
   // Hero parallax effect
   useEffect(() => {

@@ -44,27 +44,32 @@ router.post('/calculate', protect, businessOnly, async (req, res) => {
     console.log('Calculating salary for driver:', driverId);
     console.log('Period:', startDate, 'to', endDate);
 
-    // Tugatilgan reyslarni olish - faqat driver bo'yicha filter
+    // Tugatilgan reyslarni olish - user va driver bo'yicha filter
     const trips = await Trip.find({
+      user: req.user._id,
       driver: driverId,
       status: 'completed'
     });
     
     console.log('All completed trips for driver:', trips.length);
+    console.log('Trips details:', trips.map(t => ({
+      id: t._id,
+      completedAt: t.completedAt,
+      createdAt: t.createdAt,
+      tripPayment: t.tripPayment
+    })));
     
-    // Sana bo'yicha filter
+    // Sana bo'yicha filter - completedAt yoki createdAt ishlatish
     const filteredTrips = trips.filter(t => {
-      if (!t.completedAt) return false;
-      const completed = new Date(t.completedAt);
-      return completed >= startDate && completed <= endDate;
+      const completedDate = t.completedAt || t.createdAt;
+      if (!completedDate) return false;
+      const completed = new Date(completedDate);
+      const inRange = completed >= startDate && completed <= endDate;
+      console.log(`Trip ${t._id}: completedAt=${t.completedAt}, createdAt=${t.createdAt}, inRange=${inRange}`);
+      return inRange;
     });
     
-    console.log('Filtered trips in period:', filteredTrips.length, filteredTrips.map(t => ({ 
-      id: t._id, 
-      completedAt: t.completedAt, 
-      tripPayment: t.tripPayment,
-      bonusAmount: t.bonusAmount 
-    })));
+    console.log('Filtered trips in period:', filteredTrips.length);
 
     // Xarajatlarni olish
     const expenses = await Expense.find({

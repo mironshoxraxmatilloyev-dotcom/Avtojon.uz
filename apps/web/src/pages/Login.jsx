@@ -20,7 +20,7 @@ function Card3D({ children, className }) {
       const y = e.clientY - rect.top
       const centerX = rect.width / 2
       const centerY = rect.height / 2
-      const rotateX = (y - centerY) / 90
+      const rotateX = (y - centerY) / 900
       const rotateY = (centerX - x) / 90
 
       card.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`
