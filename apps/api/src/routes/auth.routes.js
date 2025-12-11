@@ -102,4 +102,45 @@ router.get('/me', protect, async (req, res) => {
   });
 });
 
+// Demo login - avtomatik demo user yaratadi yoki mavjudini qaytaradi
+router.post('/demo', async (req, res) => {
+  try {
+    const demoUsername = 'demo';
+    const demoPassword = 'demo123456';
+    
+    // Demo user mavjudmi tekshir
+    let demoUser = await User.findOne({ username: demoUsername });
+    
+    // Yo'q bo'lsa yangi yaratamiz
+    if (!demoUser) {
+      demoUser = await User.create({
+        username: demoUsername,
+        password: demoPassword,
+        fullName: 'Demo Foydalanuvchi',
+        companyName: 'Demo Kompaniya',
+        phone: '+998901234567',
+        role: 'admin'
+      });
+    }
+    
+    const token = generateToken(demoUser._id, 'admin');
+    
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: demoUser._id,
+          username: demoUser.username,
+          fullName: demoUser.fullName,
+          companyName: demoUser.companyName,
+          role: 'admin'
+        },
+        token
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

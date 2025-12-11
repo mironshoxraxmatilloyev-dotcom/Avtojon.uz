@@ -1,5 +1,7 @@
-import { useEffect, useRef, lazy, Suspense } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, lazy, Suspense, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import api from '../services/api'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
@@ -104,6 +106,27 @@ export default function Landing() {
   const featuresRef = useRef(null)
   const statsRef = useRef(null)
   const stepsRef = useRef(null)
+  const navigate = useNavigate()
+  const { login } = useAuthStore()
+  const [demoLoading, setDemoLoading] = useState(false)
+
+  // Demo akkaunt bilan kirish
+  const handleDemoLogin = async () => {
+    setDemoLoading(true)
+    try {
+      // Demo endpoint - avtomatik demo user yaratadi
+      const response = await api.post('/auth/demo')
+      
+      if (response.data.success && response.data.data) {
+        login(response.data.data.token, response.data.data.user)
+        navigate('/dashboard')
+      }
+    } catch (error) {
+      alert('Demo akkauntga kirishda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.')
+    } finally {
+      setDemoLoading(false)
+    }
+  }
   
   // Hero parallax effect
   useEffect(() => {
@@ -213,9 +236,16 @@ export default function Landing() {
                 </Link>
               </MagneticButton>
               <MagneticButton>
-                <button className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold text-violet-300 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all w-full sm:w-auto backdrop-blur-sm">
-                  <Play size={18} className="text-violet-400" />
-                  Demo ko'rish
+                <button 
+                  onClick={handleDemoLogin}
+                  disabled={demoLoading}
+                  className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold text-violet-300 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all w-full sm:w-auto backdrop-blur-sm disabled:opacity-50"
+                >
+                  {demoLoading ? (
+                    <><div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div> Yuklanmoqda...</>
+                  ) : (
+                    <><Play size={18} className="text-violet-400" /> Demo ko'rish</>
+                  )}
                 </button>
               </MagneticButton>
             </div>

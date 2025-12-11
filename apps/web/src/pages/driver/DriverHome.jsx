@@ -29,14 +29,31 @@ const endIcon = new L.Icon({
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 })
 
-// Xaritani haydovchi joylashuviga moslashtirish
-function RecenterMap({ position }) {
+// Navigator rejimi - haydovchini kuzatib borish
+function NavigatorMode({ position, isNavigating, routeCoords, endCoords }) {
     const map = useMap()
+    
     useEffect(() => {
-        if (position) {
-            map.setView(position, map.getZoom())
+        if (isNavigating && position) {
+            // Navigator rejimida - haydovchini markazda ushlab turish
+            map.setView(position, 16, { animate: true, duration: 0.3 })
         }
-    }, [position, map])
+    }, [position, isNavigating, map])
+
+    // Marshrut bo'yicha fit qilish (navigator o'chiq bo'lganda)
+    useEffect(() => {
+        if (!isNavigating && routeCoords && routeCoords.length > 1 && position) {
+            try {
+                const allPoints = [position, ...routeCoords]
+                if (endCoords) allPoints.push([endCoords.lat, endCoords.lng])
+                const bounds = L.latLngBounds(allPoints)
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
+            } catch (e) {
+                console.log('Bounds error:', e)
+            }
+        }
+    }, [isNavigating, routeCoords, position, endCoords, map])
+
     return null
 }
 
@@ -86,6 +103,7 @@ export default function DriverHome() {
     const [routeInfo, setRouteInfo] = useState(null)
     const [tripStartCoords, setTripStartCoords] = useState(null)
     const [tripEndCoords, setTripEndCoords] = useState(null)
+    const [isNavigating, setIsNavigating] = useState(false)
 
     const [driverId, setDriverId] = useState(null)
     const [newTripNotification, setNewTripNotification] = useState(null)
@@ -792,11 +810,17 @@ export default function DriverHome() {
                                 </div>
                             )}
 
-                            <div className="bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10" style={{ height: '400px' }}>
+                            <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10" style={{ height: '400px' }}>
                                 {currentLocation ? (
-                                    <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={activeTrip && routeCoords.length > 0 ? 10 : 16} style={{ height: '100%', width: '100%' }}>
+                                    <>
+                                    <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={isNavigating ? 16 : (activeTrip && routeCoords.length > 0 ? 10 : 16)} style={{ height: '100%', width: '100%' }}>
                                         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                                        <RecenterMap position={[currentLocation.lat, currentLocation.lng]} />
+                                        <NavigatorMode 
+                                            position={[currentLocation.lat, currentLocation.lng]} 
+                                            isNavigating={isNavigating}
+                                            routeCoords={routeCoords}
+                                            endCoords={tripEndCoords}
+                                        />
                                         
                                         {/* Haydovchi joylashuvi */}
                                         <Marker position={[currentLocation.lat, currentLocation.lng]} icon={truckIcon}>
@@ -845,6 +869,27 @@ export default function DriverHome() {
                                             </Marker>
                                         )}
                                     </MapContainer>
+                                    
+                                    {/* Meni top tugmasi */}
+                                    <button
+                                        onClick={() => setIsNavigating(!isNavigating)}
+                                        className={`absolute bottom-4 right-4 z-[1000] p-4 rounded-full shadow-lg transition-all ${
+                                            isNavigating 
+                                                ? 'bg-blue-600 text-white shadow-blue-500/50' 
+                                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        <Navigation size={24} className={isNavigating ? 'animate-pulse' : ''} />
+                                    </button>
+                                    
+                                    {/* Tezlik ko'rsatkichi */}
+                                    {isNavigating && currentLocation?.speed > 0 && (
+                                        <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg">
+                                            <p className="text-2xl font-bold text-gray-800">{Math.round(currentLocation.speed * 3.6)}</p>
+                                            <p className="text-xs text-gray-500">km/h</p>
+                                        </div>
+                                    )}
+                                    </>
                                 ) : (
                                     <div className="h-full flex items-center justify-center">
                                         <div className="text-center">
