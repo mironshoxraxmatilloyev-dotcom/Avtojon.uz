@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { RefreshCw, Truck, MapPin, Navigation, Maximize2, Minimize2, X } from 'lucide-react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { RefreshCw, Truck, MapPin, Navigation, Maximize2, Minimize2, X, Route } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
@@ -12,6 +12,44 @@ const truckIcon = new L.Icon({
   iconAnchor: [20, 40],
   popupAnchor: [0, -40]
 })
+
+// Start/End markers
+const startIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+})
+
+const endIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+})
+
+// Backend API orqali marshrut olish
+async function getRouteFromAPI(startLat, startLng, endLat, endLng) {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const baseUrl = apiUrl.replace('/api', '')
+    const response = await fetch(
+      `${baseUrl}/api/route?start=${startLng},${startLat}&end=${endLng},${endLat}`
+    )
+    const data = await response.json()
+    if (data.code === 'Ok' && data.routes && data.routes[0]) {
+      const route = data.routes[0]
+      const coords = route.geometry.coordinates || route.geometry
+      return {
+        coordinates: coords.map(coord => [coord[1], coord[0]]),
+        distance: Math.round(route.distance / 1000),
+        duration: Math.round(route.duration / 60)
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('Marshrut olish xatosi:', error)
+    return null
+  }
+}
 
 // Xaritani markazlashtirish komponenti
 function FlyToLocation({ position }) {
@@ -31,11 +69,26 @@ export default function LiveMap() {
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [center, setCenter] = useState([41.2995, 69.2401]) // Toshkent
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [tripRoutes, setTripRoutes] = useState({}) // Har bir reys uchun marshrut
 
   const fetchActiveTrips = async () => {
     try {
       const { data } = await api.get('/trips/active')
-      setActiveTrips(data.data || [])
+      const trips = data.data || []
+      setActiveTrips(trips)
+      
+      // Har bir faol reys uchun marshrut olish
+      for (const trip of trips) {
+        if (trip.startCoords && trip.endCoords && !tripRoutes[trip._id]) {
+          const route = await getRouteFromAPI(
+            trip.startCoords.lat, trip.startCoords.lng,
+            trip.endCoords.lat, trip.endCoords.lng
+          )
+          if (route) {
+            setTripRoutes(prev => ({ ...prev, [trip._id]: route }))
+          }
+        }
+      }
     } catch (error) {
       console.error('Active trips error:', error)
     } finally {
@@ -169,6 +222,39 @@ export default function LiveMap() {
                 </Popup>
               </Marker>
             ))}
+            
+            {/* Faol reyslar uchun marshrut chiziqlari */}
+            {activeTrips.map((trip) => {
+              const route = tripRoutes[trip._id]
+              return (
+                <span key={`route-${trip._id}`}>
+                  {route && route.coordinates && (
+                    <Polyline positions={route.coordinates} color="#3b82f6" weight={4} opacity={0.8} />
+                  )}
+                  {trip.startCoords && (
+                    <Marker position={[trip.startCoords.lat, trip.startCoords.lng]} icon={startIcon}>
+                      <Popup>
+                        <div className="text-center">
+                          <p className="font-bold text-green-600">🟢 Boshlanish</p>
+                          <p className="text-xs">{trip.startAddress}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                  {trip.endCoords && (
+                    <Marker position={[trip.endCoords.lat, trip.endCoords.lng]} icon={endIcon}>
+                      <Popup>
+                        <div className="text-center">
+                          <p className="font-bold text-red-600">🔴 Manzil</p>
+                          <p className="text-xs">{trip.endAddress}</p>
+                          {route && <p className="text-xs text-blue-600 mt-1">{route.distance} km</p>}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                </span>
+              )
+            })}
           </MapContainer>
         </div>
       </div>
@@ -263,6 +349,39 @@ export default function LiveMap() {
                 </Popup>
               </Marker>
             ))}
+            
+            {/* Fullscreen: Faol reyslar uchun marshrut chiziqlari */}
+            {activeTrips.map((trip) => {
+              const route = tripRoutes[trip._id]
+              return (
+                <span key={`fs-route-${trip._id}`}>
+                  {route && route.coordinates && (
+                    <Polyline positions={route.coordinates} color="#3b82f6" weight={4} opacity={0.8} />
+                  )}
+                  {trip.startCoords && (
+                    <Marker position={[trip.startCoords.lat, trip.startCoords.lng]} icon={startIcon}>
+                      <Popup>
+                        <div className="text-center">
+                          <p className="font-bold text-green-600">🟢 Boshlanish</p>
+                          <p className="text-xs">{trip.startAddress}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                  {trip.endCoords && (
+                    <Marker position={[trip.endCoords.lat, trip.endCoords.lng]} icon={endIcon}>
+                      <Popup>
+                        <div className="text-center">
+                          <p className="font-bold text-red-600">🔴 Manzil</p>
+                          <p className="text-xs">{trip.endAddress}</p>
+                          {route && <p className="text-xs text-blue-600 mt-1">{route.distance} km</p>}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                </span>
+              )
+            })}
           </MapContainer>
         </div>
       )}

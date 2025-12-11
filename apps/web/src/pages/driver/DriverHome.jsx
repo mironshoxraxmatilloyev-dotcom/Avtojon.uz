@@ -40,24 +40,27 @@ function RecenterMap({ position }) {
     return null
 }
 
-// OSRM API orqali yo'l bo'ylab marshrut olish
-async function getRouteFromOSRM(startLat, startLng, endLat, endLng) {
+// Backend API orqali yo'l bo'ylab marshrut olish
+async function getRouteFromAPI(startLat, startLng, endLat, endLng) {
     try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+        const baseUrl = apiUrl.replace('/api', '')
         const response = await fetch(
-            `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
+            `${baseUrl}/api/route?start=${startLng},${startLat}&end=${endLng},${endLat}`
         )
         const data = await response.json()
-        if (data.routes && data.routes[0]) {
+        if (data.code === 'Ok' && data.routes && data.routes[0]) {
             const route = data.routes[0]
+            const coords = route.geometry.coordinates || route.geometry
             return {
-                coordinates: route.geometry.coordinates.map(coord => [coord[1], coord[0]]),
+                coordinates: coords.map(coord => [coord[1], coord[0]]),
                 distance: Math.round(route.distance / 1000),
                 duration: Math.round(route.duration / 60)
             }
         }
         return null
     } catch (error) {
-        console.error('OSRM xatosi:', error)
+        console.error('Marshrut olish xatosi:', error)
         return null
     }
 }
@@ -138,7 +141,7 @@ export default function DriverHome() {
             if (activeTrip && activeTrip.startCoords && activeTrip.endCoords) {
                 setTripStartCoords(activeTrip.startCoords)
                 setTripEndCoords(activeTrip.endCoords)
-                const route = await getRouteFromOSRM(
+                const route = await getRouteFromAPI(
                     activeTrip.startCoords.lat, activeTrip.startCoords.lng,
                     activeTrip.endCoords.lat, activeTrip.endCoords.lng
                 )
@@ -161,7 +164,7 @@ export default function DriverHome() {
                         setTripStartCoords(start)
                         setTripEndCoords(end)
                         
-                        const route = await getRouteFromOSRM(start.lat, start.lng, end.lat, end.lng)
+                        const route = await getRouteFromAPI(start.lat, start.lng, end.lat, end.lng)
                         if (route) {
                             setRouteCoords(route.coordinates)
                             setRouteInfo({ distance: route.distance, duration: route.duration })
@@ -275,11 +278,22 @@ export default function DriverHome() {
             setTimeout(() => setNewTripNotification(null), 5000)
         }
 
+        // Reys bekor qilinganda
+        const handleTripCancelled = (data) => {
+            console.log('🔔 Reys bekor qilindi:', data)
+            showToast.error('❌ Reys bekor qilindi!', data.message || 'Sizning reysingiz bekor qilindi')
+            
+            // Ma'lumotlarni yangilash
+            fetchData()
+        }
+
         socket.on('new-trip', handleNewTrip)
+        socket.on('trip-cancelled', handleTripCancelled)
 
         return () => {
             socket.off('connect', joinRoom)
             socket.off('new-trip', handleNewTrip)
+            socket.off('trip-cancelled', handleTripCancelled)
         }
     }, [driverId, fetchData])
 

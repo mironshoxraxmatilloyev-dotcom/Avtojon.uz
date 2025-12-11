@@ -515,14 +515,31 @@ router.put('/:id/cancel', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Tugatilgan reysni bekor qilib bo\'lmaydi' });
     }
 
+    const wasInProgress = trip.status === 'in_progress';
+    const driverId = trip.driver;
+    
     trip.status = 'cancelled';
     await trip.save();
 
-    if (trip.status === 'in_progress') {
-      await Driver.findByIdAndUpdate(trip.driver, { status: 'free' });
+    if (wasInProgress) {
+      await Driver.findByIdAndUpdate(driverId, { status: 'free' });
     }
 
-    res.json({ success: true, data: trip });
+    const populatedTrip = await Trip.findById(trip._id)
+      .populate('driver', 'fullName username')
+      .populate('vehicle', 'plateNumber brand model');
+
+    // 🔔 Socket.io orqali shofyorga xabar yuborish
+    const io = req.app.get('io');
+    if (io && driverId) {
+      io.to(`driver-${driverId}`).emit('trip-cancelled', {
+        trip: populatedTrip,
+        message: 'Reys bekor qilindi!'
+      });
+      console.log(`📢 Reys bekor qilindi xabari yuborildi: driver-${driverId}`);
+    }
+
+    res.json({ success: true, data: populatedTrip });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
