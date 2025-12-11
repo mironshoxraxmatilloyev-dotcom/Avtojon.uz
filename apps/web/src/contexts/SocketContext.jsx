@@ -49,7 +49,16 @@ export function SocketProvider({ children }) {
     })
 
     socketInstance.on('connect_error', (error) => {
-      console.error('❌ Socket xatosi:', error.message)
+      // Faqat birinchi marta xato ko'rsatish
+      if (!socketInstance._errorShown) {
+        console.warn('⚠️ Socket: Server bilan ulanish kutilmoqda...')
+        socketInstance._errorShown = true
+      }
+    })
+
+    socketInstance.on('reconnect', (attemptNumber) => {
+      console.log('✅ Socket qayta ulandi, urinish:', attemptNumber)
+      socketInstance._errorShown = false
     })
 
     socketRef.current = socketInstance
