@@ -1,10 +1,16 @@
 import { create } from 'zustand'
 import api from '../services/api'
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
   loading: false,
+
+  // Demo rejimda ekanligini tekshirish
+  isDemo: () => {
+    const user = get().user
+    return user?.username === 'demo'
+  },
 
   login: async (username, password) => {
     set({ loading: true })
@@ -18,6 +24,13 @@ export const useAuthStore = create((set) => ({
       set({ loading: false })
       return { success: false, message: error.response?.data?.message || 'Xatolik yuz berdi' }
     }
+  },
+
+  // Demo login uchun - token va user to'g'ridan-to'g'ri set qilish
+  setAuth: (token, user) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(user))
+    set({ user, token })
   },
 
   register: async ({ username, password, fullName, companyName, phone }) => {

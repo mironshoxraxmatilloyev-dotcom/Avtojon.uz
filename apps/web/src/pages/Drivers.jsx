@@ -8,8 +8,31 @@ import { useAuthStore } from '../store/authStore'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
 
+// Demo rejim uchun fake shofyorlar
+const DEMO_DRIVERS = [
+  { _id: 'd1', fullName: 'Akmal Karimov', username: 'akmal', phone: '+998901234567', status: 'busy', paymentType: 'per_trip', perTripRate: 500000, baseSalary: 0 },
+  { _id: 'd2', fullName: 'Bobur Aliyev', username: 'bobur', phone: '+998901234568', status: 'busy', paymentType: 'monthly', perTripRate: 0, baseSalary: 5000000 },
+  { _id: 'd3', fullName: 'Sardor Rahimov', username: 'sardor', phone: '+998901234569', status: 'busy', paymentType: 'per_trip', perTripRate: 450000, baseSalary: 0 },
+  { _id: 'd4', fullName: 'Jasur Toshmatov', username: 'jasur', phone: '+998901234570', status: 'free', paymentType: 'monthly', perTripRate: 0, baseSalary: 4500000 },
+  { _id: 'd5', fullName: 'Dilshod Umarov', username: 'dilshod', phone: '+998901234571', status: 'free', paymentType: 'per_trip', perTripRate: 550000, baseSalary: 0 },
+  { _id: 'd6', fullName: 'Nodir Qodirov', username: 'nodir', phone: '+998901234572', status: 'free', paymentType: 'monthly', perTripRate: 0, baseSalary: 5500000 },
+  { _id: 'd7', fullName: 'Sherzod Yusupov', username: 'sherzod', phone: '+998901234573', status: 'free', paymentType: 'per_trip', perTripRate: 480000, baseSalary: 0 },
+  { _id: 'd8', fullName: 'Otabek Nazarov', username: 'otabek', phone: '+998901234574', status: 'free', paymentType: 'monthly', perTripRate: 0, baseSalary: 4800000 }
+]
+
+const DEMO_VEHICLES = [
+  { _id: 'v1', plateNumber: '01 A 123 AB', brand: 'MAN', year: 2020, currentDriver: 'd1' },
+  { _id: 'v2', plateNumber: '01 B 456 CD', brand: 'Volvo', year: 2019, currentDriver: 'd2' },
+  { _id: 'v3', plateNumber: '01 C 789 EF', brand: 'Mercedes', year: 2021, currentDriver: 'd3' },
+  { _id: 'v4', plateNumber: '01 D 012 GH', brand: 'Scania', year: 2018, currentDriver: 'd4' },
+  { _id: 'v5', plateNumber: '01 E 345 IJ', brand: 'DAF', year: 2020, currentDriver: 'd5' },
+  { _id: 'v6', plateNumber: '01 F 678 KL', brand: 'Iveco', year: 2019, currentDriver: 'd6' },
+  { _id: 'v7', plateNumber: '01 G 901 MN', brand: 'MAN', year: 2022, currentDriver: 'd7' },
+  { _id: 'v8', plateNumber: '01 H 234 OP', brand: 'Volvo', year: 2021, currentDriver: 'd8' }
+]
+
 export default function Drivers() {
-  const { user } = useAuthStore()
+  const { user, isDemo } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
   const [drivers, setDrivers] = useState([])
@@ -24,6 +47,7 @@ export default function Drivers() {
     paymentType: 'monthly', baseSalary: 0, perTripRate: 0,
     plateNumber: '', brand: '', year: ''
   })
+  const isDemoMode = isDemo()
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -33,6 +57,14 @@ export default function Drivers() {
   }
 
   const fetchData = async () => {
+    // Demo rejimda fake data
+    if (isDemoMode) {
+      setDrivers(DEMO_DRIVERS)
+      setVehicles(DEMO_VEHICLES)
+      setLoading(false)
+      return
+    }
+
     try {
       const [driversRes, vehiclesRes] = await Promise.all([
         api.get('/drivers'),
@@ -47,7 +79,7 @@ export default function Drivers() {
     }
   }
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, [isDemoMode])
 
   // Modal ochilganda background scroll ni bloklash
   useEffect(() => {
@@ -73,6 +105,13 @@ export default function Drivers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      setShowModal(false)
+      return
+    }
 
     // Yangi shofyor uchun mashina majburiy
     if (!editingDriver && !form.plateNumber) {
@@ -139,6 +178,12 @@ export default function Drivers() {
 
   const handleDelete = async (e, id) => {
     e.stopPropagation()
+
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      return
+    }
 
     const driver = drivers.find(d => d._id === id)
     const confirmed = await alert.confirm({

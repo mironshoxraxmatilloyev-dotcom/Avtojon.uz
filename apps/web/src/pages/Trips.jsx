@@ -8,10 +8,40 @@ import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../contexts/SocketContext'
 import LocationPicker from '../components/LocationPicker'
 import AddressAutocomplete from '../components/AddressAutocomplete'
+import { useAlert } from '../components/ui'
+
+// Demo rejim uchun fake reyslar
+const DEMO_TRIPS = [
+  { _id: 't1', driver: { fullName: 'Akmal Karimov' }, vehicle: { plateNumber: '01 A 123 AB' }, startAddress: 'Toshkent', endAddress: 'Samarqand', status: 'in_progress', estimatedDistance: 280, estimatedDuration: '4 soat', tripBudget: 2000000, tripPayment: 500000, createdAt: new Date() },
+  { _id: 't2', driver: { fullName: 'Bobur Aliyev' }, vehicle: { plateNumber: '01 B 456 CD' }, startAddress: 'Buxoro', endAddress: 'Navoiy', status: 'in_progress', estimatedDistance: 120, estimatedDuration: '2 soat', tripBudget: 1500000, tripPayment: 400000, createdAt: new Date() },
+  { _id: 't3', driver: { fullName: 'Sardor Rahimov' }, vehicle: { plateNumber: '01 C 789 EF' }, startAddress: 'Farg\'ona', endAddress: 'Andijon', status: 'in_progress', estimatedDistance: 80, estimatedDuration: '1.5 soat', tripBudget: 1000000, tripPayment: 300000, createdAt: new Date() },
+  { _id: 't4', driver: { fullName: 'Jasur Toshmatov' }, vehicle: { plateNumber: '01 D 012 GH' }, startAddress: 'Namangan', endAddress: 'Toshkent', status: 'pending', estimatedDistance: 320, estimatedDuration: '5 soat', tripBudget: 2500000, tripPayment: 600000, createdAt: new Date() },
+  { _id: 't5', driver: { fullName: 'Dilshod Umarov' }, vehicle: { plateNumber: '01 E 345 IJ' }, startAddress: 'Xorazm', endAddress: 'Buxoro', status: 'pending', estimatedDistance: 450, estimatedDuration: '7 soat', tripBudget: 3000000, tripPayment: 700000, createdAt: new Date() },
+  { _id: 't6', driver: { fullName: 'Nodir Qodirov' }, vehicle: { plateNumber: '01 F 678 KL' }, startAddress: 'Qarshi', endAddress: 'Termiz', status: 'completed', estimatedDistance: 200, estimatedDuration: '3 soat', tripBudget: 1800000, tripPayment: 450000, bonusAmount: 50000, createdAt: new Date(Date.now() - 86400000) },
+  { _id: 't7', driver: { fullName: 'Sherzod Yusupov' }, vehicle: { plateNumber: '01 G 901 MN' }, startAddress: 'Jizzax', endAddress: 'Toshkent', status: 'completed', estimatedDistance: 180, estimatedDuration: '2.5 soat', tripBudget: 1600000, tripPayment: 400000, createdAt: new Date(Date.now() - 172800000) },
+  { _id: 't8', driver: { fullName: 'Otabek Nazarov' }, vehicle: { plateNumber: '01 H 234 OP' }, startAddress: 'Nukus', endAddress: 'Urganch', status: 'completed', estimatedDistance: 150, estimatedDuration: '2 soat', tripBudget: 1400000, tripPayment: 350000, penaltyAmount: 30000, createdAt: new Date(Date.now() - 259200000) }
+]
+
+const DEMO_DRIVERS = [
+  { _id: 'd1', fullName: 'Akmal Karimov', status: 'busy' },
+  { _id: 'd2', fullName: 'Bobur Aliyev', status: 'busy' },
+  { _id: 'd3', fullName: 'Sardor Rahimov', status: 'busy' },
+  { _id: 'd4', fullName: 'Jasur Toshmatov', status: 'free' },
+  { _id: 'd5', fullName: 'Dilshod Umarov', status: 'free' }
+]
+
+const DEMO_VEHICLES = [
+  { _id: 'v1', plateNumber: '01 A 123 AB', brand: 'MAN', currentDriver: 'd1' },
+  { _id: 'v2', plateNumber: '01 B 456 CD', brand: 'Volvo', currentDriver: 'd2' },
+  { _id: 'v3', plateNumber: '01 C 789 EF', brand: 'Mercedes', currentDriver: 'd3' },
+  { _id: 'v4', plateNumber: '01 D 012 GH', brand: 'Scania', currentDriver: 'd4' },
+  { _id: 'v5', plateNumber: '01 E 345 IJ', brand: 'DAF', currentDriver: 'd5' }
+]
 
 export default function Trips() {
-  const { user } = useAuthStore()
+  const { user, isDemo } = useAuthStore()
   const navigate = useNavigate()
+  const alert = useAlert()
   const [trips, setTrips] = useState([])
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
@@ -27,6 +57,7 @@ export default function Trips() {
     estimatedDuration: '', estimatedDistance: '', tripBudget: '', tripPayment: '',
     startCoords: null, endCoords: null
   })
+  const isDemoMode = isDemo()
 
   // Masofa hisoblash funksiyasi
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -69,6 +100,19 @@ export default function Trips() {
   }
 
   const fetchData = useCallback(async () => {
+    // Demo rejimda fake data
+    if (isDemoMode) {
+      let filteredTrips = DEMO_TRIPS
+      if (filter !== 'all') {
+        filteredTrips = DEMO_TRIPS.filter(t => t.status === filter)
+      }
+      setTrips(filteredTrips)
+      setDrivers(DEMO_DRIVERS)
+      setVehicles(DEMO_VEHICLES)
+      setLoading(false)
+      return
+    }
+
     try {
       const [tripsRes, driversRes, vehiclesRes] = await Promise.all([
         api.get('/trips', { params: filter !== 'all' ? { status: filter } : {} }),
@@ -83,7 +127,7 @@ export default function Trips() {
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, isDemoMode])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -134,6 +178,13 @@ export default function Trips() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (submitting) return
+
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      setShowModal(false)
+      return
+    }
 
     // Validatsiya - barcha maydonlar majburiy
     if (!form.driverId) {
@@ -193,6 +244,13 @@ export default function Trips() {
 
   const handleStart = async (e, id) => {
     e.stopPropagation()
+    
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      return
+    }
+
     if (actionLoading) return
     setActionLoading(id)
     try {
@@ -214,6 +272,14 @@ export default function Trips() {
 
   const handleComplete = async (e) => {
     e.preventDefault()
+    
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      setShowCompleteModal(false)
+      return
+    }
+
     if (submitting) return
     setSubmitting(true)
     try {
@@ -231,6 +297,13 @@ export default function Trips() {
 
   const handleCancel = async (e, id) => {
     e.stopPropagation()
+    
+    // Demo rejimda bloklash
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      return
+    }
+
     if (!confirm('Reysni bekor qilishni xohlaysizmi?')) return
     try {
       await api.put(`/trips/${id}/cancel`)

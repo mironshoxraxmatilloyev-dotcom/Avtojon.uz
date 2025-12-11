@@ -65,8 +65,10 @@ export default function DashboardLayout() {
   }, [])
 
   const handleLogout = () => {
+    const isDemo = user?.username === 'demo'
     logout()
-    navigate('/login')
+    // Demo rejimda bosh sahifaga, aks holda login sahifasiga
+    navigate(isDemo ? '/' : '/login')
   }
 
   return (

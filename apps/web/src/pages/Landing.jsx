@@ -107,7 +107,7 @@ export default function Landing() {
   const statsRef = useRef(null)
   const stepsRef = useRef(null)
   const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const { setAuth } = useAuthStore()
   const [demoLoading, setDemoLoading] = useState(false)
 
   // Demo akkaunt bilan kirish
@@ -118,7 +118,7 @@ export default function Landing() {
       const response = await api.post('/auth/demo')
       
       if (response.data.success && response.data.data) {
-        login(response.data.data.token, response.data.data.user)
+        setAuth(response.data.data.token, response.data.data.user)
         navigate('/dashboard')
       }
     } catch (error) {

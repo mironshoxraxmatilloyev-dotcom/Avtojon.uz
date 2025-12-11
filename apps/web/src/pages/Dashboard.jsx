@@ -109,8 +109,34 @@ const createDriverIcon = (name, status) => {
 //   popupAnchor: [0, -40]
 // })
 
+// Demo rejim uchun fake ma'lumotlar
+const DEMO_DATA = {
+  stats: {
+    drivers: 8, vehicles: 12, activeTrips: 3, completedTrips: 156,
+    totalExpenses: 45000000, pendingTrips: 5, totalBonus: 8500000, totalPenalty: 1200000,
+    busyDrivers: 3, freeDrivers: 5
+  },
+  activeTrips: [
+    { _id: 'demo1', driver: { fullName: 'Akmal Karimov' }, vehicle: { plateNumber: '01 A 123 AB' }, startAddress: 'Toshkent', endAddress: 'Samarqand', status: 'in_progress' },
+    { _id: 'demo2', driver: { fullName: 'Bobur Aliyev' }, vehicle: { plateNumber: '01 B 456 CD' }, startAddress: 'Buxoro', endAddress: 'Navoiy', status: 'in_progress' },
+    { _id: 'demo3', driver: { fullName: 'Sardor Rahimov' }, vehicle: { plateNumber: '01 C 789 EF' }, startAddress: 'Farg\'ona', endAddress: 'Andijon', status: 'in_progress' }
+  ],
+  recentTrips: [
+    { _id: 'demo1', driver: { fullName: 'Akmal Karimov' }, startAddress: 'Toshkent', endAddress: 'Samarqand', status: 'in_progress', createdAt: new Date() },
+    { _id: 'demo4', driver: { fullName: 'Jasur Toshmatov' }, startAddress: 'Namangan', endAddress: 'Toshkent', status: 'completed', createdAt: new Date(Date.now() - 86400000) },
+    { _id: 'demo5', driver: { fullName: 'Dilshod Umarov' }, startAddress: 'Xorazm', endAddress: 'Buxoro', status: 'completed', createdAt: new Date(Date.now() - 172800000) },
+    { _id: 'demo6', driver: { fullName: 'Nodir Qodirov' }, startAddress: 'Qarshi', endAddress: 'Termiz', status: 'pending', createdAt: new Date() }
+  ],
+  driverLocations: [
+    { _id: 'd1', fullName: 'Akmal Karimov', phone: '+998901234567', status: 'busy', lastLocation: { lat: 39.65, lng: 66.96 } },
+    { _id: 'd2', fullName: 'Bobur Aliyev', phone: '+998901234568', status: 'busy', lastLocation: { lat: 40.12, lng: 65.37 } },
+    { _id: 'd3', fullName: 'Sardor Rahimov', phone: '+998901234569', status: 'busy', lastLocation: { lat: 40.78, lng: 72.34 } },
+    { _id: 'd4', fullName: 'Jasur Toshmatov', phone: '+998901234570', status: 'free', lastLocation: { lat: 41.31, lng: 69.28 } }
+  ]
+}
+
 export default function Dashboard() {
-  const { user } = useAuthStore()
+  const { user, isDemo } = useAuthStore()
   const navigate = useNavigate()
   const [stats, setStats] = useState({
     drivers: 0, vehicles: 0, activeTrips: 0, completedTrips: 0, 
@@ -126,6 +152,7 @@ export default function Dashboard() {
   const [shouldCenterMap, setShouldCenterMap] = useState(false)
   const [tripRoutes, setTripRoutes] = useState({}) // Har bir reys uchun marshrut
   const { socket } = useSocket()
+  const isDemoMode = isDemo()
 
   // 🔌 Socket.io - Real-time GPS yangilanishi va reys eventlari
   useEffect(() => {
@@ -200,6 +227,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      // Demo rejimda fake data ishlatish
+      if (isDemoMode) {
+        setStats(DEMO_DATA.stats)
+        setActiveTrips(DEMO_DATA.activeTrips)
+        setRecentTrips(DEMO_DATA.recentTrips)
+        setDriverLocations(DEMO_DATA.driverLocations)
+        setLoading(false)
+        return
+      }
+
       try {
         const [driversRes, vehiclesRes, tripsRes, expensesRes] = await Promise.all([
           api.get('/drivers'),
@@ -247,10 +284,12 @@ export default function Dashboard() {
       }
     }
     fetchStats()
-    fetchDriverLocations()
-    const interval = setInterval(fetchDriverLocations, 15000)
-    return () => clearInterval(interval)
-  }, [])
+    if (!isDemoMode) {
+      fetchDriverLocations()
+      const interval = setInterval(fetchDriverLocations, 15000)
+      return () => clearInterval(interval)
+    }
+  }, [isDemoMode])
 
   // Full screen map ochilganda scroll'ni bloklash
   useEffect(() => {
@@ -303,6 +342,27 @@ export default function Dashboard() {
 
   return (
     <PageWrapper className="space-y-6 pb-8">
+      {/* Demo Banner */}
+      {isDemoMode && (
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-2xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <Zap size={20} />
+            </div>
+            <div>
+              <p className="font-semibold">Demo rejim</p>
+              <p className="text-sm text-white/80">Bu demo versiya. To'liq funksiyadan foydalanish uchun ro'yxatdan o'ting.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => navigate('/register')}
+            className="px-4 py-2 bg-white text-orange-600 rounded-xl font-semibold hover:bg-orange-50 transition"
+          >
+            Ro'yxatdan o'tish
+          </button>
+        </div>
+      )}
+
       {/* Hero Header */}
       <AnimatedCard delay={0} hover={false} className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
         <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
