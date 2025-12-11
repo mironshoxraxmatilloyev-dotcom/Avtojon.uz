@@ -37,7 +37,10 @@ router.get('/locations', protect, businessOnly, async (req, res) => {
 // Barcha shofyorlar (biznesmen uchun) - faqat aktiv shofyorlar
 router.get('/', protect, businessOnly, async (req, res) => {
   try {
-    const drivers = await Driver.find({ user: req.user._id, isActive: true }).select('-password');
+    // lastLocation ham qaytarish (reys qo'shishda kerak)
+    const drivers = await Driver.find({ user: req.user._id, isActive: true })
+      .select('-password')
+      .lean();
     res.json({ success: true, data: drivers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Users, Truck, Route, TrendingUp, TrendingDown, Clock, CheckCircle, MapPin, RefreshCw, ArrowUpRight, Fuel, Calendar, Activity, Zap, Play, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
@@ -674,143 +675,95 @@ export default function Dashboard() {
       </div>
       )}
 
-      {/* Full Screen Map Modal - Portal style, covers everything */}
-      {fullScreenMap && (
+      {/* Full Screen Map Modal - Pro Design */}
+      {fullScreenMap && createPortal(
         <div className="fixed inset-0 bg-slate-950" style={{ zIndex: 99999 }}>
-          {/* Header - Mobile responsive */}
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-slate-950 via-slate-950/95 to-transparent safe-top" style={{ zIndex: 100000 }}>
-            <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
-              <div className="flex items-center gap-2 md:gap-4">
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
-                  <MapPin className="text-white" size={20} />
-                </div>
-                <div>
-                  <h2 className="text-lg md:text-2xl font-bold text-white flex items-center gap-2">
-                    Jonli xarita
-                    <span className="hidden sm:flex items-center gap-1 px-2 py-1 bg-emerald-500/20 rounded-lg text-emerald-400 text-xs font-medium">
-                      <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                      LIVE
-                    </span>
-                  </h2>
-                  <p className="text-slate-400 text-xs md:text-sm">{driverLocations.filter(d => d.lastLocation).length} ta online</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => fetchDriverLocations(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-xl text-white rounded-xl hover:bg-white/20 transition-all border border-white/10"
-                >
-                  <RefreshCw size={16} />
-                  <span className="text-sm font-medium">Yangilash</span>
-                </button>
-                <button 
-                  onClick={() => setFullScreenMap(false)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:shadow-lg transition-all"
-                >
-                  <X size={16} />
-                  <span className="text-sm font-medium">Yopish</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* CLOSE BUTTON - Top Left */}
+          <button 
+            onClick={() => setFullScreenMap(false)}
+            className="absolute top-4 left-4 flex items-center gap-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all shadow-2xl font-semibold z-[999999]"
+          >
+            <X size={20} />
+            Yopish
+          </button>
 
-          {/* Drivers Sidebar - Hidden on mobile, shown on md+ */}
-          <div className="hidden md:block absolute top-24 left-4 bottom-4 w-96 bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden shadow-2xl" style={{ zIndex: 100000 }}>
+          {/* Compact Right Sidebar */}
+          <div className="hidden lg:flex flex-col absolute top-20 right-4 bottom-4 w-72 bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden shadow-xl" style={{ zIndex: 100000 }}>
             {/* Sidebar Header */}
-            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-blue-600/20 to-indigo-600/20">
-              <div className="flex items-center justify-between">
-                <h3 className="text-white font-bold text-lg flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <Truck size={20} className="text-white" />
-                  </div>
-                  Shofyorlar
-                </h3>
-                <div className="flex items-center gap-2">
-                  {selectedDriver && (
-                    <button 
-                      onClick={() => setSelectedDriver(null)}
-                      className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-xl text-xs font-medium hover:bg-blue-500/30 transition"
-                    >
-                      Barchasini ko'rish
-                    </button>
-                  )}
-                  <span className="px-3 py-1.5 bg-white/10 rounded-xl text-white font-bold">{driverLocations.length}</span>
-                </div>
-              </div>
+            <div className="p-3 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                <Truck size={14} className="text-blue-400" />
+                Shofyorlar
+                <span className="px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-bold">{driverLocations.length}</span>
+              </h3>
+              {selectedDriver && (
+                <button onClick={() => setSelectedDriver(null)} className="text-blue-400 text-xs hover:underline">
+                  Hammasi
+                </button>
+              )}
             </div>
             
-            {/* Drivers List */}
-            <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100%-80px)]">
+            {/* Drivers List - Compact */}
+            <div className="flex-1 p-2 space-y-1.5 overflow-y-auto">
               {driverLocations.map((driver) => (
                 <div 
                   key={driver._id}
                   onClick={() => driver.lastLocation && setSelectedDriver(driver)}
-                  className={`group p-4 rounded-2xl transition-all cursor-pointer border ${
+                  className={`p-2.5 rounded-lg transition-all cursor-pointer ${
                     selectedDriver?._id === driver._id
-                      ? 'bg-blue-500/20 border-blue-500/50 ring-2 ring-blue-500/30'
+                      ? 'bg-blue-500/20 ring-1 ring-blue-500/50'
                       : driver.lastLocation 
-                        ? 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-blue-500/50' 
-                        : 'bg-white/5 opacity-50 border-white/5 cursor-not-allowed'
+                        ? 'bg-white/5 hover:bg-white/10' 
+                        : 'bg-white/5 opacity-40 cursor-not-allowed'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${
-                        driver.status === 'busy' 
-                          ? 'bg-gradient-to-br from-orange-500 to-amber-600 shadow-orange-500/30' 
-                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30'
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs ${
+                        driver.status === 'busy' ? 'bg-orange-500' : 'bg-emerald-500'
                       }`}>
                         {driver.fullName?.charAt(0)}
                       </div>
                       {driver.lastLocation && (
-                        <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
-                          <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
-                        </span>
+                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-slate-900"></span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold truncate">{driver.fullName}</p>
-                      <p className="text-slate-400 text-sm">{driver.phone || 'Telefon yo\'q'}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                        driver.status === 'busy' 
-                          ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      }`}>
-                        {driver.status === 'busy' ? '🚛 Reysda' : '✅ Bo\'sh'}
-                      </span>
-                      {driver.lastLocation && (
-                        <div className="mt-2 text-right">
-                          {driver.lastLocation.accuracy && (
-                            <p className={`text-xs font-medium ${
-                              driver.lastLocation.accuracy < 50 ? 'text-emerald-400' : 
-                              driver.lastLocation.accuracy < 100 ? 'text-amber-400' : 'text-red-400'
-                            }`}>
-                              📍 ±{Math.round(driver.lastLocation.accuracy)}m
-                            </p>
-                          )}
-                          {driver.lastLocation.speed > 0 && (
-                            <p className="text-xs text-blue-400 mt-0.5">
-                              🚗 {Math.round(driver.lastLocation.speed * 3.6)} km/h
-                            </p>
-                          )}
-                        </div>
-                      )}
+                      <p className="text-white text-xs font-medium truncate">{driver.fullName}</p>
+                      <p className={`text-[10px] ${driver.status === 'busy' ? 'text-orange-400' : 'text-emerald-400'}`}>
+                        {driver.status === 'busy' ? 'Reysda' : 'Bo\'sh'}
+                        {driver.lastLocation?.speed > 0 && ` • ${Math.round(driver.lastLocation.speed * 3.6)} km/h`}
+                      </p>
                     </div>
                   </div>
                 </div>
               ))}
               {driverLocations.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                    <Truck size={40} className="text-slate-600" />
-                  </div>
-                  <p className="text-slate-400 font-medium">Shofyorlar yo'q</p>
-                  <p className="text-slate-500 text-sm mt-1">Hali shofyor qo'shilmagan</p>
+                <div className="text-center py-6">
+                  <Truck size={24} className="text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-500 text-xs">Shofyorlar yo'q</p>
                 </div>
               )}
             </div>
+            
+            {/* Active Trips */}
+            {activeTrips.length > 0 && (
+              <div className="border-t border-white/10 p-3">
+                <h4 className="text-white text-xs font-semibold mb-2 flex items-center gap-1.5">
+                  <Activity size={12} className="text-blue-400" />
+                  Faol reyslar
+                  <span className="px-1 py-0.5 bg-blue-500/20 rounded text-blue-400 text-[10px]">{activeTrips.length}</span>
+                </h4>
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {activeTrips.slice(0, 4).map((trip) => (
+                    <div key={trip._id} className="p-2 bg-white/5 rounded-lg">
+                      <p className="text-white text-[11px] font-medium truncate">{trip.driver?.fullName}</p>
+                      <p className="text-slate-400 text-[10px] truncate">{trip.startAddress} → {trip.endAddress}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Full Screen Map */}
@@ -902,33 +855,48 @@ export default function Dashboard() {
           </MapContainer>
           </div>
 
-          {/* Mobile Bottom Sheet - Shofyorlar ro'yxati */}
-          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[10000] bg-slate-900/95 backdrop-blur-2xl rounded-t-3xl border-t border-white/10 safe-bottom">
-            <div className="p-3">
-              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-3"></div>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          {/* Mobile Bottom Sheet - Pro Design */}
+          <div className="md:hidden absolute bottom-0 left-0 right-0 z-[100000] bg-slate-900/95 backdrop-blur-2xl rounded-t-3xl border-t border-white/10">
+            <div className="p-4 pb-6">
+              <div className="w-10 h-1 bg-white/30 rounded-full mx-auto mb-4"></div>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-white font-semibold text-sm flex items-center gap-2">
+                  <Truck size={14} className="text-blue-400" />
+                  Shofyorlar
+                </h4>
+                <span className="text-emerald-400 text-xs font-medium">
+                  {driverLocations.filter(d => d.lastLocation).length} online
+                </span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {driverLocations.filter(d => d.lastLocation).map((driver) => (
                   <button
                     key={driver._id}
                     onClick={() => setSelectedDriver(driver)}
-                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border ${
                       selectedDriver?._id === driver._id
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white/10 text-white'
+                        ? 'bg-blue-500/20 border-blue-500/50 text-white'
+                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm ${
-                      driver.status === 'busy' ? 'bg-orange-500' : 'bg-emerald-500'
+                      driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-amber-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                     }`}>
                       {driver.fullName?.charAt(0)}
                     </div>
-                    <span className="text-sm font-medium whitespace-nowrap">{driver.fullName?.split(' ')[0]}</span>
+                    <div className="text-left">
+                      <p className="text-sm font-medium whitespace-nowrap">{driver.fullName?.split(' ')[0]}</p>
+                      <p className={`text-xs ${driver.status === 'busy' ? 'text-orange-400' : 'text-emerald-400'}`}>
+                        {driver.status === 'busy' ? 'Reysda' : 'Bo\'sh'}
+                      </p>
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </PageWrapper>
   )

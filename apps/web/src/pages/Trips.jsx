@@ -177,7 +177,13 @@ export default function Trips() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (submitting) return
+    e.stopPropagation()
+    
+    // Double-submit himoyasi
+    if (submitting) {
+      console.log('⚠️ Allaqachon yuborilmoqda, qayta yuborish bloklandi')
+      return
+    }
 
     // Demo rejimda bloklash
     if (isDemoMode) {
@@ -222,18 +228,21 @@ export default function Trips() {
 
     setSubmitting(true)
     try {
-      await api.post('/trips', {
+      console.log('📤 Reys yaratilmoqda...')
+      const response = await api.post('/trips', {
         ...form,
         estimatedDuration: form.estimatedDuration,
         estimatedDistance: Number(form.estimatedDistance),
         tripBudget: Number(form.tripBudget),
         tripPayment: Number(form.tripPayment)
       })
+      console.log('✅ Reys yaratildi:', response.data)
       showToast.success('Reys yaratildi')
       setShowModal(false)
       setForm({ driverId: '', vehicleId: '', startAddress: '', endAddress: '', estimatedDuration: '', estimatedDistance: '', tripBudget: '', tripPayment: '', startCoords: null, endCoords: null })
       fetchData()
     } catch (error) {
+      console.error('❌ Reys yaratishda xato:', error)
       showToast.error(error.response?.data?.message || 'Xatolik')
     } finally {
       setSubmitting(false)
@@ -606,7 +615,10 @@ export default function Trips() {
                     <p className="text-blue-300 text-sm">Reys malumotlarini kiriting</p>
                   </div>
                 </div>
-                <button onClick={() => setShowModal(false)} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
+                <button onClick={() => {
+                  setShowModal(false)
+                  setSubmitting(false)
+                }} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
                   <X size={24} />
                 </button>
                 </div>
@@ -640,7 +652,7 @@ export default function Trips() {
                     )
                     return (
                       <option key={d._id} value={d._id}>
-                        {d.fullName} {vehicle ? `→ ${vehicle.plateNumber}` : ''} {d.status === 'busy' ? '(Reysda)' : ''}
+                        {d.fullName} {vehicle ? `→ ${vehicle.plateNumber}` : ''} {d.status === 'busy' ? '(Reysda)' : ''} {d.lastLocation ? '📍' : ''}
                       </option>
                     )
                   })}
@@ -648,6 +660,54 @@ export default function Trips() {
                 {drivers.length === 0 && (
                   <p className="text-xs text-amber-400 mt-2">⚠️ Shofyorlar topilmadi. Avval shofyor qo'shing.</p>
                 )}
+                
+                {/* Shofyor joylashuvi - agar mavjud bo'lsa */}
+                {form.driverId && (() => {
+                  const selectedDriver = drivers.find(d => d._id === form.driverId)
+                  if (selectedDriver?.lastLocation) {
+                    return (
+                      <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                            <MapPin size={16} />
+                            <span>Shofyor hozir: {selectedDriver.lastLocation.lat?.toFixed(4)}, {selectedDriver.lastLocation.lng?.toFixed(4)}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const loc = selectedDriver.lastLocation
+                              // Reverse geocoding - koordinatadan manzil olish
+                              try {
+                                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.lat}&lon=${loc.lng}&zoom=14`)
+                                const data = await res.json()
+                                const address = data.display_name?.split(',').slice(0, 3).join(', ') || `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`
+                                setForm(prev => ({
+                                  ...prev,
+                                  startAddress: address,
+                                  startCoords: { lat: loc.lat, lng: loc.lng }
+                                }))
+                                if (form.endCoords) {
+                                  updateDistanceFromCoords({ lat: loc.lat, lng: loc.lng }, form.endCoords)
+                                }
+                                showToast.success('Shofyor joylashuvi boshlanish nuqtasi sifatida belgilandi')
+                              } catch {
+                                setForm(prev => ({
+                                  ...prev,
+                                  startAddress: `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`,
+                                  startCoords: { lat: loc.lat, lng: loc.lng }
+                                }))
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 transition"
+                          >
+                            Shu joydan boshlash
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
               </div>
 
               {/* Mashina */}
