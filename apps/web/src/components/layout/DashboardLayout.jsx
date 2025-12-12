@@ -13,7 +13,8 @@ export const useSidebar = () => useContext(SidebarContext)
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', description: 'Umumiy statistika' },
   { path: '/dashboard/drivers', icon: Users, label: 'Shofyorlar', description: 'Haydovchilar ro\'yxati' },
-  { path: '/dashboard/trips', icon: Route, label: 'Reyslar', description: 'Barcha reyslar' },
+  // { path: '/dashboard/flights', icon: Route, label: 'Reyslar', description: 'Faol va tugatilgan' },
+  // { path: '/dashboard/trips', icon: Route, label: 'Eski reyslar', description: 'Barcha reyslar' },
   { path: '/dashboard/salaries', icon: Calculator, label: 'Maoshlar', description: 'Moliya boshqaruvi' },
 ]
 

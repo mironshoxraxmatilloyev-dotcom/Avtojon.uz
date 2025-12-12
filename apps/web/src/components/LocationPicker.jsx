@@ -105,12 +105,13 @@ function formatDuration(minutes) {
     return remainingHours > 0 ? `${days} kun ${remainingHours} soat` : `${days} kun`
 }
 
-export default function LocationPicker({ onSelect, onClose, initialStart, initialEnd }) {
+export default function LocationPicker({ onSelect, onClose, initialStart, initialEnd, endOnly = false, initialStartAddress = '' }) {
     const [startPoint, setStartPoint] = useState(initialStart || null)
     const [endPoint, setEndPoint] = useState(initialEnd || null)
-    const [startAddress, setStartAddress] = useState('')
+    const [startAddress, setStartAddress] = useState(initialStartAddress || '')
     const [endAddress, setEndAddress] = useState('')
-    const [selectingPoint, setSelectingPoint] = useState('start')
+    // Agar endOnly bo'lsa, to'g'ridan-to'g'ri 'end' dan boshlash
+    const [selectingPoint, setSelectingPoint] = useState(endOnly && initialStart ? 'end' : 'start')
     const [distance, setDistance] = useState(0)
     const [duration, setDuration] = useState('')
     const [loading, setLoading] = useState(false)
@@ -184,14 +185,24 @@ export default function LocationPicker({ onSelect, onClose, initialStart, initia
     }
 
     const resetPoints = () => {
-        setStartPoint(null)
-        setEndPoint(null)
-        setStartAddress('')
-        setEndAddress('')
-        setDistance(0)
-        setDuration('')
-        setRouteCoords([])
-        setSelectingPoint('start')
+        // endOnly rejimida boshlanish nuqtasini saqlab qolish
+        if (endOnly && initialStart) {
+            setEndPoint(null)
+            setEndAddress('')
+            setDistance(0)
+            setDuration('')
+            setRouteCoords([])
+            setSelectingPoint('end')
+        } else {
+            setStartPoint(null)
+            setEndPoint(null)
+            setStartAddress('')
+            setEndAddress('')
+            setDistance(0)
+            setDuration('')
+            setRouteCoords([])
+            setSelectingPoint('start')
+        }
     }
 
     return (

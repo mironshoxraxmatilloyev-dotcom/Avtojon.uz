@@ -145,6 +145,8 @@ export default function Dashboard() {
     busyDrivers: 0, freeDrivers: 0
   })
   const [activeTrips, setActiveTrips] = useState([])
+  const [activeFlights, setActiveFlights] = useState([]) // Yangi reys tizimi - faol
+  const [recentFlights, setRecentFlights] = useState([]) // Yangi reys tizimi - barcha
   const [recentTrips, setRecentTrips] = useState([])
   const [driverLocations, setDriverLocations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -239,34 +241,50 @@ export default function Dashboard() {
       }
 
       try {
-        const [driversRes, vehiclesRes, tripsRes, expensesRes] = await Promise.all([
+        const [driversRes, vehiclesRes, tripsRes, expensesRes, flightsActiveRes, flightsAllRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/vehicles'),
           api.get('/trips'),
-          api.get('/expenses/stats').catch(() => ({ data: { data: { totalAmount: 0 } } }))
+          api.get('/expenses/stats').catch(() => ({ data: { data: { totalAmount: 0 } } })),
+          api.get('/flights', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
+          api.get('/flights').catch(() => ({ data: { data: [] } })) // Barcha flights
         ])
         
         const trips = tripsRes.data.data || []
         const drivers = driversRes.data.data || []
+        const flights = flightsActiveRes.data.data || []
+        const allFlights = flightsAllRes.data.data || []
         const active = trips.filter(t => t.status === 'in_progress')
         const completed = trips.filter(t => t.status === 'completed')
+        const completedFlights = allFlights.filter(f => f.status === 'completed')
         
         setStats({
           drivers: drivers.length,
           vehicles: vehiclesRes.data.data?.length || 0,
-          activeTrips: active.length,
-          completedTrips: completed.length,
-          pendingTrips: trips.filter(t => t.status === 'pending').length,
+          activeTrips: flights.length, // Faqat yangi reyslar
+          completedTrips: completedFlights.length, // Yangi reyslar
+          pendingTrips: 0,
           totalExpenses: expensesRes.data.data?.totalAmount || 0,
-          totalBonus: completed.reduce((sum, t) => sum + (t.bonusAmount || 0), 0),
-          totalPenalty: completed.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0),
+          totalBonus: 0,
+          totalPenalty: 0,
           busyDrivers: drivers.filter(d => d.status === 'busy').length,
           freeDrivers: drivers.filter(d => d.status === 'free').length
         })
         setActiveTrips(active)
+        console.log('📊 Faol flights:', flights.length, flights.map(f => ({ 
+          name: f.name, 
+          legs: f.legs?.map(l => ({ 
+            from: l.fromCity, 
+            to: l.toCity, 
+            fromCoords: l.fromCoords, 
+            toCoords: l.toCoords 
+          }))
+        })))
+        setActiveFlights(flights)
+        setRecentFlights(allFlights.slice(0, 6)) // So'ngi 6 ta flight
         setRecentTrips(trips.slice(0, 6))
         
-        // Faol reyslar uchun marshrut olish
+        // Faol reyslar uchun marshrut olish (eski trips)
         for (const trip of active) {
           if (trip.startCoords && trip.endCoords) {
             const route = await getRouteFromAPI(
@@ -275,6 +293,31 @@ export default function Dashboard() {
             )
             if (route) {
               setTripRoutes(prev => ({ ...prev, [trip._id]: route }))
+            }
+          }
+        }
+
+        // Yangi flights uchun marshrut olish (har bir leg uchun)
+        for (const flight of flights) {
+          if (flight.legs && flight.legs.length > 0) {
+            for (const leg of flight.legs) {
+              // Koordinatalar to'liq bo'lishi kerak (lat va lng mavjud)
+              const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
+              const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
+              
+              if (hasFromCoords && hasToCoords) {
+                console.log('🗺️ Flight marshrut olish:', leg.fromCity, '->', leg.toCity)
+                const route = await getRouteFromAPI(
+                  leg.fromCoords.lat, leg.fromCoords.lng,
+                  leg.toCoords.lat, leg.toCoords.lng
+                )
+                if (route) {
+                  console.log('✅ Marshrut topildi:', route.distance, 'km')
+                  setTripRoutes(prev => ({ ...prev, [`flight-${flight._id}-${leg._id}`]: route }))
+                }
+              } else {
+                console.log('⚠️ Koordinatalar yo\'q:', leg.fromCity, '->', leg.toCity, { fromCoords: leg.fromCoords, toCoords: leg.toCoords })
+              }
             }
           }
         }
@@ -409,7 +452,63 @@ export default function Dashboard() {
         </div>
       </AnimatedCard>
 
-      {/* Faol reyslar */}
+      {/* Faol reyslar (yangi tizim - flights) */}
+      {activeFlights.length > 0 && (
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <Route className="text-emerald-600" size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Faol reyslar</h2>
+                <p className="text-sm text-gray-500">{activeFlights.length} ta reys yo'lda</p>
+              </div>
+            </div>
+            <button onClick={() => fetchDriverLocations(true)} className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition">
+              <RefreshCw size={18} />
+            </button>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activeFlights.map((flight) => (
+              <div key={flight._id} 
+                onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
+                className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 border border-emerald-100 hover:border-emerald-300">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/30">
+                      {flight.driver?.fullName?.charAt(0) || '?'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{flight.driver?.fullName}</p>
+                      <p className="text-sm text-gray-500">{flight.vehicle?.plateNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                    <MapPin size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">{flight.name || 'Yangi reys'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span>{flight.legs?.length || 0} bosqich</span>
+                    <span>•</span>
+                    <span>{flight.totalDistance || 0} km</span>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                      Faol
+                    </span>
+                    <ArrowUpRight size={16} className="text-gray-400 group-hover:text-emerald-600 transition" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Eski faol reyslar (trips) */}
       {activeTrips.length > 0 && (
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
@@ -418,7 +517,7 @@ export default function Dashboard() {
                 <Zap className="text-orange-600" size={20} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Hozir yolda</h2>
+                <h2 className="text-lg font-bold text-gray-900">Hozir yolda (eski)</h2>
                 <p className="text-sm text-gray-500">{activeTrips.length} ta faol reys</p>
               </div>
             </div>
@@ -579,7 +678,7 @@ export default function Dashboard() {
                 </Marker>
               ))}
               
-              {/* Faol reyslar uchun marshrut chiziqlari */}
+              {/* Faol reyslar uchun marshrut chiziqlari (eski trips) */}
               {activeTrips.map((trip) => {
                 const route = tripRoutes[trip._id]
                 return (
@@ -611,6 +710,45 @@ export default function Dashboard() {
                   </span>
                 )
               })}
+
+              {/* Yangi flights uchun marshrut chiziqlari */}
+              {activeFlights.map((flight) => (
+                <span key={`flight-route-${flight._id}`}>
+                  {flight.legs?.map((leg, idx) => {
+                    const route = tripRoutes[`flight-${flight._id}-${leg._id}`]
+                    const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
+                    const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
+                    
+                    return (
+                      <span key={`leg-${leg._id || idx}`}>
+                        {route && route.coordinates && (
+                          <Polyline positions={route.coordinates} color="#10b981" weight={4} opacity={0.8} />
+                        )}
+                        {hasFromCoords && (
+                          <Marker position={[leg.fromCoords.lat, leg.fromCoords.lng]} icon={startIcon}>
+                            <Popup>
+                              <div className="text-center">
+                                <p className="font-bold text-green-600">🟢 {leg.fromCity}</p>
+                                <p className="text-xs">{flight.driver?.fullName}</p>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        )}
+                        {hasToCoords && (
+                          <Marker position={[leg.toCoords.lat, leg.toCoords.lng]} icon={endIcon}>
+                            <Popup>
+                              <div className="text-center">
+                                <p className="font-bold text-red-600">🔴 {leg.toCity}</p>
+                                {route && <p className="text-xs text-emerald-600 mt-1">{route.distance} km</p>}
+                              </div>
+                            </Popup>
+                          </Marker>
+                        )}
+                      </span>
+                    )
+                  })}
+                </span>
+              ))}
             </MapContainer>
           </div>
         </div>
@@ -632,42 +770,52 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="space-y-3">
-            {recentTrips.map((trip) => (
-              <div key={trip._id} 
-                onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
-                className="group flex items-center gap-4 p-4 rounded-xl cursor-pointer hover:bg-gray-50 transition-all">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ${
-                  trip.status === 'completed' ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                  trip.status === 'in_progress' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                  trip.status === 'pending' ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' : 
-                  'bg-gradient-to-br from-red-500 to-red-600'
+            {/* So'ngi reyslar - faqat yangi Flight tizimidan */}
+            {recentFlights.map((flight) => (
+              <div key={`recent-flight-${flight._id}`} 
+                onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
+                className={`group flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all ${
+                  flight.status === 'active' 
+                    ? 'hover:bg-emerald-50 border border-emerald-100' 
+                    : 'hover:bg-gray-50'
                 }`}>
-                  {trip.driver?.fullName?.charAt(0) || '?'}
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ${
+                  flight.status === 'active' 
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600' 
+                    : flight.status === 'completed'
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                    : 'bg-gradient-to-br from-gray-500 to-slate-600'
+                }`}>
+                  {flight.driver?.fullName?.charAt(0) || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{trip.driver?.fullName || 'Nomalum'}</p>
-                  <p className="text-sm text-gray-500 truncate">{trip.startAddress} - {trip.endAddress}</p>
+                  <p className="font-semibold text-gray-900 truncate">{flight.driver?.fullName || 'Nomalum'}</p>
+                  <p className="text-sm text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
+                  <p className="text-xs text-gray-400">
+                    {flight.legs?.length || 0} bosqich • {flight.totalDistance || 0} km
+                    {flight.status === 'completed' && ` • Foyda: ${new Intl.NumberFormat('uz-UZ').format(flight.profit || 0)} so'm`}
+                  </p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                    trip.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    trip.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                    trip.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
+                    flight.status === 'active' 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : flight.status === 'completed'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700'
                   }`}>
-                    {trip.status === 'completed' ? 'Tugatilgan' :
-                     trip.status === 'in_progress' ? 'Yolda' :
-                     trip.status === 'pending' ? 'Kutilmoqda' : 'Bekor'}
+                    {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
                   </span>
                 </div>
               </div>
             ))}
-            {recentTrips.length === 0 && (
+            {recentFlights.length === 0 && (
               <div className="text-center py-16">
                 <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Route size={32} className="text-gray-400" />
                 </div>
                 <p className="text-gray-500">Reyslar yoq</p>
+                <p className="text-xs text-gray-400 mt-1">Shofyorlar sahifasidan yangi reys oching</p>
               </div>
             )}
           </div>
@@ -819,7 +967,7 @@ export default function Dashboard() {
               </Marker>
             ))}
             
-            {/* Fullscreen: Faol reyslar uchun marshrut chiziqlari */}
+            {/* Fullscreen: Faol reyslar uchun marshrut chiziqlari (eski trips) */}
             {activeTrips.map((trip) => {
               const route = tripRoutes[trip._id]
               return (
@@ -852,6 +1000,46 @@ export default function Dashboard() {
                 </span>
               )
             })}
+
+            {/* Fullscreen: Yangi flights uchun marshrut chiziqlari */}
+            {activeFlights.map((flight) => (
+              <span key={`fs-flight-route-${flight._id}`}>
+                {flight.legs?.map((leg, idx) => {
+                  const route = tripRoutes[`flight-${flight._id}-${leg._id}`]
+                  const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
+                  const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
+                  
+                  return (
+                    <span key={`fs-leg-${leg._id || idx}`}>
+                      {route && route.coordinates && (
+                        <Polyline positions={route.coordinates} color="#10b981" weight={5} opacity={0.9} />
+                      )}
+                      {hasFromCoords && (
+                        <Marker position={[leg.fromCoords.lat, leg.fromCoords.lng]} icon={startIcon}>
+                          <Popup>
+                            <div className="text-center">
+                              <p className="font-bold text-green-600">🟢 {leg.fromCity}</p>
+                              <p className="text-xs text-gray-500">{flight.driver?.fullName}</p>
+                              <p className="text-xs text-gray-400">{flight.vehicle?.plateNumber}</p>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
+                      {hasToCoords && (
+                        <Marker position={[leg.toCoords.lat, leg.toCoords.lng]} icon={endIcon}>
+                          <Popup>
+                            <div className="text-center">
+                              <p className="font-bold text-red-600">🔴 {leg.toCity}</p>
+                              {route && <p className="text-xs text-emerald-600 mt-1">{route.distance} km</p>}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
+                    </span>
+                  )
+                })}
+              </span>
+            ))}
           </MapContainer>
           </div>
 

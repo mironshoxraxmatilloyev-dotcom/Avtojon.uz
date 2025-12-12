@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, X, User, Truck, Phone, Search, Calendar, ArrowUpRight, Users, Activity } from 'lucide-react'
+import { Plus, Edit, Trash2, X, User, Truck, Phone, Search, Calendar, ArrowUpRight, Users, Activity, Play, Route, Fuel, Gauge } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 // Demo rejim uchun fake shofyorlar
 const DEMO_DRIVERS = [
@@ -48,6 +49,21 @@ export default function Drivers() {
     plateNumber: '', brand: '', year: ''
   })
   const isDemoMode = isDemo()
+  
+  // Reys ochish modal
+  const [showFlightModal, setShowFlightModal] = useState(false)
+  const [selectedDriver, setSelectedDriver] = useState(null)
+  const [flightForm, setFlightForm] = useState({
+    startOdometer: '',
+    startFuel: '',
+    fromCity: '',
+    toCity: '',
+    payment: '',
+    distance: '',
+    fromCoords: null,
+    toCoords: null
+  })
+  const [activeFlights, setActiveFlights] = useState({}) // driverId -> flight
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -66,12 +82,22 @@ export default function Drivers() {
     }
 
     try {
-      const [driversRes, vehiclesRes] = await Promise.all([
+      const [driversRes, vehiclesRes, flightsRes] = await Promise.all([
         api.get('/drivers'),
-        api.get('/vehicles')
+        api.get('/vehicles'),
+        api.get('/flights', { params: { status: 'active' } })
       ])
       setDrivers(driversRes.data.data || [])
       setVehicles(vehiclesRes.data.data || [])
+      
+      // Faol reyslarni driver bo'yicha map qilish
+      const flights = flightsRes.data.data || []
+      const flightMap = {}
+      flights.forEach(f => {
+        if (f.driver?._id) flightMap[f.driver._id] = f
+        else if (f.driver) flightMap[f.driver] = f
+      })
+      setActiveFlights(flightMap)
     } catch (error) {
       showToast.error('Malumotlarni yuklashda xatolik')
     } finally {
@@ -102,6 +128,83 @@ export default function Drivers() {
     paymentType: 'monthly', baseSalary: 0, perTripRate: 0,
     plateNumber: '', brand: '', year: ''
   })
+
+  const resetFlightForm = () => setFlightForm({
+    startOdometer: '',
+    startFuel: '',
+    fromCity: '',
+    toCity: '',
+    payment: '',
+    distance: '',
+    fromCoords: null,
+    toCoords: null
+  })
+
+  // Masofa hisoblash (Haversine formula)
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371 // km
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return Math.round(R * c)
+  }
+
+  // Reys ochish
+  const handleStartFlight = async (e) => {
+    e.preventDefault()
+    
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      setShowFlightModal(false)
+      return
+    }
+
+    if (!flightForm.fromCity || !flightForm.toCity) {
+      showToast.error('Qayerdan va qayerga shaharlarini kiriting!')
+      return
+    }
+
+    try {
+      const payload = {
+        driverId: selectedDriver._id,
+        startOdometer: Number(flightForm.startOdometer) || 0,
+        startFuel: Number(flightForm.startFuel) || 0,
+        firstLeg: {
+          fromCity: flightForm.fromCity,
+          toCity: flightForm.toCity,
+          fromCoords: flightForm.fromCoords,
+          toCoords: flightForm.toCoords,
+          payment: Number(flightForm.payment) || 0,
+          distance: Number(flightForm.distance) || 0
+        }
+      }
+
+      console.log('🚀 Reys ochish payload:', payload)
+      await api.post('/flights', payload)
+      showToast.success('Reys ochildi!')
+      setShowFlightModal(false)
+      resetFlightForm()
+      setSelectedDriver(null)
+      fetchData()
+    } catch (error) {
+      showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
+
+  // Shofyorni bosganda
+  const handleDriverClick = (driver) => {
+    if (driver.status === 'busy') {
+      // Reysda bo'lsa, reys sahifasiga o'tish
+      navigate(`/dashboard/drivers/${driver._id}`)
+    } else {
+      // Bo'sh bo'lsa, reys ochish modalni ochish
+      setSelectedDriver(driver)
+      setShowFlightModal(true)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -328,7 +431,7 @@ export default function Drivers() {
           return (
             <div
               key={driver._id}
-              onClick={() => navigate(`/dashboard/drivers/${driver._id}`)}
+              onClick={() => handleDriverClick(driver)}
               className="group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
@@ -379,6 +482,25 @@ export default function Drivers() {
                 )}
               </div>
 
+              {/* Active Flight Info */}
+              {driver.status === 'busy' && activeFlights[driver._id] && (
+                <div 
+                  className="p-3 rounded-xl mb-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 cursor-pointer hover:shadow-md transition"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/dashboard/flights/${activeFlights[driver._id]._id}`)
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Route size={16} className="text-orange-600" />
+                      <span className="font-medium text-orange-700">{activeFlights[driver._id].name || 'Faol reys'}</span>
+                    </div>
+                    <span className="text-xs text-orange-500">{activeFlights[driver._id].legs?.length || 0} bosqich →</span>
+                  </div>
+                </div>
+              )}
+
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -394,6 +516,31 @@ export default function Drivers() {
                   </p>
                 </div>
                 <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                  {driver.status === 'free' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedDriver(driver)
+                        setShowFlightModal(true)
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                      title="Reys ochish"
+                    >
+                      <Play size={18} />
+                    </button>
+                  )}
+                  {driver.status === 'busy' && activeFlights[driver._id] && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(`/dashboard/flights/${activeFlights[driver._id]._id}`)
+                      }}
+                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                      title="Reysni davom ettirish"
+                    >
+                      <Route size={18} />
+                    </button>
+                  )}
                   <button
                     onClick={(e) => handleEdit(e, driver)}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -626,6 +773,172 @@ export default function Drivers() {
                   className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
                 >
                   <Plus size={20} /> {editingDriver ? 'Saqlash' : "Shofyor qo'shish"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Reys ochish Modal */}
+      {showFlightModal && selectedDriver && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="absolute inset-0" onClick={() => { setShowFlightModal(false); resetFlightForm(); setSelectedDriver(null) }} />
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="p-6 border-b border-white/10">
+                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-t-3xl"></div>
+                <div className="relative flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30">
+                      <Route className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Reys ochish</h2>
+                      <p className="text-green-300 text-sm">{selectedDriver.fullName}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setShowFlightModal(false); resetFlightForm(); setSelectedDriver(null) }}
+                    className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleStartFlight} className="p-6 space-y-5">
+                {/* Mashina info */}
+                {(() => {
+                  const vehicle = getDriverVehicle(selectedDriver._id)
+                  return vehicle ? (
+                    <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                      <div className="flex items-center gap-3">
+                        <Truck size={20} className="text-blue-400" />
+                        <div>
+                          <p className="text-white font-semibold">{vehicle.plateNumber}</p>
+                          <p className="text-blue-300 text-sm">{vehicle.brand}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+                      <p className="text-red-400 text-sm">⚠️ Shofyorga mashina biriktirilmagan</p>
+                    </div>
+                  )
+                })()}
+
+                {/* Boshlang'ich ma'lumotlar */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-200 mb-2">
+                      <Gauge size={14} className="inline mr-1" />
+                      Odometr (km)
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startOdometer}
+                      onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
+                      placeholder="123456"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-200 mb-2">
+                      <Fuel size={14} className="inline mr-1" />
+                      Bakda yoqilg'i (L)
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startFuel}
+                      onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+
+                {/* Birinchi bosqich */}
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-4">
+                  <p className="text-white font-semibold flex items-center gap-2">
+                    <Route size={16} className="text-green-400" />
+                    Birinchi bosqich
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">Qayerdan *</label>
+                      <AddressAutocomplete
+                        value={flightForm.fromCity}
+                        onChange={(val) => setFlightForm({ ...flightForm, fromCity: val })}
+                        onSelect={(s) => {
+                          const newFromCoords = { lat: s.lat, lng: s.lng }
+                          setFlightForm(prev => ({ 
+                            ...prev, 
+                            fromCity: s.name, 
+                            fromCoords: newFromCoords,
+                            distance: prev.toCoords ? calculateDistance(newFromCoords.lat, newFromCoords.lng, prev.toCoords.lat, prev.toCoords.lng) : prev.distance
+                          }))
+                        }}
+                        placeholder="Toshkent"
+                        focusColor="green"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">Qayerga *</label>
+                      <AddressAutocomplete
+                        value={flightForm.toCity}
+                        onChange={(val) => setFlightForm({ ...flightForm, toCity: val })}
+                        onSelect={(s) => {
+                          const newToCoords = { lat: s.lat, lng: s.lng }
+                          setFlightForm(prev => ({ 
+                            ...prev, 
+                            toCity: s.name, 
+                            toCoords: newToCoords,
+                            distance: prev.fromCoords ? calculateDistance(prev.fromCoords.lat, prev.fromCoords.lng, newToCoords.lat, newToCoords.lng) : prev.distance
+                          }))
+                        }}
+                        placeholder="Samarqand"
+                        focusColor="green"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">To'lov (so'm)</label>
+                      <input
+                        type="number"
+                        value={flightForm.payment}
+                        onChange={(e) => setFlightForm({ ...flightForm, payment: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
+                        placeholder="500000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">Masofa (km)</label>
+                      <input
+                        type="number"
+                        value={flightForm.distance}
+                        onChange={(e) => setFlightForm({ ...flightForm, distance: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
+                        placeholder="300"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-400 text-center">
+                  💡 Reys ochilgandan keyin yangi bosqichlar qo'shishingiz mumkin
+                </p>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all"
+                >
+                  <Play size={20} /> Reysni boshlash
                 </button>
               </form>
             </div>

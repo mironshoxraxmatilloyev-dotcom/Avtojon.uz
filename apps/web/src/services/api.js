@@ -1,12 +1,16 @@
 import axios from 'axios'
 
-// Telefonda proxy ishlamaydi, shuning uchun to'g'ridan-to'g'ri API URL ishlatamiz
+// API base URL ni aniqlash
 const getBaseURL = () => {
-  // Agar VITE_API_URL berilgan bo'lsa va localhost emas bo'lsa
-  if (import.meta.env.VITE_API_URL && !window.location.hostname.includes('localhost')) {
-    return import.meta.env.VITE_API_URL + '/api'
+  const apiUrl = import.meta.env.VITE_API_URL
+  
+  // Agar VITE_API_URL berilgan bo'lsa
+  if (apiUrl) {
+    // Agar URL allaqachon /api bilan tugasa, qayta qo'shmaslik
+    return apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api'
   }
-  // Localhost da proxy orqali
+  
+  // Localhost - Vite proxy orqali
   return '/api'
 }
 

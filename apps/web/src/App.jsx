@@ -12,6 +12,8 @@ import DriverDetail from './pages/DriverDetail'
 import Trips from './pages/Trips'
 import TripDetail from './pages/TripDetail'
 import Salaries from './pages/Salaries'
+import Flights from './pages/Flights'
+import FlightDetail from './pages/FlightDetail'
 
 import DriverHome from './pages/driver/DriverHome'
 
@@ -54,6 +56,8 @@ function App() {
         <Route path="drivers/:id" element={<DriverDetail />} />
         <Route path="trips" element={<Trips />} />
         <Route path="trips/:id" element={<TripDetail />} />
+        <Route path="flights" element={<Flights />} />
+        <Route path="flights/:id" element={<FlightDetail />} />
         <Route path="salaries" element={<Salaries />} />
       </Route>
 
