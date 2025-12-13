@@ -36,7 +36,8 @@ export default function DriverDetail() {
     givenBudget: '',
     distance: '',
     fromCoords: null,
-    toCoords: null
+    toCoords: null,
+    flightType: 'domestic' // 'domestic' - mahalliy, 'international' - xalqaro
   })
 
   const fetchData = async () => {
@@ -96,6 +97,7 @@ export default function DriverDetail() {
         driverId: id,
         startOdometer: Number(flightForm.startOdometer) || 0,
         startFuel: Number(flightForm.startFuel) || 0,
+        flightType: flightForm.flightType,
         firstLeg: {
           fromCity: flightForm.fromCity,
           toCity: flightForm.toCity,
@@ -110,7 +112,7 @@ export default function DriverDetail() {
       const res = await api.post('/flights', payload)
       showToast.success('Reys ochildi!')
       setShowFlightModal(false)
-      setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
+      setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null, flightType: 'domestic' })
       // Yangi reysga o'tish
       navigate(`/dashboard/flights/${res.data.data._id}`)
     } catch (error) {
@@ -226,28 +228,77 @@ export default function DriverDetail() {
               </div>
             </div>
 
-            {/* Faol reys - davom ettirish */}
+            {/* Reys Action Card - zamonaviy dizayn */}
             {(() => {
               const activeFlight = flights.find(f => f.status === 'active')
               if (activeFlight) {
                 return (
-                  <div 
-                    onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
-                    className="mt-4 p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-2xl border border-orange-500/30 cursor-pointer hover:from-orange-500/30 hover:to-amber-500/30 transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center">
-                          <Route size={24} className="text-white" />
+                  <div className="mt-4">
+                    <div 
+                      onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
+                      className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 cursor-pointer shadow-xl shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                      </div>
+                      
+                      <div className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                            <Route size={28} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="text-white/70 text-xs uppercase tracking-wider mb-1">Faol reys</p>
+                            <p className="font-bold text-white text-lg">{activeFlight.name || 'Joriy reys'}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-white/80 text-sm flex items-center gap-1">
+                                <MapPin size={12} /> {activeFlight.legs?.length || 0} bosqich
+                              </span>
+                              <span className="text-white/80 text-sm">{activeFlight.totalDistance || 0} km</span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-white">{activeFlight.name || 'Faol reys'}</p>
-                          <p className="text-orange-300 text-sm">{activeFlight.legs?.length || 0} bosqich • {activeFlight.totalDistance || 0} km</p>
+                        <div className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm rounded-xl group-hover:bg-white/30 transition">
+                          <Play size={18} className="text-white" />
+                          <span className="text-white font-semibold">Davom ettirish</span>
+                          <ChevronRight size={18} className="text-white group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
-                      <button className="px-4 py-2 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition flex items-center gap-2">
-                        <Play size={16} /> Davom ettirish
-                      </button>
+                    </div>
+                  </div>
+                )
+              } else if (driver.status !== 'busy') {
+                return (
+                  <div className="mt-4">
+                    <div 
+                      onClick={() => setShowFlightModal(true)}
+                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                      </div>
+                      
+                      <div className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                            <Truck size={28} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="text-white/70 text-xs uppercase tracking-wider mb-1">Haydovchi bo'sh</p>
+                            <p className="font-bold text-white text-lg">Yangi reys boshlash</p>
+                            <p className="text-white/80 text-sm mt-1">Yo'nalish va xarajatlarni kiriting</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm rounded-xl group-hover:bg-white/30 transition">
+                          <Play size={18} className="text-white" />
+                          <span className="text-white font-semibold">Boshlash</span>
+                          <ChevronRight size={18} className="text-white group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )
@@ -553,6 +604,39 @@ export default function DriverDetail() {
                   </div>
                 )}
 
+                {/* Reys turi */}
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-200 mb-2">Reys turi</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        flightForm.flightType === 'domestic'
+                          ? 'border-green-500 bg-green-500/20 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">🇺🇿</div>
+                      <div className="font-semibold text-sm">O'zbekiston ichida</div>
+                      <div className="text-xs opacity-70">Mahalliy reys</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFlightForm({ ...flightForm, flightType: 'international' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        flightForm.flightType === 'international'
+                          ? 'border-blue-500 bg-blue-500/20 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">🌍</div>
+                      <div className="font-semibold text-sm">Xalqaro</div>
+                      <div className="text-xs opacity-70">Chet elga reys</div>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Odometr va Yoqilg'i */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -620,16 +704,6 @@ export default function DriverDetail() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">Mijozdan to'lov</label>
-                        <input
-                          type="number"
-                          value={flightForm.payment}
-                          onChange={(e) => setFlightForm({ ...flightForm, payment: e.target.value })}
-                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
-                          placeholder="500000"
-                        />
-                      </div>
-                      <div>
                         <label className="block text-sm text-slate-400 mb-1">Yo'l xarajati</label>
                         <input
                           type="number"
@@ -639,16 +713,16 @@ export default function DriverDetail() {
                           placeholder="200000"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-1">Masofa (km)</label>
-                      <input
-                        type="number"
-                        value={flightForm.distance}
-                        onChange={(e) => setFlightForm({ ...flightForm, distance: e.target.value })}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
-                        placeholder="300"
-                      />
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Masofa (km)</label>
+                        <input
+                          type="number"
+                          value={flightForm.distance}
+                          onChange={(e) => setFlightForm({ ...flightForm, distance: e.target.value })}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                          placeholder="300"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

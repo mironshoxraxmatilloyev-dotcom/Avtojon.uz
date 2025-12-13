@@ -83,30 +83,38 @@ export default function FlightDetail() {
   // Manzil tanlanganda (autocomplete)
   const handleFromSelect = (suggestion) => {
     const newFromCoords = { lat: suggestion.lat, lng: suggestion.lng }
-    setLegForm(prev => ({ 
-      ...prev, 
-      fromCity: suggestion.name,
-      fromCoords: newFromCoords
-    }))
-    // Agar toCoords mavjud bo'lsa, masofani hisoblash
-    if (legForm.toCoords) {
-      const dist = calculateDistance(newFromCoords.lat, newFromCoords.lng, legForm.toCoords.lat, legForm.toCoords.lng)
-      setLegForm(prev => ({ ...prev, distance: dist }))
-    }
+    setLegForm(prev => {
+      // Agar toCoords mavjud bo'lsa, masofani hisoblash
+      const dist = prev.toCoords 
+        ? calculateDistance(newFromCoords.lat, newFromCoords.lng, prev.toCoords.lat, prev.toCoords.lng)
+        : prev.distance
+      return { 
+        ...prev, 
+        fromCity: suggestion.name,
+        fromCoords: newFromCoords,
+        distance: dist
+      }
+    })
   }
 
   const handleToSelect = (suggestion) => {
     const newToCoords = { lat: suggestion.lat, lng: suggestion.lng }
-    setLegForm(prev => ({ 
-      ...prev, 
-      toCity: suggestion.name,
-      toCoords: newToCoords
-    }))
-    // Agar fromCoords mavjud bo'lsa, masofani hisoblash
-    if (legForm.fromCoords) {
-      const dist = calculateDistance(legForm.fromCoords.lat, legForm.fromCoords.lng, newToCoords.lat, newToCoords.lng)
-      setLegForm(prev => ({ ...prev, distance: dist }))
-    }
+    setLegForm(prev => {
+      // Oldingi bosqichdan fromCoords olish
+      const lastLeg = flight?.legs?.[flight.legs.length - 1]
+      const fromCoords = prev.fromCoords || lastLeg?.toCoords
+      
+      // Agar fromCoords mavjud bo'lsa, masofani hisoblash
+      const dist = fromCoords 
+        ? calculateDistance(fromCoords.lat, fromCoords.lng, newToCoords.lat, newToCoords.lng)
+        : prev.distance
+      return { 
+        ...prev, 
+        toCity: suggestion.name,
+        toCoords: newToCoords,
+        distance: dist
+      }
+    })
   }
 
   // Xaritadan tanlanganda (faqat tugash nuqtasi)

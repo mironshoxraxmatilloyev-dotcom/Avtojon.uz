@@ -58,7 +58,7 @@ export default function Drivers() {
     startFuel: '',
     fromCity: '',
     toCity: '',
-    payment: '',
+    givenBudget: '',
     distance: '',
     fromCoords: null,
     toCoords: null,
@@ -135,7 +135,7 @@ export default function Drivers() {
     startFuel: '',
     fromCity: '',
     toCity: '',
-    payment: '',
+    givenBudget: '',
     distance: '',
     fromCoords: null,
     toCoords: null,
@@ -180,7 +180,7 @@ export default function Drivers() {
           toCity: flightForm.toCity,
           fromCoords: flightForm.fromCoords,
           toCoords: flightForm.toCoords,
-          payment: Number(flightForm.payment) || 0,
+          givenBudget: Number(flightForm.givenBudget) || 0,
           distance: Number(flightForm.distance) || 0
         }
       }
@@ -938,13 +938,13 @@ export default function Drivers() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">To'lov (so'm)</label>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">Yo'l xarajati (so'm)</label>
                       <input
                         type="number"
-                        value={flightForm.payment}
-                        onChange={(e) => setFlightForm({ ...flightForm, payment: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
-                        placeholder="500000"
+                        value={flightForm.givenBudget}
+                        onChange={(e) => setFlightForm({ ...flightForm, givenBudget: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none transition"
+                        placeholder="200000"
                       />
                     </div>
                     <div>
