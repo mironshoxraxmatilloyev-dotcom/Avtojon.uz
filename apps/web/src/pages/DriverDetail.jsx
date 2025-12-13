@@ -1,44 +1,122 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { 
-  ArrowLeft, User, Phone, CreditCard, FileText, Truck, Route, MapPin, 
+  ArrowLeft, User, Phone, CreditCard, Truck, Route, MapPin, 
   Calendar, Wallet, TrendingUp, TrendingDown, CheckCircle, Clock, 
-  Activity, Star, Award, ChevronRight, Sparkles, Shield
+  Activity, Star, Award, ChevronRight, Sparkles, Shield, X, Play, Gauge, Fuel
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
+import { useAuthStore } from '../store/authStore'
+import { useAlert } from '../components/ui'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 export default function DriverDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isDemo } = useAuthStore()
+  const alert = useAlert()
+  const isDemoMode = isDemo()
+  
   const [driver, setDriver] = useState(null)
   const [trips, setTrips] = useState([])
+  const [flights, setFlights] = useState([])
   const [vehicle, setVehicle] = useState(null)
   const [loading, setLoading] = useState(true)
+  
+  // Reys ochish modal
+  const [showFlightModal, setShowFlightModal] = useState(false)
+  const [flightForm, setFlightForm] = useState({
+    startOdometer: '',
+    startFuel: '',
+    fromCity: '',
+    toCity: '',
+    payment: '',
+    givenBudget: '',
+    distance: '',
+    fromCoords: null,
+    toCoords: null
+  })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [driverRes, tripsRes, vehiclesRes] = await Promise.all([
-          api.get(`/drivers/${id}`),
-          api.get('/trips', { params: { driverId: id } }),
-          api.get('/vehicles')
-        ])
-        setDriver(driverRes.data.data)
-        setTrips(tripsRes.data.data || [])
-        const assignedVehicle = (vehiclesRes.data.data || []).find(v => 
-          v.currentDriver === id || v.currentDriver?._id === id
-        )
-        setVehicle(assignedVehicle)
-      } catch (error) {
-        showToast.error('Shofyor topilmadi')
-        navigate('/dashboard/drivers')
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = async () => {
+    try {
+      const [driverRes, tripsRes, vehiclesRes, flightsRes] = await Promise.all([
+        api.get(`/drivers/${id}`),
+        api.get('/trips', { params: { driverId: id } }),
+        api.get('/vehicles'),
+        api.get('/flights', { params: { driverId: id } })
+      ])
+      setDriver(driverRes.data.data)
+      setTrips(tripsRes.data.data || [])
+      setFlights(flightsRes.data.data || [])
+      const assignedVehicle = (vehiclesRes.data.data || []).find(v => 
+        v.currentDriver === id || v.currentDriver?._id === id
+      )
+      setVehicle(assignedVehicle)
+    } catch (error) {
+      showToast.error('Shofyor topilmadi')
+      navigate('/dashboard/drivers')
+    } finally {
+      setLoading(false)
     }
-    fetchData()
-  }, [id, navigate])
+  }
+
+  useEffect(() => { fetchData() }, [id])
+
+  // Masofa hisoblash
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return Math.round(R * c)
+  }
+
+  // Reys ochish
+  const handleStartFlight = async (e) => {
+    e.preventDefault()
+    
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      setShowFlightModal(false)
+      return
+    }
+
+    if (!flightForm.fromCity || !flightForm.toCity) {
+      showToast.error('Qayerdan va qayerga shaharlarini kiriting!')
+      return
+    }
+
+    try {
+      const payload = {
+        driverId: id,
+        startOdometer: Number(flightForm.startOdometer) || 0,
+        startFuel: Number(flightForm.startFuel) || 0,
+        firstLeg: {
+          fromCity: flightForm.fromCity,
+          toCity: flightForm.toCity,
+          fromCoords: flightForm.fromCoords,
+          toCoords: flightForm.toCoords,
+          payment: Number(flightForm.payment) || 0,
+          givenBudget: Number(flightForm.givenBudget) || 0,
+          distance: Number(flightForm.distance) || 0
+        }
+      }
+
+      const res = await api.post('/flights', payload)
+      showToast.success('Reys ochildi!')
+      setShowFlightModal(false)
+      setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
+      // Yangi reysga o'tish
+      navigate(`/dashboard/flights/${res.data.data._id}`)
+    } catch (error) {
+      showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
 
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
@@ -402,12 +480,22 @@ export default function DriverDetail() {
               Tezkor amallar
             </h3>
             <div className="space-y-3">
+              {driver.status !== 'busy' && (
+                <button 
+                  onClick={() => setShowFlightModal(true)}
+                  className="w-full p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 rounded-xl text-left transition flex items-center gap-3 border border-emerald-500/30"
+                >
+                  <Play size={20} className="text-emerald-400" />
+                  <span className="font-medium">Reys ochish</span>
+                  <ChevronRight size={18} className="ml-auto text-emerald-400" />
+                </button>
+              )}
               <button 
                 onClick={() => navigate('/dashboard/trips')}
                 className="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl text-left transition flex items-center gap-3"
               >
                 <Route size={20} className="text-blue-400" />
-                <span>Yangi reys yaratish</span>
+                <span>Barcha reyslar</span>
                 <ChevronRight size={18} className="ml-auto text-slate-400" />
               </button>
               <button 
@@ -422,6 +510,157 @@ export default function DriverDetail() {
           </div>
         </div>
       </div>
+
+      {/* Reys ochish Modal */}
+      {showFlightModal && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="absolute inset-0" onClick={() => setShowFlightModal(false)} />
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="p-6 border-b border-white/10">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <Play className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Yangi reys ochish</h2>
+                      <p className="text-emerald-300 text-sm">{driver.fullName}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowFlightModal(false)} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleStartFlight} className="p-6 space-y-5">
+                {/* Mashina info */}
+                {vehicle && (
+                  <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <div className="flex items-center gap-3">
+                      <Truck size={20} className="text-blue-400" />
+                      <div>
+                        <p className="font-semibold text-white">{vehicle.plateNumber}</p>
+                        <p className="text-sm text-blue-300">{vehicle.brand}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Odometr va Yoqilg'i */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-emerald-200 mb-2">
+                      <Gauge size={14} className="inline mr-1" /> Odometr (km)
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startOdometer}
+                      onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      placeholder="123456"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-emerald-200 mb-2">
+                      <Fuel size={14} className="inline mr-1" /> Yoqilg'i (L)
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startFuel}
+                      onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+
+                {/* Birinchi bosqich */}
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-sm font-semibold text-emerald-300 mb-3">Birinchi bosqich</p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Qayerdan *</label>
+                      <AddressAutocomplete
+                        value={flightForm.fromCity}
+                        onChange={(val) => setFlightForm({ ...flightForm, fromCity: val })}
+                        onSelect={(s) => {
+                          setFlightForm(prev => ({ ...prev, fromCity: s.name, fromCoords: { lat: s.lat, lng: s.lng } }))
+                          if (flightForm.toCoords) {
+                            const dist = calculateDistance(s.lat, s.lng, flightForm.toCoords.lat, flightForm.toCoords.lng)
+                            setFlightForm(prev => ({ ...prev, distance: dist }))
+                          }
+                        }}
+                        placeholder="Toshkent"
+                        focusColor="green"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Qayerga *</label>
+                      <AddressAutocomplete
+                        value={flightForm.toCity}
+                        onChange={(val) => setFlightForm({ ...flightForm, toCity: val })}
+                        onSelect={(s) => {
+                          setFlightForm(prev => ({ ...prev, toCity: s.name, toCoords: { lat: s.lat, lng: s.lng } }))
+                          if (flightForm.fromCoords) {
+                            const dist = calculateDistance(flightForm.fromCoords.lat, flightForm.fromCoords.lng, s.lat, s.lng)
+                            setFlightForm(prev => ({ ...prev, distance: dist }))
+                          }
+                        }}
+                        placeholder="Samarqand"
+                        focusColor="green"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Mijozdan to'lov</label>
+                        <input
+                          type="number"
+                          value={flightForm.payment}
+                          onChange={(e) => setFlightForm({ ...flightForm, payment: e.target.value })}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                          placeholder="500000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Yo'l xarajati</label>
+                        <input
+                          type="number"
+                          value={flightForm.givenBudget}
+                          onChange={(e) => setFlightForm({ ...flightForm, givenBudget: e.target.value })}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-sm"
+                          placeholder="200000"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Masofa (km)</label>
+                      <input
+                        type="number"
+                        value={flightForm.distance}
+                        onChange={(e) => setFlightForm({ ...flightForm, distance: e.target.value })}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                        placeholder="300"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition flex items-center justify-center gap-2"
+                >
+                  <Play size={20} /> Reysni boshlash
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

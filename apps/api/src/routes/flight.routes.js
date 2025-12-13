@@ -93,6 +93,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
         fromCoords: firstLeg.fromCoords || null,
         toCoords: firstLeg.toCoords || null,
         payment: firstLeg.payment || 0,
+        givenBudget: firstLeg.givenBudget || 0, // Yo'l xarajatlari uchun berilgan pul
         distance: firstLeg.distance || 0,
         status: 'in_progress',
         startedAt: new Date()
@@ -126,7 +127,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
 // Yangi bosqich (leg) qo'shish
 router.post('/:id/legs', protect, businessOnly, async (req, res) => {
   try {
-    const { fromCity, toCity, fromCoords, toCoords, payment, distance, note } = req.body;
+    const { fromCity, toCity, fromCoords, toCoords, payment, givenBudget, distance, note } = req.body;
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
@@ -151,6 +152,7 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
       fromCoords: fromCoords || (lastLeg ? lastLeg.toCoords : null),
       toCoords: toCoords || null,
       payment: payment || 0,
+      givenBudget: givenBudget || 0, // Yo'l xarajatlari uchun berilgan pul
       distance: distance || 0,
       status: 'in_progress',
       startedAt: new Date(),
@@ -172,24 +174,33 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
 // Xarajat qo'shish
 router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
   try {
-    const { type, amount, description, legIndex } = req.body;
+    const { type, amount, description, legIndex, legId } = req.body;
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
       return res.status(404).json({ success: false, message: 'Reys topilmadi' });
     }
 
+    // Agar legIndex berilmagan bo'lsa, oxirgi bosqichga biriktirish
+    const actualLegIndex = legIndex !== undefined ? legIndex : (flight.legs.length - 1);
+    const actualLegId = legId || (flight.legs[actualLegIndex] ? flight.legs[actualLegIndex]._id : null);
+
     flight.expenses.push({
       type,
       amount,
       description,
-      legIndex,
+      legIndex: actualLegIndex,
+      legId: actualLegId,
       date: new Date()
     });
 
     await flight.save();
 
-    res.json({ success: true, data: flight });
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

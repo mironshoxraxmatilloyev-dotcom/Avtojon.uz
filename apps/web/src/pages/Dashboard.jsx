@@ -793,7 +793,11 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
                   <p className="text-xs text-gray-400">
                     {flight.legs?.length || 0} bosqich • {flight.totalDistance || 0} km
-                    {flight.status === 'completed' && ` • Foyda: ${new Intl.NumberFormat('uz-UZ').format(flight.profit || 0)} so'm`}
+                    {flight.status === 'completed' && (
+                      <span className={flight.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                        {` • ${flight.profit >= 0 ? 'Foyda' : 'Zarar'}: ${new Intl.NumberFormat('uz-UZ').format(Math.abs(flight.profit || 0))} so'm`}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">

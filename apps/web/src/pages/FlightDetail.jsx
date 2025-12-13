@@ -38,7 +38,7 @@ export default function FlightDetail() {
 
   // Forms
   const [legForm, setLegForm] = useState({ 
-    fromCity: '', toCity: '', payment: '', distance: '',
+    fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '',
     fromCoords: null, toCoords: null
   })
   const [expenseForm, setExpenseForm] = useState({ type: 'fuel', amount: '', description: '' })
@@ -149,11 +149,12 @@ export default function FlightDetail() {
         fromCoords: legForm.fromCoords,
         toCoords: legForm.toCoords,
         payment: Number(legForm.payment) || 0,
+        givenBudget: Number(legForm.givenBudget) || 0,
         distance: Number(legForm.distance) || 0
       })
       showToast.success('Yangi bosqich qo\'shildi!')
       setShowLegModal(false)
-      setLegForm({ fromCity: '', toCity: '', payment: '', distance: '', fromCoords: null, toCoords: null })
+      setLegForm({ fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
       fetchFlight()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')
@@ -269,7 +270,7 @@ export default function FlightDetail() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
@@ -283,23 +284,38 @@ export default function FlightDetail() {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-                  <Navigation size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{flight.totalDistance || 0}</p>
-                  <p className="text-emerald-200 text-xs">km masofa</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
                   <TrendingUp size={18} className="text-white" />
                 </div>
                 <div>
                   <p className="text-xl font-bold">{formatMoney(flight.totalPayment)}</p>
-                  <p className="text-emerald-200 text-xs">so'm to'lov</p>
+                  <p className="text-emerald-200 text-xs">Mijozdan</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                  <Wallet size={18} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-orange-300">{formatMoney(flight.totalGivenBudget)}</p>
+                  <p className="text-emerald-200 text-xs">Yo'l uchun</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  (flight.finalBalance || 0) >= 0 ? 'bg-gradient-to-br from-cyan-400 to-cyan-600' : 'bg-gradient-to-br from-red-400 to-red-600'
+                }`}>
+                  <DollarSign size={18} className="text-white" />
+                </div>
+                <div>
+                  <p className={`text-xl font-bold ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-300' : 'text-red-300'}`}>
+                    {formatMoney(Math.abs(flight.finalBalance || 0))}
+                  </p>
+                  <p className="text-emerald-200 text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
                 </div>
               </div>
             </div>
@@ -308,13 +324,13 @@ export default function FlightDetail() {
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   flight.profit >= 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-red-600'
                 }`}>
-                  <Wallet size={18} className="text-white" />
+                  <Navigation size={18} className="text-white" />
                 </div>
                 <div>
                   <p className={`text-xl font-bold ${flight.profit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    {formatMoney(flight.profit)}
+                    {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))}
                   </p>
-                  <p className="text-emerald-200 text-xs">so'm foyda</p>
+                  <p className="text-emerald-200 text-xs">{flight.profit >= 0 ? 'Sof foyda' : 'Zarar'}</p>
                 </div>
               </div>
             </div>
@@ -398,30 +414,60 @@ export default function FlightDetail() {
           {flight.legs?.map((leg, idx) => (
             <div key={leg._id || idx} className="relative">
               {idx < flight.legs.length - 1 && (
-                <div className="absolute left-5 top-14 w-0.5 h-8 bg-gray-200"></div>
+                <div className="absolute left-5 top-20 w-0.5 h-12 bg-gray-200"></div>
               )}
-              <div className="flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
-                  leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                }`}>
-                  {idx + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900">{leg.fromCity}</span>
-                    <ChevronRight size={16} className="text-gray-400" />
-                    <span className="font-semibold text-gray-900">{leg.toCity}</span>
+              <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
+                    leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                  }`}>
+                    {idx + 1}
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                    <span>{leg.distance || 0} km</span>
-                    {leg.status === 'completed' && <span className="text-emerald-600">✓ Tugatilgan</span>}
-                    {leg.status === 'in_progress' && <span className="text-blue-600">🚛 Yo'lda</span>}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">{leg.fromCity}</span>
+                      <ChevronRight size={16} className="text-gray-400" />
+                      <span className="font-semibold text-gray-900">{leg.toCity}</span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                      <span>{leg.distance || 0} km</span>
+                      {leg.status === 'completed' && <span className="text-emerald-600">✓ Tugatilgan</span>}
+                      {leg.status === 'in_progress' && <span className="text-blue-600">🚛 Yo'lda</span>}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-emerald-600">{formatMoney(leg.payment)}</p>
+                    <p className="text-xs text-gray-400">mijozdan</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-emerald-600">{formatMoney(leg.payment)}</p>
-                  <p className="text-xs text-gray-400">so'm</p>
-                </div>
+                
+                {/* Budget va Balance */}
+                {(leg.givenBudget > 0 || leg.previousBalance > 0) && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-4 gap-2 text-xs">
+                    {leg.previousBalance > 0 && (
+                      <div className="text-center p-2 bg-blue-50 rounded-lg">
+                        <p className="text-blue-600 font-semibold">{formatMoney(leg.previousBalance)}</p>
+                        <p className="text-blue-400">Qoldiq</p>
+                      </div>
+                    )}
+                    <div className="text-center p-2 bg-orange-50 rounded-lg">
+                      <p className="text-orange-600 font-semibold">{formatMoney(leg.givenBudget)}</p>
+                      <p className="text-orange-400">Berildi</p>
+                    </div>
+                    <div className="text-center p-2 bg-red-50 rounded-lg">
+                      <p className="text-red-600 font-semibold">{formatMoney(leg.spentAmount)}</p>
+                      <p className="text-red-400">Sarflandi</p>
+                    </div>
+                    <div className={`text-center p-2 rounded-lg ${leg.balance >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                      <p className={`font-semibold ${leg.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {formatMoney(Math.abs(leg.balance))}
+                      </p>
+                      <p className={leg.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                        {leg.balance >= 0 ? 'Qoldiq' : 'Kamomad'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -523,9 +569,11 @@ export default function FlightDetail() {
             </div>
             <div className="text-center">
               <p className={`text-2xl font-bold ${flight.profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                {formatMoney(flight.profit)}
+                {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))}
               </p>
-              <p className="text-sm text-gray-600">Sof foyda</p>
+              <p className={`text-sm ${flight.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                {flight.profit >= 0 ? 'Sof foyda' : 'Zarar'}
+              </p>
             </div>
           </div>
         </div>
@@ -597,26 +645,48 @@ export default function FlightDetail() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">To'lov (so'm)</label>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Mijozdan to'lov</label>
                     <input
                       type="number"
                       value={legForm.payment}
                       onChange={(e) => setLegForm({ ...legForm, payment: e.target.value })}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="200000"
+                      placeholder="500000"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Masofa (km)</label>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Yo'l xarajati</label>
                     <input
                       type="number"
-                      value={legForm.distance}
-                      onChange={(e) => setLegForm({ ...legForm, distance: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="150"
+                      value={legForm.givenBudget}
+                      onChange={(e) => setLegForm({ ...legForm, givenBudget: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                      placeholder="200000"
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Masofa (km)</label>
+                  <input
+                    type="number"
+                    value={legForm.distance}
+                    onChange={(e) => setLegForm({ ...legForm, distance: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    placeholder="150"
+                  />
+                </div>
+
+                {/* Oldingi qoldiq ko'rsatish */}
+                {flight?.legs?.length > 0 && flight.legs[flight.legs.length - 1].balance > 0 && (
+                  <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-emerald-300 text-sm">Oldingi qoldiq:</span>
+                      <span className="text-emerald-400 font-bold">+{formatMoney(flight.legs[flight.legs.length - 1].balance)} so'm</span>
+                    </div>
+                    <p className="text-xs text-emerald-300/70 mt-1">Bu summa avtomatik qo'shiladi</p>
+                  </div>
+                )}
 
                 <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition">
                   Qo'shish
@@ -738,9 +808,9 @@ export default function FlightDetail() {
                     <span className="text-red-400 font-bold">{formatMoney(flight.totalExpenses)} so'm</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
-                    <span className="text-white font-semibold">Foyda:</span>
+                    <span className="text-white font-semibold">{flight.profit >= 0 ? 'Foyda:' : 'Zarar:'}</span>
                     <span className={`font-bold ${flight.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {formatMoney(flight.profit)} so'm
+                      {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))} so'm
                     </span>
                   </div>
                 </div>

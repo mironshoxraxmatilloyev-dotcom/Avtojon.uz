@@ -13,7 +13,12 @@ const legSchema = new mongoose.Schema({
     lat: { type: Number, default: null }, 
     lng: { type: Number, default: null } 
   },
-  payment: { type: Number, default: 0 }, // Bu bosqich uchun to'lov (so'm)
+  payment: { type: Number, default: 0 }, // Mijozdan olingan to'lov (so'm)
+  givenBudget: { type: Number, default: 0 }, // Yo'l xarajatlari uchun berilgan pul
+  previousBalance: { type: Number, default: 0 }, // Oldingi bosqichdan qoldiq
+  totalBudget: { type: Number, default: 0 }, // Jami budget = givenBudget + previousBalance
+  spentAmount: { type: Number, default: 0 }, // Sarflangan summa (xarajatlar)
+  balance: { type: Number, default: 0 }, // Qoldiq = totalBudget - spentAmount
   distance: { type: Number, default: 0 }, // km
   status: {
     type: String,
@@ -34,7 +39,8 @@ const expenseSchema = new mongoose.Schema({
   },
   amount: { type: Number, required: true },
   description: String,
-  legIndex: Number, // Qaysi bosqichda bo'lgan (ixtiyoriy)
+  legId: { type: mongoose.Schema.Types.ObjectId, default: null }, // Qaysi bosqichga tegishli
+  legIndex: { type: Number, default: null }, // Bosqich indeksi (0, 1, 2...)
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
@@ -74,10 +80,12 @@ const flightSchema = new mongoose.Schema({
   expenses: [expenseSchema],
   
   // Hisob-kitob
-  totalPayment: { type: Number, default: 0 }, // Jami to'lov (barcha bosqichlar)
-  totalExpenses: { type: Number, default: 0 }, // Jami xarajatlar
+  totalPayment: { type: Number, default: 0 }, // Jami to'lov (mijozdan)
+  totalGivenBudget: { type: Number, default: 0 }, // Jami berilgan yo'l xarajati
+  totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar)
   totalDistance: { type: Number, default: 0 }, // Jami masofa
-  profit: { type: Number, default: 0 }, // Foyda = totalPayment - totalExpenses
+  finalBalance: { type: Number, default: 0 }, // Oxirgi qoldiq (qaytarilishi kerak)
+  profit: { type: Number, default: 0 }, // Foyda = totalPayment - totalGivenBudget
   
   status: {
     type: String,
@@ -92,8 +100,37 @@ const flightSchema = new mongoose.Schema({
 
 // Saqlashdan oldin hisob-kitob
 flightSchema.pre('save', function(next) {
-  // Jami to'lov
+  // Har bir bosqich uchun xarajatlar va balance hisoblash
+  let previousBalance = 0;
+  
+  this.legs.forEach((leg, index) => {
+    // Bu bosqichga tegishli xarajatlar
+    const legExpenses = this.expenses.filter(exp => 
+      exp.legIndex === index || (exp.legId && exp.legId.toString() === leg._id.toString())
+    );
+    const spentAmount = legExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    
+    // Oldingi qoldiq
+    leg.previousBalance = previousBalance;
+    
+    // Jami budget = berilgan pul + oldingi qoldiq
+    leg.totalBudget = (leg.givenBudget || 0) + previousBalance;
+    
+    // Sarflangan
+    leg.spentAmount = spentAmount;
+    
+    // Qoldiq = jami budget - sarflangan
+    leg.balance = leg.totalBudget - spentAmount;
+    
+    // Keyingi bosqich uchun qoldiq
+    previousBalance = leg.balance;
+  });
+  
+  // Jami to'lov (mijozdan)
   this.totalPayment = this.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+  
+  // Jami berilgan budget
+  this.totalGivenBudget = this.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
   
   // Jami masofa
   this.totalDistance = this.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
@@ -101,8 +138,11 @@ flightSchema.pre('save', function(next) {
   // Jami xarajatlar
   this.totalExpenses = this.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   
-  // Foyda
-  this.profit = this.totalPayment - this.totalExpenses;
+  // Oxirgi qoldiq (haydovchi qaytarishi kerak)
+  this.finalBalance = this.legs.length > 0 ? this.legs[this.legs.length - 1].balance : 0;
+  
+  // Foyda = Mijozdan olgan - Yo'l uchun bergan
+  this.profit = this.totalPayment - this.totalGivenBudget;
   
   // Reys nomi
   if (this.legs.length > 0) {
