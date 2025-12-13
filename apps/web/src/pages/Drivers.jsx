@@ -475,8 +475,8 @@ export default function Drivers() {
                 )}
               </div>
 
-              {/* Active Flight Info yoki Bo'sh holat */}
-              {driver.status === 'busy' && activeFlights[driver._id] ? (
+              {/* Active Flight Info - faqat reysda bo'lganda */}
+              {driver.status === 'busy' && activeFlights[driver._id] && (
                 <div 
                   className="p-3 rounded-xl mb-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 cursor-pointer hover:shadow-md transition"
                   onClick={(e) => {
@@ -492,24 +492,7 @@ export default function Drivers() {
                     <span className="text-xs text-orange-500">{activeFlights[driver._id].legs?.length || 0} bosqich →</span>
                   </div>
                 </div>
-              ) : driver.status === 'free' ? (
-                <div 
-                  className="p-3 rounded-xl mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 border-dashed cursor-pointer hover:shadow-md hover:border-solid transition"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedDriver(driver)
-                    setShowFlightModal(true)
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Play size={16} className="text-emerald-600" />
-                      <span className="font-medium text-emerald-700">Reys ochish</span>
-                    </div>
-                    <span className="text-xs text-emerald-500">+ Yangi reys</span>
-                  </div>
-                </div>
-              ) : null}
+              )}
 
 
               {/* Footer */}

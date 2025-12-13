@@ -225,6 +225,35 @@ export default function DriverDetail() {
                 <p className="text-blue-300 text-xs sm:text-sm">Jami daromad</p>
               </div>
             </div>
+
+            {/* Faol reys - davom ettirish */}
+            {(() => {
+              const activeFlight = flights.find(f => f.status === 'active')
+              if (activeFlight) {
+                return (
+                  <div 
+                    onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
+                    className="mt-4 p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-2xl border border-orange-500/30 cursor-pointer hover:from-orange-500/30 hover:to-amber-500/30 transition"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center">
+                          <Route size={24} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-white">{activeFlight.name || 'Faol reys'}</p>
+                          <p className="text-orange-300 text-sm">{activeFlight.legs?.length || 0} bosqich • {activeFlight.totalDistance || 0} km</p>
+                        </div>
+                      </div>
+                      <button className="px-4 py-2 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition flex items-center gap-2">
+                        <Play size={16} /> Davom ettirish
+                      </button>
+                    </div>
+                  </div>
+                )
+              }
+              return null
+            })()}
           </div>
         </div>
       </div>
