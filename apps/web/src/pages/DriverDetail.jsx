@@ -326,7 +326,7 @@ export default function DriverDetail() {
             </div>
           </div>
 
-          {/* Trips History */}
+          {/* Flights History */}
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -335,42 +335,47 @@ export default function DriverDetail() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Reyslar tarixi</h2>
-                  <p className="text-gray-500 text-sm">{trips.length} ta reys</p>
+                  <p className="text-gray-500 text-sm">{flights.length} ta reys</p>
                 </div>
               </div>
-              {activeTrips.length > 0 && (
-                <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium animate-pulse">
-                  {activeTrips.length} ta faol reys
+              {flights.filter(f => f.status === 'active').length > 0 && (
+                <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl text-sm font-medium animate-pulse">
+                  {flights.filter(f => f.status === 'active').length} ta faol reys
                 </span>
               )}
             </div>
 
-            {trips.length > 0 ? (
+            {flights.length > 0 ? (
               <div className="space-y-3">
-                {trips.slice(0, 10).map((trip) => (
+                {flights.slice(0, 10).map((flight) => (
                   <div 
-                    key={trip._id} 
-                    onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
+                    key={flight._id} 
+                    onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
                     className="group flex items-center gap-4 p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-blue-200"
                   >
-                    <div className={`w-12 h-12 bg-gradient-to-br ${statusConfig[trip.status]?.gradient} rounded-xl flex items-center justify-center shadow-lg`}>
-                      <MapPin size={20} className="text-white" />
+                    <div className={`w-12 h-12 bg-gradient-to-br ${
+                      flight.status === 'active' ? 'from-orange-500 to-amber-600' : 
+                      flight.status === 'completed' ? 'from-emerald-500 to-teal-600' : 'from-gray-400 to-gray-500'
+                    } rounded-xl flex items-center justify-center shadow-lg`}>
+                      <Route size={20} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{trip.startAddress} → {trip.endAddress}</p>
+                      <p className="font-semibold text-gray-900 truncate">{flight.name || 'Reys'}</p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-sm text-gray-500">{formatDate(trip.createdAt)}</span>
-                        {trip.estimatedDistance && (
-                          <span className="text-sm text-gray-400">• {trip.estimatedDistance} km</span>
-                        )}
+                        <span className="text-sm text-gray-500">{formatDate(flight.createdAt)}</span>
+                        <span className="text-sm text-gray-400">• {flight.totalDistance || 0} km</span>
+                        <span className="text-sm text-gray-400">• {flight.legs?.length || 0} bosqich</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${statusConfig[trip.status]?.color}`}>
-                        {statusConfig[trip.status]?.label}
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                        flight.status === 'active' ? 'bg-orange-100 text-orange-700' : 
+                        flight.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
                       </span>
-                      {trip.tripPayment > 0 && (
-                        <p className="text-sm font-bold text-gray-900 mt-2">{formatMoney(trip.tripPayment)} so'm</p>
+                      {flight.totalPayment > 0 && (
+                        <p className="text-sm font-bold text-emerald-600 mt-2">{formatMoney(flight.totalPayment)} so'm</p>
                       )}
                     </div>
                     <ChevronRight size={20} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
@@ -415,30 +420,6 @@ export default function DriverDetail() {
                   </div>
                 </div>
               </div>
-
-              <div className="group p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl border border-gray-100 hover:border-purple-200 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                    <CreditCard size={20} className="text-purple-600 group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Passport</p>
-                    <p className="font-semibold text-gray-900">{driver.passport || 'Kiritilmagan'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
-                    <Shield size={20} className="text-emerald-600 group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Guvohnoma</p>
-                    <p className="font-semibold text-gray-900">{driver.licenseNumber || 'Kiritilmagan'}</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -468,15 +449,9 @@ export default function DriverDetail() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-gray-50 rounded-xl text-center">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Yil</p>
-                    <p className="text-xl font-bold text-gray-900">{vehicle.year || '-'}</p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-xl text-center">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Rang</p>
-                    <p className="text-xl font-bold text-gray-900">{vehicle.color || '-'}</p>
-                  </div>
+                <div className="p-4 bg-gray-50 rounded-xl text-center">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Yil</p>
+                  <p className="text-xl font-bold text-gray-900">{vehicle.year || '-'}</p>
                 </div>
 
                 {vehicle.capacity && (
