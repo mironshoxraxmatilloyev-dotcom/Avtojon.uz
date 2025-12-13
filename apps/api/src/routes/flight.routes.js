@@ -45,7 +45,7 @@ router.get('/:id', protect, async (req, res) => {
 // Yangi reys ochish (boshlash)
 router.post('/', protect, businessOnly, async (req, res) => {
   try {
-    const { driverId, vehicleId, startOdometer, startFuel, firstLeg, notes } = req.body;
+    const { driverId, vehicleId, startOdometer, startFuel, firstLeg, notes, flightType } = req.body;
 
     // Shofyor tekshirish
     const driver = await Driver.findOne({ _id: driverId, user: req.user._id });
@@ -79,6 +79,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
       vehicle: vehicle._id,
       startOdometer: startOdometer || 0,
       startFuel: startFuel || 0,
+      flightType: flightType || 'domestic',
       status: 'active',
       startedAt: new Date(),
       notes,
