@@ -42,6 +42,7 @@ export default function Flights() {
   const [legForm, setLegForm] = useState({ toCity: '', payment: '', distance: '' })
   const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '', quantity: '' })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
+  const [submitting, setSubmitting] = useState(false)
 
   const fetchData = useCallback(async () => {
     if (isDemoMode) {
@@ -92,11 +93,13 @@ export default function Flights() {
   // Xarajat qo'shish
   const handleAddExpense = async (e) => {
     e.preventDefault()
+    if (submitting) return
     if (!expenseForm.amount) {
       showToast.error('Summani kiriting!')
       return
     }
 
+    setSubmitting(true)
     try {
       const isFuel = ['fuel_benzin', 'fuel_diesel', 'fuel_gas'].includes(expenseForm.type)
       await api.post(`/flights/${selectedFlight._id}/expenses`, {
@@ -112,6 +115,8 @@ export default function Flights() {
       fetchData()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -565,8 +570,17 @@ export default function Flights() {
                     placeholder="Qo'shimcha ma'lumot..."
                   />
                 </div>
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold">
-                  Qo'shish
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saqlanmoqda...
+                    </>
+                  ) : 'Qo\'shish'}
                 </button>
               </form>
             </div>

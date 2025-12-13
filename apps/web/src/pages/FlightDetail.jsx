@@ -45,6 +45,7 @@ export default function FlightDetail() {
   })
   const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '', quantity: '' })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
+  const [submitting, setSubmitting] = useState(false)
 
   const fetchFlight = async () => {
     try {
@@ -174,11 +175,13 @@ export default function FlightDetail() {
   // Xarajat qo'shish
   const handleAddExpense = async (e) => {
     e.preventDefault()
+    if (submitting) return
     if (!expenseForm.amount) {
       showToast.error('Summani kiriting!')
       return
     }
 
+    setSubmitting(true)
     try {
       const isFuel = ['fuel_benzin', 'fuel_diesel', 'fuel_gas'].includes(expenseForm.type)
       await api.post(`/flights/${id}/expenses`, {
@@ -194,6 +197,8 @@ export default function FlightDetail() {
       fetchFlight()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -790,8 +795,17 @@ export default function FlightDetail() {
                     placeholder="Qo'shimcha ma'lumot..."
                   />
                 </div>
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold hover:shadow-lg transition">
-                  Qo'shish
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saqlanmoqda...
+                    </>
+                  ) : 'Qo\'shish'}
                 </button>
               </form>
             </div>
