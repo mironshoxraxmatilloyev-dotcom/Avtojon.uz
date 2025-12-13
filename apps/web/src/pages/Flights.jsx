@@ -229,46 +229,49 @@ export default function Flights() {
           <div key={flight._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {/* Flight Header */}
             <div 
-              className="p-5 cursor-pointer hover:bg-gray-50 transition"
+              className="p-3 sm:p-5 cursor-pointer hover:bg-gray-50 transition"
               onClick={() => setExpandedFlight(expandedFlight === flight._id ? null : flight._id)}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold ${
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${
                     flight.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'
                   }`}>
                     {flight.driver?.fullName?.charAt(0) || '?'}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{flight.name || 'Yangi reys'}</h3>
-                    <p className="text-sm text-gray-500">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Yangi reys'}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">
+                      {flight.flightType === 'international' ? '🌍' : '🇺🇿'} {flight.driver?.fullName} • {flight.vehicle?.plateNumber}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig[flight.status]?.color}`}>
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${statusConfig[flight.status]?.color}`}>
                     {statusConfig[flight.status]?.label}
                   </span>
-                  {expandedFlight === flight._id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  {expandedFlight === flight._id ? <ChevronUp size={18} className="sm:hidden" /> : <ChevronDown size={18} className="sm:hidden" />}
+                  {expandedFlight === flight._id ? <ChevronUp size={20} className="hidden sm:block" /> : <ChevronDown size={20} className="hidden sm:block" />}
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-3 sm:mt-4">
                 <div className="text-center">
-                  <p className="text-xs text-gray-400">Bosqichlar</p>
-                  <p className="font-bold text-gray-900">{flight.legs?.length || 0}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Bosqichlar</p>
+                  <p className="font-bold text-gray-900 text-sm sm:text-base">{flight.legs?.length || 0}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-400">Masofa</p>
-                  <p className="font-bold text-gray-900">{flight.totalDistance || 0} km</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Masofa</p>
+                  <p className="font-bold text-gray-900 text-sm sm:text-base">{flight.totalDistance || 0} km</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-400">To'lov</p>
-                  <p className="font-bold text-green-600">{formatMoney(flight.totalPayment)}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">To'lov</p>
+                  <p className="font-bold text-green-600 text-xs sm:text-base truncate">{formatMoney(flight.totalPayment)}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-400">Foyda</p>
-                  <p className={`font-bold ${flight.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Foyda</p>
+                  <p className={`font-bold text-xs sm:text-base truncate ${flight.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(flight.profit)}
                   </p>
                 </div>
@@ -361,24 +364,31 @@ export default function Flights() {
 
                 {/* Actions */}
                 {flight.status === 'active' && (
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     <button
                       onClick={() => { setSelectedFlight(flight); setShowLegModal(true) }}
-                      className="flex-1 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl font-medium hover:bg-green-700 transition flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                     >
-                      <Plus size={18} /> Bosqich qo'shish
+                      <Plus size={16} className="sm:hidden" />
+                      <Plus size={18} className="hidden sm:block" />
+                      <span className="sm:hidden">Bosqich</span>
+                      <span className="hidden sm:inline">Bosqich qo'shish</span>
                     </button>
                     <button
                       onClick={() => { setSelectedFlight(flight); setShowExpenseModal(true) }}
-                      className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 sm:py-3 bg-orange-600 text-white rounded-lg sm:rounded-xl font-medium hover:bg-orange-700 transition flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                     >
-                      <DollarSign size={18} /> Xarajat
+                      <DollarSign size={16} className="sm:hidden" />
+                      <DollarSign size={18} className="hidden sm:block" />
+                      Xarajat
                     </button>
                     <button
                       onClick={() => { setSelectedFlight(flight); setShowCompleteModal(true) }}
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl font-medium hover:bg-blue-700 transition flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                     >
-                      <CheckCircle size={18} /> Yopish
+                      <CheckCircle size={16} className="sm:hidden" />
+                      <CheckCircle size={18} className="hidden sm:block" />
+                      Yopish
                     </button>
                   </div>
                 )}

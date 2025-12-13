@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+/* Phone Input Styles */
+.react-tel-input .form-control:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.react-tel-input .country-list {
+  border-radius: 12px !important;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.react-tel-input .country-list .country:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.react-tel-input .country-list .country.highlight {
+  background-color: #eff6ff !important;
+}
+
+.react-tel-input .selected-flag:hover,
+.react-tel-input .selected-flag:focus {
+  background-color: #f3f4f6 !important;
+}
+
+/* Dark theme phone input */
+.dark-phone .react-tel-input .country-list {
+  background-color: #1e293b !important;
+}
+
+.dark-phone .react-tel-input .country-list .country {
+  color: #fff !important;
+}
+
+.dark-phone .react-tel-input .country-list .country:hover {
+  background-color: #334155 !important;
+}
+
+.dark-phone .react-tel-input .search-box {
+  background-color: #334155 !important;
+  color: #fff !important;
+}
+
+/* Toast Animations */
+@keyframes enter {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes leave {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-enter {
+  animation: enter 0.35s ease-out;
+}
+
+.animate-leave {
+  animation: leave 0.35s ease-in forwards;
+}

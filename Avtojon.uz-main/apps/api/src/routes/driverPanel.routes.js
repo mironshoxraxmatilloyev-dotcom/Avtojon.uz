@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Trip = require('../models/Trip');
-const Flight = require('../models/Flight');
 const Vehicle = require('../models/Vehicle');
 const Expense = require('../models/Expense');
 const Driver = require('../models/Driver');
@@ -17,7 +16,7 @@ router.get('/me', protect, driverOnly, async (req, res) => {
   }
 });
 
-// GPS joylashuvni yuborish - Real-time Socket.io
+// GPS joylashuvni yuborish - maksimal aniqlik
 router.post('/me/location', protect, driverOnly, async (req, res) => {
   try {
     const { lat, lng, accuracy, speed, heading, timestamp } = req.body;
@@ -27,49 +26,31 @@ router.post('/me/location', protect, driverOnly, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Noto\'g\'ri koordinatalar' });
     }
 
-    // Koordinatalar oqilona chegarada ekanligini tekshirish
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
-      return res.status(400).json({ success: false, message: 'Koordinatalar chegaradan tashqarida' });
-    }
-
-    const accuracyNum = accuracy ? parseFloat(accuracy) : null;
-    const isAccurate = accuracyNum ? accuracyNum < 100 : true;
+    // Aniqlik tekshirish (accuracy metrda) - 100m dan katta bo'lsa ogohlantirish
+    const isAccurate = accuracy ? accuracy < 100 : true;
+    
+    console.log(`📍 GPS: ${req.driver.fullName} | ${lat.toFixed(6)}, ${lng.toFixed(6)} | Aniqlik: ${accuracy ? accuracy.toFixed(1) + 'm' : 'N/A'} | ${isAccurate ? '✅' : '⚠️'}`);
     
     const locationData = { 
-      lat: latNum, 
-      lng: lngNum, 
-      accuracy: accuracyNum,
+      lat: parseFloat(lat), 
+      lng: parseFloat(lng), 
+      accuracy: accuracy ? parseFloat(accuracy) : null,
       speed: speed ? parseFloat(speed) : null,
       heading: heading ? parseFloat(heading) : null,
       updatedAt: new Date(),
       deviceTimestamp: timestamp ? new Date(timestamp) : null
     };
 
-    // Har doim saqlash - aniqlik qanday bo'lmasin
     const updated = await Driver.findByIdAndUpdate(
       req.driver._id, 
       { lastLocation: locationData },
       { new: true }
     );
 
-    console.log(`📍 GPS yangilandi: ${req.driver.fullName} - ${latNum.toFixed(4)}, ${lngNum.toFixed(4)} (±${accuracyNum || '?'}m)`);
-
-    // 🔌 Socket.io orqali biznesmenga real-time yuborish
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`business-${req.driver.user}`).emit('driver-location', {
-        driverId: req.driver._id,
-        driverName: req.driver.fullName,
-        location: locationData
-      });
-    }
-
     res.json({ 
       success: true, 
       message: 'Joylashuv yangilandi',
-      accuracy: accuracyNum ? `${accuracyNum.toFixed(1)}m` : null,
+      accuracy: accuracy ? `${accuracy.toFixed(1)}m` : null,
       isAccurate
     });
   } catch (error) {
@@ -130,30 +111,7 @@ router.put('/me/trips/:id/start', protect, driverOnly, async (req, res) => {
     // Shofyorni "reysda" qilish
     await Driver.findByIdAndUpdate(req.driver._id, { status: 'busy' });
 
-    const populated = await Trip.findById(trip._id)
-      .populate('driver', 'fullName username')
-      .populate('vehicle', 'plateNumber brand model');
-
-    // 🔔 Socket.io orqali biznesmenga xabar yuborish
-    const io = req.app.get('io');
-    if (io) {
-      const businessId = trip.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-started', {
-        trip: populated,
-        message: `${req.driver.fullName} reysni boshladi!`
-      });
-      console.log(`📢 Reys boshlandi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
-    }
-
+    const populated = await Trip.findById(trip._id).populate('vehicle', 'plateNumber brand model');
     res.json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -185,30 +143,7 @@ router.post('/me/trips/start', protect, driverOnly, async (req, res) => {
       startedAt: new Date()
     });
 
-    const populated = await Trip.findById(trip._id)
-      .populate('driver', 'fullName username')
-      .populate('vehicle', 'plateNumber brand model');
-
-    // 🔔 Socket.io orqali biznesmenga xabar yuborish
-    const io = req.app.get('io');
-    if (io) {
-      const businessId = driver.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-started', {
-        trip: populated,
-        message: `${driver.fullName} yangi reys boshladi!`
-      });
-      console.log(`📢 Yangi reys boshlandi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
-    }
-
+    const populated = await Trip.findById(trip._id).populate('vehicle', 'plateNumber brand model');
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -251,30 +186,7 @@ router.put('/me/trips/:id/complete', protect, driverOnly, async (req, res) => {
     // Shofyorni "bo'sh" qilish
     await Driver.findByIdAndUpdate(req.driver._id, { status: 'free' });
 
-    const populated = await Trip.findById(trip._id)
-      .populate('driver', 'fullName username')
-      .populate('vehicle', 'plateNumber brand model');
-
-    // 🔔 Socket.io orqali biznesmenga xabar yuborish
-    const io = req.app.get('io');
-    if (io) {
-      const businessId = trip.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-completed', {
-        trip: populated,
-        message: `${req.driver.fullName} reysni tugatdi!`
-      });
-      console.log(`📢 Reys tugatildi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
-    }
-
+    const populated = await Trip.findById(trip._id).populate('vehicle', 'plateNumber brand model');
     res.json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -301,20 +213,10 @@ router.post('/me/expenses', protect, driverOnly, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
     }
 
-    const curr = currency || 'UZS';
+    const curr = currency || 'USD';
     const rate = exchangeRate || 1;
     const amountNum = Number(amount);
     const amountInUSD = curr === 'USD' ? amountNum : amountNum / rate;
-    
-    console.log('📦 Xarajat qo\'shilmoqda:', {
-      amount: amountNum,
-      currency: curr,
-      exchangeRate: rate,
-      tripId,
-      expenseType,
-      tripBudget: trip.tripBudget,
-      currentTotalExpenses: trip.totalExpenses
-    });
 
     // Xarajat turiga qarab Trip modeliga qo'shish
     if (expenseType === 'fuel') {
@@ -379,8 +281,9 @@ router.post('/me/expenses', protect, driverOnly, async (req, res) => {
       });
     }
 
-    // totalExpenses va remainingBudget Trip model pre('save') da avtomatik hisoblanadi
-    console.log('✅ Xarajat qo\'shildi, trip.save() chaqirilmoqda...');
+    // Eski tizim uchun ham yangilash (orqaga moslik)
+    trip.totalExpenses = (trip.totalExpenses || 0) + amountInUSD;
+    trip.remainingBudget = (trip.tripBudget || 0) - trip.totalExpenses;
 
     await trip.save();
 
@@ -435,104 +338,6 @@ router.get('/me/salary', protect, driverOnly, async (req, res) => {
         netSalary: (driver.baseSalary || 0) + totalBonus - totalPenalty
       }
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ============ FLIGHT (YANGI TIZIM) ============
-
-// Shofyor reyslari (Flight tizimi)
-router.get('/me/flights', protect, driverOnly, async (req, res) => {
-  try {
-    const flights = await Flight.find({ driver: req.driver._id })
-      .populate('vehicle', 'plateNumber brand model')
-      .sort({ createdAt: -1 });
-    res.json({ success: true, data: flights });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Faol reys olish
-router.get('/me/flights/active', protect, driverOnly, async (req, res) => {
-  try {
-    const flight = await Flight.findOne({ 
-      driver: req.driver._id, 
-      status: 'active' 
-    }).populate('vehicle', 'plateNumber brand model');
-    
-    res.json({ success: true, data: flight });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Bosqichni tugatish
-router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (req, res) => {
-  try {
-    const flight = await Flight.findOne({ 
-      _id: req.params.id, 
-      driver: req.driver._id,
-      status: 'active'
-    });
-    
-    if (!flight) {
-      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
-    }
-
-    const leg = flight.legs.id(req.params.legId);
-    if (!leg) {
-      return res.status(404).json({ success: false, message: 'Bosqich topilmadi' });
-    }
-
-    leg.status = 'completed';
-    leg.completedAt = new Date();
-    await flight.save();
-
-    res.json({ success: true, data: flight });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Xarajat qo'shish (Flight tizimi)
-router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) => {
-  try {
-    const { type, amount, description, currency, country } = req.body;
-
-    const flight = await Flight.findOne({ 
-      _id: req.params.id, 
-      driver: req.driver._id,
-      status: 'active'
-    });
-    
-    if (!flight) {
-      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
-    }
-
-    flight.expenses.push({
-      type: type || 'other',
-      amount: Number(amount) || 0,
-      description,
-      currency: currency || 'UZS',
-      country: country || 'UZB',
-      date: new Date()
-    });
-
-    await flight.save();
-
-    // Socket orqali biznesmenga xabar
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`business-${flight.user}`).emit('flight-expense-added', {
-        flightId: flight._id,
-        expense: flight.expenses[flight.expenses.length - 1],
-        driverName: req.driver.fullName
-      });
-    }
-
-    res.json({ success: true, data: flight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
