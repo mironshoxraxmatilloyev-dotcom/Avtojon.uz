@@ -897,6 +897,33 @@ export default function Drivers() {
                     Birinchi bosqich
                   </p>
                   
+                  {/* Haydovchi joylashuvi taklifi */}
+                  {selectedDriver.lastLocation?.lat && selectedDriver.lastLocation?.lng && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedDriver.lastLocation.lat}&lon=${selectedDriver.lastLocation.lng}&zoom=10`)
+                          const data = await res.json()
+                          const cityName = data.address?.city || data.address?.town || data.address?.village || data.address?.state || data.display_name?.split(',')[0] || 'Noma\'lum'
+                          setFlightForm(prev => ({
+                            ...prev,
+                            fromCity: cityName,
+                            fromCoords: { lat: selectedDriver.lastLocation.lat, lng: selectedDriver.lastLocation.lng },
+                            distance: prev.toCoords ? calculateDistance(selectedDriver.lastLocation.lat, selectedDriver.lastLocation.lng, prev.toCoords.lat, prev.toCoords.lng) : prev.distance
+                          }))
+                          showToast.success('Haydovchi joylashuvi tanlandi')
+                        } catch (err) {
+                          showToast.error('Joylashuvni olishda xatolik')
+                        }
+                      }}
+                      className="w-full p-3 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-xl text-blue-300 hover:bg-blue-600/30 transition flex items-center justify-center gap-2 text-sm"
+                    >
+                      <span className="text-lg">📍</span>
+                      Haydovchi hozirgi joylashuvidan boshlash
+                    </button>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-400 mb-2">Qayerdan *</label>
