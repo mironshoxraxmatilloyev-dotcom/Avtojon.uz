@@ -40,7 +40,7 @@ export default function Flights() {
 
   // Forms
   const [legForm, setLegForm] = useState({ toCity: '', payment: '', distance: '' })
-  const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '' })
+  const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '', quantity: '' })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
 
   const fetchData = useCallback(async () => {
@@ -98,14 +98,17 @@ export default function Flights() {
     }
 
     try {
+      const isFuel = ['fuel_benzin', 'fuel_diesel', 'fuel_gas'].includes(expenseForm.type)
       await api.post(`/flights/${selectedFlight._id}/expenses`, {
         type: expenseForm.type,
         amount: Number(expenseForm.amount),
-        description: expenseForm.description
+        description: expenseForm.description,
+        quantity: isFuel && expenseForm.quantity ? Number(expenseForm.quantity) : null,
+        quantityUnit: isFuel && expenseForm.quantity ? (expenseForm.type === 'fuel_gas' ? 'kub' : 'litr') : null
       })
       showToast.success('Xarajat qo\'shildi!')
       setShowExpenseModal(false)
-      setExpenseForm({ type: 'fuel_benzin', amount: '', description: '' })
+      setExpenseForm({ type: 'fuel_benzin', amount: '', description: '', quantity: '' })
       fetchData()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')
@@ -527,6 +530,20 @@ export default function Flights() {
                     ))}
                   </div>
                 </div>
+                {['fuel_benzin', 'fuel_diesel', 'fuel_gas'].includes(expenseForm.type) && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Miqdori ({expenseForm.type === 'fuel_gas' ? 'kub' : 'litr'})
+                    </label>
+                    <input
+                      type="number"
+                      value={expenseForm.quantity}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                      placeholder={expenseForm.type === 'fuel_gas' ? '50' : '100'}
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Summa (so'm) *</label>
                   <input
