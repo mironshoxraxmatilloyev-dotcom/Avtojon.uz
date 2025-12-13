@@ -34,7 +34,7 @@ const legSchema = new mongoose.Schema({
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['fuel', 'food', 'repair', 'toll', 'fine', 'other'],
+    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'food', 'repair', 'toll', 'fine', 'other'],
     required: true
   },
   amount: { type: Number, required: true },

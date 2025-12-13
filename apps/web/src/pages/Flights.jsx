@@ -12,7 +12,9 @@ import { useAuthStore } from '../store/authStore'
 import { useAlert } from '../components/ui'
 
 const EXPENSE_TYPES = [
-  { value: 'fuel', label: 'Yoqilg\'i', icon: '⛽' },
+  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽' },
+  { value: 'fuel_diesel', label: 'Dizel (Salarka)', icon: '🛢️' },
+  { value: 'fuel_gas', label: 'Gaz', icon: '🔵' },
   { value: 'food', label: 'Ovqat', icon: '🍽️' },
   { value: 'repair', label: 'Ta\'mir', icon: '🔧' },
   { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️' },
@@ -38,7 +40,7 @@ export default function Flights() {
 
   // Forms
   const [legForm, setLegForm] = useState({ toCity: '', payment: '', distance: '' })
-  const [expenseForm, setExpenseForm] = useState({ type: 'fuel', amount: '', description: '' })
+  const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '' })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
 
   const fetchData = useCallback(async () => {
@@ -103,7 +105,7 @@ export default function Flights() {
       })
       showToast.success('Xarajat qo\'shildi!')
       setShowExpenseModal(false)
-      setExpenseForm({ type: 'fuel', amount: '', description: '' })
+      setExpenseForm({ type: 'fuel_benzin', amount: '', description: '' })
       fetchData()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')

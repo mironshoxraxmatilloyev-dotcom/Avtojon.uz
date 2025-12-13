@@ -13,7 +13,9 @@ import AddressAutocomplete from '../components/AddressAutocomplete'
 import LocationPicker from '../components/LocationPicker'
 
 const EXPENSE_TYPES = [
-  { value: 'fuel', label: 'Yoqilg\'i', icon: '⛽', color: 'from-amber-500 to-orange-500' },
+  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', color: 'from-amber-500 to-orange-500' },
+  { value: 'fuel_diesel', label: 'Dizel (Salarka)', icon: '🛢️', color: 'from-yellow-600 to-amber-600' },
+  { value: 'fuel_gas', label: 'Gaz', icon: '🔵', color: 'from-sky-500 to-blue-500' },
   { value: 'food', label: 'Ovqat', icon: '🍽️', color: 'from-green-500 to-emerald-500' },
   { value: 'repair', label: 'Ta\'mir', icon: '🔧', color: 'from-red-500 to-rose-500' },
   { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️', color: 'from-blue-500 to-indigo-500' },
@@ -41,7 +43,7 @@ export default function FlightDetail() {
     fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '',
     fromCoords: null, toCoords: null
   })
-  const [expenseForm, setExpenseForm] = useState({ type: 'fuel', amount: '', description: '' })
+  const [expenseForm, setExpenseForm] = useState({ type: 'fuel_benzin', amount: '', description: '' })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
 
   const fetchFlight = async () => {
@@ -177,7 +179,7 @@ export default function FlightDetail() {
       })
       showToast.success('Xarajat qo\'shildi!')
       setShowExpenseModal(false)
-      setExpenseForm({ type: 'fuel', amount: '', description: '' })
+      setExpenseForm({ type: 'fuel_benzin', amount: '', description: '' })
       fetchFlight()
     } catch (error) {
       showToast.error(error.response?.data?.message || 'Xatolik')

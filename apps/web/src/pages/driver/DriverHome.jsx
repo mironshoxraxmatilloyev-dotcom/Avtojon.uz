@@ -94,7 +94,7 @@ export default function DriverHome() {
     const [tab, setTab] = useState('home')
     const [showExpenseModal, setShowExpenseModal] = useState(false)
     const [expenseForm, setExpenseForm] = useState({
-        expenseType: 'fuel', amount: '', description: '', fuelLiters: '', receiptImage: '',
+        expenseType: 'fuel_benzin', amount: '', description: '', fuelLiters: '', receiptImage: '',
         country: 'UZB', currency: 'UZS'
     })
     const [imagePreview, setImagePreview] = useState(null)
@@ -562,7 +562,7 @@ export default function DriverHome() {
             
             showToast.success('Xarajat qo\'shildi!')
             setShowExpenseModal(false)
-            setExpenseForm({ expenseType: 'fuel', amount: '', description: '', fuelLiters: '', receiptImage: '', country: 'UZB', currency: 'UZS' })
+            setExpenseForm({ expenseType: 'fuel_benzin', amount: '', description: '', fuelLiters: '', receiptImage: '', country: 'UZB', currency: 'UZS' })
             setImagePreview(null)
             fetchData()
         } catch (error) { 
@@ -578,7 +578,9 @@ export default function DriverHome() {
     const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
 
     const expenseTypes = [
-        { key: 'fuel', label: 'Yoqilgi', emoji: '⛽' },
+        { key: 'fuel_benzin', label: 'Benzin', emoji: '⛽' },
+        { key: 'fuel_diesel', label: 'Dizel', emoji: '🛢️' },
+        { key: 'fuel_gas', label: 'Gaz', emoji: '🔵' },
         { key: 'toll', label: 'Yol', emoji: '🛣️' },
         { key: 'repair', label: 'Tamir', emoji: '🔧' },
         { key: 'parking', label: 'Parking', emoji: '🅿️' },
@@ -1282,7 +1284,7 @@ export default function DriverHome() {
                                 </div>
                             </div>
 
-                            {expenseForm.expenseType === 'fuel' && (
+                            {['fuel_benzin', 'fuel_diesel', 'fuel_gas'].includes(expenseForm.expenseType) && (
                                 <div>
                                     <label className="block text-sm font-semibold text-violet-200 mb-2">Litr</label>
                                     <input type="number" value={expenseForm.fuelLiters} onChange={(e) => setExpenseForm({ ...expenseForm, fuelLiters: e.target.value })}
