@@ -1,2 +1,0 @@
-# Avtojon.uz
-# Avtojon.uz
