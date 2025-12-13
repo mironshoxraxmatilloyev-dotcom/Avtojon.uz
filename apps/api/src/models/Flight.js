@@ -34,10 +34,12 @@ const legSchema = new mongoose.Schema({
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['fuel', 'food', 'repair', 'toll', 'fine', 'other'],
+    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'food', 'repair', 'toll', 'fine', 'other'],
     required: true
   },
   amount: { type: Number, required: true },
+  quantity: { type: Number, default: null }, // Yoqilg'i miqdori (litr yoki kub)
+  quantityUnit: { type: String, enum: ['litr', 'kub', null], default: null }, // Birlik
   description: String,
   legId: { type: mongoose.Schema.Types.ObjectId, default: null }, // Qaysi bosqichga tegishli
   legIndex: { type: Number, default: null }, // Bosqich indeksi (0, 1, 2...)

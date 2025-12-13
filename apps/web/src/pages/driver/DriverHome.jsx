@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import {
-    LogOut, Truck, Play, CheckCircle, Plus, History, Wallet, Route, MapPin, Map,
-    Clock, TrendingUp, TrendingDown, Award, Navigation, X, Camera, Sparkles, Zap, Target,
+    LogOut, Truck, Play, CheckCircle, History, Wallet, Route, MapPin, Map,
+    Clock, TrendingUp, TrendingDown, Award, Navigation, X, Sparkles, Zap, Target,
     Star, CircleDollarSign, Bell
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
@@ -92,12 +92,6 @@ export default function DriverHome() {
     const [flights, setFlights] = useState([])
     const [loading, setLoading] = useState(true)
     const [tab, setTab] = useState('home')
-    const [showExpenseModal, setShowExpenseModal] = useState(false)
-    const [expenseForm, setExpenseForm] = useState({
-        expenseType: 'fuel', amount: '', description: '', fuelLiters: '', receiptImage: '',
-        country: 'UZB', currency: 'UZS'
-    })
-    const [imagePreview, setImagePreview] = useState(null)
     const [gpsStatus, setGpsStatus] = useState('checking')
     const [currentLocation, setCurrentLocation] = useState(null)
     const [lastGpsUpdate, setLastGpsUpdate] = useState(null)
@@ -510,81 +504,11 @@ export default function DriverHome() {
         catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
         finally { setActionLoading(false) }
     }
-    const handleImageChange = (e) => {
-        const file = e.target.files[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => { setImagePreview(reader.result); setExpenseForm({ ...expenseForm, receiptImage: reader.result }) }
-            reader.readAsDataURL(file)
-        }
-    }
-    const CURRENCY_RATES = { USD: 1, UZS: 12800, KZT: 450, RUB: 90 }
-
-    const handleAddExpense = async (e) => {
-        e.preventDefault()
-        
-        // Summa tekshiruvi
-        if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
-            showToast.error('Summani kiriting!')
-            return
-        }
-
-        const amountNum = Number(expenseForm.amount)
-        const rate = CURRENCY_RATES[expenseForm.currency] || 1
-        
-        try {
-            // Flight tizimi (yangi)
-            if (activeFlight?._id) {
-                console.log('Flight xarajat yuborilmoqda:', { flightId: activeFlight._id, amount: amountNum })
-                await api.post(`/driver/me/flights/${activeFlight._id}/expenses`, {
-                    type: expenseForm.expenseType,
-                    amount: amountNum,
-                    description: expenseForm.description,
-                    currency: expenseForm.currency,
-                    country: expenseForm.country
-                })
-            } 
-            // Trip tizimi (eski)
-            else if (activeTrip?._id) {
-                console.log('Trip xarajat yuborilmoqda:', { tripId: activeTrip._id, amount: amountNum })
-                await api.post('/driver/me/expenses', {
-                    ...expenseForm,
-                    amount: amountNum,
-                    fuelLiters: expenseForm.fuelLiters ? Number(expenseForm.fuelLiters) : undefined,
-                    fuelPricePerLiter: expenseForm.fuelLiters ? amountNum / Number(expenseForm.fuelLiters) : undefined,
-                    tripId: activeTrip._id,
-                    exchangeRate: rate
-                })
-            } else {
-                showToast.error('Faol reys topilmadi!')
-                return
-            }
-            
-            showToast.success('Xarajat qo\'shildi!')
-            setShowExpenseModal(false)
-            setExpenseForm({ expenseType: 'fuel', amount: '', description: '', fuelLiters: '', receiptImage: '', country: 'UZB', currency: 'UZS' })
-            setImagePreview(null)
-            fetchData()
-        } catch (error) { 
-            console.error('Xarajat xatosi:', error)
-            showToast.error(error.response?.data?.message || 'Xatolik yuz berdi') 
-        }
-    }
-
     const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
     const formatDate = (d) => d ? new Date(d).toLocaleString('uz-UZ') : '-'
     const completedTrips = trips.filter(t => t.status === 'completed').length
     const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
     const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
-
-    const expenseTypes = [
-        { key: 'fuel', label: 'Yoqilgi', emoji: '⛽' },
-        { key: 'toll', label: 'Yol', emoji: '🛣️' },
-        { key: 'repair', label: 'Tamir', emoji: '🔧' },
-        { key: 'parking', label: 'Parking', emoji: '🅿️' },
-        { key: 'food', label: 'Ovqat', emoji: '🍽️' },
-        { key: 'other', label: 'Boshqa', emoji: '📦' }
-    ]
 
     if (loading) return (
         <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
@@ -786,16 +710,6 @@ export default function DriverHome() {
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2 sm:gap-3">
-                                            <button 
-                                                onClick={() => setShowExpenseModal(true)} 
-                                                className="flex-1 bg-white/20 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-white flex items-center justify-center gap-1.5 sm:gap-2 border border-white/20 text-sm sm:text-base"
-                                            >
-                                                <Plus size={18} className="sm:hidden" />
-                                                <Plus size={22} className="hidden sm:block" />
-                                                Xarajat
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
                             ) : activeTrip ? (
@@ -869,11 +783,6 @@ export default function DriverHome() {
                                                 {actionLoading ? <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div> : <CheckCircle size={18} className="sm:hidden" />}
                                                 {actionLoading ? <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-violet-600 border-t-transparent rounded-full animate-spin hidden sm:block"></div> : <CheckCircle size={22} className="hidden sm:block" />}
                                                 {actionLoading ? 'Kutilmoqda...' : 'Tugatish'}
-                                            </button>
-                                            <button onClick={() => setShowExpenseModal(true)} className="flex-1 bg-white/20 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-white flex items-center justify-center gap-1.5 sm:gap-2 border border-white/20 text-sm sm:text-base">
-                                                <Plus size={18} className="sm:hidden" />
-                                                <Plus size={22} className="hidden sm:block" />
-                                                Xarajat
                                             </button>
                                         </div>
                                     </div>
@@ -1202,127 +1111,7 @@ export default function DriverHome() {
                 </div>
             </main>
 
-            {/* Expense Modal */}
-            {showExpenseModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-end sm:items-center justify-center z-50">
-                    <div className="bg-[#12122a] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md border border-white/10 max-h-[90vh] overflow-y-auto">
-                        <div className="relative p-6 border-b border-white/10">
-                            <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-indigo-600/20"></div>
-                            <div className="relative flex justify-between items-center">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                                        <Plus className="w-6 h-6 text-white" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-bold text-white">Xarajat qoshish</h2>
-                                        <p className="text-violet-300 text-sm">Reys xarajatlarini kiriting</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowExpenseModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-violet-300">
-                                    <X size={24} />
-                                </button>
-                            </div>
-                        </div>
 
-                        <form onSubmit={handleAddExpense} className="p-6 space-y-5">
-                            <div>
-                                <label className="block text-sm font-semibold text-violet-200 mb-3">Xarajat turi</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {expenseTypes.map(({ key, label, emoji }) => (
-                                        <button key={key} type="button" onClick={() => setExpenseForm({ ...expenseForm, expenseType: key })}
-                                            className={`p-4 rounded-xl border-2 transition-all text-center ${expenseForm.expenseType === key ? 'border-violet-500 bg-violet-500/20' : 'border-white/10 bg-white/5 hover:border-white/20'
-                                                }`}>
-                                            <span className="text-2xl mb-1 block">{emoji}</span>
-                                            <p className="text-xs font-medium text-white">{label}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Davlat tanlash */}
-                            <div>
-                                <label className="block text-sm font-semibold text-violet-200 mb-3">Davlat</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { code: 'UZB', flag: '🇺🇿', name: "O'zbekiston", curr: 'UZS' },
-                                        { code: 'QZ', flag: '🇰🇿', name: "Qozog'iston", curr: 'KZT' },
-                                        { code: 'RU', flag: '🇷🇺', name: 'Rossiya', curr: 'RUB' }
-                                    ].map(({ code, flag, name, curr }) => (
-                                        <button key={code} type="button"
-                                            onClick={() => setExpenseForm({ ...expenseForm, country: code, currency: curr })}
-                                            className={`p-3 rounded-xl border-2 transition-all text-center ${expenseForm.country === code
-                                                ? 'border-violet-500 bg-violet-500/20'
-                                                : 'border-white/10 bg-white/5 hover:border-white/20'
-                                                }`}>
-                                            <span className="text-2xl">{flag}</span>
-                                            <p className="text-xs font-medium text-white mt-1">{name}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Summa va valyuta */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-semibold text-violet-200 mb-2">Summa *</label>
-                                    <input type="number" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                                        className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-semibold placeholder-violet-400/50 focus:border-violet-500 focus:outline-none"
-                                        placeholder="0" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-violet-200 mb-2">Valyuta</label>
-                                    <select value={expenseForm.currency}
-                                        onChange={(e) => setExpenseForm({ ...expenseForm, currency: e.target.value })}
-                                        className="w-full px-3 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-violet-500 focus:outline-none">
-                                        <option value="UZS" className="bg-slate-900">UZS</option>
-                                        <option value="KZT" className="bg-slate-900">KZT</option>
-                                        <option value="RUB" className="bg-slate-900">RUB</option>
-                                        <option value="USD" className="bg-slate-900">USD</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {expenseForm.expenseType === 'fuel' && (
-                                <div>
-                                    <label className="block text-sm font-semibold text-violet-200 mb-2">Litr</label>
-                                    <input type="number" value={expenseForm.fuelLiters} onChange={(e) => setExpenseForm({ ...expenseForm, fuelLiters: e.target.value })}
-                                        className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-violet-400/50 focus:border-violet-500 focus:outline-none"
-                                        placeholder="Necha litr?" />
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-semibold text-violet-200 mb-2">Izoh</label>
-                                <input type="text" value={expenseForm.description} onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                                    className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-violet-400/50 focus:border-violet-500 focus:outline-none"
-                                    placeholder="Qoshimcha malumot..." />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-violet-200 mb-2">Chek rasmi</label>
-                                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="receipt-image" />
-                                <label htmlFor="receipt-image" className="flex items-center justify-center gap-3 w-full px-4 py-5 bg-white/5 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-violet-500/50 hover:bg-violet-500/10 transition-all">
-                                    <Camera size={24} className="text-violet-400" />
-                                    <span className="text-violet-300 font-medium">Rasm yuklash</span>
-                                </label>
-                                {imagePreview && (
-                                    <div className="mt-3 relative">
-                                        <img src={imagePreview} alt="Chek" className="w-full h-40 object-cover rounded-xl" />
-                                        <button type="button" onClick={() => { setImagePreview(null); setExpenseForm({ ...expenseForm, receiptImage: '' }) }}
-                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center">
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <button type="submit" className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-violet-500/30">
-                                <Plus size={20} /> Qoshish
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
