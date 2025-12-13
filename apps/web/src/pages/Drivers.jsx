@@ -61,7 +61,8 @@ export default function Drivers() {
     payment: '',
     distance: '',
     fromCoords: null,
-    toCoords: null
+    toCoords: null,
+    flightType: 'domestic' // 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
   })
   const [activeFlights, setActiveFlights] = useState({}) // driverId -> flight
 
@@ -137,7 +138,8 @@ export default function Drivers() {
     payment: '',
     distance: '',
     fromCoords: null,
-    toCoords: null
+    toCoords: null,
+    flightType: 'domestic'
   })
 
   // Masofa hisoblash (Haversine formula)
@@ -172,6 +174,7 @@ export default function Drivers() {
         driverId: selectedDriver._id,
         startOdometer: Number(flightForm.startOdometer) || 0,
         startFuel: Number(flightForm.startFuel) || 0,
+        flightType: flightForm.flightType,
         firstLeg: {
           fromCity: flightForm.fromCity,
           toCity: flightForm.toCity,
@@ -183,7 +186,8 @@ export default function Drivers() {
       }
 
       console.log('🚀 Reys ochish payload:', payload)
-      await api.post('/flights', payload)
+      const response = await api.post('/flights', payload)
+      console.log('✅ Reys ochildi:', response.data)
       showToast.success('Reys ochildi!')
       setShowFlightModal(false)
       resetFlightForm()
@@ -822,6 +826,39 @@ export default function Drivers() {
                     </div>
                   )
                 })()}
+
+                {/* Reys turi tanlash */}
+                <div>
+                  <label className="block text-sm font-semibold text-blue-200 mb-3">Reys turi</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        flightForm.flightType === 'domestic'
+                          ? 'border-green-500 bg-green-500/20 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">🇺🇿</div>
+                      <div className="font-semibold text-sm">O'zbekiston ichida</div>
+                      <div className="text-xs opacity-70">Mahalliy reys</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFlightForm({ ...flightForm, flightType: 'international' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        flightForm.flightType === 'international'
+                          ? 'border-blue-500 bg-blue-500/20 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">🌍</div>
+                      <div className="font-semibold text-sm">Xalqaro</div>
+                      <div className="text-xs opacity-70">Chet elga reys</div>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Boshlang'ich ma'lumotlar */}
                 <div className="grid grid-cols-2 gap-4">

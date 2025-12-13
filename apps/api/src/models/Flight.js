@@ -65,6 +65,13 @@ const flightSchema = new mongoose.Schema({
   // Reys nomi (avtomatik: birinchi va oxirgi shahar)
   name: String,
   
+  // Reys turi: 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
+  flightType: {
+    type: String,
+    enum: ['domestic', 'international'],
+    default: 'domestic'
+  },
+  
   // Boshlang'ich ma'lumotlar
   startOdometer: { type: Number, default: 0 }, // Boshlang'ich odometr (km)
   startFuel: { type: Number, default: 0 }, // Bakdagi yoqilg'i (litr)
