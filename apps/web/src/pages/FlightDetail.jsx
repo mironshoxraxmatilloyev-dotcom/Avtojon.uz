@@ -711,9 +711,9 @@ export default function FlightDetail() {
                 })
                 setShowLegModal(true)
               }}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:shadow-lg transition flex items-center gap-1 flex-shrink-0"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition flex items-center gap-1.5 flex-shrink-0"
             >
-              <Plus size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline">Bosqich</span> <span className="xs:hidden">+</span>
+              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Bosqich</span>
             </button>
           )}
         </div>
@@ -775,9 +775,9 @@ export default function FlightDetail() {
           {isActive && (
             <button
               onClick={() => setShowExpenseModal(true)}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:shadow-lg transition flex items-center gap-1 flex-shrink-0"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition flex items-center gap-1.5 flex-shrink-0"
             >
-              <Plus size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline">Xarajat</span> <span className="xs:hidden">+</span>
+              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Xarajat</span>
             </button>
           )}
         </div>
