@@ -1,31 +1,29 @@
 import { useEffect, useState, memo } from 'react'
 
-// Page wrapper with entrance animation
+// Page wrapper with entrance animation - TEZLASHTIRILGAN
 export const PageWrapper = memo(function PageWrapper({ children, className = '' }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
+    // Darhol ko'rsatish
+    setMounted(true)
   }, [])
 
   return (
     <div 
-      className={`transition-all duration-300 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'} ${className}`}
-      style={{ willChange: mounted ? 'auto' : 'opacity, transform' }}
+      className={`transition-all duration-150 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} ${className}`}
     >
       {children}
     </div>
   )
 })
 
-// Staggered list
-export const StaggeredList = memo(function StaggeredList({ children, className = '', delay = 40 }) {
+// Staggered list - TEZLASHTIRILGAN
+export const StaggeredList = memo(function StaggeredList({ children, className = '', delay = 20 }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
+    setMounted(true)
   }, [])
 
   return (
@@ -33,11 +31,8 @@ export const StaggeredList = memo(function StaggeredList({ children, className =
       {Array.isArray(children) ? children.map((child, index) => (
         <div
           key={index}
-          className={`transition-all duration-300 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-          style={{ 
-            transitionDelay: `${index * delay}ms`,
-            willChange: mounted ? 'auto' : 'opacity, transform'
-          }}
+          className={`transition-all duration-150 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
+          style={{ transitionDelay: `${index * delay}ms` }}
         >
           {child}
         </div>
@@ -46,7 +41,7 @@ export const StaggeredList = memo(function StaggeredList({ children, className =
   )
 })
 
-// Animated stat card with number animation
+// Animated stat card - TEZLASHTIRILGAN (animatsiyasiz)
 export const AnimatedStatCard = memo(function AnimatedStatCard({ 
   icon: Icon, 
   label, 
@@ -56,56 +51,16 @@ export const AnimatedStatCard = memo(function AnimatedStatCard({
   onClick,
   delay = 0 
 }) {
-  const [mounted, setMounted] = useState(false)
-  const [displayValue, setDisplayValue] = useState(0)
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
-  useEffect(() => {
-    if (typeof value !== 'number') {
-      setDisplayValue(value)
-      return
-    }
-
-    const duration = 600
-    const startTime = performance.now()
-    const startValue = 0
-    
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const current = Math.floor(startValue + (value - startValue) * eased)
-      
-      setDisplayValue(current)
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      }
-    }
-    
-    const raf = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf)
-  }, [value])
-
   return (
     <div 
       onClick={onClick}
-      className={`stat-card ${bgColor} p-6 rounded-2xl cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-transparent hover:border-gray-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-      style={{ 
-        transitionDelay: `${delay}ms`,
-        transitionProperty: 'opacity, transform',
-        transitionDuration: '300ms',
-        willChange: mounted ? 'auto' : 'opacity, transform'
-      }}
+      className={`stat-card ${bgColor} p-6 rounded-2xl cursor-pointer hover:shadow-lg transition-shadow duration-100 border border-transparent hover:border-gray-200`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div className={`stat-icon w-12 h-12 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-4 shadow-lg`}>
         <Icon className="text-white" size={22} />
       </div>
-      <p className="text-4xl font-bold text-gray-900 mb-1 tabular-nums">{displayValue}</p>
+      <p className="text-4xl font-bold text-gray-900 mb-1 tabular-nums">{value}</p>
       <p className="text-gray-500 text-sm">{label}</p>
     </div>
   )
@@ -134,22 +89,12 @@ export const AnimatedTableRow = memo(function AnimatedTableRow({ children, onCli
   )
 })
 
-// Animated card
+// Animated card - TEZLASHTIRILGAN
 export const AnimatedCard = memo(function AnimatedCard({ children, className = '', delay = 0, hover = true }) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
   return (
     <div 
-      className={`${hover ? 'card-hover' : ''} ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'} transition-all duration-300 ease-out ${className}`}
-      style={{ 
-        transitionDelay: `${delay}ms`,
-        willChange: mounted ? 'auto' : 'opacity, transform'
-      }}
+      className={`${hover ? 'card-hover' : ''} transition-all duration-100 ease-out ${className}`}
+      style={{ animationDelay: `${delay}ms` }}
     >
       {children}
     </div>
@@ -170,17 +115,10 @@ export const AnimatedButton = memo(function AnimatedButton({ children, className
   )
 })
 
-// Empty state with animation
+// Empty state - TEZLASHTIRILGAN
 export const EmptyState = memo(function EmptyState({ icon: Icon, title, description, action }) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
   return (
-    <div className={`text-center py-16 transition-all duration-300 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+    <div className="text-center py-16">
       <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
         <Icon size={40} className="text-gray-400" />
       </div>

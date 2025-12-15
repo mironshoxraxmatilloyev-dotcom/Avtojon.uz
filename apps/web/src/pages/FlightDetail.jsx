@@ -623,55 +623,78 @@ export default function FlightDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Odometer & Fuel Info */}
           <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Gauge className="text-blue-600" size={20} />
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Gauge className="text-blue-600" size={16} />
             </div>
-            <h3 className="font-semibold text-gray-900">Odometr</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">Odometr</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-400">Boshlang'ich</p>
-              <p className="text-xl font-bold text-gray-900">{flight.startOdometer || 0} km</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-[10px] text-gray-400">Boshlang'ich</p>
+              <p className="text-sm font-bold text-gray-900">{formatMoney(flight.startOdometer || 0)} km</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-400">Tugash</p>
-              <p className="text-xl font-bold text-gray-900">{flight.endOdometer || '-'} km</p>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-[10px] text-gray-400">Tugash</p>
+              <p className="text-sm font-bold text-gray-900">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-2">
+              <p className="text-[10px] text-blue-500">Jami yurgan</p>
+              <p className="text-sm font-bold text-blue-600">
+                {flight.endOdometer && flight.startOdometer 
+                  ? formatMoney(flight.endOdometer - flight.startOdometer) 
+                  : formatMoney(flight.totalDistance || 0)} km
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-              <Fuel className="text-amber-600" size={20} />
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Fuel className="text-amber-600" size={16} />
             </div>
-            <h3 className="font-semibold text-gray-900">Yoqilg'i</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">Yoqilg'i</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-400">Boshlang'ich</p>
-              <p className="text-xl font-bold text-gray-900">{flight.startFuel || 0} L</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-[10px] text-gray-400">Boshlang'ich</p>
+              <p className="text-sm font-bold text-gray-900">{flight.startFuel || 0} L</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-400">Qoldiq</p>
-              <p className="text-xl font-bold text-gray-900">{flight.endFuel || '-'} L</p>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-[10px] text-gray-400">Qoldiq</p>
+              <p className="text-sm font-bold text-gray-900">{flight.endFuel || '-'} L</p>
+            </div>
+            <div className="bg-amber-50 rounded-lg p-2">
+              <p className="text-[10px] text-amber-500">Jami sarflangan</p>
+              <p className="text-sm font-bold text-amber-600">
+                {(() => {
+                  // Xarajatlardan yoqilg'i miqdorini hisoblash
+                  const totalFuel = flight.expenses?.reduce((sum, exp) => {
+                    if (exp.type?.startsWith('fuel_') && exp.quantity) {
+                      return sum + Number(exp.quantity)
+                    }
+                    return sum
+                  }, 0) || 0
+                  return totalFuel > 0 ? `${totalFuel} L` : '-'
+                })()}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Legs Section */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <Route className="text-emerald-600" size={20} />
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <Route className="text-emerald-600" size={16} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Bosqichlar</h3>
-              <p className="text-sm text-gray-500">{flight.legs?.length || 0} ta bosqich</p>
+              <h3 className="font-semibold text-gray-900 text-sm">Bosqichlar</h3>
+              <p className="text-xs text-gray-500">{flight.legs?.length || 0} ta bosqich</p>
             </div>
           </div>
           {isActive && (
@@ -685,46 +708,39 @@ export default function FlightDetail() {
                 })
                 setShowLegModal(true)
               }}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
+              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-medium hover:shadow-lg transition flex items-center gap-1"
             >
-              <Plus size={18} /> Bosqich qo'shish
+              <Plus size={14} /> Bosqich qo'shish
             </button>
           )}
         </div>
 
-        {/* Legs Timeline */}
-        <div className="space-y-3">
+        {/* Legs Timeline - scrollable */}
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
           {flight.legs?.map((leg, idx) => (
-            <div key={leg._id || idx} className="relative">
-              {idx < flight.legs.length - 1 && (
-                <div className="absolute left-5 top-20 w-0.5 h-12 bg-gray-200"></div>
-              )}
-              <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
-                    leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                  }`}>
-                    {idx + 1}
+            <div key={leg._id || idx} className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0 ${
+                  leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                }`}>
+                  {idx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1 text-sm">
+                    <span className="font-medium text-gray-900 truncate">{leg.fromCity}</span>
+                    <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
+                    <span className="font-medium text-gray-900 truncate">{leg.toCity}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{leg.fromCity}</span>
-                      <ChevronRight size={16} className="text-gray-400" />
-                      <span className="font-semibold text-gray-900">{leg.toCity}</span>
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                      <span>{leg.distance || 0} km</span>
-                      {leg.status === 'completed' && <span className="text-emerald-600">✓ Tugatilgan</span>}
-                      {leg.status === 'in_progress' && <span className="text-blue-600">🚛 Yo'lda</span>}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-emerald-600">{formatMoney(leg.payment)}</p>
-                    <p className="text-xs text-gray-400">mijozdan</p>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                    <span>{leg.distance || 0} km</span>
+                    {leg.status === 'completed' && <span className="text-emerald-600">✓ Tugatilgan</span>}
+                    {leg.status === 'in_progress' && <span className="text-blue-600">🚛 Yo'lda</span>}
                   </div>
                 </div>
-                
-                {/* Budget va Balance - header da bor, shu yerda kerak emas */}
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-emerald-600 text-sm">{formatMoney(leg.payment)}</p>
+                  <p className="text-[10px] text-gray-400">mijozdan</p>
+                </div>
               </div>
             </div>
           ))}
@@ -740,89 +756,57 @@ export default function FlightDetail() {
         </div>
 
         {/* Right Column - Expenses */}
-        <div className="space-y-6">
+        <div className="lg:sticky lg:top-4 lg:self-start">
       {/* Expenses Section */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm sticky top-4">
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
               <Wallet className="text-red-600" size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Xarajatlar</h3>
-              <p className="text-sm text-gray-500">Jami: {formatMoney(flight.totalExpenses)} so'm</p>
+              <h3 className="font-semibold text-gray-900 text-sm">Xarajatlar</h3>
+              <p className="text-xs text-gray-500">Jami: {formatMoney(flight.totalExpenses)} so'm</p>
             </div>
           </div>
           {isActive && (
             <button
               onClick={() => setShowExpenseModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
+              className="px-3 py-1.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-xs font-medium hover:shadow-lg transition flex items-center gap-1"
             >
-              <DollarSign size={18} /> Xarajat qo'shish
+              <Plus size={14} /> Xarajat qo'shish
             </button>
           )}
         </div>
 
-        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+        <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {flight.expenses?.map((exp) => {
             const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
             const isFuel = exp.type && exp.type.startsWith('fuel_')
             return (
-              <div key={exp._id} className="bg-gray-50 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-2xl flex-shrink-0`}>
+              <div key={exp._id} className="bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-lg flex-shrink-0`}>
                     {expType?.icon || '📦'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">{expType?.label || exp.type}</p>
-                    {exp.description && <p className="text-xs text-gray-400 truncate">{exp.description}</p>}
+                    <p className="font-medium text-gray-900 text-sm">{expType?.label || exp.type}</p>
+                    {/* Yoqilg'i uchun qo'shimcha info */}
+                    {isFuel && exp.quantity && (
+                      <p className="text-[10px] text-gray-400">
+                        {exp.quantity} {exp.quantityUnit || 'L'} 
+                        {exp.odometer && ` • ${formatMoney(exp.odometer)} km`}
+                        {exp.stationName && ` • ${exp.stationName}`}
+                      </p>
+                    )}
+                    {!isFuel && exp.description && (
+                      <p className="text-[10px] text-gray-400 truncate">{exp.description}</p>
+                    )}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-red-600">-{formatMoney(exp.amount)}</p>
-                    {isActive && (
-                      <button 
-                        onClick={() => handleDeleteExpense(exp._id)}
-                        className="text-xs text-gray-400 hover:text-red-500 mt-1"
-                      >
-                        O'chirish
-                      </button>
-                    )}
+                    <p className="font-bold text-red-600 text-sm">-{formatMoney(exp.amount)}</p>
                   </div>
                 </div>
-                
-                {/* Yoqilg'i uchun qo'shimcha ma'lumotlar */}
-                {isFuel && (exp.quantity || exp.odometer || exp.stationName) && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-2 gap-2 text-xs">
-                    {exp.quantity && (
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <Fuel size={12} />
-                        <span>{exp.quantity} {exp.quantityUnit || 'litr'}</span>
-                        {exp.pricePerUnit && <span className="text-gray-400">× {formatMoney(exp.pricePerUnit)}</span>}
-                      </div>
-                    )}
-                    {exp.odometer && (
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <Gauge size={12} />
-                        <span>{formatMoney(exp.odometer)} km</span>
-                        {exp.distanceSinceLast && (
-                          <span className="text-blue-500">(+{exp.distanceSinceLast} km)</span>
-                        )}
-                      </div>
-                    )}
-                    {exp.stationName && (
-                      <div className="flex items-center gap-1 text-gray-500 col-span-2">
-                        <MapPin size={12} />
-                        <span className="truncate">{exp.stationName}</span>
-                      </div>
-                    )}
-                    {exp.fuelConsumption && (
-                      <div className="flex items-center gap-1 text-emerald-600 col-span-2">
-                        <TrendingUp size={12} />
-                        <span>Sarflanish: {exp.fuelConsumption} {exp.quantityUnit || 'litr'}/100km</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )
           })}

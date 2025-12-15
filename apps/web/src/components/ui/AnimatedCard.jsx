@@ -44,16 +44,16 @@ export function TiltCard({ children, className = '', intensity = 10 }) {
   )
 }
 
-// Hover lift card
+// Hover lift card - TEZLASHTIRILGAN
 export function HoverCard({ children, className = '' }) {
   return (
-    <div className={`transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${className}`}>
+    <div className={`transition-all duration-150 hover:-translate-y-1 hover:shadow-lg ${className}`}>
       {children}
     </div>
   )
 }
 
-// Glow card on hover
+// Glow card on hover - TEZLASHTIRILGAN
 export function GlowCard({ children, className = '', glowColor = 'violet' }) {
   const glowClasses = {
     violet: 'hover:shadow-violet-500/20',
@@ -64,7 +64,7 @@ export function GlowCard({ children, className = '', glowColor = 'violet' }) {
   }
 
   return (
-    <div className={`transition-all duration-300 hover:shadow-xl ${glowClasses[glowColor]} ${className}`}>
+    <div className={`transition-all duration-150 hover:shadow-xl ${glowClasses[glowColor]} ${className}`}>
       {children}
     </div>
   )
@@ -146,7 +146,7 @@ export function Skeleton({ className = '', variant = 'text' }) {
   )
 }
 
-// Fade in on scroll
+// Fade in on scroll - TEZLASHTIRILGAN
 export function FadeIn({ children, className = '', delay = 0 }) {
   const ref = useRef(null)
 
@@ -160,7 +160,7 @@ export function FadeIn({ children, className = '', delay = 0 }) {
           if (entry.isIntersecting) {
             setTimeout(() => {
               entry.target.classList.add('opacity-100', 'translate-y-0')
-              entry.target.classList.remove('opacity-0', 'translate-y-4')
+              entry.target.classList.remove('opacity-0', 'translate-y-2')
             }, delay)
           }
         })
@@ -175,7 +175,7 @@ export function FadeIn({ children, className = '', delay = 0 }) {
   return (
     <div
       ref={ref}
-      className={`opacity-0 translate-y-4 transition-all duration-500 ease-out ${className}`}
+      className={`opacity-0 translate-y-2 transition-all duration-200 ease-out ${className}`}
     >
       {children}
     </div>
