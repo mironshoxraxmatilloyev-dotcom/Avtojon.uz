@@ -559,74 +559,74 @@ export default function Dashboard() {
       </div>
 
       {/* Moliyaviy statistika */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="relative overflow-hidden bg-gradient-to-br from-red-500 via-red-600 to-rose-600 text-white p-6 rounded-2xl shadow-xl shadow-red-500/20">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-red-500 via-red-600 to-rose-600 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl shadow-red-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <Fuel size={22} />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur rounded-lg sm:rounded-xl flex items-center justify-center">
+                <Fuel size={18} className="sm:w-[22px] sm:h-[22px]" />
               </div>
-              <span className="font-medium">Jami xarajatlar</span>
+              <span className="font-medium text-sm sm:text-base">Jami xarajatlar</span>
             </div>
-            <p className="text-4xl font-bold">{formatMoney(stats.totalExpenses)}</p>
-            <p className="text-red-200 text-sm mt-1">som sarflandi</p>
+            <p className="text-2xl sm:text-4xl font-bold truncate">{formatMoney(stats.totalExpenses)}</p>
+            <p className="text-red-200 text-xs sm:text-sm mt-1">so'm sarflandi</p>
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white p-6 rounded-2xl shadow-xl shadow-green-500/20">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl shadow-green-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <TrendingUp size={22} />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur rounded-lg sm:rounded-xl flex items-center justify-center">
+                <TrendingUp size={18} className="sm:w-[22px] sm:h-[22px]" />
               </div>
-              <span className="font-medium">Bonuslar</span>
+              <span className="font-medium text-sm sm:text-base">Mijozdan</span>
             </div>
-            <p className="text-4xl font-bold">+{formatMoney(stats.totalBonus)}</p>
-            <p className="text-green-200 text-sm mt-1">som tejaldi</p>
+            <p className="text-2xl sm:text-4xl font-bold truncate">{formatMoney(stats.totalBonus)}</p>
+            <p className="text-green-200 text-xs sm:text-sm mt-1">so'm olindi</p>
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 text-white p-6 rounded-2xl shadow-xl shadow-orange-500/20">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl shadow-orange-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
           <div className="relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <TrendingDown size={22} />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur rounded-lg sm:rounded-xl flex items-center justify-center">
+                <TrendingDown size={18} className="sm:w-[22px] sm:h-[22px]" />
               </div>
-              <span className="font-medium">Jarimalar</span>
+              <span className="font-medium text-sm sm:text-base">Sof foyda</span>
             </div>
-            <p className="text-4xl font-bold">-{formatMoney(stats.totalPenalty)}</p>
-            <p className="text-orange-200 text-sm mt-1">som ortiqcha</p>
+            <p className="text-2xl sm:text-4xl font-bold truncate">+{formatMoney(stats.totalPenalty)}</p>
+            <p className="text-orange-200 text-xs sm:text-sm mt-1">so'm foyda</p>
           </div>
         </div>
       </div>
 
       {/* Xarita va Songgi reyslar */}
       {!fullScreenMap && (
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Jonli xarita */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <MapPin className="text-blue-600" size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <MapPin className="text-blue-600" size={16} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Jonli xarita</h2>
-                <p className="text-sm text-gray-500">{driverLocations.filter(d => d.lastLocation).length} ta shofyor online</p>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">Jonli xarita</h2>
+                <p className="text-xs sm:text-sm text-gray-500">{driverLocations.filter(d => d.lastLocation).length} ta shofyor</p>
               </div>
             </div>
             <button 
               onClick={() => setFullScreenMap(true)} 
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs sm:text-sm"
             >
-              <Play size={16} />
-              <span className="text-sm font-medium">Kengaytirish</span>
+              <Play size={14} className="sm:w-4 sm:h-4" />
+              <span className="font-medium">Kengaytirish</span>
             </button>
           </div>
-          <div className="rounded-2xl overflow-hidden border border-gray-200" style={{ height: '380px' }}>
+          <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200" style={{ height: '280px' }}>
             <MapContainer center={[39.7747, 64.4286]} zoom={6} style={{ height: '100%', width: '100%' }}>
               <TileLayer
                 attribution='&copy; <a href="https://carto.com/">CARTO</a>'
@@ -711,32 +711,32 @@ export default function Dashboard() {
         </div>
 
         {/* Songgi reyslar */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Route className="text-purple-600" size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <Route className="text-purple-600" size={16} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Songgi reyslar</h2>
-                <p className="text-sm text-gray-500">Oxirgi faoliyat</p>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">Reyslar tarixi</h2>
+                <p className="text-xs sm:text-sm text-gray-500">{recentFlights.length} ta reys</p>
               </div>
             </div>
-            <button onClick={() => navigate('/dashboard/trips')} className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
-              Barchasi <ArrowUpRight size={14} />
+            <button onClick={() => navigate('/dashboard/trips')} className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1">
+              Barchasi <ArrowUpRight size={12} className="sm:w-3.5 sm:h-3.5" />
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {/* So'ngi reyslar - faqat yangi Flight tizimidan */}
             {recentFlights.map((flight) => (
               <div key={`recent-flight-${flight._id}`} 
                 onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                className={`group flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all ${
+                className={`group flex items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl cursor-pointer transition-all ${
                   flight.status === 'active' 
                     ? 'hover:bg-emerald-50 border border-emerald-100' 
                     : 'hover:bg-gray-50'
                 }`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ${
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-lg flex-shrink-0 ${
                   flight.status === 'active' 
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600' 
                     : flight.status === 'completed'
@@ -746,19 +746,13 @@ export default function Dashboard() {
                   {flight.driver?.fullName?.charAt(0) || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{flight.driver?.fullName || 'Nomalum'}</p>
-                  <p className="text-sm text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
-                  <p className="text-xs text-gray-400">
-                    {flight.legs?.length || 0} bosqich • {flight.totalDistance || 0} km
-                    {flight.status === 'completed' && (
-                      <span className={flight.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}>
-                        {` • ${flight.profit >= 0 ? 'Foyda' : 'Zarar'}: ${new Intl.NumberFormat('uz-UZ').format(Math.abs(flight.profit || 0))} so'm`}
-                      </span>
-                    )}
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Yangi reys'}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">
+                    {new Date(flight.createdAt).toLocaleDateString('uz-UZ')} • {flight.totalDistance || 0} km • {flight.legs?.length || 0} bosqich
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                <div className="text-right flex-shrink-0 hidden sm:block">
+                  <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${
                     flight.status === 'active' 
                       ? 'bg-emerald-100 text-emerald-700' 
                       : flight.status === 'completed'
@@ -771,11 +765,11 @@ export default function Dashboard() {
               </div>
             ))}
             {recentFlights.length === 0 && (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Route size={32} className="text-gray-400" />
+              <div className="text-center py-8 sm:py-16">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Route size={24} className="sm:w-8 sm:h-8 text-gray-400" />
                 </div>
-                <p className="text-gray-500">Reyslar yoq</p>
+                <p className="text-gray-500 text-sm sm:text-base">Reyslar yo'q</p>
                 <p className="text-xs text-gray-400 mt-1">Shofyorlar sahifasidan yangi reys oching</p>
               </div>
             )}
