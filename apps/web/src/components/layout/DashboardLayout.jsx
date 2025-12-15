@@ -172,7 +172,7 @@ export default function DashboardLayout() {
 
       {/* Main content */}
       <main className="lg:ml-72 h-screen overflow-y-auto">
-        <div className="p-4 sm:p-6 pt-16 lg:pt-6 animate-fadeIn">
+        <div className="p-3 sm:p-4 md:p-6 pt-16 lg:pt-6 pb-20 lg:pb-6 animate-fadeIn">
           <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
             <Outlet />
           </SidebarContext.Provider>
