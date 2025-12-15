@@ -113,26 +113,32 @@ export default function Flights() {
   const formatDate = (date) => date ? new Date(date).toLocaleDateString('uz-UZ') : '-'
 
   // Yangi bosqich qo'shish
-  const handleAddLeg = async (e) => {
+  const handleAddLeg = (e) => {
     e.preventDefault()
     if (!legForm.toCity) {
       showToast.error('Qayerga shahrini kiriting!')
       return
     }
 
-    try {
-      await api.post(`/flights/${selectedFlight._id}/legs`, {
-        toCity: legForm.toCity,
-        payment: Number(legForm.payment) || 0,
-        distance: Number(legForm.distance) || 0
-      })
-      showToast.success('Yangi bosqich qo\'shildi!')
-      setShowLegModal(false)
-      setLegForm({ toCity: '', payment: '', distance: '' })
-      fetchData()
-    } catch (error) {
-      showToast.error(error.response?.data?.message || 'Xatolik')
+    const flightId = selectedFlight._id
+    const legData = {
+      toCity: legForm.toCity,
+      payment: Number(legForm.payment) || 0,
+      distance: Number(legForm.distance) || 0
     }
+
+    // Darhol yopish
+    setShowLegModal(false)
+    setLegForm({ toCity: '', payment: '', distance: '' })
+    showToast.success('Bosqich qo\'shildi!')
+
+    // Fonda API
+    api.post(`/flights/${flightId}/legs`, legData)
+      .then(() => fetchData())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchData()
+      })
   }
 
   // Xarajat qo'shish
@@ -188,18 +194,24 @@ export default function Flights() {
 
     if (!confirmed) return
 
-    try {
-      await api.put(`/flights/${selectedFlight._id}/complete`, {
-        endOdometer: Number(completeForm.endOdometer) || 0,
-        endFuel: Number(completeForm.endFuel) || 0
-      })
-      alert.success('Reys yopildi! ✅', 'Reys muvaffaqiyatli yakunlandi')
-      setShowCompleteModal(false)
-      setCompleteForm({ endOdometer: '', endFuel: '' })
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik yuz berdi', error.response?.data?.message || 'Serverda xatolik')
+    const flightId = selectedFlight._id
+    const completeData = {
+      endOdometer: Number(completeForm.endOdometer) || 0,
+      endFuel: Number(completeForm.endFuel) || 0
     }
+
+    // Darhol yopish
+    setShowCompleteModal(false)
+    setCompleteForm({ endOdometer: '', endFuel: '' })
+    showToast.success('Reys yopildi!')
+
+    // Fonda API
+    api.put(`/flights/${flightId}/complete`, completeData)
+      .then(() => fetchData())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchData()
+      })
   }
 
   // Chegara xarajati qo'shish (xalqaro reyslar uchun)
@@ -279,13 +291,15 @@ export default function Flights() {
 
     if (!confirmed) return
 
-    try {
-      await api.delete(`/flights/${flightId}/expenses/${expenseId}`)
-      alert.success('O\'chirildi', 'Xarajat muvaffaqiyatli o\'chirildi')
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik', 'Xarajatni o\'chirishda xatolik yuz berdi')
-    }
+    showToast.success('Xarajat o\'chirildi')
+
+    // Fonda API
+    api.delete(`/flights/${flightId}/expenses/${expenseId}`)
+      .then(() => fetchData())
+      .catch(() => {
+        showToast.error('Xarajatni o\'chirishda xatolik')
+        fetchData()
+      })
   }
 
   const statusConfig = {

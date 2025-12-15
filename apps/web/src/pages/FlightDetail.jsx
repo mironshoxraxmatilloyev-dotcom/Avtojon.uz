@@ -275,39 +275,44 @@ export default function FlightDetail() {
   }
 
   // Yangi bosqich qo'shish
-  const handleAddLeg = async (e) => {
+  const handleAddLeg = (e) => {
     e.preventDefault()
     
     // Validatsiyalar
     if (!legForm.toCity?.trim()) {
-      alert.warning('Maydon to\'ldirilmagan', 'Qayerga (tugash nuqtasi) shahrini kiriting!')
+      showToast.error('Qayerga shahrini kiriting!')
       return
     }
 
     const fromCity = legForm.fromCity || (flight.legs?.length > 0 ? flight.legs[flight.legs.length - 1].toCity : '')
     
     if (fromCity.toLowerCase() === legForm.toCity.trim().toLowerCase()) {
-      alert.warning('Xatolik', 'Boshlanish va tugash nuqtalari bir xil bo\'lmasligi kerak!')
+      showToast.error('Boshlanish va tugash nuqtalari bir xil bo\'lmasligi kerak!')
       return
     }
 
-    try {
-      await api.post(`/flights/${id}/legs`, {
-        fromCity: fromCity,
-        toCity: legForm.toCity.trim(),
-        fromCoords: legForm.fromCoords,
-        toCoords: legForm.toCoords,
-        payment: Number(legForm.payment) || 0,
-        givenBudget: Number(legForm.givenBudget) || 0,
-        distance: Number(legForm.distance) || 0
-      })
-      alert.success('Bosqich qo\'shildi! 📍', `${fromCity} → ${legForm.toCity}`)
-      setShowLegModal(false)
-      setLegForm({ fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik yuz berdi', error.response?.data?.message || 'Serverda xatolik')
+    const legData = {
+      fromCity: fromCity,
+      toCity: legForm.toCity.trim(),
+      fromCoords: legForm.fromCoords,
+      toCoords: legForm.toCoords,
+      payment: Number(legForm.payment) || 0,
+      givenBudget: Number(legForm.givenBudget) || 0,
+      distance: Number(legForm.distance) || 0
     }
+
+    // Darhol yopish
+    setShowLegModal(false)
+    setLegForm({ fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
+    showToast.success(`${fromCity} → ${legForm.toCity} qo'shildi`)
+
+    // Fonda API
+    api.post(`/flights/${id}/legs`, legData)
+      .then(() => fetchFlight())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchFlight()
+      })
   }
 
   // Xarajat qo'shish
@@ -371,39 +376,43 @@ export default function FlightDetail() {
 
     if (!confirmed) return
 
-    try {
-      await api.delete(`/flights/${id}/expenses/${expenseId}`)
-      alert.success('O\'chirildi', 'Xarajat muvaffaqiyatli o\'chirildi')
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik', 'Xarajatni o\'chirishda xatolik yuz berdi')
-    }
+    showToast.success('Xarajat o\'chirildi')
+
+    // Fonda API
+    api.delete(`/flights/${id}/expenses/${expenseId}`)
+      .then(() => fetchFlight())
+      .catch(() => {
+        showToast.error('Xarajatni o\'chirishda xatolik')
+        fetchFlight()
+      })
   }
 
   // ============ XALQARO REYS FUNKSIYALARI ============
   
   // Chegara xarajati qo'shish
-  const handleAddBorderCrossing = async (e) => {
+  const handleAddBorderCrossing = (e) => {
     e.preventDefault()
-    if (submitting) return
-    setSubmitting(true)
-    try {
-      await api.post(`/flights/${id}/border-crossing`, {
-        ...borderForm,
-        customsFee: Number(borderForm.customsFee) || 0,
-        transitFee: Number(borderForm.transitFee) || 0,
-        insuranceFee: Number(borderForm.insuranceFee) || 0,
-        otherFees: Number(borderForm.otherFees) || 0
-      })
-      alert.success('Chegara xarajati qo\'shildi! 🛂')
-      setShowBorderModal(false)
-      setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+    
+    const borderData = {
+      ...borderForm,
+      customsFee: Number(borderForm.customsFee) || 0,
+      transitFee: Number(borderForm.transitFee) || 0,
+      insuranceFee: Number(borderForm.insuranceFee) || 0,
+      otherFees: Number(borderForm.otherFees) || 0
     }
+
+    // Darhol yopish
+    setShowBorderModal(false)
+    setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
+    showToast.success('Chegara xarajati qo\'shildi!')
+
+    // Fonda API
+    api.post(`/flights/${id}/border-crossing`, borderData)
+      .then(() => fetchFlight())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchFlight()
+      })
   }
 
   // Chegara xarajatini o'chirish
@@ -416,13 +425,16 @@ export default function FlightDetail() {
       type: "danger"
     })
     if (!confirmed) return
-    try {
-      await api.delete(`/flights/${id}/border-crossing/${crossingId}`)
-      alert.success('O\'chirildi')
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik')
-    }
+
+    showToast.success('Chegara xarajati o\'chirildi')
+
+    // Fonda API
+    api.delete(`/flights/${id}/border-crossing/${crossingId}`)
+      .then(() => fetchFlight())
+      .catch(() => {
+        showToast.error('Xatolik')
+        fetchFlight()
+      })
   }
 
   // Platon saqlash
@@ -462,21 +474,22 @@ export default function FlightDetail() {
 
     if (!confirmed) return
 
-    try {
-      await api.put(`/flights/${id}/complete`, {
-        endOdometer: Number(completeForm.endOdometer) || 0,
-        endFuel: Number(completeForm.endFuel) || 0
-      })
-      
-      const profit = flight.totalPayment - flight.totalExpenses
-      const profitText = profit >= 0 ? `Foyda: ${new Intl.NumberFormat('uz-UZ').format(profit)} so'm` : `Zarar: ${new Intl.NumberFormat('uz-UZ').format(Math.abs(profit))} so'm`
-      
-      alert.success('Reys yopildi! ✅', profitText)
-      setShowCompleteModal(false)
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik yuz berdi', error.response?.data?.message || 'Serverda xatolik')
+    const completeData = {
+      endOdometer: Number(completeForm.endOdometer) || 0,
+      endFuel: Number(completeForm.endFuel) || 0
     }
+
+    // Darhol yopish
+    setShowCompleteModal(false)
+    showToast.success('Reys yopildi!')
+
+    // Fonda API
+    api.put(`/flights/${id}/complete`, completeData)
+      .then(() => fetchFlight())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchFlight()
+      })
   }
 
   if (loading) {
