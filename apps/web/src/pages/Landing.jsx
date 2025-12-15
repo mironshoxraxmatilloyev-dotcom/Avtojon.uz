@@ -1,19 +1,15 @@
-import { useEffect, useRef, lazy, Suspense, useState } from 'react'
+import { useEffect, useRef, lazy, Suspense, useState, memo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
   Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles, Zap,
-  CheckCircle, Star, Users, Route, Clock, TrendingUp, Play, ChevronDown
+  CheckCircle, Star, Users, Route, Clock, TrendingUp, Play
 } from 'lucide-react'
 // import { useScrollAnimation, useStaggerAnimation } from '../hooks/useScrollAnimation'
 
-// Lazy load 3D scene for better performance
+// 🚀 Lazy load 3D scene - faqat kerak bo'lganda
 const Scene3D = lazy(() => import('../components/3d/Scene3D'))
-
-gsap.registerPlugin(ScrollTrigger)
 
 const features = [
   { icon: MapPin, title: 'Real-time GPS', desc: 'Mashinalaringizni jonli xaritada kuzating', color: 'from-emerald-500 to-teal-600' },
@@ -29,128 +25,56 @@ const stats = [
   { value: '24/7', label: 'Qollab-quvvatlash' },
 ]
 
-// Optimized animated text - CSS based with JS trigger
-function AnimatedText({ children, delay = 0 }) {
-  const ref = useRef(null)
-  
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    
-    // Use CSS transitions instead of GSAP for better performance
-    element.style.transitionDelay = `${delay}s`
-    requestAnimationFrame(() => {
-      element.classList.add('animate-in')
-    })
-  }, [delay])
-  
-  return (
-    <div 
-      ref={ref} 
-      className="opacity-0 translate-y-6 transition-all duration-700 ease-out"
-      style={{ willChange: 'opacity, transform' }}
-    >
-      {children}
-    </div>
-  )
-}
+// 🚀 Optimized AnimatedText - CSS only, no JS
+const AnimatedText = memo(({ children, delay = 0 }) => (
+  <div 
+    className="opacity-0 translate-y-4 animate-fadeIn"
+    style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
+  >
+    {children}
+  </div>
+))
 
-// Simplified magnetic button - lighter effect
-function MagneticButton({ children, className, ...props }) {
-  const buttonRef = useRef(null)
-  
-  useEffect(() => {
-    const button = buttonRef.current
-    if (!button || window.innerWidth < 768) return // Disable on mobile
-    
-    const handleMouseMove = (e) => {
-      const rect = button.getBoundingClientRect()
-      const x = (e.clientX - rect.left - rect.width / 2) * 0.15
-      const y = (e.clientY - rect.top - rect.height / 2) * 0.15
-      
-      button.style.transform = `translate(${x}px, ${y}px)`
-    }
-    
-    const handleMouseLeave = () => {
-      button.style.transform = 'translate(0, 0)'
-    }
-    
-    button.addEventListener('mousemove', handleMouseMove)
-    button.addEventListener('mouseleave', handleMouseLeave)
-    
-    return () => {
-      button.removeEventListener('mousemove', handleMouseMove)
-      button.removeEventListener('mouseleave', handleMouseLeave)
-    }
-  }, [])
-  
-  return (
-    <div 
-      ref={buttonRef} 
-      className={`${className} transition-transform duration-200 ease-out`} 
-      style={{ willChange: 'transform' }}
-      {...props}
-    >
-      {children}
-    </div>
-  )
-}
+// 🚀 Simple Button wrapper - magnetic effect o'chirildi (performance uchun)
+const MagneticButton = memo(({ children, className }) => (
+  <div className={className}>{children}</div>
+))
 
-// Static Card - 3D tilt o'chirilgan (input yozishda noqulaylik qilmasligi uchun)
-function Card3D({ children, className }) {
-  return <div className={className}>{children}</div>
-}
+// 🚀 Simple Card - no effects
+const Card3D = memo(({ children, className }) => (
+  <div className={className}>{children}</div>
+))
 
 export default function Landing() {
-  const heroRef = useRef(null)
-  const featuresRef = useRef(null)
-  const statsRef = useRef(null)
-  const stepsRef = useRef(null)
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
   const [demoLoading, setDemoLoading] = useState(false)
 
-  // Demo akkaunt bilan kirish
-  const handleDemoLogin = async () => {
+  // 🚀 Demo login - useCallback bilan optimizatsiya
+  const handleDemoLogin = useCallback(async () => {
     setDemoLoading(true)
     try {
-      // Demo endpoint - avtomatik demo user yaratadi
       const response = await api.post('/auth/demo')
-      
       if (response.data.success && response.data.data) {
         setAuth(response.data.data.token, response.data.data.user)
         navigate('/dashboard')
       }
     } catch (error) {
-      alert('Demo akkauntga kirishda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.')
+      alert('Demo akkauntga kirishda xatolik yuz berdi.')
     } finally {
       setDemoLoading(false)
     }
-  }
-  
-  // Hero parallax effect
-  useEffect(() => {
-    const hero = heroRef.current
-    if (!hero) return
-    
-    gsap.to(hero, {
-      yPercent: 30,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: hero,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true
-      }
-    })
-  }, [])
+  }, [setAuth, navigate])
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] text-white overflow-hidden">
-      {/* 3D Background Scene */}
+      {/* 🚀 3D Background - lazy loaded */}
       <div className="fixed inset-0 z-0">
         <Suspense fallback={
-          <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent">
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
         }>
           <Scene3D variant="hero" />
         </Suspense>
@@ -194,7 +118,7 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative z-10 container mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-20 sm:pb-32">
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-20 sm:pb-32">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <AnimatedText delay={0.3}>
@@ -262,7 +186,7 @@ export default function Landing() {
         </div>
 
         {/* Stats */}
-        <div ref={statsRef} className="max-w-4xl mx-auto mt-16 sm:mt-20 px-2">
+        <div className="max-w-4xl mx-auto mt-16 sm:mt-20 px-2">
           <Card3D className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-5 sm:p-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
               {stats.map(({ value, label }) => (
@@ -288,7 +212,7 @@ export default function Landing() {
             <p className="text-violet-300 max-w-2xl mx-auto text-sm sm:text-base px-2">Biznesingizni keyingi bosqichga olib chiqadigan barcha vositalar</p>
           </div>
 
-          <div ref={featuresRef} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {features.map(({ icon: Icon, title, desc, color }) => (
               <Card3D key={title} className="group bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-violet-500/30 transition-all hover:bg-white/10">
                 <div className={`w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br ${color} rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 shadow-lg group-hover:scale-110 transition-transform`}>
@@ -312,7 +236,7 @@ export default function Landing() {
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">3 oddiy qadam</h3>
           </div>
 
-          <div ref={stepsRef} className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 max-w-5xl mx-auto">
             {[
               { step: '01', title: 'Ro\'yxatdan o\'ting', desc: 'Bir daqiqada hisob yarating va platformaga kiring', icon: Users },
               { step: '02', title: 'Ma\'lumotlarni kiriting', desc: 'Mashinalar va shofyorlarni qo\'shing', icon: Truck },

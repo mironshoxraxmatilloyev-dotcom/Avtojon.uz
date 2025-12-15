@@ -336,14 +336,14 @@ router.post('/me/expenses', protect, driverOnly, async (req, res) => {
     } else if (expenseType === 'toll') {
       // Yo'l puli - roadExpenses ga qo'shish
       const ctry = (country || 'UZB').toLowerCase();
-      if (!trip.roadExpenses) trip.roadExpenses = { uzb: {}, qz: {}, ru: {}, totalUSD: 0 };
+      if (!trip.roadExpenses) trip.roadExpenses = { uzb: {}, kz: {}, ru: {}, totalUSD: 0 };
       if (!trip.roadExpenses[ctry]) trip.roadExpenses[ctry] = {};
       trip.roadExpenses[ctry].toll = (trip.roadExpenses[ctry].toll || 0) + amountInUSD;
       trip.roadExpenses[ctry].totalInUSD = (trip.roadExpenses[ctry].totalInUSD || 0) + amountInUSD;
     } else if (expenseType === 'parking') {
       // Stoyanka - roadExpenses ga qo'shish
       const ctry = (country || 'UZB').toLowerCase();
-      if (!trip.roadExpenses) trip.roadExpenses = { uzb: {}, qz: {}, ru: {}, totalUSD: 0 };
+      if (!trip.roadExpenses) trip.roadExpenses = { uzb: {}, kz: {}, ru: {}, totalUSD: 0 };
       if (!trip.roadExpenses[ctry]) trip.roadExpenses[ctry] = {};
       trip.roadExpenses[ctry].parking = (trip.roadExpenses[ctry].parking || 0) + amountInUSD;
       trip.roadExpenses[ctry].totalInUSD = (trip.roadExpenses[ctry].totalInUSD || 0) + amountInUSD;
@@ -490,7 +490,22 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
     leg.completedAt = new Date();
     await flight.save();
 
-    res.json({ success: true, data: flight });
+    // Populate qilish
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket orqali biznesmenga xabar yuborish
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`business-${flight.user}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: `${req.driver.fullName} bosqichni tugatdi: ${leg.fromCity} → ${leg.toCity}`
+      });
+      console.log(`📢 Bosqich tugatildi xabari yuborildi: business-${flight.user}`);
+    }
+
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -499,7 +514,15 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
 // Xarajat qo'shish (Flight tizimi)
 router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) => {
   try {
-    const { type, amount, description, currency, country } = req.body;
+    const { 
+      type, amount, description,
+      // Yoqilg'i uchun
+      quantity, quantityUnit, pricePerUnit,
+      // Joylashuv
+      location, stationName,
+      // Odometr
+      odometer
+    } = req.body;
 
     const flight = await Flight.findOne({ 
       _id: req.params.id, 
@@ -511,28 +534,77 @@ router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) =>
       return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
     }
 
-    flight.expenses.push({
+    // Yoqilg'i xarajati uchun qo'shimcha hisob-kitob
+    let distanceSinceLast = null;
+    let fuelConsumption = null;
+    
+    if (type && type.startsWith('fuel_') && odometer) {
+      // Oldingi yoqilg'i xarajatini topish
+      const lastFuelExpense = [...flight.expenses]
+        .reverse()
+        .find(exp => exp.type && exp.type.startsWith('fuel_') && exp.odometer);
+      
+      if (lastFuelExpense && lastFuelExpense.odometer) {
+        distanceSinceLast = odometer - lastFuelExpense.odometer;
+        
+        // Sarflanish hisoblash (litr/100km)
+        if (lastFuelExpense.quantity && distanceSinceLast > 0) {
+          fuelConsumption = Math.round((lastFuelExpense.quantity / distanceSinceLast) * 100 * 10) / 10;
+        }
+      } else if (flight.startOdometer) {
+        // Birinchi yoqilg'i - reys boshidan hisoblash
+        distanceSinceLast = odometer - flight.startOdometer;
+      }
+    }
+
+    // Xarajat qo'shish
+    const expenseData = {
       type: type || 'other',
       amount: Number(amount) || 0,
       description,
-      currency: currency || 'UZS',
-      country: country || 'UZB',
-      date: new Date()
-    });
+      date: new Date(),
+      legIndex: flight.legs.length > 0 ? flight.legs.length - 1 : 0
+    };
 
+    // Yoqilg'i ma'lumotlari
+    if (type && type.startsWith('fuel_')) {
+      expenseData.quantity = quantity ? Number(quantity) : null;
+      expenseData.quantityUnit = quantityUnit || (type === 'fuel_gas' || type === 'fuel_metan' ? 'kub' : 'litr');
+      expenseData.pricePerUnit = pricePerUnit ? Number(pricePerUnit) : null;
+      expenseData.stationName = stationName || null;
+      expenseData.odometer = odometer ? Number(odometer) : null;
+      expenseData.distanceSinceLast = distanceSinceLast;
+      expenseData.fuelConsumption = fuelConsumption;
+    }
+
+    // Joylashuv
+    if (location && (location.lat || location.name)) {
+      expenseData.location = {
+        name: location.name || null,
+        lat: location.lat || null,
+        lng: location.lng || null
+      };
+    }
+
+    flight.expenses.push(expenseData);
     await flight.save();
+
+    // Populate qilish
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
 
     // Socket orqali biznesmenga xabar
     const io = req.app.get('io');
     if (io) {
-      io.to(`business-${flight.user}`).emit('flight-expense-added', {
-        flightId: flight._id,
-        expense: flight.expenses[flight.expenses.length - 1],
-        driverName: req.driver.fullName
+      const expenseLabel = type && type.startsWith('fuel_') ? 'yoqilg\'i oldi' : 'xarajat qo\'shdi';
+      io.to(`business-${flight.user}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: `${req.driver.fullName} ${expenseLabel}`
       });
     }
 
-    res.json({ success: true, data: flight });
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

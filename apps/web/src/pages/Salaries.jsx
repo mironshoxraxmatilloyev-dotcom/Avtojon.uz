@@ -6,11 +6,13 @@ import {
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
+import { SalariesSkeleton, NetworkError, ServerError } from '../components/ui'
 
 export default function Salaries() {
     const [salaries, setSalaries] = useState([])
     const [drivers, setDrivers] = useState([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [selectedSalary, setSelectedSalary] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
@@ -22,6 +24,8 @@ export default function Salaries() {
     })
 
     const fetchData = async () => {
+        setLoading(true)
+        setError(null)
         try {
             const [salRes, drvRes] = await Promise.all([
                 api.get('/salaries'),
@@ -29,8 +33,11 @@ export default function Salaries() {
             ])
             setSalaries(salRes.data.data || [])
             setDrivers(drvRes.data.data || [])
-        } catch (error) {
-            showToast.error('Xatolik')
+        } catch (err) {
+            setError({
+                type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
+                message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+            })
         } finally {
             setLoading(false)
         }
@@ -104,16 +111,23 @@ export default function Salaries() {
     })
 
     if (loading) {
+        return <SalariesSkeleton />
+    }
+
+    if (error) {
+        if (error.type === 'network') {
+            return <NetworkError onRetry={fetchData} message={error.message} />
+        }
+        if (error.type === 'server') {
+            return <ServerError onRetry={fetchData} message={error.message} />
+        }
         return (
-            <div className="min-h-[80vh] flex items-center justify-center">
+            <div className="min-h-[400px] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="relative w-20 h-20 mx-auto mb-6">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl animate-pulse"></div>
-                        <div className="absolute inset-2 bg-white rounded-xl flex items-center justify-center">
-                            <Wallet className="w-8 h-8 text-blue-600 animate-bounce" />
-                        </div>
-                    </div>
-                    <p className="text-gray-500 font-medium">Maoshlar yuklanmoqda...</p>
+                    <p className="text-gray-500 mb-4">{error.message}</p>
+                    <button onClick={fetchData} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                        Qayta urinish
+                    </button>
                 </div>
             </div>
         )

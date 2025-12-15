@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { 
-  ArrowLeft, User, Phone, CreditCard, Truck, Route, MapPin, 
+  ArrowLeft, User, Phone, Truck, Route, MapPin, 
   Calendar, Wallet, TrendingUp, TrendingDown, CheckCircle, Clock, 
-  Activity, Star, Award, ChevronRight, Sparkles, Shield, X, Play, Gauge, Fuel
+  Activity, Star, Award, ChevronRight, Sparkles, X, Play, Gauge, Fuel
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
-import { useAlert } from '../components/ui'
+import { useAlert, DriverDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
+import { useSocket } from '../contexts/SocketContext'
 
 export default function DriverDetail() {
   const { id } = useParams()
@@ -18,15 +19,28 @@ export default function DriverDetail() {
   const { isDemo } = useAuthStore()
   const alert = useAlert()
   const isDemoMode = isDemo()
+  const { socket } = useSocket()
   
   const [driver, setDriver] = useState(null)
-  const [trips, setTrips] = useState([])
   const [flights, setFlights] = useState([])
   const [vehicle, setVehicle] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   
   // Reys ochish modal
   const [showFlightModal, setShowFlightModal] = useState(false)
+  
+  // Modal ochilganda body scroll ni bloklash
+  useEffect(() => {
+    if (showFlightModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showFlightModal])
   const [flightForm, setFlightForm] = useState({
     startOdometer: '',
     startFuel: '',
@@ -40,30 +54,88 @@ export default function DriverDetail() {
     flightType: 'domestic' // 'domestic' - mahalliy, 'international' - xalqaro
   })
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true)
+    setError(null)
     try {
-      const [driverRes, tripsRes, vehiclesRes, flightsRes] = await Promise.all([
+      const [driverRes, vehiclesRes, flightsRes] = await Promise.all([
         api.get(`/drivers/${id}`),
-        api.get('/trips', { params: { driverId: id } }),
         api.get('/vehicles'),
         api.get('/flights', { params: { driverId: id } })
       ])
       setDriver(driverRes.data.data)
-      setTrips(tripsRes.data.data || [])
       setFlights(flightsRes.data.data || [])
       const assignedVehicle = (vehiclesRes.data.data || []).find(v => 
         v.currentDriver === id || v.currentDriver?._id === id
       )
       setVehicle(assignedVehicle)
-    } catch (error) {
-      showToast.error('Shofyor topilmadi')
-      navigate('/dashboard/drivers')
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setError({ type: 'notfound', message: 'Shofyor topilmadi' })
+      } else {
+        setError({
+          type: err.isNetworkError ? 'network' : 'generic',
+          message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+        })
+      }
     } finally {
       setLoading(false)
     }
+  }, [id])
+
+  // Dastlabki yuklash
+  useEffect(() => { fetchData() }, [fetchData])
+  
+  // Socket orqali realtime yangilanishlar
+  useEffect(() => {
+    if (!socket) return
+    
+    const handleFlightUpdate = (data) => {
+      // Agar bu shofyorga tegishli bo'lsa, ma'lumotlarni yangilash
+      if (data.flight?.driver === id || data.flight?.driver?._id === id) {
+        fetchData(false) // Loader ko'rsatmasdan yangilash
+      }
+    }
+    
+    const handleDriverUpdate = (data) => {
+      if (data.driver?._id === id || data.driverId === id) {
+        fetchData(false)
+      }
+    }
+    
+    socket.on('flight-started', handleFlightUpdate)
+    socket.on('flight-updated', handleFlightUpdate)
+    socket.on('flight-completed', handleFlightUpdate)
+    socket.on('driver-updated', handleDriverUpdate)
+    
+    return () => {
+      socket.off('flight-started', handleFlightUpdate)
+      socket.off('flight-updated', handleFlightUpdate)
+      socket.off('flight-completed', handleFlightUpdate)
+      socket.off('driver-updated', handleDriverUpdate)
+    }
+  }, [socket, id, fetchData])
+
+  if (loading) {
+    return <DriverDetailSkeleton />
   }
 
-  useEffect(() => { fetchData() }, [id])
+  if (error) {
+    if (error.type === 'notfound') {
+      return <NotFoundError title="Shofyor topilmadi" message="Bu shofyor mavjud emas yoki o'chirilgan" onBack={() => navigate('/dashboard/drivers')} />
+    }
+    if (error.type === 'network') {
+      return <NetworkError onRetry={fetchData} message={error.message} />
+    }
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">{error.message}</p>
+          <button onClick={fetchData} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Qayta urinish</button>
+        </div>
+      </div>
+    )
+  }
 
   // Masofa hisoblash
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -136,13 +208,27 @@ export default function DriverDetail() {
     available: { label: "Bo'sh", color: 'from-emerald-500 to-teal-600', icon: CheckCircle }
   }
 
-  // Statistika
-  const completedTrips = trips.filter(t => t.status === 'completed')
-  const activeTrips = trips.filter(t => t.status === 'in_progress')
-  const totalBonus = completedTrips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
-  const totalPenalty = completedTrips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
-  const totalPayment = completedTrips.reduce((sum, t) => sum + (t.tripPayment || 0), 0)
-  const totalEarnings = (driver?.baseSalary || 0) + totalPayment + totalBonus - totalPenalty
+  // Statistika - flights dan olinadi
+  const completedFlights = flights.filter(f => f.status === 'completed')
+  const activeFlights = flights.filter(f => f.status === 'active')
+  
+  // Jami to'lovlar (mijozdan olingan)
+  const totalPayment = flights.reduce((sum, f) => sum + (f.totalPayment || 0), 0)
+  
+  // Jami berilgan yo'l xarajatlari
+  const totalGivenBudget = flights.reduce((sum, f) => sum + (f.totalGivenBudget || 0), 0)
+  
+  // Jami sarflangan xarajatlar
+  const totalExpenses = flights.reduce((sum, f) => sum + (f.totalExpenses || 0), 0)
+  
+  // Jami foyda
+  const totalProfit = flights.reduce((sum, f) => sum + (f.profit || 0), 0)
+  
+  // Jami masofa
+  const totalDistance = flights.reduce((sum, f) => sum + (f.totalDistance || 0), 0)
+  
+  // Jami daromad = oylik maosh + foyda
+  const totalEarnings = (driver?.baseSalary || 0) + totalProfit
 
   if (loading) {
     return (
@@ -219,7 +305,7 @@ export default function DriverDetail() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="text-center px-4 py-3 sm:px-6 sm:py-4 bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl border border-white/10">
-                <p className="text-2xl sm:text-3xl font-bold">{completedTrips.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold">{flights.length}</p>
                 <p className="text-blue-300 text-xs sm:text-sm">Reyslar</p>
               </div>
               <div className="text-center px-4 py-3 sm:px-6 sm:py-4 bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl border border-white/10">
@@ -340,23 +426,23 @@ export default function DriverDetail() {
                   <Route size={16} className="sm:w-5 sm:h-5 text-white" />
                 </div>
                 <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatMoney(totalPayment)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Reys haqlari</p>
+                <p className="text-xs sm:text-sm text-gray-500">Mijozdan to'lov</p>
+              </div>
+
+              <div className="group p-3 sm:p-5 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl border border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 transition-all">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+                  <TrendingDown size={16} className="sm:w-5 sm:h-5 text-white" />
+                </div>
+                <p className="text-lg sm:text-2xl font-bold text-orange-600">{formatMoney(totalExpenses)}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Yo'l xarajatlari</p>
               </div>
 
               <div className="group p-3 sm:p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl sm:rounded-2xl border border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10 transition-all">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
                   <TrendingUp size={16} className="sm:w-5 sm:h-5 text-white" />
                 </div>
-                <p className="text-lg sm:text-2xl font-bold text-emerald-600">+{formatMoney(totalBonus)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Bonuslar</p>
-              </div>
-
-              <div className="group p-3 sm:p-5 bg-gradient-to-br from-red-50 to-rose-50 rounded-xl sm:rounded-2xl border border-red-100 hover:shadow-lg hover:shadow-red-500/10 transition-all">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                  <TrendingDown size={16} className="sm:w-5 sm:h-5 text-white" />
-                </div>
-                <p className="text-lg sm:text-2xl font-bold text-red-600">-{formatMoney(totalPenalty)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Jarimalar</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-600">+{formatMoney(totalProfit)}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Sof foyda</p>
               </div>
             </div>
 
@@ -568,10 +654,15 @@ export default function DriverDetail() {
 
       {/* Reys ochish Modal */}
       {showFlightModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setShowFlightModal(false)}
+        >
           <div className="min-h-full flex items-center justify-center p-4">
-            <div className="absolute inset-0" onClick={() => setShowFlightModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="p-6 border-b border-white/10">
                 <div className="flex justify-between items-center">
@@ -684,6 +775,7 @@ export default function DriverDetail() {
                         }}
                         placeholder="Toshkent"
                         focusColor="green"
+                        domesticOnly={flightForm.flightType === 'domestic'}
                       />
                     </div>
                     <div>
@@ -700,6 +792,7 @@ export default function DriverDetail() {
                         }}
                         placeholder="Samarqand"
                         focusColor="green"
+                        domesticOnly={flightForm.flightType === 'domestic'}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">

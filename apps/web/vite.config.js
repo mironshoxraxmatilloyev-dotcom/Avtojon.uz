@@ -5,29 +5,73 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [react()],
+    plugins: [
+      react({
+        // Fast Refresh optimizatsiyasi
+        fastRefresh: true,
+      })
+    ],
+    
+    // 🚀 BUILD OPTIMIZATSIYASI
+    build: {
+      // Chunk splitting - katta fayllarni bo'lish
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks - alohida yuklanadi
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-ui': ['lucide-react', 'zustand'],
+            'vendor-map': ['leaflet', 'react-leaflet'],
+            'vendor-utils': ['axios', 'socket.io-client', 'gsap'],
+          }
+        }
+      },
+      // Chunk size warning
+      chunkSizeWarningLimit: 1000,
+      // Minify - esbuild (tezroq, terser kerak emas)
+      minify: 'esbuild',
+      // Source maps faqat dev uchun
+      sourcemap: mode === 'development',
+      // Target
+      target: 'es2020'
+    },
+
+    // 🚀 DEV SERVER OPTIMIZATSIYASI
     server: {
       port: 5173,
-      host: '0.0.0.0', // Tarmoqda ochish uchun
+      host: '0.0.0.0',
+      // HMR optimizatsiyasi
+      hmr: {
+        overlay: false // Error overlay ni o'chirish - tezroq
+      },
       proxy: {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
-          ws: true, // WebSocket support
-          configure: (proxy, _options) => {
-            proxy.on('error', (err, _req, _res) => {
-              console.log('❌ Proxy error:', err);
-            });
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log('📤 Sending Request:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req, _res) => {
-              console.log('📥 Received Response:', proxyRes.statusCode, req.url);
-            });
-          }
+          ws: true
         }
       }
+    },
+
+    // 🚀 DEPENDENCY OPTIMIZATSIYASI
+    optimizeDeps: {
+      include: [
+        'react', 
+        'react-dom', 
+        'react-router-dom',
+        'zustand',
+        'axios',
+        'lucide-react'
+      ]
+    },
+
+    // 🚀 ESBUILD OPTIMIZATSIYASI
+    esbuild: {
+      // JSX optimizatsiyasi
+      jsxInject: undefined,
+      // Drop console in production
+      drop: mode === 'production' ? ['console', 'debugger'] : []
     }
   }
 })

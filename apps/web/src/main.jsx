@@ -1,32 +1,45 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { StrictMode, lazy, Suspense } from 'react'
+import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
 import App from './App'
-import { SocketProvider } from './contexts/SocketContext'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+// 🚀 Lazy load - kerak bo'lganda yuklanadi
+const SocketProvider = lazy(() => 
+  import('./contexts/SocketContext').then(mod => ({ default: mod.SocketProvider }))
+)
+const Toaster = lazy(() => 
+  import('react-hot-toast').then(mod => ({ default: mod.Toaster }))
+)
+
+// 🎯 Production da StrictMode o'chiriladi (2x render yo'q)
+const isDev = import.meta.env.DEV
+const Wrapper = isDev ? StrictMode : ({ children }) => children
+
+// 🚀 Root render
+createRoot(document.getElementById('root')).render(
+  <Wrapper>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <SocketProvider>
-        <App />
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'transparent',
-              boxShadow: 'none',
-              padding: 0,
-            },
-          }}
-          containerStyle={{
-            top: 20,
-            right: 20,
-          }}
-        />
-      </SocketProvider>
+      <Suspense fallback={null}>
+        <SocketProvider>
+          <App />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000, // Qisqaroq
+              style: {
+                background: 'transparent',
+                boxShadow: 'none',
+                padding: 0,
+              },
+            }}
+            containerStyle={{
+              top: 16,
+              right: 16,
+            }}
+          />
+        </SocketProvider>
+      </Suspense>
     </BrowserRouter>
-  </React.StrictMode>,
+  </Wrapper>
 )

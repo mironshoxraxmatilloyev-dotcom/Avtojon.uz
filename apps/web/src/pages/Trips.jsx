@@ -1,42 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Play, CheckCircle, XCircle, X, Route, Truck, ArrowRight, Wallet, Calendar, ArrowUpRight, Activity, Clock, MapPin, PenLine, Map } from 'lucide-react'
+import { Route } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../contexts/SocketContext'
 import LocationPicker from '../components/LocationPicker'
-import AddressAutocomplete from '../components/AddressAutocomplete'
-import { useAlert } from '../components/ui'
-
-// Demo rejim uchun fake reyslar
-const DEMO_TRIPS = [
-  { _id: 't1', driver: { fullName: 'Akmal Karimov' }, vehicle: { plateNumber: '01 A 123 AB' }, startAddress: 'Toshkent', endAddress: 'Samarqand', status: 'in_progress', estimatedDistance: 280, estimatedDuration: '4 soat', tripBudget: 2000000, tripPayment: 500000, createdAt: new Date() },
-  { _id: 't2', driver: { fullName: 'Bobur Aliyev' }, vehicle: { plateNumber: '01 B 456 CD' }, startAddress: 'Buxoro', endAddress: 'Navoiy', status: 'in_progress', estimatedDistance: 120, estimatedDuration: '2 soat', tripBudget: 1500000, tripPayment: 400000, createdAt: new Date() },
-  { _id: 't3', driver: { fullName: 'Sardor Rahimov' }, vehicle: { plateNumber: '01 C 789 EF' }, startAddress: 'Farg\'ona', endAddress: 'Andijon', status: 'in_progress', estimatedDistance: 80, estimatedDuration: '1.5 soat', tripBudget: 1000000, tripPayment: 300000, createdAt: new Date() },
-  { _id: 't4', driver: { fullName: 'Jasur Toshmatov' }, vehicle: { plateNumber: '01 D 012 GH' }, startAddress: 'Namangan', endAddress: 'Toshkent', status: 'pending', estimatedDistance: 320, estimatedDuration: '5 soat', tripBudget: 2500000, tripPayment: 600000, createdAt: new Date() },
-  { _id: 't5', driver: { fullName: 'Dilshod Umarov' }, vehicle: { plateNumber: '01 E 345 IJ' }, startAddress: 'Xorazm', endAddress: 'Buxoro', status: 'pending', estimatedDistance: 450, estimatedDuration: '7 soat', tripBudget: 3000000, tripPayment: 700000, createdAt: new Date() },
-  { _id: 't6', driver: { fullName: 'Nodir Qodirov' }, vehicle: { plateNumber: '01 F 678 KL' }, startAddress: 'Qarshi', endAddress: 'Termiz', status: 'completed', estimatedDistance: 200, estimatedDuration: '3 soat', tripBudget: 1800000, tripPayment: 450000, bonusAmount: 50000, createdAt: new Date(Date.now() - 86400000) },
-  { _id: 't7', driver: { fullName: 'Sherzod Yusupov' }, vehicle: { plateNumber: '01 G 901 MN' }, startAddress: 'Jizzax', endAddress: 'Toshkent', status: 'completed', estimatedDistance: 180, estimatedDuration: '2.5 soat', tripBudget: 1600000, tripPayment: 400000, createdAt: new Date(Date.now() - 172800000) },
-  { _id: 't8', driver: { fullName: 'Otabek Nazarov' }, vehicle: { plateNumber: '01 H 234 OP' }, startAddress: 'Nukus', endAddress: 'Urganch', status: 'completed', estimatedDistance: 150, estimatedDuration: '2 soat', tripBudget: 1400000, tripPayment: 350000, penaltyAmount: 30000, createdAt: new Date(Date.now() - 259200000) }
-]
-
-const DEMO_DRIVERS = [
-  { _id: 'd1', fullName: 'Akmal Karimov', status: 'busy' },
-  { _id: 'd2', fullName: 'Bobur Aliyev', status: 'busy' },
-  { _id: 'd3', fullName: 'Sardor Rahimov', status: 'busy' },
-  { _id: 'd4', fullName: 'Jasur Toshmatov', status: 'free' },
-  { _id: 'd5', fullName: 'Dilshod Umarov', status: 'free' }
-]
-
-const DEMO_VEHICLES = [
-  { _id: 'v1', plateNumber: '01 A 123 AB', brand: 'MAN', currentDriver: 'd1' },
-  { _id: 'v2', plateNumber: '01 B 456 CD', brand: 'Volvo', currentDriver: 'd2' },
-  { _id: 'v3', plateNumber: '01 C 789 EF', brand: 'Mercedes', currentDriver: 'd3' },
-  { _id: 'v4', plateNumber: '01 D 012 GH', brand: 'Scania', currentDriver: 'd4' },
-  { _id: 'v5', plateNumber: '01 E 345 IJ', brand: 'DAF', currentDriver: 'd5' }
-]
+import { useAlert, TripsSkeleton, NetworkError, ServerError } from '../components/ui'
+import { 
+  TripCard, 
+  TripModal, 
+  TripCompleteModal, 
+  TripsHeader,
+  DEMO_TRIPS, 
+  DEMO_DRIVERS, 
+  DEMO_VEHICLES,
+  FILTER_BUTTONS,
+  INITIAL_FORM_STATE
+} from '../components/trips'
 
 export default function Trips() {
   const { user, isDemo } = useAuthStore()
@@ -46,17 +27,16 @@ export default function Trips() {
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
-  const [routeMode, setRouteMode] = useState('manual') // 'manual' | 'map'
+  const [routeMode, setRouteMode] = useState('manual')
   const [completingTrip, setCompletingTrip] = useState(null)
-  const [form, setForm] = useState({
-    driverId: '', vehicleId: '', startAddress: '', endAddress: '',
-    estimatedDuration: '', estimatedDistance: '', tripBudget: '', tripPayment: '',
-    startCoords: null, endCoords: null
-  })
+  const [form, setForm] = useState(INITIAL_FORM_STATE)
+  const [submitting, setSubmitting] = useState(false)
+  const [actionLoading, setActionLoading] = useState(null)
   const isDemoMode = isDemo()
 
   // Masofa hisoblash funksiyasi
@@ -80,7 +60,6 @@ export default function Trips() {
     return remainingHours > 0 ? `${days} kun ${remainingHours} soat` : `${days} kun`
   }
 
-  // Koordinatalar o'zgarganda masofa/vaqtni hisoblash
   const updateDistanceFromCoords = (startCoords, endCoords) => {
     if (startCoords && endCoords) {
       const dist = calculateDistance(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng)
@@ -92,15 +71,36 @@ export default function Trips() {
     }
   }
 
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Xayrli tong'
-    if (hour < 18) return 'Xayrli kun'
-    return 'Xayrli kech'
+  // Waypoint funksiyalari
+  const addWaypoint = (country, city, type = 'transit') => {
+    const newWaypoint = {
+      id: Date.now(),
+      country,
+      city,
+      type,
+      order: form.waypoints.length
+    }
+    const newWaypoints = [...form.waypoints, newWaypoint]
+    const countries = [...new Set(newWaypoints.map(w => w.country))]
+    setForm(prev => ({
+      ...prev,
+      waypoints: newWaypoints,
+      countriesInRoute: countries
+    }))
   }
 
+  const removeWaypoint = (id) => {
+    const newWaypoints = form.waypoints.filter(w => w.id !== id)
+    const countries = [...new Set(newWaypoints.map(w => w.country))]
+    setForm(prev => ({
+      ...prev,
+      waypoints: newWaypoints,
+      countriesInRoute: countries
+    }))
+  }
+
+  // Data fetching
   const fetchData = useCallback(async () => {
-    // Demo rejimda fake data
     if (isDemoMode) {
       let filteredTrips = DEMO_TRIPS
       if (filter !== 'all') {
@@ -110,9 +110,13 @@ export default function Trips() {
       setDrivers(DEMO_DRIVERS)
       setVehicles(DEMO_VEHICLES)
       setLoading(false)
+      setError(null)
       return
     }
 
+    setLoading(true)
+    setError(null)
+    
     try {
       const [tripsRes, driversRes, vehiclesRes] = await Promise.all([
         api.get('/trips', { params: filter !== 'all' ? { status: filter } : {} }),
@@ -122,8 +126,11 @@ export default function Trips() {
       setTrips(tripsRes.data.data || [])
       setDrivers(driversRes.data.data || [])
       setVehicles(vehiclesRes.data.data || [])
-    } catch (error) {
-      showToast.error('Malumotlarni yuklashda xatolik')
+    } catch (err) {
+      setError({
+        type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
+        message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+      })
     } finally {
       setLoading(false)
     }
@@ -131,23 +138,18 @@ export default function Trips() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  // Socket context dan olish
+  // Socket.io
   const { socket } = useSocket()
 
-  // Socket.io - realtime yangilanishlar
   useEffect(() => {
     if (!socket) return
 
-    // Reys boshlanganda
     const handleTripStarted = (data) => {
-      console.log('🔔 Trips: Reys boshlandi:', data)
       showToast.success('🚛 Reys boshlandi!', data.message)
       fetchData()
     }
 
-    // Reys tugatilganda
     const handleTripCompleted = (data) => {
-      console.log('🔔 Trips: Reys tugatildi:', data)
       showToast.success('✅ Reys tugatildi!', data.message)
       fetchData()
     }
@@ -161,100 +163,77 @@ export default function Trips() {
     }
   }, [socket, fetchData])
 
-  // Modal ochilganda background scroll ni bloklash
+  // Modal scroll lock
   useEffect(() => {
     if (showModal || showCompleteModal) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
+    return () => { document.body.style.overflow = 'unset' }
   }, [showModal, showCompleteModal])
 
-  const [submitting, setSubmitting] = useState(false)
-
+  // Handlers
   const handleSubmit = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     
-    // Double-submit himoyasi
-    if (submitting) {
-      console.log('⚠️ Allaqachon yuborilmoqda, qayta yuborish bloklandi')
-      return
-    }
+    if (submitting) return
 
-    // Demo rejimda bloklash
     if (isDemoMode) {
       alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
       setShowModal(false)
       return
     }
 
-    // Validatsiya - barcha maydonlar majburiy
-    if (!form.driverId) {
-      showToast.error('Shofyorni tanlang!')
-      return
-    }
-    if (!form.vehicleId) {
-      showToast.error('Mashinani tanlang!')
-      return
-    }
-    if (!form.startAddress?.trim()) {
-      showToast.error('Qayerdan manzilini kiriting!')
-      return
-    }
-    if (!form.endAddress?.trim()) {
-      showToast.error('Qayerga manzilini kiriting!')
-      return
-    }
-    if (!form.estimatedDistance) {
-      showToast.error('Masofani kiriting!')
-      return
-    }
-    if (!form.estimatedDuration?.trim()) {
-      showToast.error('Taxminiy vaqtni kiriting!')
-      return
-    }
-    if (!form.tripBudget) {
-      showToast.error('Berilgan pulni kiriting!')
-      return
-    }
-    if (!form.tripPayment) {
-      showToast.error('Reys haqini kiriting!')
-      return
-    }
+    // Validatsiya
+    if (!form.driverId) { showToast.error('Shofyorni tanlang!'); return }
+    if (!form.vehicleId) { showToast.error('Mashinani tanlang!'); return }
+    if (!form.startAddress?.trim()) { showToast.error('Qayerdan manzilini kiriting!'); return }
+    if (!form.endAddress?.trim()) { showToast.error('Qayerga manzilini kiriting!'); return }
+    if (!form.estimatedDistance) { showToast.error('Masofani kiriting!'); return }
+    if (!form.estimatedDuration?.trim()) { showToast.error('Taxminiy vaqtni kiriting!'); return }
+    if (!form.tripBudget) { showToast.error('Berilgan pulni kiriting!'); return }
+    if (!form.tripPayment) { showToast.error('Reys haqini kiriting!'); return }
 
     setSubmitting(true)
     try {
-      console.log('📤 Reys yaratilmoqda...')
-      const response = await api.post('/trips', {
+      let startAddr = form.startAddress
+      let endAddr = form.endAddress
+      
+      if (form.tripType === 'international' && form.waypoints.length >= 2) {
+        const startWp = form.waypoints.find(w => w.type === 'start') || form.waypoints[0]
+        const endWp = form.waypoints.filter(w => w.type === 'end').pop() || form.waypoints[form.waypoints.length - 1]
+        startAddr = startAddr || `${startWp.city}, ${startWp.country}`
+        endAddr = endAddr || `${endWp.city}, ${endWp.country}`
+      }
+
+      await api.post('/trips', {
         ...form,
+        startAddress: startAddr,
+        endAddress: endAddr,
         estimatedDuration: form.estimatedDuration,
         estimatedDistance: Number(form.estimatedDistance),
         tripBudget: Number(form.tripBudget),
-        tripPayment: Number(form.tripPayment)
+        tripPayment: Number(form.tripPayment),
+        tripType: form.tripType,
+        waypoints: form.waypoints,
+        countriesInRoute: form.countriesInRoute
       })
-      console.log('✅ Reys yaratildi:', response.data)
       showToast.success('Reys yaratildi')
       setShowModal(false)
-      setForm({ driverId: '', vehicleId: '', startAddress: '', endAddress: '', estimatedDuration: '', estimatedDistance: '', tripBudget: '', tripPayment: '', startCoords: null, endCoords: null })
+      setForm(INITIAL_FORM_STATE)
       fetchData()
     } catch (error) {
-      console.error('❌ Reys yaratishda xato:', error)
       showToast.error(error.response?.data?.message || 'Xatolik')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const [actionLoading, setActionLoading] = useState(null)
-
   const handleStart = async (e, id) => {
     e.stopPropagation()
     
-    // Demo rejimda bloklash
     if (isDemoMode) {
       alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
       return
@@ -282,7 +261,6 @@ export default function Trips() {
   const handleComplete = async (e) => {
     e.preventDefault()
     
-    // Demo rejimda bloklash
     if (isDemoMode) {
       alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
       setShowCompleteModal(false)
@@ -307,7 +285,6 @@ export default function Trips() {
   const handleCancel = async (e, id) => {
     e.stopPropagation()
     
-    // Demo rejimda bloklash
     if (isDemoMode) {
       alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
       return
@@ -323,99 +300,36 @@ export default function Trips() {
     }
   }
 
-  const formatDate = (date) => date ? new Date(date).toLocaleDateString('uz-UZ') : '-'
-  const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
+  // Loading & Error states
+  if (loading) return <TripsSkeleton />
 
-  const statusConfig = {
-    pending: { label: 'Kutilmoqda', color: 'bg-yellow-100 text-yellow-700', gradient: 'from-yellow-500 to-yellow-600', dot: 'bg-yellow-500' },
-    in_progress: { label: "Yo'lda", color: 'bg-blue-100 text-blue-700', gradient: 'from-blue-500 to-blue-600', dot: 'bg-blue-500' },
-    completed: { label: 'Tugatilgan', color: 'bg-green-100 text-green-700', gradient: 'from-green-500 to-green-600', dot: 'bg-green-500' },
-    cancelled: { label: 'Bekor', color: 'bg-red-100 text-red-700', gradient: 'from-red-500 to-red-600', dot: 'bg-red-500' }
-  }
-
-  const filterButtons = [
-    { value: 'all', label: 'Barchasi', count: trips.length },
-    { value: 'in_progress', label: "Yo'lda" },
-    { value: 'pending', label: 'Kutilmoqda' },
-    { value: 'completed', label: 'Tugatilgan' },
-    { value: 'cancelled', label: 'Bekor' }
-  ]
-
-  if (loading) {
+  if (error) {
+    if (error.type === 'network') return <NetworkError onRetry={fetchData} message={error.message} />
+    if (error.type === 'server') return <ServerError onRetry={fetchData} message={error.message} />
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-[400px] flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-500">Yuklanmoqda...</p>
+          <p className="text-gray-500 mb-4">{error.message}</p>
+          <button onClick={fetchData} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+            Qayta urinish
+          </button>
         </div>
       </div>
     )
   }
 
-  const activeTripsCount = trips.filter(t => t.status === 'in_progress').length
-  const pendingTripsCount = trips.filter(t => t.status === 'pending').length
-  const completedTripsCount = trips.filter(t => t.status === 'completed').length
-
-  const quickStats = [
-    { label: 'Jami reyslar', value: trips.length, icon: Route, color: 'from-blue-400 to-blue-600' },
-    { label: "Yo'lda", value: activeTripsCount, icon: Activity, color: 'from-orange-400 to-orange-600' },
-    { label: 'Kutilmoqda', value: pendingTripsCount, icon: Clock, color: 'from-yellow-400 to-yellow-600' },
-    { label: 'Tugatilgan', value: completedTripsCount, icon: CheckCircle, color: 'from-green-400 to-green-600' },
-  ]
-
   return (
     <div className="space-y-4 sm:space-y-6 pb-8">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
-        <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
-        
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 text-blue-300 text-sm mb-2">
-              <Calendar size={14} />
-              <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {getGreeting()}, {user?.companyName || 'Admin'}! 👋
-            </h1>
-            <p className="text-blue-200">Reyslarni boshqaring va kuzating</p>
-          </div>
-          
-          <div className="flex gap-3">
-            <button onClick={() => setShowModal(true)} 
-              className="group px-6 py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10">
-              <Plus size={18} /> 
-              Yangi reys
-              <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Stats in Header */}
-        <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          {quickStats.map((item, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                  <item.icon size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{item.value}</p>
-                  <p className="text-blue-200 text-xs">{item.label}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Header */}
+      <TripsHeader 
+        user={user} 
+        trips={trips} 
+        onNewTrip={() => setShowModal(true)} 
+      />
 
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {filterButtons.map(({ value, label }) => (
+        {FILTER_BUTTONS.map(({ value, label }) => (
           <button 
             key={value} 
             onClick={() => setFilter(value)}
@@ -433,149 +347,15 @@ export default function Trips() {
       {/* Trips Grid */}
       <div className="grid md:grid-cols-2 gap-4">
         {trips.map((trip) => (
-          <div 
+          <TripCard
             key={trip._id}
-            onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
-            className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            {/* Header */}
-            <div className={`bg-gradient-to-r ${statusConfig[trip.status]?.gradient} p-4 text-white`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center font-bold text-lg">
-                    {trip.driver?.fullName?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <p className="font-semibold">{trip.driver?.fullName || 'Nomalum'}</p>
-                    <p className="text-white/80 text-sm">{trip.vehicle?.plateNumber}</p>
-                  </div>
-                </div>
-                <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-sm font-medium">
-                  {statusConfig[trip.status]?.label}
-                </span>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-5">
-              {/* Route */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div className="w-0.5 h-8 bg-gray-200"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{trip.startAddress || 'Boshlanish'}</p>
-                  <p className="text-gray-400 text-sm my-1">↓</p>
-                  <p className="font-medium text-gray-900">{trip.endAddress || 'Tugash'}</p>
-                </div>
-              </div>
-
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Masofa</p>
-                  <p className="font-semibold text-gray-900">{trip.estimatedDistance || '-'} km</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Vaqt</p>
-                  <p className="font-semibold text-gray-900">{trip.estimatedDuration || '-'}</p>
-                </div>
-              </div>
-
-              {/* Financial - Yangi tizim */}
-              {(trip.income?.amountInUSD > 0 || trip.profitUSD !== undefined) && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl">
-                  <Wallet size={18} className="text-blue-600" />
-                  <div className="flex-1 flex items-center gap-3 text-sm">
-                    {trip.income?.amountInUSD > 0 && (
-                      <span className="text-blue-700">
-                        <span className="text-gray-500">Daromad:</span> ${trip.income.amountInUSD}
-                      </span>
-                    )}
-                    {trip.profitUSD !== undefined && trip.profitUSD !== 0 && (
-                      <span className={trip.profitUSD >= 0 ? 'text-emerald-700' : 'text-red-600'}>
-                        <span className="text-gray-500">Foyda:</span> ${trip.profitUSD?.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Eski tizim uchun */}
-              {!trip.income?.amountInUSD && (trip.tripBudget > 0 || trip.tripPayment > 0) && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-xl">
-                  <Wallet size={18} className="text-blue-600" />
-                  <div className="flex-1 flex items-center gap-3 text-sm">
-                    {trip.tripBudget > 0 && (
-                      <span className="text-blue-700">
-                        <span className="text-gray-500">Berilgan:</span> {formatMoney(trip.tripBudget)}
-                      </span>
-                    )}
-                    {trip.tripPayment > 0 && (
-                      <span className="text-purple-700">
-                        <span className="text-gray-500">Haqi:</span> {formatMoney(trip.tripPayment)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Bonus/Penalty */}
-              {(trip.bonusAmount > 0 || trip.penaltyAmount > 0) && (
-                <div className="flex gap-2 mb-4">
-                  {trip.bonusAmount > 0 && (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      +{formatMoney(trip.bonusAmount)} bonus
-                    </span>
-                  )}
-                  {trip.penaltyAmount > 0 && (
-                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                      -{formatMoney(trip.penaltyAmount)} jarima
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-400">{formatDate(trip.createdAt)}</p>
-                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                  {trip.status === 'pending' && (
-                    <button 
-                      onClick={(e) => handleStart(e, trip._id)} 
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                      title="Boshlash"
-                    >
-                      <Play size={18} />
-                    </button>
-                  )}
-                  {trip.status === 'in_progress' && (
-                    <button 
-                      onClick={(e) => openCompleteModal(e, trip)} 
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      title="Tugatish"
-                    >
-                      <CheckCircle size={18} />
-                    </button>
-                  )}
-                  {(trip.status === 'pending' || trip.status === 'in_progress') && (
-                    <button 
-                      onClick={(e) => handleCancel(e, trip._id)} 
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Bekor qilish"
-                    >
-                      <XCircle size={18} />
-                    </button>
-                  )}
-                  <div className="p-2 text-gray-400 group-hover:text-blue-600 transition">
-                    <ArrowRight size={18} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            trip={trip}
+            onNavigate={(id) => navigate(`/dashboard/trips/${id}`)}
+            onStart={handleStart}
+            onComplete={openCompleteModal}
+            onCancel={handleCancel}
+            actionLoading={actionLoading}
+          />
         ))}
       </div>
 
@@ -596,323 +376,37 @@ export default function Trips() {
         </div>
       )}
 
-      {/* Add Trip Modal - Pro Design */}
-      {showModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
-          <div className="min-h-full flex items-center justify-center p-4">
-            <div className="absolute inset-0" onClick={() => setShowModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="relative p-6 border-b border-white/10">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-t-3xl pointer-events-none"></div>
-                <div className="relative flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                    <Route className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Yangi reys</h2>
-                    <p className="text-blue-300 text-sm">Reys malumotlarini kiriting</p>
-                  </div>
-                </div>
-                <button onClick={() => {
-                  setShowModal(false)
-                  setSubmitting(false)
-                }} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
-                  <X size={24} />
-                </button>
-                </div>
-              </div>
-            
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              {/* Shofyor */}
-              <div>
-                <label className="block text-sm font-semibold text-blue-200 mb-2">Shofyor *</label>
-                <select 
-                  value={form.driverId} 
-                  onChange={(e) => {
-                    const driverId = e.target.value
-                    const assignedVehicle = vehicles.find(v => 
-                      v.currentDriver === driverId || 
-                      v.currentDriver?._id === driverId ||
-                      String(v.currentDriver) === driverId
-                    )
-                    setForm({...form, driverId, vehicleId: assignedVehicle?._id || ''})
-                  }} 
-                  className="w-full px-4 py-4 bg-slate-800 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition cursor-pointer appearance-none"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px' }}
-                  required
-                >
-                  <option value="">Shofyorni tanlang</option>
-                  {drivers.map(d => {
-                    const vehicle = vehicles.find(v => 
-                      v.currentDriver === d._id || 
-                      v.currentDriver?._id === d._id ||
-                      String(v.currentDriver) === d._id
-                    )
-                    return (
-                      <option key={d._id} value={d._id}>
-                        {d.fullName} {vehicle ? `→ ${vehicle.plateNumber}` : ''} {d.status === 'busy' ? '(Reysda)' : ''} {d.lastLocation ? '📍' : ''}
-                      </option>
-                    )
-                  })}
-                </select>
-                {drivers.length === 0 && (
-                  <p className="text-xs text-amber-400 mt-2">⚠️ Shofyorlar topilmadi. Avval shofyor qo'shing.</p>
-                )}
-                
-                {/* Shofyor joylashuvi - agar mavjud bo'lsa */}
-                {form.driverId && (() => {
-                  const selectedDriver = drivers.find(d => d._id === form.driverId)
-                  if (selectedDriver?.lastLocation) {
-                    return (
-                      <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                            <MapPin size={16} />
-                            <span>Shofyor hozir: {selectedDriver.lastLocation.lat?.toFixed(4)}, {selectedDriver.lastLocation.lng?.toFixed(4)}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const loc = selectedDriver.lastLocation
-                              // Reverse geocoding - koordinatadan manzil olish
-                              try {
-                                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.lat}&lon=${loc.lng}&zoom=14`)
-                                const data = await res.json()
-                                const address = data.display_name?.split(',').slice(0, 3).join(', ') || `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`
-                                setForm(prev => ({
-                                  ...prev,
-                                  startAddress: address,
-                                  startCoords: { lat: loc.lat, lng: loc.lng }
-                                }))
-                                if (form.endCoords) {
-                                  updateDistanceFromCoords({ lat: loc.lat, lng: loc.lng }, form.endCoords)
-                                }
-                                showToast.success('Shofyor joylashuvi boshlanish nuqtasi sifatida belgilandi')
-                              } catch {
-                                setForm(prev => ({
-                                  ...prev,
-                                  startAddress: `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`,
-                                  startCoords: { lat: loc.lat, lng: loc.lng }
-                                }))
-                              }
-                            }}
-                            className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 transition"
-                          >
-                            Shu joydan boshlash
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
-              </div>
-
-              {/* Mashina */}
-              <div>
-                <label className="block text-sm font-semibold text-blue-200 mb-2">Mashina *</label>
-                {form.vehicleId ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 px-4 py-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-300 flex items-center gap-3">
-                      <Truck size={20} />
-                      <span className="font-medium">{vehicles.find(v => v._id === form.vehicleId)?.plateNumber} - {vehicles.find(v => v._id === form.vehicleId)?.brand}</span>
-                    </div>
-                    <button type="button" onClick={() => setForm({...form, vehicleId: ''})} className="p-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition">
-                      <X size={20} />
-                    </button>
-                  </div>
-                ) : (
-                  <select 
-                    value={form.vehicleId} 
-                    onChange={(e) => setForm({...form, vehicleId: e.target.value})} 
-                    className="w-full px-4 py-4 bg-slate-800 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none transition cursor-pointer appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px' }}
-                    required
-                  >
-                    <option value="">Mashinani tanlang</option>
-                    {vehicles.map(v => (
-                      <option key={v._id} value={v._id}>{v.plateNumber} - {v.brand}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Marshrut - Tab */}
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-blue-200">Marshrut *</label>
-                
-                {/* Tab buttons */}
-                <div className="flex bg-white/5 rounded-xl p-1 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setRouteMode('manual')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition ${
-                      routeMode === 'manual' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <PenLine size={16} /> Qo'lda yozish
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false)
-                      setShowLocationPicker(true)
-                    }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition ${
-                      routeMode === 'map' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Map size={16} /> Xaritadan
-                  </button>
-                </div>
-
-                {/* Manzil inputlari - autocomplete bilan */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span> Qayerdan *
-                    </label>
-                    <AddressAutocomplete
-                      value={form.startAddress}
-                      onChange={(val) => setForm({...form, startAddress: val})}
-                      onSelect={(suggestion) => {
-                        const newCoords = { lat: suggestion.lat, lng: suggestion.lng }
-                        setForm(prev => ({...prev, startAddress: suggestion.name, startCoords: newCoords}))
-                        if (form.endCoords) updateDistanceFromCoords(newCoords, form.endCoords)
-                      }}
-                      placeholder="Toshkent"
-                      focusColor="green"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
-                      <span className="w-2 h-2 bg-red-500 rounded-full"></span> Qayerga *
-                    </label>
-                    <AddressAutocomplete
-                      value={form.endAddress}
-                      onChange={(val) => setForm({...form, endAddress: val})}
-                      onSelect={(suggestion) => {
-                        const newCoords = { lat: suggestion.lat, lng: suggestion.lng }
-                        setForm(prev => ({...prev, endAddress: suggestion.name, endCoords: newCoords}))
-                        if (form.startCoords) updateDistanceFromCoords(form.startCoords, newCoords)
-                      }}
-                      placeholder="Samarqand"
-                      focusColor="red"
-                    />
-                  </div>
-                </div>
-
-                {/* Masofa va vaqt */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Masofa (km) *</label>
-                    <input 
-                      type="number" 
-                      value={form.estimatedDistance}
-                      required 
-                      onChange={(e) => setForm({...form, estimatedDistance: e.target.value})} 
-                      className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition text-sm" 
-                      placeholder="300" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Taxminiy vaqt *</label>
-                    <input 
-                      type="text" 
-                      value={form.estimatedDuration} 
-                      onChange={(e) => setForm({...form, estimatedDuration: e.target.value})} 
-                      className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition text-sm" 
-                      placeholder="5 soat"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Koordinatalar ko'rsatkichi */}
-                {form.startCoords && form.endCoords && (
-                  <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-lg">
-                    <MapPin size={14} />
-                    <span>Koordinatalar aniqlangan - masofa avtomatik hisoblandi</span>
-                  </div>
-                )}
-              </div>
-
-
-
-              {/* Moliyaviy */}
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-4">
-                <div className="flex items-center gap-2 text-blue-300 mb-2">
-                  <Wallet size={18} />
-                  <span className="font-semibold">Moliyaviy malumotlar</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Berilgan pul *</label>
-                    <input 
-                      type="number" 
-                      value={form.tripBudget} 
-                      onChange={(e) => setForm({...form, tripBudget: e.target.value})} 
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                      placeholder="500000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Reys haqi *</label>
-                    <input 
-                      type="number" 
-                      value={form.tripPayment} 
-                      onChange={(e) => setForm({...form, tripPayment: e.target.value})} 
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                      placeholder="200000"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={submitting}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Yaratilmoqda...</>
-                ) : (
-                  <><Plus size={20} /> Reys yaratish</>
-                )}
-              </button>
-            </form>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {/* Modals */}
+      {showModal && (
+        <TripModal
+          form={form}
+          setForm={setForm}
+          drivers={drivers}
+          vehicles={vehicles}
+          submitting={submitting}
+          onSubmit={handleSubmit}
+          onClose={() => { setShowModal(false); setSubmitting(false) }}
+          onOpenLocationPicker={() => { setShowModal(false); setShowLocationPicker(true) }}
+          routeMode={routeMode}
+          updateDistanceFromCoords={updateDistanceFromCoords}
+          addWaypoint={addWaypoint}
+          removeWaypoint={removeWaypoint}
+        />
       )}
 
-      {/* Complete Trip Modal - Pro Design */}
-      {/* Location Picker */}
       {showLocationPicker && (
         <LocationPicker
-          onClose={() => {
-            setShowLocationPicker(false)
-            setShowModal(true)
-          }}
+          onClose={() => { setShowLocationPicker(false); setShowModal(true) }}
           onSelect={(data) => {
-            setForm({
-              ...form,
+            setForm(prev => ({
+              ...prev,
               startAddress: data.startAddress,
               endAddress: data.endAddress,
               estimatedDistance: data.distance,
               estimatedDuration: data.duration,
               startCoords: data.startPoint,
               endCoords: data.endPoint
-            })
+            }))
             setRouteMode('map')
             setShowLocationPicker(false)
             setShowModal(true)
@@ -922,91 +416,13 @@ export default function Trips() {
         />
       )}
 
-      {showCompleteModal && completingTrip && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
-          <div className="min-h-full flex items-center justify-center p-4">
-            <div className="absolute inset-0" onClick={() => setShowCompleteModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="p-6 border-b border-white/10">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-t-3xl"></div>
-              <div className="relative flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                    <CheckCircle className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Reysni tugatish</h2>
-                    <p className="text-emerald-300 text-sm">Moliyaviy hisobot</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowCompleteModal(false)} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
-                  <X size={24} />
-                </button>
-              </div>
-            </div>
-            
-            <form onSubmit={handleComplete} className="p-6 space-y-5">
-              {/* Driver Info */}
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    {completingTrip.driver?.fullName?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <p className="font-bold text-white text-lg">{completingTrip.driver?.fullName}</p>
-                    <p className="text-slate-400 text-sm flex items-center gap-2">
-                      <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
-                      {completingTrip.startAddress} → {completingTrip.endAddress}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              {completingTrip.tripBudget > 0 && (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                    <span className="text-blue-300 flex items-center gap-2"><Wallet size={18} /> Berilgan pul</span>
-                    <span className="font-bold text-blue-400 text-lg">{formatMoney(completingTrip.tripBudget)} som</span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                    <span className="text-amber-300">Sarflangan</span>
-                    <span className="font-bold text-amber-400 text-lg">{formatMoney(completingTrip.totalExpenses || 0)} som</span>
-                  </div>
-                  <div className={`flex justify-between items-center p-4 rounded-xl border ${(completingTrip.remainingBudget || completingTrip.tripBudget) >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                    <span className={`${(completingTrip.remainingBudget || completingTrip.tripBudget) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>Qoldiq</span>
-                    <span className={`font-bold text-lg ${(completingTrip.remainingBudget || completingTrip.tripBudget) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {formatMoney(completingTrip.remainingBudget || completingTrip.tripBudget)} som
-                    </span>
-                  </div>
-                  <div className="text-center py-3">
-                    <p className="text-sm text-slate-400">
-                      {(completingTrip.remainingBudget || completingTrip.tripBudget) > 0 
-                        ? '✅ Ortib qolgan pul bonus sifatida qoshiladi' 
-                        : (completingTrip.remainingBudget || completingTrip.tripBudget) < 0 
-                          ? '⚠️ Ortiqcha sarflangan pul jarima sifatida yoziladi'
-                          : ''}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <button 
-                type="submit" 
-                disabled={submitting}
-                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Tugatilmoqda...</>
-                ) : (
-                  <><CheckCircle size={20} /> Reysni tugatish</>
-                )}
-              </button>
-            </form>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {showCompleteModal && completingTrip && (
+        <TripCompleteModal
+          trip={completingTrip}
+          submitting={submitting}
+          onSubmit={handleComplete}
+          onClose={() => setShowCompleteModal(false)}
+        />
       )}
     </div>
   )

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Driver = require('../models/Driver');
+const Vehicle = require('../models/Vehicle');
+const Flight = require('../models/Flight');
 const { protect, businessOnly } = require('../middleware/auth');
 
 // Shofyorlar joylashuvi (xarita uchun) - /:id dan OLDIN bo'lishi kerak!
@@ -137,7 +139,20 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
     }
-    res.json({ success: true, message: 'Shofyor o\'chirildi' });
+    
+    // Shofyorga biriktirilgan mashinani ham o'chirish (soft delete)
+    await Vehicle.updateMany(
+      { currentDriver: req.params.id, user: req.user._id },
+      { isActive: false, currentDriver: null }
+    );
+    
+    // Shofyorning faol reyslarini bekor qilish
+    await Flight.updateMany(
+      { driver: req.params.id, status: 'active' },
+      { status: 'cancelled' }
+    );
+    
+    res.json({ success: true, message: 'Shofyor va unga tegishli ma\'lumotlar o\'chirildi' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

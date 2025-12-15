@@ -3,14 +3,15 @@ import { useAuthStore } from '../../store/authStore'
 import {
     LogOut, Truck, Play, CheckCircle, History, Wallet, Route, MapPin, Map,
     Clock, TrendingUp, TrendingDown, Award, Navigation, X, Sparkles, Zap, Target,
-    Star, CircleDollarSign, Bell
+    Star, CircleDollarSign, Bell, WifiOff, RefreshCw
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '../../services/api'
 import { showToast } from '../../components/Toast'
-import { connectSocket, joinDriverRoom, disconnectSocket, getSocket } from '../../services/socket'
+import { connectSocket, joinDriverRoom } from '../../services/socket'
+import { DriverHomeSkeleton } from '../../components/ui'
 
 const truckIcon = new L.Icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/3097/3097180.png',
@@ -49,7 +50,7 @@ function NavigatorMode({ position, isNavigating, routeCoords, endCoords }) {
                 const bounds = L.latLngBounds(allPoints)
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
             } catch (e) {
-                console.log('Bounds error:', e)
+                // Bounds error - silent
             }
         }
     }, [isNavigating, routeCoords, position, endCoords, map])
@@ -76,8 +77,7 @@ async function getRouteFromAPI(startLat, startLng, endLat, endLng) {
             }
         }
         return null
-    } catch (error) {
-        console.error('Marshrut olish xatosi:', error)
+    } catch {
         return null
     }
 }
@@ -105,7 +105,10 @@ export default function DriverHome() {
     const [driverId, setDriverId] = useState(null)
     const [newTripNotification, setNewTripNotification] = useState(null)
 
+    const [error, setError] = useState(null)
+
     const fetchData = useCallback(async () => {
+        setError(null)
         try {
             const [tripsRes, profileRes, flightsRes] = await Promise.all([
                 api.get('/driver/me/trips'),
@@ -125,7 +128,6 @@ export default function DriverHome() {
             
             // Serverdan oxirgi joylashuvni olish
             const driverData = profileRes.data.data
-            console.log('📦 Driver data:', driverData)
             
             // Driver ID ni saqlash (socket uchun)
             if (driverData?._id) {
@@ -134,7 +136,6 @@ export default function DriverHome() {
             
             if (driverData?.lastLocation) {
                 const loc = driverData.lastLocation
-                console.log('📍 lastLocation:', loc)
                 
                 if (loc.lat && loc.lng) {
                     setCurrentLocation({
@@ -145,12 +146,14 @@ export default function DriverHome() {
                     })
                     setGpsAccuracy(loc.accuracy || 100)
                     setGpsStatus(loc.accuracy < 50 ? 'excellent' : loc.accuracy < 200 ? 'good' : 'active')
-                    console.log('✅ Joylashuv olindi:', loc.lat, loc.lng)
                 }
-            } else {
-                console.log('⚠️ lastLocation topilmadi')
             }
-        } catch (error) { console.error(error) }
+        } catch (err) {
+            setError({
+                type: err.isNetworkError ? 'network' : 'generic',
+                message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+            })
+        }
         finally { setLoading(false) }
     }, [])
 
@@ -169,7 +172,7 @@ export default function DriverHome() {
                     setTripStartCoords(firstLeg.fromCoords)
                     setTripEndCoords(lastLeg.toCoords)
                     
-                    console.log('🗺️ Flight marshrut so\'ralmoqda:', firstLeg.fromCoords, '->', lastLeg.toCoords)
+
                     const route = await getRouteFromAPI(
                         firstLeg.fromCoords.lat, firstLeg.fromCoords.lng,
                         lastLeg.toCoords.lat, lastLeg.toCoords.lng
@@ -209,8 +212,8 @@ export default function DriverHome() {
                                 setRouteInfo({ distance: activeFlight.totalDistance || 0, duration: 0 })
                             }
                         }
-                    } catch (err) {
-                        console.error('Flight marshrut olishda xato:', err)
+                    } catch {
+                        // Flight marshrut xatosi - silent
                     }
                 }
                 return // Flight bor bo'lsa, Trip ni tekshirmaymiz
@@ -221,7 +224,7 @@ export default function DriverHome() {
                 setTripStartCoords(activeTrip.startCoords)
                 setTripEndCoords(activeTrip.endCoords)
                 
-                console.log('🗺️ Trip marshrut so\'ralmoqda:', activeTrip.startCoords, '->', activeTrip.endCoords)
+
                 const route = await getRouteFromAPI(
                     activeTrip.startCoords.lat, activeTrip.startCoords.lng,
                     activeTrip.endCoords.lat, activeTrip.endCoords.lng
@@ -268,8 +271,8 @@ export default function DriverHome() {
                             setRouteCoords([[start.lat, start.lng], [end.lat, end.lng]])
                         }
                     }
-                } catch (err) {
-                    console.error('Trip marshrut olishda xato:', err)
+                } catch {
+                    // Trip marshrut xatosi - silent
                 }
             }
         }
@@ -278,11 +281,12 @@ export default function DriverHome() {
 
     const sendLocation = async (position) => {
         const accuracy = position.coords.accuracy
+        console.log('🟢 GPS olindi:', position.coords.latitude, position.coords.longitude, '±', accuracy, 'm')
 
         // Juda yomon aniqlikni rad etish (100km dan ko'p = kesh yoki xato)
         if (accuracy > 100000) {
-            console.warn('⚠️ GPS juda noaniq, rad etildi:', Math.round(accuracy), 'm')
             setGpsStatus('waiting')
+            console.log('⚠️ GPS aniqlik juda yomon, kutilmoqda...')
             return
         }
 
@@ -313,48 +317,46 @@ export default function DriverHome() {
             setGpsStatus('waiting')
         }
 
-        console.log('📍 GPS:', loc.lat.toFixed(6), loc.lng.toFixed(6), `±${Math.round(accuracy)}m`)
-
         // Har doim serverga yuborish (aniqlik qanday bo'lmasin)
         // Server o'zi qaror qiladi - saqlash yoki yo'q
         try {
             await api.post('/driver/me/location', loc)
             console.log('✅ GPS serverga yuborildi')
-        } catch (error) {
-            console.error('❌ Server xatolik:', error)
+        } catch (err) {
+            console.log('❌ GPS yuborishda xatolik:', err.message)
         }
     }
 
     const handleGpsError = (error, setRetry) => {
-        console.error('❌ GPS error:', error.code, error.message)
-
+        console.log('🔴 GPS xatolik:', error.code, error.message)
         if (error.code === 1) {
             setGpsStatus('denied')
+            console.log('GPS ruxsat berilmagan')
         } else if (error.code === 2) {
             setGpsStatus('unavailable')
+            console.log('GPS mavjud emas')
             if (setRetry) setGpsRetryCount(prev => prev + 1)
         } else if (error.code === 3) {
             setGpsStatus('timeout')
+            console.log('GPS timeout')
             if (setRetry) setGpsRetryCount(prev => prev + 1)
         } else {
             setGpsStatus('error')
+            console.log('GPS noma\'lum xatolik')
         }
     }
 
     // Socket.io ulanish va yangi reys xabarlarini tinglash
     useEffect(() => {
         if (!driverId) {
-            console.log('⏳ Socket: driverId kutilmoqda...')
             return
         }
 
-        console.log('🔌 Socket ulanmoqda, driverId:', driverId)
         const socket = connectSocket()
         
         // Socket ulanganidan keyin xonaga qo'shilish
         const joinRoom = () => {
             joinDriverRoom(driverId)
-            console.log('✅ Socket ulandi va xonaga qo\'shildi')
         }
 
         if (socket.connected) {
@@ -365,7 +367,6 @@ export default function DriverHome() {
 
         // Yangi reys xabarini tinglash (eski Trip tizimi)
         const handleNewTrip = (data) => {
-            console.log('🔔 Yangi reys keldi:', data)
             showToast.success('🚛 Yangi reys!', data.message || 'Sizga yangi reys tayinlandi')
             setNewTripNotification(data.trip)
             
@@ -378,7 +379,6 @@ export default function DriverHome() {
 
         // Yangi Flight xabarini tinglash (yangi tizim)
         const handleNewFlight = (data) => {
-            console.log('🔔 Yangi flight keldi:', data)
             showToast.success('🚛 Yangi reys!', data.message || 'Sizga yangi reys tayinlandi')
             setNewTripNotification(data.flight)
             
@@ -388,10 +388,21 @@ export default function DriverHome() {
             // 5 sekunddan keyin notification ni yashirish
             setTimeout(() => setNewTripNotification(null), 5000)
         }
+        
+        // Flight yangilanganda
+        const handleFlightUpdated = (data) => {
+            // Ma'lumotlarni yangilash
+            fetchData()
+        }
+        
+        // Flight yopilganda
+        const handleFlightCompleted = (data) => {
+            showToast.success('✅ Reys yopildi!', data.message || 'Reys muvaffaqiyatli yopildi')
+            fetchData()
+        }
 
         // Reys bekor qilinganda
         const handleTripCancelled = (data) => {
-            console.log('🔔 Reys bekor qilindi:', data)
             showToast.error('❌ Reys bekor qilindi!', data.message || 'Sizning reysingiz bekor qilindi')
             
             // Ma'lumotlarni yangilash
@@ -400,12 +411,18 @@ export default function DriverHome() {
 
         socket.on('new-trip', handleNewTrip)
         socket.on('new-flight', handleNewFlight)
+        socket.on('flight-started', handleNewFlight)
+        socket.on('flight-updated', handleFlightUpdated)
+        socket.on('flight-completed', handleFlightCompleted)
         socket.on('trip-cancelled', handleTripCancelled)
 
         return () => {
             socket.off('connect', joinRoom)
             socket.off('new-trip', handleNewTrip)
             socket.off('new-flight', handleNewFlight)
+            socket.off('flight-started', handleNewFlight)
+            socket.off('flight-updated', handleFlightUpdated)
+            socket.off('flight-completed', handleFlightCompleted)
             socket.off('trip-cancelled', handleTripCancelled)
         }
     }, [driverId, fetchData])
@@ -493,6 +510,27 @@ export default function DriverHome() {
         finally { setActionLoading(false) }
     }
     
+    // Flight bosqichini tugatish
+    const handleCompleteLeg = async () => {
+        if (!activeFlight || actionLoading) return
+        
+        // Joriy in_progress bosqichni topish
+        const currentLeg = activeFlight.legs?.find(leg => leg.status === 'in_progress')
+        if (!currentLeg) {
+            showToast.error('Faol bosqich topilmadi')
+            return
+        }
+        
+        setActionLoading(true)
+        try { 
+            await api.put(`/driver/me/flights/${activeFlight._id}/legs/${currentLeg._id}/complete`)
+            showToast.success('Bosqich tugatildi!')
+            fetchData() 
+        }
+        catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
+        finally { setActionLoading(false) }
+    }
+    
     const handleStartPendingTrip = async (tripId) => {
         if (actionLoading) return
         setActionLoading(true)
@@ -510,19 +548,30 @@ export default function DriverHome() {
     const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
     const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
 
-    if (loading) return (
-        <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
-            <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4 relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl animate-spin" style={{ animationDuration: '3s' }}></div>
-                    <div className="absolute inset-1 bg-[#0a0a1a] rounded-xl flex items-center justify-center">
-                        <Truck className="w-8 h-8 text-violet-400" />
+    if (loading) return <DriverHomeSkeleton />
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-4">
+                <div className="text-center max-w-sm">
+                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <WifiOff className="w-10 h-10 text-red-400" />
                     </div>
+                    <h3 className="text-xl font-bold text-white mb-2">
+                        {error.type === 'network' ? 'Internet aloqasi yo\'q' : 'Xatolik yuz berdi'}
+                    </h3>
+                    <p className="text-violet-300 mb-6">{error.message}</p>
+                    <button
+                        onClick={() => { setLoading(true); fetchData(); }}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition-colors"
+                    >
+                        <RefreshCw size={18} />
+                        Qayta urinish
+                    </button>
                 </div>
-                <p className="text-violet-300">Yuklanmoqda...</p>
             </div>
-        </div>
-    )
+        )
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a1a]">
@@ -709,6 +758,22 @@ export default function DriverHome() {
                                                 <p className="text-amber-300 font-bold text-xs sm:text-sm truncate">{formatMoney(activeFlight.totalExpenses)}</p>
                                             </div>
                                         </div>
+
+                                        {/* Joriy bosqichni tugatish */}
+                                        {activeFlight.legs?.some(leg => leg.status === 'in_progress') && (
+                                            <button 
+                                                onClick={handleCompleteLeg}
+                                                disabled={actionLoading}
+                                                className="w-full bg-white text-emerald-600 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-1.5 sm:gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base mb-2"
+                                            >
+                                                {actionLoading ? (
+                                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <CheckCircle size={18} className="sm:w-[22px] sm:h-[22px]" />
+                                                )}
+                                                {actionLoading ? 'Kutilmoqda...' : 'Bosqichni tugatish'}
+                                            </button>
+                                        )}
 
                                     </div>
                                 </div>

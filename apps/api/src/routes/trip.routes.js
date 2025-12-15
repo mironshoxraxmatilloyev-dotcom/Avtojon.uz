@@ -31,7 +31,16 @@ router.get('/', protect, businessOnly, async (req, res) => {
       .populate('vehicle', 'plateNumber brand model')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, data: trips });
+    // Eski reyslar uchun default tripType qo'shish
+    const tripsWithDefaults = trips.map(trip => {
+      const tripObj = trip.toObject();
+      if (!tripObj.tripType) {
+        tripObj.tripType = 'local';
+      }
+      return tripObj;
+    });
+
+    res.json({ success: true, data: tripsWithDefaults });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -74,10 +83,17 @@ router.get('/:id', protect, async (req, res) => {
       expensesByType[exp.expenseType].items.push(exp);
     });
 
+    const tripData = trip.toObject();
+    
+    // Eski reyslar uchun default qiymatlar
+    if (!tripData.tripType) {
+      tripData.tripType = 'local';
+    }
+    
     res.json({ 
       success: true, 
       data: {
-        ...trip.toObject(),
+        ...tripData,
         expenses,
         expensesByType
       }
@@ -101,7 +117,9 @@ router.post('/', protect, businessOnly, async (req, res) => {
       // Reys haqi (shofyorga to'lanadigan)
       tripPayment,
       // Koordinatalar
-      startCoords, endCoords
+      startCoords, endCoords,
+      // Xalqaro reys maydonlari
+      tripType, waypoints, countriesInRoute
     } = req.body;
 
     const driver = await Driver.findOne({ _id: driverId, user: req.user._id });
@@ -126,7 +144,11 @@ router.post('/', protect, businessOnly, async (req, res) => {
       tripPayment: tripPayment || 0,
       status: 'pending',
       startCoords,
-      endCoords
+      endCoords,
+      // Xalqaro reys
+      tripType: tripType || 'local',
+      waypoints: waypoints || [],
+      countriesInRoute: countriesInRoute || []
     };
 
     // Odometr
@@ -329,8 +351,8 @@ router.put('/:id/road-expenses/:country', protect, async (req, res) => {
     const { border, gai, toll, parking, currency, exchangeRate } = req.body;
     const country = req.params.country.toLowerCase();
 
-    if (!['uzb', 'qz', 'ru'].includes(country)) {
-      return res.status(400).json({ success: false, message: 'Davlat faqat UZB, QZ yoki RU bo\'lishi mumkin' });
+    if (!['uzb', 'kz', 'ru'].includes(country)) {
+      return res.status(400).json({ success: false, message: 'Davlat faqat UZB, KZ yoki RU bo\'lishi mumkin' });
     }
 
     const trip = await Trip.findById(req.params.id);
@@ -344,7 +366,7 @@ router.put('/:id/road-expenses/:country', protect, async (req, res) => {
     const totalInUSD = convertToUSD(totalInOriginal, curr, rate);
 
     if (!trip.roadExpenses) {
-      trip.roadExpenses = { uzb: {}, qz: {}, ru: {}, totalUSD: 0 };
+      trip.roadExpenses = { uzb: {}, kz: {}, ru: {}, totalUSD: 0 };
     }
 
     trip.roadExpenses[country] = {
@@ -410,6 +432,199 @@ router.delete('/:id/unexpected/:expenseId', protect, async (req, res) => {
     trip.unexpectedExpenses = trip.unexpectedExpenses.filter(
       e => e._id.toString() !== req.params.expenseId
     );
+    await trip.save();
+
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============ CHEGARA O'TISH XARAJATLARI ============
+
+// Chegara o'tish qo'shish
+router.post('/:id/border-crossing', protect, async (req, res) => {
+  try {
+    const { 
+      fromCountry, toCountry, borderName,
+      customsFee, transitFee, insuranceFee, otherFees,
+      currency, exchangeRate, note 
+    } = req.body;
+
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const curr = currency || 'USD';
+    const rate = exchangeRate || getDefaultRate(curr);
+    const totalInOriginal = (customsFee || 0) + (transitFee || 0) + (insuranceFee || 0) + (otherFees || 0);
+    const totalInUSD = convertToUSD(totalInOriginal, curr, rate);
+
+    trip.borderCrossings.push({
+      fromCountry: fromCountry.toUpperCase(),
+      toCountry: toCountry.toUpperCase(),
+      borderName,
+      customsFee: customsFee || 0,
+      transitFee: transitFee || 0,
+      insuranceFee: insuranceFee || 0,
+      otherFees: otherFees || 0,
+      currency: curr,
+      totalInOriginal,
+      totalInUSD,
+      exchangeRate: rate,
+      crossedAt: new Date(),
+      note
+    });
+
+    await trip.save();
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Chegara o'tish o'chirish
+router.delete('/:id/border-crossing/:crossingId', protect, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    trip.borderCrossings = trip.borderCrossings.filter(
+      bc => bc._id.toString() !== req.params.crossingId
+    );
+    await trip.save();
+
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============ PLATON (ROSSIYA YO'L TO'LOVI) ============
+
+// Platon yangilash
+router.put('/:id/platon', protect, async (req, res) => {
+  try {
+    const { amount, currency, exchangeRate, distanceKm, note } = req.body;
+
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const curr = currency || 'RUB';
+    const rate = exchangeRate || getDefaultRate(curr);
+
+    trip.platon = {
+      amount: amount || 0,
+      currency: curr,
+      amountInUSD: convertToUSD(amount || 0, curr, rate),
+      exchangeRate: rate,
+      distanceKm: distanceKm || 0,
+      note
+    };
+
+    await trip.save();
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============ WAYPOINTS (YO'NALISH NUQTALARI) ============
+
+// Waypoint qo'shish
+router.post('/:id/waypoint', protect, async (req, res) => {
+  try {
+    const { country, city, address, coords, type, order } = req.body;
+
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    trip.waypoints.push({
+      country: country.toUpperCase(),
+      city,
+      address,
+      coords,
+      type: type || 'transit',
+      order: order || trip.waypoints.length
+    });
+
+    // Davlatlar ro'yxatini yangilash
+    const countries = [...new Set(trip.waypoints.map(w => w.country))];
+    trip.countriesInRoute = countries;
+
+    await trip.save();
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Waypoint o'chirish
+router.delete('/:id/waypoint/:waypointId', protect, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    trip.waypoints = trip.waypoints.filter(
+      w => w._id.toString() !== req.params.waypointId
+    );
+
+    // Davlatlar ro'yxatini yangilash
+    const countries = [...new Set(trip.waypoints.map(w => w.country))];
+    trip.countriesInRoute = countries;
+
+    await trip.save();
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Waypoint ga yetib kelish
+router.put('/:id/waypoint/:waypointId/arrive', protect, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const waypoint = trip.waypoints.id(req.params.waypointId);
+    if (!waypoint) {
+      return res.status(404).json({ success: false, message: 'Nuqta topilmadi' });
+    }
+
+    waypoint.arrivedAt = new Date();
+    await trip.save();
+
+    res.json({ success: true, data: trip });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Waypoint dan jo'nash
+router.put('/:id/waypoint/:waypointId/depart', protect, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const waypoint = trip.waypoints.id(req.params.waypointId);
+    if (!waypoint) {
+      return res.status(404).json({ success: false, message: 'Nuqta topilmadi' });
+    }
+
+    waypoint.departedAt = new Date();
     await trip.save();
 
     res.json({ success: true, data: trip });

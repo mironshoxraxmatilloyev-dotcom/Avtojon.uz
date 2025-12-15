@@ -1,25 +1,96 @@
 import axios from 'axios'
 
-// API base URL ni aniqlash
+// 🚀 API base URL
 const getBaseURL = () => {
   const apiUrl = import.meta.env.VITE_API_URL
-  
-  // Agar VITE_API_URL berilgan bo'lsa
   if (apiUrl) {
-    // Agar URL allaqachon /api bilan tugasa, qayta qo'shmaslik
     return apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api'
   }
-  
-  // Localhost - Vite proxy orqali
   return '/api'
 }
 
+// 🎯 Error messages - O'zbek tilida
+const ERROR_MESSAGES = {
+  // Network errors
+  NETWORK_ERROR: 'Internet aloqasi yo\'q. Iltimos, tarmoqni tekshiring.',
+  TIMEOUT: 'Server javob bermayapti. Iltimos, keyinroq urinib ko\'ring.',
+  SERVER_ERROR: 'Serverda xatolik yuz berdi. Iltimos, keyinroq urinib ko\'ring.',
+  
+  // Auth errors
+  UNAUTHORIZED: 'Sessiya tugadi. Iltimos, qaytadan kiring.',
+  FORBIDDEN: 'Bu amalni bajarishga ruxsat yo\'q.',
+  
+  // Validation errors
+  BAD_REQUEST: 'Noto\'g\'ri so\'rov. Ma\'lumotlarni tekshiring.',
+  NOT_FOUND: 'Ma\'lumot topilmadi.',
+  CONFLICT: 'Bu ma\'lumot allaqachon mavjud.',
+  
+  // Rate limiting
+  TOO_MANY_REQUESTS: 'Juda ko\'p so\'rov. Biroz kuting.',
+  
+  // Default
+  UNKNOWN: 'Noma\'lum xatolik yuz berdi.'
+}
+
+// 🎯 Get user-friendly error message
+const getErrorMessage = (error) => {
+  // Network error (no response)
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED') {
+      return ERROR_MESSAGES.TIMEOUT
+    }
+    if (error.message === 'Network Error') {
+      return ERROR_MESSAGES.NETWORK_ERROR
+    }
+    return ERROR_MESSAGES.NETWORK_ERROR
+  }
+
+  const status = error.response.status
+  const serverMessage = error.response.data?.message
+
+  // Server provided message
+  if (serverMessage && typeof serverMessage === 'string') {
+    return serverMessage
+  }
+
+  // Status-based messages
+  switch (status) {
+    case 400:
+      return ERROR_MESSAGES.BAD_REQUEST
+    case 401:
+      return ERROR_MESSAGES.UNAUTHORIZED
+    case 403:
+      return ERROR_MESSAGES.FORBIDDEN
+    case 404:
+      return ERROR_MESSAGES.NOT_FOUND
+    case 409:
+      return ERROR_MESSAGES.CONFLICT
+    case 429:
+      return ERROR_MESSAGES.TOO_MANY_REQUESTS
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return ERROR_MESSAGES.SERVER_ERROR
+    default:
+      return ERROR_MESSAGES.UNKNOWN
+  }
+}
+
+// 🚀 Axios instance
 const api = axios.create({
   baseURL: getBaseURL(),
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000 // 15 sekund timeout
 })
+
+// 🎯 Simple request cache (GET uchun)
+const cache = new Map()
+const CACHE_TTL = 5000 // 5 sekund
+
+// 🎯 Retry configuration
+const MAX_RETRIES = 2
+const RETRY_DELAY = 1000
 
 // Token qo'shish
 api.interceptors.request.use((config) => {
@@ -27,19 +98,97 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  
+  // 🚀 GET request caching
+  if (config.method === 'get' && !config.params?.noCache) {
+    const cacheKey = config.url + JSON.stringify(config.params || {})
+    const cached = cache.get(cacheKey)
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      config.adapter = () => Promise.resolve({
+        data: cached.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+        request: {}
+      })
+    }
+  }
+  
+  // Retry count
+  config._retryCount = config._retryCount || 0
+  
   return config
 })
 
-// Error handling
+// Response handling
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    // 🚀 GET response ni cache qilish
+    if (response.config.method === 'get') {
+      const cacheKey = response.config.url + JSON.stringify(response.config.params || {})
+      cache.set(cacheKey, {
+        data: response.data,
+        timestamp: Date.now()
+      })
+    }
+    return response
+  },
+  async (error) => {
+    const config = error.config
+
+    // 🎯 Retry logic for network errors
+    if (
+      !error.response && 
+      config._retryCount < MAX_RETRIES &&
+      config.method === 'get'
+    ) {
+      config._retryCount += 1
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * config._retryCount))
+      return api(config)
+    }
+
+    // 🎯 401 - Unauthorized
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      localStorage.removeItem('user')
+      
+      // Faqat dashboard sahifalarida redirect qilish
+      if (window.location.pathname.startsWith('/dashboard') || 
+          window.location.pathname.startsWith('/driver')) {
+        window.location.href = '/login'
+      }
     }
-    return Promise.reject(error)
+
+    // 🎯 Enhanced error object
+    const enhancedError = {
+      ...error,
+      userMessage: getErrorMessage(error),
+      statusCode: error.response?.status || 0,
+      isNetworkError: !error.response,
+      isServerError: error.response?.status >= 500,
+      isAuthError: error.response?.status === 401 || error.response?.status === 403
+    }
+
+    return Promise.reject(enhancedError)
   }
 )
+
+// 🎯 Cache tozalash (POST/PUT/DELETE dan keyin)
+export const clearCache = () => cache.clear()
+
+// 🎯 API health check
+export const checkApiHealth = async () => {
+  try {
+    await api.get('/health', { timeout: 5000, params: { noCache: true } })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// 🎯 Export error messages for use in components
+export { ERROR_MESSAGES, getErrorMessage }
 
 export default api

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, X, User, Truck, Phone, Search, Calendar, ArrowUpRight, Users, Activity, Play, Route, Fuel, Gauge } from 'lucide-react'
+import { Plus, Edit, Trash2, X, User, Truck, Phone, Search, Calendar, ArrowUpRight, Users, Activity, Play, Route, Fuel, Gauge, WifiOff, RefreshCw } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { PhoneInputDark } from '../components/PhoneInput'
-import { useAlert } from '../components/ui'
+import { useAlert, DriversListSkeleton, NetworkError, ServerError } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 
 // Demo rejim uchun fake shofyorlar
@@ -39,6 +39,7 @@ export default function Drivers() {
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null) // Error state
   const [showModal, setShowModal] = useState(false)
   const [editingDriver, setEditingDriver] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,7 +63,8 @@ export default function Drivers() {
     distance: '',
     fromCoords: null,
     toCoords: null,
-    flightType: 'domestic' // 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
+    flightType: 'domestic', // 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
+    countriesInRoute: ['UZB'] // Xalqaro reyslar uchun davlatlar ro'yxati
   })
   const [activeFlights, setActiveFlights] = useState({}) // driverId -> flight
 
@@ -79,9 +81,13 @@ export default function Drivers() {
       setDrivers(DEMO_DRIVERS)
       setVehicles(DEMO_VEHICLES)
       setLoading(false)
+      setError(null)
       return
     }
 
+    setLoading(true)
+    setError(null)
+    
     try {
       const [driversRes, vehiclesRes, flightsRes] = await Promise.all([
         api.get('/drivers'),
@@ -99,8 +105,11 @@ export default function Drivers() {
         else if (f.driver) flightMap[f.driver] = f
       })
       setActiveFlights(flightMap)
-    } catch (error) {
-      showToast.error('Malumotlarni yuklashda xatolik')
+    } catch (err) {
+      setError({
+        type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
+        message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+      })
     } finally {
       setLoading(false)
     }
@@ -154,47 +163,134 @@ export default function Drivers() {
     return Math.round(R * c)
   }
 
+  // Shahar nomidan koordinatalarni olish
+  const getCoordinatesFromCity = async (cityName, domesticOnly = false) => {
+    try {
+      const countryParam = domesticOnly ? '&countrycodes=uz' : ''
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}${countryParam}&limit=1`,
+        { headers: { 'Accept-Language': 'uz,ru,en' } }
+      )
+      const data = await response.json()
+      if (data && data[0]) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  // O'zbekiston chegaralari (taxminiy)
+  const isInUzbekistan = (lat, lng) => {
+    // O'zbekiston chegaralari: lat 37-46, lng 56-73
+    return lat >= 37 && lat <= 46 && lng >= 56 && lng <= 73
+  }
+
   // Reys ochish
   const handleStartFlight = async (e) => {
     e.preventDefault()
     
+    // Demo rejim tekshiruvi
     if (isDemoMode) {
       alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
       setShowFlightModal(false)
       return
     }
 
-    if (!flightForm.fromCity || !flightForm.toCity) {
-      showToast.error('Qayerdan va qayerga shaharlarini kiriting!')
+    // Validatsiyalar
+    if (!flightForm.fromCity?.trim()) {
+      alert.warning('Maydon to\'ldirilmagan', 'Qayerdan (boshlanish nuqtasi) shahrini kiriting!')
+      return
+    }
+
+    if (!flightForm.toCity?.trim()) {
+      alert.warning('Maydon to\'ldirilmagan', 'Qayerga (tugash nuqtasi) shahrini kiriting!')
+      return
+    }
+
+    if (flightForm.fromCity.trim().toLowerCase() === flightForm.toCity.trim().toLowerCase()) {
+      alert.warning('Xatolik', 'Boshlanish va tugash nuqtalari bir xil bo\'lmasligi kerak!')
+      return
+    }
+
+    // Mahalliy reysda koordinatalar O'zbekistonda ekanligini tekshirish
+    const isDomestic = flightForm.flightType === 'domestic'
+    if (isDomestic) {
+      if (flightForm.fromCoords && !isInUzbekistan(flightForm.fromCoords.lat, flightForm.fromCoords.lng)) {
+        alert.warning(
+          'Noto\'g\'ri manzil', 
+          `"${flightForm.fromCity}" O'zbekistondan tashqarida joylashgan. Mahalliy reys uchun O'zbekiston ichidagi manzilni tanlang yoki "Xalqaro" rejimini tanlang.`
+        )
+        return
+      }
+      if (flightForm.toCoords && !isInUzbekistan(flightForm.toCoords.lat, flightForm.toCoords.lng)) {
+        alert.warning(
+          'Noto\'g\'ri manzil', 
+          `"${flightForm.toCity}" O'zbekistondan tashqarida joylashgan. Mahalliy reys uchun O'zbekiston ichidagi manzilni tanlang yoki "Xalqaro" rejimini tanlang.`
+        )
+        return
+      }
+    }
+
+    // Mashina tekshiruvi
+    const vehicle = getDriverVehicle(selectedDriver._id)
+    if (!vehicle) {
+      alert.error('Mashina topilmadi', 'Bu shofyorga mashina biriktirilmagan. Avval mashina biriktiring.')
       return
     }
 
     try {
+      const isDomestic = flightForm.flightType === 'domestic'
+      let fromCoords = flightForm.fromCoords
+      let toCoords = flightForm.toCoords
+      let distance = Number(flightForm.distance) || 0
+
+      // Agar koordinatalar yo'q bo'lsa, shahar nomidan topamiz
+      if (!fromCoords) {
+        showToast.info('Boshlanish nuqtasi aniqlanmoqda...')
+        fromCoords = await getCoordinatesFromCity(flightForm.fromCity, isDomestic)
+      }
+      if (!toCoords) {
+        showToast.info('Tugash nuqtasi aniqlanmoqda...')
+        toCoords = await getCoordinatesFromCity(flightForm.toCity, isDomestic)
+      }
+
+      // Agar ikkala koordinata topilsa va masofa yo'q bo'lsa, hisoblaymiz
+      if (fromCoords && toCoords && !distance) {
+        distance = calculateDistance(fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng)
+      }
+
       const payload = {
         driverId: selectedDriver._id,
         startOdometer: Number(flightForm.startOdometer) || 0,
         startFuel: Number(flightForm.startFuel) || 0,
         flightType: flightForm.flightType,
+        // Xalqaro reyslar uchun davlatlar ro'yxati
+        countriesInRoute: flightForm.flightType === 'international' ? (flightForm.countriesInRoute || ['UZB']) : [],
         firstLeg: {
           fromCity: flightForm.fromCity,
           toCity: flightForm.toCity,
-          fromCoords: flightForm.fromCoords,
-          toCoords: flightForm.toCoords,
+          fromCoords: fromCoords,
+          toCoords: toCoords,
           givenBudget: Number(flightForm.givenBudget) || 0,
-          distance: Number(flightForm.distance) || 0
+          distance: distance
         }
       }
 
-      console.log('🚀 Reys ochish payload:', payload)
       const response = await api.post('/flights', payload)
-      console.log('✅ Reys ochildi:', response.data)
-      showToast.success('Reys ochildi!')
+      
+      alert.success(
+        'Reys muvaffaqiyatli ochildi! 🚛', 
+        `${flightForm.fromCity} → ${flightForm.toCity} (${distance} km)`
+      )
       setShowFlightModal(false)
       resetFlightForm()
       setSelectedDriver(null)
       fetchData()
     } catch (error) {
-      showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
+      const errorMessage = error.response?.data?.message || 'Serverda xatolik yuz berdi'
+      alert.error('Reys ochishda xatolik', errorMessage)
     }
   }
 
@@ -213,21 +309,39 @@ export default function Drivers() {
       return
     }
 
-    // Yangi shofyor uchun mashina majburiy
-    if (!editingDriver && !form.plateNumber) {
-      showToast.error('Mashina davlat raqamini kiriting!')
+    // Validatsiyalar
+    if (!form.username?.trim()) {
+      alert.warning('Maydon to\'ldirilmagan', 'Username kiriting!')
       return
     }
-    if (!editingDriver && !form.brand) {
-      showToast.error('Mashina markasini kiriting!')
+
+    if (!editingDriver && !form.password?.trim()) {
+      alert.warning('Maydon to\'ldirilmagan', 'Parol kiriting!')
       return
+    }
+
+    if (!form.fullName?.trim()) {
+      alert.warning('Maydon to\'ldirilmagan', 'Shofyorning to\'liq ismini kiriting!')
+      return
+    }
+
+    // Yangi shofyor uchun mashina majburiy
+    if (!editingDriver) {
+      if (!form.plateNumber?.trim()) {
+        alert.warning('Maydon to\'ldirilmagan', 'Mashina davlat raqamini kiriting!')
+        return
+      }
+      if (!form.brand?.trim()) {
+        alert.warning('Maydon to\'ldirilmagan', 'Mashina markasini kiriting!')
+        return
+      }
     }
 
     try {
       const driverPayload = {
-        username: form.username,
+        username: form.username.trim(),
         password: form.password,
-        fullName: form.fullName,
+        fullName: form.fullName.trim(),
         phone: form.phone,
         paymentType: form.paymentType,
         baseSalary: form.paymentType === 'monthly' ? Number(form.baseSalary) || 0 : 0,
@@ -236,26 +350,27 @@ export default function Drivers() {
 
       if (editingDriver) {
         await api.put(`/drivers/${editingDriver._id}`, driverPayload)
-        showToast.success('Shofyor yangilandi')
+        alert.success('Muvaffaqiyatli yangilandi', `${form.fullName} ma'lumotlari saqlandi`)
       } else {
         const driverRes = await api.post('/drivers', driverPayload)
         const newDriver = driverRes.data.data
 
         // Mashina yaratish (majburiy)
         await api.post('/vehicles', {
-          plateNumber: form.plateNumber,
-          brand: form.brand,
+          plateNumber: form.plateNumber.trim().toUpperCase(),
+          brand: form.brand.trim(),
           year: form.year ? Number(form.year) : undefined,
           currentDriver: newDriver._id
         })
-        showToast.success('Shofyor va mashina qoshildi')
+        alert.success('Muvaffaqiyatli qo\'shildi! 🎉', `${form.fullName} va ${form.plateNumber} tizimga qo'shildi`)
       }
       setShowModal(false)
       setEditingDriver(null)
       resetForm()
       fetchData()
     } catch (error) {
-      showToast.error(error.response?.data?.message || 'Xatolik')
+      const errorMessage = error.response?.data?.message || 'Serverda xatolik yuz berdi'
+      alert.error('Xatolik yuz berdi', errorMessage)
     }
   }
 
@@ -316,14 +431,24 @@ export default function Drivers() {
   })
 
   if (loading) {
+    return <DriversListSkeleton count={6} />
+  }
+
+  // Error states
+  if (error) {
+    if (error.type === 'network') {
+      return <NetworkError onRetry={fetchData} message={error.message} />
+    }
+    if (error.type === 'server') {
+      return <ServerError onRetry={fetchData} message={error.message} />
+    }
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-[400px] flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-500">Yuklanmoqda...</p>
+          <p className="text-gray-500 mb-4">{error.message}</p>
+          <button onClick={fetchData} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+            Qayta urinish
+          </button>
         </div>
       </div>
     )
@@ -833,7 +958,20 @@ export default function Drivers() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
+                      onClick={() => {
+                        // Mahalliy tanlanganda manzillarni tozalash (xalqaro manzil tanlangan bo'lishi mumkin)
+                        if (flightForm.flightType !== 'domestic') {
+                          setFlightForm({ 
+                            ...flightForm, 
+                            flightType: 'domestic',
+                            fromCity: '',
+                            toCity: '',
+                            fromCoords: null,
+                            toCoords: null,
+                            distance: ''
+                          })
+                        }
+                      }}
                       className={`p-4 rounded-xl border-2 transition-all ${
                         flightForm.flightType === 'domestic'
                           ? 'border-green-500 bg-green-500/20 text-white'
@@ -859,6 +997,48 @@ export default function Drivers() {
                     </button>
                   </div>
                 </div>
+
+                {/* Xalqaro reys uchun davlatlar tanlash */}
+                {flightForm.flightType === 'international' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-blue-200 mb-2">
+                      🌍 Yo'nalish davlatlari
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { code: 'UZB', name: "O'zbekiston", flag: '🇺🇿' },
+                        { code: 'KZ', name: 'Qozog\'iston', flag: '🇰🇿' },
+                        { code: 'RU', name: 'Rossiya', flag: '🇷🇺' }
+                      ].map(country => (
+                        <button
+                          key={country.code}
+                          type="button"
+                          onClick={() => {
+                            const current = flightForm.countriesInRoute || []
+                            if (current.includes(country.code)) {
+                              if (current.length > 1) {
+                                setFlightForm({ ...flightForm, countriesInRoute: current.filter(c => c !== country.code) })
+                              }
+                            } else {
+                              setFlightForm({ ...flightForm, countriesInRoute: [...current, country.code] })
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-xl border-2 transition-all flex items-center gap-2 ${
+                            (flightForm.countriesInRoute || []).includes(country.code)
+                              ? 'border-blue-500 bg-blue-500/20 text-white'
+                              : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                          }`}
+                        >
+                          <span className="text-xl">{country.flag}</span>
+                          <span className="text-sm">{country.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Reys qaysi davlatlardan o'tishini tanlang (kamida 1 ta)
+                    </p>
+                  </div>
+                )}
 
                 {/* Boshlang'ich ma'lumotlar */}
                 <div className="grid grid-cols-2 gap-4">
@@ -941,6 +1121,7 @@ export default function Drivers() {
                         }}
                         placeholder="Toshkent"
                         focusColor="green"
+                        domesticOnly={flightForm.flightType === 'domestic'}
                       />
                     </div>
                     <div>
@@ -959,6 +1140,7 @@ export default function Drivers() {
                         }}
                         placeholder="Samarqand"
                         focusColor="green"
+                        domesticOnly={flightForm.flightType === 'domestic'}
                       />
                     </div>
                   </div>

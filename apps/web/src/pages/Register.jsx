@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, Zap, CheckCircle } from 'lucide-react'
+import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
+import { validateForm, SCHEMAS } from '../utils/validation'
 
 const Scene3D = lazy(() => import('../components/3d/Scene3D'))
 
@@ -63,6 +64,8 @@ function MagneticButton({ children, className, ...props }) {
 export default function Register() {
   const [form, setForm] = useState({ username: '', password: '', fullName: '', companyName: '', phone: '' })
   const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
   const { register, loading } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
@@ -83,31 +86,86 @@ export default function Register() {
     }
   }, [])
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+    
+    // Real-time validation for touched fields
+    if (touched[name]) {
+      validateSingleField(name, value)
+    }
+  }
+
+  const validateSingleField = (name, value) => {
+    let error = null
+    
+    switch (name) {
+      case 'fullName':
+        if (!value.trim()) error = 'To\'liq ism majburiy'
+        else if (value.trim().length < 2) error = 'Kamida 2 ta belgi'
+        break
+      case 'username':
+        if (!value.trim()) error = 'Username majburiy'
+        else if (value.length < 3) error = 'Kamida 3 ta belgi'
+        else if (!/^[a-zA-Z0-9_]+$/.test(value)) error = 'Faqat harflar, raqamlar va _'
+        break
+      case 'password':
+        if (!value) error = 'Parol majburiy'
+        else if (value.length < 6) error = 'Kamida 6 ta belgi'
+        break
+    }
+    
+    setErrors(prev => ({ ...prev, [name]: error }))
+    return error
+  }
+
+  const handleBlur = (name) => {
+    setTouched(prev => ({ ...prev, [name]: true }))
+    validateSingleField(name, form[name])
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!form.fullName.trim()) {
-      alert.warning("Ogohlantirish", "To'liq ismingizni kiriting")
-      return
-    }
-    if (!form.username.trim()) {
-      alert.warning("Ogohlantirish", "Username kiriting")
-      return
-    }
-    if (form.password.length < 6) {
-      alert.warning("Ogohlantirish", "Parol kamida 6 ta belgidan iborat bo'lishi kerak")
+    // Validate all required fields
+    const newErrors = {}
+    const requiredFields = ['fullName', 'username', 'password']
+    
+    requiredFields.forEach(field => {
+      const error = validateSingleField(field, form[field])
+      if (error) newErrors[field] = error
+    })
+    
+    setTouched({ fullName: true, username: true, password: true })
+    setErrors(newErrors)
+    
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0]
+      alert.warning("Ogohlantirish", firstError)
       return
     }
     
-    const result = await register(form)
-    if (result.success) {
-      alert.success("Muvaffaqiyatli!", "Ro'yxatdan o'tdingiz. Xush kelibsiz!")
-      navigate('/dashboard')
-    } else {
-      alert.error("Xatolik", result.message || "Ro'yxatdan o'tishda xatolik yuz berdi")
+    try {
+      const result = await register(form)
+      if (result.success) {
+        alert.success("Muvaffaqiyatli!", "Ro'yxatdan o'tdingiz. Xush kelibsiz!")
+        navigate('/dashboard')
+      } else {
+        alert.error("Xatolik", result.message || "Ro'yxatdan o'tishda xatolik yuz berdi")
+      }
+    } catch (error) {
+      alert.error("Xatolik", error.userMessage || "Serverga ulanishda xatolik yuz berdi")
     }
+  }
+  
+  // Helper for input styling
+  const getInputClass = (fieldName) => {
+    const hasError = errors[fieldName] && touched[fieldName]
+    return `w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
+      hasError 
+        ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+        : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
+    }`
   }
 
   return (
@@ -149,57 +207,75 @@ export default function Register() {
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">To'liq ism *</label>
               <div className="relative group">
-                <UserCircle className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
+                <UserCircle className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
                   type="text"
                   name="fullName"
                   value={form.fullName}
                   onChange={handleChange}
+                  onBlur={() => handleBlur('fullName')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
                       usernameRef.current?.focus()
                     }
                   }}
-                  className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
+                  aria-invalid={errors.fullName && touched.fullName}
+                  className={getInputClass('fullName')}
                   placeholder="Ism Familiya"
                 />
               </div>
+              {errors.fullName && touched.fullName && (
+                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
+                  <AlertCircle size={12} />
+                  {errors.fullName}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Username *</label>
               <div className="relative group">
-                <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
+                <User className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.username && touched.username ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
                   ref={usernameRef}
                   type="text"
                   name="username"
                   value={form.username}
                   onChange={handleChange}
+                  onBlur={() => handleBlur('username')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
                       passwordRef.current?.focus()
                     }
                   }}
-                  className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
+                  aria-invalid={errors.username && touched.username}
+                  className={getInputClass('username')}
                   placeholder="username"
                 />
               </div>
-              <p className="text-[10px] sm:text-xs text-violet-400/60 mt-1 sm:mt-1.5 ml-1">Login qilish uchun ishlatiladi</p>
+              {errors.username && touched.username ? (
+                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
+                  <AlertCircle size={12} />
+                  {errors.username}
+                </p>
+              ) : (
+                <p className="text-[10px] sm:text-xs text-violet-400/60 mt-1 sm:mt-1.5 ml-1">Login qilish uchun ishlatiladi</p>
+              )}
             </div>
 
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Parol *</label>
               <div className="relative group">
-                <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
+                <Lock className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.password && touched.password ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
                   ref={passwordRef}
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
+                  onBlur={() => handleBlur('password')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
@@ -210,7 +286,12 @@ export default function Register() {
                       }
                     }
                   }}
-                  className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
+                  aria-invalid={errors.password && touched.password}
+                  className={`w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
+                    errors.password && touched.password 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+                      : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
+                  }`}
                   placeholder="Kamida 6 ta belgi"
                   minLength={6}
                 />
@@ -222,6 +303,12 @@ export default function Register() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.password && touched.password && (
+                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
+                  <AlertCircle size={12} />
+                  {errors.password}
+                </p>
+              )}
             </div>
 
             <div>

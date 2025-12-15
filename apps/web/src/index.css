@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 🚀 PERFORMANCE OPTIMIZATIONS */
+
 /* Base styles */
 * {
   -webkit-tap-highlight-color: transparent;
@@ -15,6 +17,28 @@ html {
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
+  /* GPU acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* 🚀 GPU Acceleration for animations */
+.gpu-accelerate {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* 🚀 Optimize will-change */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
 }
 
 /* Reduce motion preference */

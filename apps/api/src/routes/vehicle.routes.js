@@ -3,10 +3,10 @@ const router = express.Router();
 const Vehicle = require('../models/Vehicle');
 const { protect, businessOnly } = require('../middleware/auth');
 
-// Barcha mashinalar
+// Barcha mashinalar (faqat aktiv)
 router.get('/', protect, businessOnly, async (req, res) => {
   try {
-    const vehicles = await Vehicle.find({ user: req.user._id }).populate('currentDriver', 'fullName username');
+    const vehicles = await Vehicle.find({ user: req.user._id, isActive: true }).populate('currentDriver', 'fullName username');
     res.json({ success: true, data: vehicles });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -16,7 +16,7 @@ router.get('/', protect, businessOnly, async (req, res) => {
 // Bitta mashina
 router.get('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOne({ _id: req.params.id, user: req.user._id })
+    const vehicle = await Vehicle.findOne({ _id: req.params.id, user: req.user._id, isActive: true })
       .populate('currentDriver', 'fullName username');
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' });
@@ -32,7 +32,12 @@ router.post('/', protect, businessOnly, async (req, res) => {
   try {
     const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentDriver } = req.body;
 
-    const existingVehicle = await Vehicle.findOne({ plateNumber: plateNumber.toUpperCase() });
+    // Faqat aktiv mashinalar orasida tekshirish
+    const existingVehicle = await Vehicle.findOne({ 
+      plateNumber: plateNumber.toUpperCase(),
+      user: req.user._id,
+      isActive: true 
+    });
     if (existingVehicle) {
       return res.status(400).json({ success: false, message: 'Bu raqamli mashina mavjud' });
     }
@@ -100,10 +105,14 @@ router.put('/:id/assign', protect, businessOnly, async (req, res) => {
   }
 });
 
-// Mashinani o'chirish
+// Mashinani o'chirish (soft delete)
 router.delete('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const vehicle = await Vehicle.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id, isActive: true },
+      { isActive: false, currentDriver: null },
+      { new: true }
+    );
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' });
     }

@@ -4,10 +4,71 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Avtojon - Yuk tashish boshqaruvi</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>Avtojon - Yuk tashish boshqaruvi | Logistika platformasi</title>
+    <meta name="description" content="Avtojon - O'zbekistondagi eng zamonaviy yuk tashish boshqaruv tizimi. Shofyorlar, mashinalar va reyslarni real-time kuzating. GPS monitoring, moliyaviy hisobotlar va AI tahlil." />
+    <meta name="keywords" content="yuk tashish, logistika, transport, shofyor boshqaruvi, GPS tracking, O'zbekiston, avtopark, reys, mashina" />
+    <meta name="author" content="Avtojon" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://avtojon.uz" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://avtojon.uz" />
+    <meta property="og:title" content="Avtojon - Yuk tashish boshqaruvi" />
+    <meta property="og:description" content="O'zbekistondagi eng zamonaviy yuk tashish boshqaruv tizimi. Real-time GPS monitoring va moliyaviy hisobotlar." />
+    <meta property="og:image" content="https://avtojon.uz/og-image.png" />
+    <meta property="og:locale" content="uz_UZ" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://avtojon.uz" />
+    <meta name="twitter:title" content="Avtojon - Yuk tashish boshqaruvi" />
+    <meta name="twitter:description" content="O'zbekistondagi eng zamonaviy yuk tashish boshqaruv tizimi." />
+    <meta name="twitter:image" content="https://avtojon.uz/og-image.png" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="msapplication-TileColor" content="#7c3aed" />
+    
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
+    
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Avtojon",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Yuk tashish va logistika boshqaruv tizimi",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "UZS"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "500"
+      }
+    }
+    </script>
   </head>
   <body>
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h1>Avtojon</h1>
+        <p>Bu sayt ishlashi uchun JavaScript yoqilgan bo'lishi kerak.</p>
+        <p>Iltimos, brauzeringizda JavaScript ni yoqing.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

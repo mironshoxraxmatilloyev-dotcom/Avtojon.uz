@@ -1,52 +1,42 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, memo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Float } from '@react-three/drei'
 
-function Shape({ position, type, color, size, speed }) {
+// 🚀 Optimized Shape - Float o'chirildi (og'ir)
+const Shape = memo(function Shape({ position, type, color, size }) {
   const ref = useRef()
   const frame = useRef(0)
-  const rot = useMemo(() => ({ x: Math.random() * Math.PI, y: Math.random() * Math.PI }), [])
+  const initialRot = useMemo(() => Math.random() * Math.PI, [])
 
   useFrame((state) => {
     frame.current++
-    if (frame.current % 4 !== 0) return
+    // Har 8-frame da yangilash
+    if (frame.current % 8 !== 0) return
     if (ref.current) {
-      ref.current.rotation.x = rot.x + state.clock.elapsedTime * speed * 0.2
-      ref.current.rotation.y = rot.y + state.clock.elapsedTime * speed * 0.15
+      ref.current.rotation.x = initialRot + state.clock.elapsedTime * 0.05
+      ref.current.rotation.y = initialRot + state.clock.elapsedTime * 0.03
     }
   })
 
-  const geo = useMemo(() => {
-    switch (type) {
-      case 0: return <octahedronGeometry args={[size, 0]} />
-      case 1: return <icosahedronGeometry args={[size, 0]} />
-      case 2: return <tetrahedronGeometry args={[size, 0]} />
-      default: return <dodecahedronGeometry args={[size, 0]} />
-    }
-  }, [type, size])
-
   return (
-    <Float speed={speed * 0.6} rotationIntensity={0.2} floatIntensity={0.2}>
-      <mesh ref={ref} position={position}>
-        {geo}
-        <meshBasicMaterial color={color} transparent opacity={0.4} wireframe={type % 2 === 0} />
-      </mesh>
-    </Float>
+    <mesh ref={ref} position={position}>
+      <octahedronGeometry args={[size, 0]} /> {/* Faqat bitta geometry turi */}
+      <meshBasicMaterial color={color} transparent opacity={0.3} wireframe />
+    </mesh>
   )
-}
+})
 
-export default function FloatingShapes({ count = 6 }) {
+// 🚀 Optimized FloatingShapes
+export default memo(function FloatingShapes({ count = 4 }) {
   const shapes = useMemo(() => {
-    const colors = ['#8b5cf6', '#6366f1', '#a78bfa', '#818cf8']
-    return Array.from({ length: count }, (_, i) => ({
+    const colors = ['#8b5cf6', '#6366f1', '#a78bfa']
+    return Array.from({ length: Math.min(count, 6) }, (_, i) => ({ // Max 6 ta
       id: i,
-      position: [(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 12, -5 - Math.random() * 10],
-      type: i % 4,
+      position: [(Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10, -5 - Math.random() * 8],
+      type: i % 3,
       color: colors[i % colors.length],
-      size: 0.12 + Math.random() * 0.25,
-      speed: 0.3 + Math.random() * 0.5
+      size: 0.15 + Math.random() * 0.2
     }))
   }, [count])
 
   return <>{shapes.map(s => <Shape key={s.id} {...s} />)}</>
-}
+})

@@ -1,10 +1,91 @@
 const mongoose = require('mongoose');
 
+// ============ XALQARO REYS UCHUN SXEMALAR ============
+
+// Yo'nalish nuqtasi (waypoint) sxemasi
+const waypointSchema = new mongoose.Schema({
+  country: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  city: {
+    type: String,
+    required: true
+  },
+  address: String,
+  coords: {
+    lat: Number,
+    lng: Number
+  },
+  type: {
+    type: String,
+    enum: ['start', 'transit', 'end'],
+    default: 'transit'
+  },
+  order: { type: Number, default: 0 },
+  arrivedAt: Date,
+  departedAt: Date
+}, { _id: true });
+
+// Chegara o'tish xarajati sxemasi
+const borderCrossingSchema = new mongoose.Schema({
+  fromCountry: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  toCountry: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  borderName: String, // Masalan: "Yallama", "Oybek", "Troitsk"
+  // Xarajatlar
+  customsFee: { type: Number, default: 0 }, // Bojxona
+  transitFee: { type: Number, default: 0 }, // Tranzit to'lov
+  insuranceFee: { type: Number, default: 0 }, // Sug'urta
+  otherFees: { type: Number, default: 0 }, // Boshqa
+  currency: {
+    type: String,
+    enum: ['UZS', 'KZT', 'RUB', 'USD'],
+    default: 'USD'
+  },
+  totalInOriginal: { type: Number, default: 0 },
+  totalInUSD: { type: Number, default: 0 },
+  exchangeRate: { type: Number, default: 1 },
+  crossedAt: Date,
+  note: String
+}, { _id: true });
+
+// Platon to'lovi sxemasi (Rossiya yo'l to'lovi)
+const platonSchema = new mongoose.Schema({
+  amount: { type: Number, default: 0 },
+  currency: {
+    type: String,
+    enum: ['RUB', 'USD'],
+    default: 'RUB'
+  },
+  amountInUSD: { type: Number, default: 0 },
+  exchangeRate: { type: Number, default: 1 },
+  distanceKm: { type: Number, default: 0 }, // Rossiyada yurgan km
+  note: String
+}, { _id: false });
+
+// Davlat bo'yicha xarajatlar xulosasi
+const countryExpenseSummarySchema = new mongoose.Schema({
+  distanceKm: { type: Number, default: 0 }, // Shu davlatda yurgan km
+  fuelLiters: { type: Number, default: 0 },
+  fuelCostUSD: { type: Number, default: 0 },
+  roadExpensesUSD: { type: Number, default: 0 },
+  totalUSD: { type: Number, default: 0 }
+}, { _id: false });
+
 // Yoqilg'i yozuvi sxemasi
 const fuelEntrySchema = new mongoose.Schema({
   country: {
     type: String,
-    enum: ['UZB', 'QZ', 'RU'],
+    enum: ['UZB', 'KZ', 'RU', 'uzb', 'kz', 'ru'], // Katta va kichik harflar
     required: true
   },
   liters: {
@@ -87,6 +168,38 @@ const tripSchema = new mongoose.Schema({
     ref: 'Vehicle',
     required: true
   },
+
+  // ============ REYS TURI ============
+  tripType: {
+    type: String,
+    enum: ['local', 'international'],
+    default: 'local'
+  },
+
+  // ============ XALQARO REYS MAYDONLARI ============
+  // Yo'nalish nuqtalari (xalqaro reyslar uchun)
+  waypoints: [waypointSchema],
+  
+  // Chegara o'tish xarajatlari
+  borderCrossings: [borderCrossingSchema],
+  borderCrossingsTotalUSD: { type: Number, default: 0 },
+  
+  // Platon (Rossiya yo'l to'lovi)
+  platon: platonSchema,
+  
+  // Davlatlar bo'yicha xarajatlar xulosasi
+  countryExpenses: {
+    uzb: countryExpenseSummarySchema,
+    kz: countryExpenseSummarySchema,
+    ru: countryExpenseSummarySchema
+  },
+
+  // Qaysi davlatlardan o'tadi
+  countriesInRoute: [{
+    type: String,
+    enum: ['UZB', 'KZ', 'RU']
+  }],
+
   startAddress: String,
   endAddress: String,
   // Koordinatalar (xarita uchun)
@@ -121,7 +234,7 @@ const tripSchema = new mongoose.Schema({
   fuelEntries: [fuelEntrySchema], // Barcha yoqilg'i yozuvlari
   fuelSummary: {
     uzb: { liters: { type: Number, default: 0 }, totalUSD: { type: Number, default: 0 } },
-    qz: { liters: { type: Number, default: 0 }, totalUSD: { type: Number, default: 0 } },
+    kz: { liters: { type: Number, default: 0 }, totalUSD: { type: Number, default: 0 } },
     ru: { liters: { type: Number, default: 0 }, totalUSD: { type: Number, default: 0 } },
     remaining: { type: Number, default: 0 }, // Astatka (qoldiq litr)
     totalLiters: { type: Number, default: 0 }, // Jami quyilgan
@@ -133,7 +246,7 @@ const tripSchema = new mongoose.Schema({
   // ============ YO'L XARAJATLARI (DAVLATLAR BO'YICHA) ============
   roadExpenses: {
     uzb: roadExpenseSchema,
-    qz: roadExpenseSchema,
+    kz: roadExpenseSchema,
     ru: roadExpenseSchema,
     totalUSD: { type: Number, default: 0 }
   },
@@ -203,9 +316,24 @@ tripSchema.pre('save', function(next) {
     this.odometer.traveled = this.odometer.end - this.odometer.start;
   }
 
+  // ============ XALQARO REYS HISOBLARI ============
+  
+  // Chegara o'tish xarajatlari jami
+  if (this.borderCrossings && this.borderCrossings.length > 0) {
+    this.borderCrossingsTotalUSD = this.borderCrossings.reduce(
+      (sum, bc) => sum + (bc.totalInUSD || 0), 0
+    );
+  }
+
+  // Davlatlar ro'yxatini waypoints dan olish
+  if (this.waypoints && this.waypoints.length > 0) {
+    const countries = [...new Set(this.waypoints.map(w => w.country))];
+    this.countriesInRoute = countries;
+  }
+
   // Yoqilg'i summary hisoblash
   if (this.fuelEntries && this.fuelEntries.length > 0) {
-    const summary = { uzb: { liters: 0, totalUSD: 0 }, qz: { liters: 0, totalUSD: 0 }, ru: { liters: 0, totalUSD: 0 } };
+    const summary = { uzb: { liters: 0, totalUSD: 0 }, kz: { liters: 0, totalUSD: 0 }, ru: { liters: 0, totalUSD: 0 } };
     
     this.fuelEntries.forEach(entry => {
       const country = entry.country.toLowerCase();
@@ -216,10 +344,10 @@ tripSchema.pre('save', function(next) {
     });
 
     this.fuelSummary.uzb = summary.uzb;
-    this.fuelSummary.qz = summary.qz;
+    this.fuelSummary.kz = summary.kz;
     this.fuelSummary.ru = summary.ru;
-    this.fuelSummary.totalLiters = summary.uzb.liters + summary.qz.liters + summary.ru.liters;
-    this.fuelSummary.totalUSD = summary.uzb.totalUSD + summary.qz.totalUSD + summary.ru.totalUSD;
+    this.fuelSummary.totalLiters = summary.uzb.liters + summary.kz.liters + summary.ru.liters;
+    this.fuelSummary.totalUSD = summary.uzb.totalUSD + summary.kz.totalUSD + summary.ru.totalUSD;
     this.fuelSummary.totalUsed = this.fuelSummary.totalLiters - (this.fuelSummary.remaining || 0);
     
     // Rashod hisoblash (litr/1km)
@@ -234,8 +362,8 @@ tripSchema.pre('save', function(next) {
     if (this.roadExpenses.uzb) {
       roadTotal += this.roadExpenses.uzb.totalInUSD || 0;
     }
-    if (this.roadExpenses.qz) {
-      roadTotal += this.roadExpenses.qz.totalInUSD || 0;
+    if (this.roadExpenses.kz) {
+      roadTotal += this.roadExpenses.kz.totalInUSD || 0;
     }
     if (this.roadExpenses.ru) {
       roadTotal += this.roadExpenses.ru.totalInUSD || 0;
@@ -253,9 +381,39 @@ tripSchema.pre('save', function(next) {
     (this.fuelSummary?.totalUSD || 0) +
     (this.roadExpenses?.totalUSD || 0) +
     (this.food?.amountInUSD || 0) +
-    (this.unexpectedTotalUSD || 0);
+    (this.unexpectedTotalUSD || 0) +
+    (this.borderCrossingsTotalUSD || 0) + // Chegara xarajatlari
+    (this.platon?.amountInUSD || 0); // Platon (Rossiya)
 
   this.totalExpensesUSD = tripExpenses + (this.driverSalary?.amountInUSD || 0);
+
+  // Davlatlar bo'yicha xarajatlar xulosasini hisoblash
+  if (this.tripType === 'international') {
+    const countries = ['uzb', 'kz', 'ru'];
+    countries.forEach(country => {
+      if (!this.countryExpenses) this.countryExpenses = {};
+      if (!this.countryExpenses[country]) {
+        this.countryExpenses[country] = { distanceKm: 0, fuelLiters: 0, fuelCostUSD: 0, roadExpensesUSD: 0, totalUSD: 0 };
+      }
+      
+      // Yoqilg'i
+      const countryCode = country.toUpperCase();
+      if (this.fuelSummary && this.fuelSummary[country]) {
+        this.countryExpenses[country].fuelLiters = this.fuelSummary[country].liters || 0;
+        this.countryExpenses[country].fuelCostUSD = this.fuelSummary[country].totalUSD || 0;
+      }
+      
+      // Yo'l xarajatlari
+      if (this.roadExpenses && this.roadExpenses[country]) {
+        this.countryExpenses[country].roadExpensesUSD = this.roadExpenses[country].totalInUSD || 0;
+      }
+      
+      // Jami
+      this.countryExpenses[country].totalUSD = 
+        (this.countryExpenses[country].fuelCostUSD || 0) +
+        (this.countryExpenses[country].roadExpensesUSD || 0);
+    });
+  }
 
   // Eski tizim uchun (orqaga moslik) - USD da
   // totalExpenses UZS da yuqorida hisoblanadi (tripBudget bilan ishlash uchun)

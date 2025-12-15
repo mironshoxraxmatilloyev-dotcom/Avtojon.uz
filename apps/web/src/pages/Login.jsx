@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Zap } from 'lucide-react'
+import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Zap, AlertCircle } from 'lucide-react'
 import { useAlert } from '../components/ui'
+import { validateField, VALIDATION_RULES } from '../utils/validation'
 
 const Scene3D = lazy(() => import('../components/3d/Scene3D'))
 
@@ -63,6 +64,8 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
   const { login, loading } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
@@ -82,24 +85,67 @@ export default function Login() {
     }
   }, [])
 
+  // Real-time validation
+  const validateUsername = (value) => {
+    if (!value.trim()) return 'Username kiriting'
+    const result = validateField('username', value)
+    return result.error
+  }
+
+  const validatePassword = (value) => {
+    if (!value.trim()) return 'Parol kiriting'
+    if (value.length < 6) return 'Parol kamida 6 ta belgi'
+    return null
+  }
+
+  const handleUsernameChange = (value) => {
+    setUsername(value)
+    if (touched.username) {
+      setErrors(prev => ({ ...prev, username: validateUsername(value) }))
+    }
+  }
+
+  const handlePasswordChange = (value) => {
+    setPassword(value)
+    if (touched.password) {
+      setErrors(prev => ({ ...prev, password: validatePassword(value) }))
+    }
+  }
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+    if (field === 'username') {
+      setErrors(prev => ({ ...prev, username: validateUsername(username) }))
+    } else if (field === 'password') {
+      setErrors(prev => ({ ...prev, password: validatePassword(password) }))
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!username.trim()) {
-      alert.warning("Ogohlantirish", "Username kiriting")
-      return
-    }
-    if (!password.trim()) {
-      alert.warning("Ogohlantirish", "Parol kiriting")
+    // Validate all fields
+    const usernameError = validateUsername(username)
+    const passwordError = validatePassword(password)
+    
+    setTouched({ username: true, password: true })
+    setErrors({ username: usernameError, password: passwordError })
+
+    if (usernameError || passwordError) {
+      alert.warning("Ogohlantirish", usernameError || passwordError)
       return
     }
 
-    const result = await login(username, password)
-    if (result.success) {
-      alert.success('Xush kelibsiz!', `Salom, ${result.user?.fullName || username}`)
-      navigate(result.role === 'driver' ? '/driver' : '/dashboard')
-    } else {
-      alert.error("Kirish xatosi", result.message || "Username yoki parol noto'g'ri")
+    try {
+      const result = await login(username, password)
+      if (result.success) {
+        alert.success('Xush kelibsiz!', `Salom, ${result.user?.fullName || username}`)
+        navigate(result.role === 'driver' ? '/driver' : '/dashboard')
+      } else {
+        alert.error("Kirish xatosi", result.message || "Username yoki parol noto'g'ri")
+      }
+    } catch (error) {
+      alert.error("Xatolik", error.userMessage || "Serverga ulanishda xatolik yuz berdi")
     }
   }
 
@@ -148,38 +194,58 @@ export default function Login() {
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Username</label>
               <div className="relative group">
-                <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
+                <User className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.username && touched.username ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  onBlur={() => handleBlur('username')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
                       passwordRef.current?.focus()
                     }
                   }}
-                  className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
+                  aria-invalid={errors.username && touched.username}
+                  aria-describedby={errors.username ? 'username-error' : undefined}
+                  className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
+                    errors.username && touched.username 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+                      : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
+                  }`}
                   placeholder="username"
                 />
               </div>
+              {errors.username && touched.username && (
+                <p id="username-error" className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
+                  <AlertCircle size={12} />
+                  {errors.username}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Parol</label>
               <div className="relative group">
-                <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
+                <Lock className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.password && touched.password ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
                   ref={passwordRef}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  onBlur={() => handleBlur('password')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && username.trim() && password.trim()) {
                       handleSubmit(e)
                     }
                   }}
-                  className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
+                  aria-invalid={errors.password && touched.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
+                  className={`w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
+                    errors.password && touched.password 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+                      : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
+                  }`}
                   placeholder="••••••••"
                 />
                 <button
@@ -190,6 +256,12 @@ export default function Login() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.password && touched.password && (
+                <p id="password-error" className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
+                  <AlertCircle size={12} />
+                  {errors.password}
+                </p>
+              )}
             </div>
 
             <MagneticButton className="w-full pt-1 sm:pt-0">

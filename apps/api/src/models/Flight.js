@@ -1,5 +1,86 @@
 const mongoose = require('mongoose');
 
+// ============ XALQARO REYS UCHUN SXEMALAR ============
+
+// Yo'nalish nuqtasi (waypoint) sxemasi
+const waypointSchema = new mongoose.Schema({
+  country: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  city: {
+    type: String,
+    required: true
+  },
+  address: String,
+  coords: {
+    lat: Number,
+    lng: Number
+  },
+  type: {
+    type: String,
+    enum: ['start', 'transit', 'end'],
+    default: 'transit'
+  },
+  order: { type: Number, default: 0 },
+  arrivedAt: Date,
+  departedAt: Date
+}, { _id: true });
+
+// Chegara o'tish xarajati sxemasi
+const borderCrossingSchema = new mongoose.Schema({
+  fromCountry: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  toCountry: {
+    type: String,
+    enum: ['UZB', 'KZ', 'RU'],
+    required: true
+  },
+  borderName: String,
+  customsFee: { type: Number, default: 0 },
+  transitFee: { type: Number, default: 0 },
+  insuranceFee: { type: Number, default: 0 },
+  otherFees: { type: Number, default: 0 },
+  currency: {
+    type: String,
+    enum: ['UZS', 'KZT', 'RUB', 'USD'],
+    default: 'USD'
+  },
+  totalInOriginal: { type: Number, default: 0 },
+  totalInUSD: { type: Number, default: 0 },
+  totalInUZS: { type: Number, default: 0 },
+  exchangeRate: { type: Number, default: 1 },
+  crossedAt: Date,
+  note: String
+}, { _id: true });
+
+// Platon to'lovi sxemasi (Rossiya yo'l to'lovi)
+const platonSchema = new mongoose.Schema({
+  amount: { type: Number, default: 0 },
+  currency: {
+    type: String,
+    enum: ['RUB', 'USD'],
+    default: 'RUB'
+  },
+  amountInUSD: { type: Number, default: 0 },
+  exchangeRate: { type: Number, default: 1 },
+  distanceKm: { type: Number, default: 0 },
+  note: String
+}, { _id: false });
+
+// Davlat bo'yicha xarajatlar xulosasi
+const countryExpenseSummarySchema = new mongoose.Schema({
+  distanceKm: { type: Number, default: 0 },
+  fuelLiters: { type: Number, default: 0 },
+  fuelCostUSD: { type: Number, default: 0 },
+  roadExpensesUSD: { type: Number, default: 0 },
+  totalUSD: { type: Number, default: 0 }
+}, { _id: false });
+
 // Bosqich (leg) sxemasi - har bir yo'nalish uchun
 const legSchema = new mongoose.Schema({
   fromCity: { type: String, required: true },
@@ -34,15 +115,37 @@ const legSchema = new mongoose.Schema({
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'food', 'repair', 'toll', 'fine', 'other'],
+    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'food', 'repair', 'toll', 'fine', 'other'],
     required: true
   },
-  amount: { type: Number, required: true },
-  quantity: { type: Number, default: null }, // Yoqilg'i miqdori (litr yoki kub)
-  quantityUnit: { type: String, enum: ['litr', 'kub', null], default: null }, // Birlik
+  amount: { type: Number, required: true }, // Jami summa (so'm)
+  
+  // Yoqilg'i uchun batafsil ma'lumotlar
+  quantity: { type: Number, default: null }, // Miqdor (litr yoki kub)
+  quantityUnit: { type: String, enum: ['litr', 'kub', null], default: null },
+  pricePerUnit: { type: Number, default: null }, // 1 litr/kub narxi
+  
+  // Joylashuv ma'lumotlari
+  location: {
+    name: { type: String, default: null }, // Manzil nomi (shahar, AZS nomi)
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
+  },
+  
+  // Odometr ma'lumotlari
+  odometer: { type: Number, default: null }, // Xarajat paytidagi odometr
+  distanceSinceLast: { type: Number, default: null }, // Oldingi yoqilg'idan beri yurgan km
+  fuelConsumption: { type: Number, default: null }, // Sarflanish (litr/100km)
+  
+  // Qo'shimcha
+  stationName: { type: String, default: null }, // AZS nomi
+  receiptImage: { type: String, default: null }, // Chek rasmi URL
   description: String,
-  legId: { type: mongoose.Schema.Types.ObjectId, default: null }, // Qaysi bosqichga tegishli
-  legIndex: { type: Number, default: null }, // Bosqich indeksi (0, 1, 2...)
+  
+  // Qaysi bosqichga tegishli
+  legId: { type: mongoose.Schema.Types.ObjectId, default: null },
+  legIndex: { type: Number, default: null },
+  
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
@@ -73,6 +176,31 @@ const flightSchema = new mongoose.Schema({
     enum: ['domestic', 'international'],
     default: 'domestic'
   },
+  
+  // ============ XALQARO REYS MAYDONLARI ============
+  // Yo'nalish nuqtalari
+  waypoints: [waypointSchema],
+  
+  // Chegara o'tish xarajatlari
+  borderCrossings: [borderCrossingSchema],
+  borderCrossingsTotalUSD: { type: Number, default: 0 },
+  borderCrossingsTotalUZS: { type: Number, default: 0 },
+  
+  // Platon (Rossiya yo'l to'lovi)
+  platon: platonSchema,
+  
+  // Davlatlar bo'yicha xarajatlar xulosasi
+  countryExpenses: {
+    uzb: countryExpenseSummarySchema,
+    kz: countryExpenseSummarySchema,
+    ru: countryExpenseSummarySchema
+  },
+
+  // Qaysi davlatlardan o'tadi
+  countriesInRoute: [{
+    type: String,
+    enum: ['UZB', 'KZ', 'RU']
+  }],
   
   // Boshlang'ich ma'lumotlar
   startOdometer: { type: Number, default: 0 }, // Boshlang'ich odometr (km)
@@ -109,6 +237,23 @@ const flightSchema = new mongoose.Schema({
 
 // Saqlashdan oldin hisob-kitob
 flightSchema.pre('save', function(next) {
+  // ============ XALQARO REYS HISOBLARI ============
+  
+  // Chegara o'tish xarajatlari jami
+  if (this.borderCrossings && this.borderCrossings.length > 0) {
+    this.borderCrossingsTotalUSD = this.borderCrossings.reduce(
+      (sum, bc) => sum + (bc.totalInUSD || 0), 0
+    );
+    // So'm da jami (1 USD = 12800 so'm)
+    this.borderCrossingsTotalUZS = Math.round(this.borderCrossingsTotalUSD * 12800);
+  }
+
+  // Davlatlar ro'yxatini waypoints dan olish
+  if (this.waypoints && this.waypoints.length > 0) {
+    const countries = [...new Set(this.waypoints.map(w => w.country))];
+    this.countriesInRoute = countries;
+  }
+
   // Har bir bosqich uchun xarajatlar va balance hisoblash
   let previousBalance = 0;
   
@@ -150,8 +295,8 @@ flightSchema.pre('save', function(next) {
   // Oxirgi qoldiq (haydovchi qaytarishi kerak)
   this.finalBalance = this.legs.length > 0 ? this.legs[this.legs.length - 1].balance : 0;
   
-  // Foyda = Mijozdan olgan - Yo'l uchun bergan
-  this.profit = this.totalPayment - this.totalGivenBudget;
+  // Foyda = Mijozdan olgan - Sarflangan xarajatlar
+  this.profit = this.totalPayment - this.totalExpenses;
   
   // Reys nomi
   if (this.legs.length > 0) {

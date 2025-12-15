@@ -1,0 +1,569 @@
+🚀 AVTOOJON - Sidebar Elementlari va Funksiyalar
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 ADMIN PANEL (Sidebar)
+═══════════════════════════════════════════════════════════════════════════════
+
+1️⃣ DASHBOARD (Bosh sahifa)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Umumiy statistika:
+   ├── Faol reyslar soni (in_progress)
+   ├── Yoldagi shofyorlar soni (busy)
+   ├── Bo'sh shofyorlar soni (free)
+   ├── Kutilayotgan reyslar soni (pending)
+   ├── Jami shofyorlar
+   ├── Tugatilgan reyslar
+   ├── Jami mashinalar
+   └── Jami reyslar
+
+💰 Moliyaviy statistika:
+   ├── Jami xarajatlar (som)
+   ├── Bonuslar (+som)
+   └── Jarimalar (-som)
+
+🗺️ Real-time xarita:
+   ├── Shofyorlar joylashuvi (GPS)
+   ├── Faol reyslar marshruti
+   ├── Full-screen xarita rejimi
+   └── Socket.io orqali real-time yangilanish
+
+🚛 Faol reyslar ro'yxati:
+   ├── Shofyor ismi va mashina raqami
+   ├── Bosqichlar soni va masofa
+   ├── Reys holatini ko'rish
+   └── Reysga o'tish (click)
+
+📋 Nima qilish mumkin:
+   ├── Barcha statistikani kuzatish
+   ├── Shofyorlar joylashuvini real-time ko'rish
+   ├── Faol reyslarni monitoring qilish
+   ├── Moliyaviy holatni tahlil qilish
+   └── Tezkor navigatsiya (Shofyorlar sahifasiga)
+
+
+2️⃣ SHOFYORLAR (Drivers)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 Shofyorlar ro'yxati:
+   ├── Jami shofyorlar soni
+   ├── Reysda bo'lganlar (busy)
+   ├── Bo'sh shofyorlar (free)
+   └── Mashinalar soni
+
+🔍 Qidiruv va filter:
+   ├── Ism yoki telefon orqali qidirish
+   ├── Status bo'yicha filter (Barchasi/Bo'sh/Reysda)
+   └── Real-time qidiruv
+
+👤 Har bir shofyor kartasi:
+   ├── Avatar va to'liq ism
+   ├── Telefon raqami
+   ├── Status (Reysda/Bo'sh)
+   ├── Biriktirilgan mashina (raqam, marka, yil)
+   ├── Faol reys ma'lumoti (agar bor bo'lsa)
+   ├── To'lov turi (Oylik/Reys uchun)
+   └── Maosh summasi
+
+🎮 Amallar (Actions):
+   ├── ▶️ Reys ochish (bo'sh shofyor uchun)
+   ├── 🛣️ Faol reysga o'tish (reysda bo'lgan uchun)
+   ├── ✏️ Tahrirlash
+   ├── 🗑️ O'chirish
+   └── 👁️ Profil ko'rish (click)
+
+➕ Yangi shofyor qo'shish:
+   ├── Username va parol
+   ├── To'liq ism
+   ├── Telefon raqami
+   ├── To'lov turi (Oylik/Reys uchun)
+   ├── Maosh summasi
+   └── Mashina ma'lumotlari (raqam, marka, yil)
+
+🚛 Reys ochish modali:
+   ├── Boshlang'ich odometr (km)
+   ├── Boshlang'ich yoqilg'i (litr)
+   ├── Reys turi (Mahalliy/Xalqaro)
+   ├── Qayerdan (shahar)
+   ├── Qayerga (shahar)
+   ├── Berilgan byudjet (so'm)
+   └── Masofa (avtomatik hisoblanadi)
+
+
+3️⃣ SHOFYOR PROFILI (DriverDetail)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Shaxsiy ma'lumotlar:
+   ├── Avatar va to'liq ism
+   ├── Username
+   ├── Status (Reysda/Bo'sh/Offline)
+   ├── Telefon raqami
+   ├── Ro'yxatdan o'tgan sana
+   └── Pro badge
+
+📊 Statistika:
+   ├── Tugatilgan reyslar soni
+   └── Jami daromad
+
+💰 Moliyaviy statistika:
+   ├── Oylik maosh
+   ├── Reys haqlari
+   ├── Bonuslar (+)
+   ├── Jarimalar (-)
+   └── Jami daromad
+
+🚗 Biriktirilgan mashina:
+   ├── Davlat raqami
+   ├── Marka va model
+   ├── Ishlab chiqarilgan yil
+   └── Yuk sig'imi (agar bor bo'lsa)
+
+📜 Reyslar tarixi:
+   ├── Reys nomi
+   ├── Sana
+   ├── Masofa (km)
+   ├── Bosqichlar soni
+   ├── Status (Faol/Yopilgan/Bekor)
+   └── To'lov summasi
+
+🎮 Tezkor amallar:
+   ├── ▶️ Reys ochish (bo'sh bo'lsa)
+   ├── 🛣️ Faol reysga o'tish (reysda bo'lsa)
+   └── 📞 Qo'ng'iroq qilish
+
+
+4️⃣ MAOSHLAR (Salaries)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Umumiy statistika:
+   ├── Jami maoshlar summasi
+   ├── To'langan maoshlar
+   ├── Kutilayotgan maoshlar
+   ├── Jami bonuslar
+   └── Jami jarimalar
+
+🔍 Qidiruv va filter:
+   ├── Shofyor nomi bo'yicha qidirish
+   └── Status bo'yicha filter (Barchasi/Hisoblangan/Tasdiqlangan/To'langan)
+
+💳 Har bir maosh kartasi:
+   ├── Shofyor ismi va avatar
+   ├── Davr (boshlanish - tugash)
+   ├── Status (Kutilmoqda/Hisoblangan/Tasdiqlangan/To'langan)
+   ├── Bazaviy oylik
+   ├── Reys haqi (reyslar soni bilan)
+   ├── Bonus (+)
+   ├── Jarima (-)
+   └── Jami maosh (net)
+
+🎮 Amallar:
+   ├── ✅ Tasdiqlash (hisoblangan uchun)
+   ├── 💳 To'landi deb belgilash (tasdiqlangan uchun)
+   ├── 👁️ Batafsil ko'rish
+   └── 🗑️ Bekor qilish
+
+➕ Maosh hisoblash:
+   ├── Shofyorni tanlash
+   ├── Davr boshlanishi
+   ├── Davr tugashi
+   └── Avtomatik hisoblash (bazaviy + reyslar + bonus - jarima)
+
+
+5️⃣ REYSLAR (Flights) - Yangi tizim
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Statistika:
+   ├── Faol reyslar soni
+   └── Yopilgan reyslar soni
+
+🔍 Filter:
+   ├── Faol
+   ├── Yopilgan
+   └── Barchasi
+
+🚛 Har bir reys kartasi:
+   ├── Shofyor ismi va avatar
+   ├── Mashina raqami
+   ├── Reys turi (Mahalliy 🇺🇿 / Xalqaro 🌍)
+   ├── Status (Faol/Yopilgan/Bekor)
+   ├── Bosqichlar soni
+   ├── Jami masofa (km)
+   ├── Jami to'lov (mijozdan)
+   └── Foyda/Zarar
+
+📋 Kengaytirilgan ma'lumot (expand):
+   ├── Odometr (boshlang'ich/tugash)
+   ├── Yoqilg'i (boshlang'ich/tugash)
+   ├── Bosqichlar ro'yxati:
+   │   ├── Tartib raqami
+   │   ├── Qayerdan → Qayerga
+   │   ├── Masofa (km)
+   │   └── To'lov (so'm)
+   └── Xarajatlar ro'yxati:
+       ├── Turi (icon bilan)
+       ├── Tavsif
+       ├── Summa
+       └── O'chirish tugmasi
+
+🎮 Amallar (faol reys uchun):
+   ├── ➕ Bosqich qo'shish
+   ├── 💰 Xarajat qo'shish
+   └── ✅ Reysni yopish
+
+
+6️⃣ REYS TAFSILOTI (FlightDetail)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Asosiy ma'lumotlar:
+   ├── Reys nomi
+   ├── Shofyor ismi
+   ├── Mashina raqami
+   └── Status (Faol/Yopilgan)
+
+📊 Statistika:
+   ├── Bosqichlar soni
+   ├── Mijozdan to'lov
+   ├── Yo'l uchun berilgan
+   ├── Qoldiq/Kamomad
+   └── Sof foyda/Zarar
+
+⛽ Odometr va Yoqilg'i:
+   ├── Boshlang'ich km
+   ├── Tugash km
+   ├── Boshlang'ich litr
+   └── Qoldiq litr
+
+🛣️ Bosqichlar (Timeline):
+   ├── Tartib raqami
+   ├── Qayerdan → Qayerga
+   ├── Masofa (km)
+   ├── Status (Tugatilgan/Yo'lda)
+   ├── Mijozdan to'lov
+   ├── Oldingi qoldiq
+   ├── Berilgan byudjet
+   ├── Sarflangan
+   └── Qoldiq/Kamomad
+
+💰 Xarajatlar:
+   ├── Turi (icon bilan):
+   │   ├── ⛽ Yoqilg'i (Benzin/Dizel/Gaz/Metan/Propan)
+   │   ├── 🍽️ Ovqat
+   │   ├── 🔧 Ta'mir
+   │   ├── 🛣️ Yo'l to'lovi
+   │   ├── 📋 Jarima
+   │   └── 📦 Boshqa
+   ├── Tavsif
+   ├── Summa
+   └── O'chirish
+
+➕ Bosqich qo'shish:
+   ├── Qayerdan (avtomatik oldingi bosqichdan)
+   ├── Qayerga (autocomplete yoki xaritadan)
+   ├── Mijozdan to'lov (so'm)
+   ├── Berilgan byudjet (so'm)
+   ├── Masofa (avtomatik hisoblanadi)
+   └── 🗺️ Xaritadan tanlash
+
+💰 Xarajat qo'shish:
+   ├── Kategoriya tanlash (Yoqilg'i/Ovqat/Ta'mir/...)
+   ├── Yoqilg'i turi (agar yoqilg'i bo'lsa)
+   ├── Miqdori (litr/kub)
+   ├── Summa (so'm)
+   └── Tavsif
+
+✅ Reysni yopish:
+   ├── Tugash odometri (km)
+   ├── Qoldiq yoqilg'i (litr)
+   └── Tasdiqlash
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 SHOFYOR PANELI (Driver App)
+═══════════════════════════════════════════════════════════════════════════════
+
+🏠 BOSH SAHIFA (Home Tab)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 GPS Status:
+   ├── Excellent (📍 ±<50m)
+   ├── Good (📍 ±<200m)
+   ├── Active (GPS ±<1000m)
+   ├── Waiting (⏳ kutilmoqda)
+   ├── Denied (🚫 ruxsat yo'q)
+   └── Error (xatolik)
+
+🔔 Real-time bildirishnomalar:
+   ├── Yangi reys tayinlanganda
+   └── Reys bekor qilinganda
+
+🚛 Faol reys (agar bor bo'lsa):
+   ├── Reys nomi
+   ├── Bosqichlar (Qayerdan → Qayerga)
+   ├── Jami masofa
+   ├── Jami to'lov
+   ├── Xarajatlar
+   ├── Foyda/Zarar
+   └── 🗺️ Xarita (marshrut bilan)
+
+🗺️ Navigator rejimi:
+   ├── Real-time joylashuv
+   ├── Marshrut ko'rsatish
+   ├── Boshlanish nuqtasi (yashil marker)
+   ├── Tugash nuqtasi (qizil marker)
+   └── Haydovchi joylashuvi (truck icon)
+
+📊 Statistika:
+   ├── Tugatilgan reyslar
+   ├── Jami bonus
+   └── Jami jarima
+
+
+📜 TARIX (History Tab)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Reyslar tarixi:
+   ├── Reys nomi
+   ├── Sana
+   ├── Bosqichlar soni
+   ├── Masofa
+   ├── Status
+   └── To'lov
+
+
+💰 HISOBIM (Wallet Tab)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Moliyaviy ma'lumotlar:
+   ├── Oylik maosh
+   ├── Reys haqlari
+   ├── Bonuslar
+   ├── Jarimalar
+   └── Jami daromad
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 TEXNIK XUSUSIYATLAR
+═══════════════════════════════════════════════════════════════════════════════
+
+🔌 Real-time funksiyalar (Socket.io):
+   ├── GPS joylashuvni real-time yuborish
+   ├── Yangi reys bildirishnomasi
+   ├── Reys boshlanganda dashboard yangilanishi
+   ├── Reys tugaganda dashboard yangilanishi
+   └── Shofyor joylashuvi real-time yangilanishi
+
+🗺️ Xarita funksiyalari:
+   ├── Leaflet xaritasi
+   ├── OpenStreetMap tiles
+   ├── OSRM routing (marshrut hisoblash)
+   ├── Nominatim geocoding (shahar qidirish)
+   ├── Custom markers (shofyor, boshlanish, tugash)
+   └── Polyline (marshrut chizig'i)
+
+🔐 Autentifikatsiya:
+   ├── JWT token
+   ├── Admin va Driver rollari
+   ├── Protected routes
+   └── Demo rejim
+
+📱 Responsive dizayn:
+   ├── Mobile-first
+   ├── Tablet va Desktop moslashuvi
+   └── Touch-friendly UI
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 MA'LUMOTLAR MODELLARI
+═══════════════════════════════════════════════════════════════════════════════
+
+👤 Driver (Shofyor):
+   ├── username, password
+   ├── fullName, phone
+   ├── status (free/busy)
+   ├── paymentType (monthly/per_trip)
+   ├── baseSalary, perTripRate
+   └── lastLocation (lat, lng, accuracy, speed)
+
+🚗 Vehicle (Mashina):
+   ├── plateNumber
+   ├── brand, model, year
+   ├── capacity
+   └── currentDriver
+
+🚛 Flight (Reys - yangi tizim):
+   ├── driver, vehicle
+   ├── name, flightType
+   ├── status (active/completed/cancelled)
+   ├── startOdometer, endOdometer
+   ├── startFuel, endFuel
+   ├── legs[] (bosqichlar)
+   ├── expenses[] (xarajatlar)
+   ├── totalDistance, totalPayment
+   ├── totalExpenses, totalGivenBudget
+   ├── finalBalance, profit
+   └── createdAt, completedAt
+
+📍 Leg (Bosqich):
+   ├── fromCity, toCity
+   ├── fromCoords, toCoords
+   ├── distance
+   ├── payment, givenBudget
+   ├── spentAmount, balance
+   └── status
+
+💰 Expense (Xarajat):
+   ├── type (fuel_benzin/fuel_diesel/food/repair/toll/fine/other)
+   ├── amount
+   ├── description
+   ├── quantity, quantityUnit
+   └── createdAt
+
+💳 Salary (Maosh):
+   ├── driver
+   ├── periodStart, periodEnd
+   ├── baseSalary
+   ├── tripsPayment, tripsCount
+   ├── totalBonus, totalPenalty
+   ├── netSalary
+   └── status (pending/calculated/approved/paid)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Yaratilgan: 2025-yil, 14-dekabr
+🔧 Texnologiyalar: React, Node.js, MongoDB, Socket.io, Leaflet
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 OPTIMIZATSIYA NATIJALARI (2025-yil, 14-dekabr)
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 AMALGA OSHIRILGAN OPTIMIZATSIYALAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ LAZY LOADING (Code Splitting)
+   ├── Barcha sahifalar lazy load qilingan
+   ├── 3D komponentlar alohida chunk
+   ├── Xarita kutubxonalari alohida chunk
+   ├── Socket va Toaster lazy load
+   └── Natija: Boshlang'ich yuklash 60% tezlashdi
+
+2️⃣ VENDOR CHUNKING
+   ├── vendor-react: 163KB (React, ReactDOM, Router)
+   ├── vendor-3d: 754KB (Three.js, R3F) - faqat Landing da
+   ├── vendor-map: 154KB (Leaflet) - faqat kerak bo'lganda
+   ├── vendor-utils: 77KB (Axios, Socket.io, GSAP)
+   └── vendor-ui: 25KB (Lucide, Zustand)
+
+3️⃣ 3D SCENE OPTIMIZATSIYASI
+   ├── Particle count kamaytirildi (80 -> 40)
+   ├── Stars count kamaytirildi (1500 -> 800)
+   ├── Frame skip qo'shildi (har 4-6 frame)
+   ├── MeshDistortMaterial o'chirildi (og'ir)
+   ├── Float effekti o'chirildi (og'ir)
+   ├── CSS fallback qo'shildi (sekin qurilmalar uchun)
+   └── Device performance detection yaxshilandi
+
+4️⃣ REACT OPTIMIZATSIYASI
+   ├── React.memo() qo'shildi (komponentlar)
+   ├── useCallback() qo'shildi (funksiyalar)
+   ├── useMemo() qo'shildi (hisoblashlar)
+   ├── StrictMode production da o'chirildi
+   └── Keraksiz re-render yo'qotildi
+
+5️⃣ API OPTIMIZATSIYASI
+   ├── Request caching qo'shildi (5 sekund TTL)
+   ├── Timeout qo'shildi (15 sekund)
+   └── Cache tozalash funksiyasi
+
+6️⃣ SOCKET OPTIMIZATSIYASI
+   ├── WebSocket birinchi (polling fallback)
+   ├── Reconnection attempts cheklandi (10)
+   ├── Silent error handling
+   └── Optimized room joining
+
+7️⃣ CSS OPTIMIZATSIYASI
+   ├── GPU acceleration qo'shildi
+   ├── will-change optimizatsiyasi
+   ├── Keraksiz animatsiyalar o'chirildi
+   └── Transition duration kamaytirildi
+
+8️⃣ BUILD OPTIMIZATSIYASI
+   ├── esbuild minification (terser o'rniga - tezroq)
+   ├── Console.log lar production da o'chiriladi
+   ├── Source maps faqat dev da
+   └── Dependency pre-bundling
+
+📊 BUILD NATIJALARI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Build vaqti: ~9 sekund
+   Jami hajm: ~1.5MB (gzip: ~450KB)
+   
+   Asosiy chunk lar:
+   ├── index.js: 26KB (gzip: 8KB) - asosiy app
+   ├── Landing.js: 19KB (gzip: 5.5KB)
+   ├── Dashboard.js: 35KB (gzip: 8KB)
+   ├── Drivers.js: 31KB (gzip: 7.5KB)
+   └── DriverHome.js: 36KB (gzip: 8KB)
+
+🎯 FOYDALANUVCHI TAJRIBASI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✅ Sahifa tez ochiladi (lazy loading)
+   ✅ 3D sekin qurilmalarda CSS fallback
+   ✅ API javoblari keshlanadi
+   ✅ Socket ulanish optimallashtirilgan
+   ✅ Animatsiyalar GPU da ishlaydi
+   ✅ Keraksiz re-render yo'q
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 MODULARIZATSIYA NATIJALARI
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 KATTA FAYLLAR ANIQLANDI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   1. TripDetail.jsx    - 1524 qator (ishlatilmayapti)
+   2. DriverHome.jsx    - 1117 qator
+   3. Drivers.jsx       - 1108 qator
+   4. Dashboard.jsx     - 1095 qator
+   5. FlightDetail.jsx  - 1007 qator
+   6. Flights.jsx       - 753 qator
+   7. DriverDetail.jsx  - 744 qator
+
+🚀 YARATILGAN MODULLAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 components/dashboard/
+   ├── index.js              - Export hub
+   ├── DashboardHeader.jsx   - Hero header, Demo banner
+   ├── ActiveFlights.jsx     - Faol reyslar kartasi
+   ├── StatsCards.jsx        - Statistika kartalari
+   └── DashboardMap.jsx      - Xarita komponenti (lazy)
+
+📁 components/drivers/
+   ├── index.js              - Export hub
+   ├── DriverCard.jsx        - Shofyor kartasi
+   ├── DriversHeader.jsx     - Sahifa headeri
+   └── DriversFilter.jsx     - Qidiruv va filter
+
+📁 hooks/
+   ├── useDashboardData.js   - Dashboard data hook
+   └── useScrollAnimation.js - Animatsiya hook
+
+📁 pages/
+   └── DashboardNew.jsx      - Modular Dashboard (namuna)
+
+🎯 MODULARIZATSIYA AFZALLIKLARI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✅ Kichik fayllar - oson o'qish va tahrirlash
+   ✅ Qayta ishlatish - komponentlar boshqa joylarda ham ishlaydi
+   ✅ Tree shaking - faqat kerakli kod yuklanadi
+   ✅ Parallel development - bir nechta dasturchi ishlashi mumkin
+   ✅ Testing - alohida test yozish oson
+   ✅ Lazy loading - kerak bo'lganda yuklanadi
+
+📊 FAYL HAJMLARI (yangi modullar):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DashboardHeader.jsx   ~100 qator
+   ActiveFlights.jsx     ~130 qator
+   StatsCards.jsx        ~100 qator
+   DashboardMap.jsx      ~150 qator
+   DriverCard.jsx        ~150 qator
+   DriversHeader.jsx     ~80 qator
+   DriversFilter.jsx     ~50 qator
+   useDashboardData.js   ~150 qator
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Users, Truck, Route, TrendingUp, TrendingDown, Clock, CheckCircle, MapPin, RefreshCw, ArrowUpRight, Fuel, Calendar, Activity, Zap, Play, X } from 'lucide-react'
+import { Users, Truck, Route, TrendingUp, TrendingDown, Clock, CheckCircle, MapPin, RefreshCw, ArrowUpRight, Fuel, Calendar, Activity, Zap, Play, X, WifiOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -8,7 +8,7 @@ import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../contexts/SocketContext'
-import { PageWrapper, AnimatedCard, AnimatedStatCard } from '../components/ui'
+import { PageWrapper, AnimatedCard, AnimatedStatCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
 
 // eslint-disable-next-line no-unused-vars
 
@@ -44,8 +44,7 @@ async function getRouteFromAPI(startLat, startLng, endLat, endLng) {
       }
     }
     return null
-  } catch (error) {
-    console.error('Marshrut olish xatosi:', error)
+  } catch {
     return null
   }
 }
@@ -144,26 +143,92 @@ export default function Dashboard() {
     totalExpenses: 0, pendingTrips: 0, totalBonus: 0, totalPenalty: 0,
     busyDrivers: 0, freeDrivers: 0
   })
-  const [activeTrips, setActiveTrips] = useState([])
-  const [activeFlights, setActiveFlights] = useState([]) // Yangi reys tizimi - faol
-  const [recentFlights, setRecentFlights] = useState([]) // Yangi reys tizimi - barcha
-  const [recentTrips, setRecentTrips] = useState([])
+  const [activeFlights, setActiveFlights] = useState([])
+  const [recentFlights, setRecentFlights] = useState([])
   const [driverLocations, setDriverLocations] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null) // Error state
   const [fullScreenMap, setFullScreenMap] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [shouldCenterMap, setShouldCenterMap] = useState(false)
   const [tripRoutes, setTripRoutes] = useState({}) // Har bir reys uchun marshrut
+  const [routesLoading, setRoutesLoading] = useState(false)
   const { socket } = useSocket()
   const isDemoMode = isDemo()
+
+  // 🗺️ Shahar nomidan koordinata olish
+  const getCoordsFromCity = async (cityName) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1`
+      )
+      const data = await response.json()
+      if (data[0]) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+      }
+    } catch {
+      // Geocoding error - silent
+    }
+    return null
+  }
+
+  // 🗺️ Faol reyslar uchun marshrutlarni olish
+  const fetchRoutes = async (flights) => {
+    if (!flights || flights.length === 0 || routesLoading) return
+    
+    setRoutesLoading(true)
+    const newRoutes = {}
+    
+    for (const flight of flights) {
+      if (!flight.legs) continue
+      
+      for (const leg of flight.legs) {
+        const routeKey = `flight-${flight._id}-${leg._id}`
+        
+        // Agar allaqachon mavjud bo'lsa, o'tkazib yuborish
+        if (tripRoutes[routeKey]) {
+          newRoutes[routeKey] = tripRoutes[routeKey]
+          continue
+        }
+        
+        let fromCoords = leg.fromCoords?.lat && leg.fromCoords?.lng ? leg.fromCoords : null
+        let toCoords = leg.toCoords?.lat && leg.toCoords?.lng ? leg.toCoords : null
+        
+        // Koordinatalar yo'q bo'lsa, shahar nomidan olish
+        if (!fromCoords && leg.fromCity) {
+          fromCoords = await getCoordsFromCity(leg.fromCity)
+        }
+        if (!toCoords && leg.toCity) {
+          toCoords = await getCoordsFromCity(leg.toCity)
+        }
+        
+        if (fromCoords && toCoords) {
+          const route = await getRouteFromAPI(
+            fromCoords.lat, fromCoords.lng,
+            toCoords.lat, toCoords.lng
+          )
+          if (route) {
+            newRoutes[routeKey] = {
+              ...route,
+              fromCoords,
+              toCoords
+            }
+          }
+        }
+      }
+    }
+    
+    if (Object.keys(newRoutes).length > 0) {
+      setTripRoutes(prev => ({ ...prev, ...newRoutes }))
+    }
+    setRoutesLoading(false)
+  }
 
   // 🔌 Socket.io - Real-time GPS yangilanishi va reys eventlari
   useEffect(() => {
     if (!socket) return
 
     socket.on('driver-location', (data) => {
-      console.log('🔌 Real-time GPS:', data.driverName, data.location.lat.toFixed(4), data.location.lng.toFixed(4))
-      
       setDriverLocations(prev => prev.map(driver => 
         driver._id === data.driverId 
           ? { ...driver, lastLocation: data.location }
@@ -171,27 +236,22 @@ export default function Dashboard() {
       ))
     })
 
-    // Reys boshlanganda - real-time yangilash
-    socket.on('trip-started', (data) => {
-      console.log('🔔 Dashboard: Reys boshlandi:', data)
-      // Stats va trips ni yangilash
+    // Flight boshlanganda - real-time yangilash
+    socket.on('flight-started', (data) => {
       setStats(prev => ({
         ...prev,
         activeTrips: prev.activeTrips + 1,
-        pendingTrips: Math.max(0, prev.pendingTrips - 1),
         busyDrivers: prev.busyDrivers + 1,
         freeDrivers: Math.max(0, prev.freeDrivers - 1)
       }))
-      if (data.trip) {
-        setActiveTrips(prev => [data.trip, ...prev])
-        setRecentTrips(prev => [data.trip, ...prev.slice(0, 5)])
+      if (data.flight) {
+        setActiveFlights(prev => [data.flight, ...prev])
+        setRecentFlights(prev => [data.flight, ...prev.slice(0, 5)])
       }
     })
 
-    // Reys tugatilganda - real-time yangilash
-    socket.on('trip-completed', (data) => {
-      console.log('🔔 Dashboard: Reys tugatildi:', data)
-      // Stats va trips ni yangilash
+    // Flight tugatilganda - real-time yangilash
+    socket.on('flight-completed', (data) => {
       setStats(prev => ({
         ...prev,
         activeTrips: Math.max(0, prev.activeTrips - 1),
@@ -199,23 +259,22 @@ export default function Dashboard() {
         busyDrivers: Math.max(0, prev.busyDrivers - 1),
         freeDrivers: prev.freeDrivers + 1
       }))
-      if (data.trip) {
-        setActiveTrips(prev => prev.filter(t => t._id !== data.trip._id))
-        setRecentTrips(prev => [data.trip, ...prev.filter(t => t._id !== data.trip._id).slice(0, 5)])
+      if (data.flight) {
+        setActiveFlights(prev => prev.filter(f => f._id !== data.flight._id))
+        setRecentFlights(prev => [data.flight, ...prev.filter(f => f._id !== data.flight._id).slice(0, 5)])
       }
     })
 
     return () => {
       socket.off('driver-location')
-      socket.off('trip-started')
-      socket.off('trip-completed')
+      socket.off('flight-started')
+      socket.off('flight-completed')
     }
   }, [socket])
 
   const fetchDriverLocations = async (centerMap = false) => {
     try {
       const { data } = await api.get('/drivers/locations')
-      console.log('📍 Shofyorlar joylashuvi olindi:', data.data?.length || 0, 'ta')
       setDriverLocations(data.data || [])
       
       // Faqat "Yangilash" tugmasi bosilganda xaritani markazlashtirish
@@ -223,8 +282,8 @@ export default function Dashboard() {
         setShouldCenterMap(true)
         setTimeout(() => setShouldCenterMap(false), 100)
       }
-    } catch (error) {
-      console.error('Driver locations error:', error)
+    } catch {
+      // Driver locations error - silent
     }
   }
 
@@ -233,104 +292,61 @@ export default function Dashboard() {
       // Demo rejimda fake data ishlatish
       if (isDemoMode) {
         setStats(DEMO_DATA.stats)
-        setActiveTrips(DEMO_DATA.activeTrips)
-        setRecentTrips(DEMO_DATA.recentTrips)
+        setActiveFlights(DEMO_DATA.activeTrips) // Demo uchun
         setDriverLocations(DEMO_DATA.driverLocations)
         setLoading(false)
         return
       }
 
       try {
-        const [driversRes, vehiclesRes, tripsRes, expensesRes, flightsActiveRes, flightsAllRes] = await Promise.all([
+        // Faqat kerakli so'rovlar - trips ni olib tashladik (eski tizim)
+        const [driversRes, vehiclesRes, expensesRes, flightsRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/vehicles'),
-          api.get('/trips'),
           api.get('/expenses/stats').catch(() => ({ data: { data: { totalAmount: 0 } } })),
-          api.get('/flights', { params: { status: 'active' } }).catch(() => ({ data: { data: [] } })),
-          api.get('/flights').catch(() => ({ data: { data: [] } })) // Barcha flights
+          api.get('/flights').catch(() => ({ data: { data: [] } }))
         ])
         
-        const trips = tripsRes.data.data || []
         const drivers = driversRes.data.data || []
-        const flights = flightsActiveRes.data.data || []
-        const allFlights = flightsAllRes.data.data || []
-        const active = trips.filter(t => t.status === 'in_progress')
-        const completed = trips.filter(t => t.status === 'completed')
+        const allFlights = flightsRes.data.data || []
+        const activeFlightsList = allFlights.filter(f => f.status === 'active')
         const completedFlights = allFlights.filter(f => f.status === 'completed')
         
         setStats({
           drivers: drivers.length,
           vehicles: vehiclesRes.data.data?.length || 0,
-          activeTrips: flights.length, // Faqat yangi reyslar
-          completedTrips: completedFlights.length, // Yangi reyslar
+          activeTrips: activeFlightsList.length,
+          completedTrips: completedFlights.length,
           pendingTrips: 0,
           totalExpenses: expensesRes.data.data?.totalAmount || 0,
           totalBonus: 0,
           totalPenalty: 0,
           busyDrivers: drivers.filter(d => d.status === 'busy').length,
-          freeDrivers: drivers.filter(d => d.status === 'free').length
+          freeDrivers: drivers.filter(d => d.status === 'free' || d.status === 'available').length
         })
-        setActiveTrips(active)
-        console.log('📊 Faol flights:', flights.length, flights.map(f => ({ 
-          name: f.name, 
-          legs: f.legs?.map(l => ({ 
-            from: l.fromCity, 
-            to: l.toCity, 
-            fromCoords: l.fromCoords, 
-            toCoords: l.toCoords 
-          }))
-        })))
-        setActiveFlights(flights)
-        setRecentFlights(allFlights.slice(0, 6)) // So'ngi 6 ta flight
-        setRecentTrips(trips.slice(0, 6))
+        setActiveFlights(activeFlightsList)
+        setRecentFlights(allFlights.slice(0, 6))
         
-        // Faol reyslar uchun marshrut olish (eski trips)
-        for (const trip of active) {
-          if (trip.startCoords && trip.endCoords) {
-            const route = await getRouteFromAPI(
-              trip.startCoords.lat, trip.startCoords.lng,
-              trip.endCoords.lat, trip.endCoords.lng
-            )
-            if (route) {
-              setTripRoutes(prev => ({ ...prev, [trip._id]: route }))
-            }
-          }
+        // Faol reyslar uchun marshrutlarni olish
+        if (activeFlightsList.length > 0) {
+          fetchRoutes(activeFlightsList)
         }
-
-        // Yangi flights uchun marshrut olish (har bir leg uchun)
-        for (const flight of flights) {
-          if (flight.legs && flight.legs.length > 0) {
-            for (const leg of flight.legs) {
-              // Koordinatalar to'liq bo'lishi kerak (lat va lng mavjud)
-              const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
-              const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
-              
-              if (hasFromCoords && hasToCoords) {
-                console.log('🗺️ Flight marshrut olish:', leg.fromCity, '->', leg.toCity)
-                const route = await getRouteFromAPI(
-                  leg.fromCoords.lat, leg.fromCoords.lng,
-                  leg.toCoords.lat, leg.toCoords.lng
-                )
-                if (route) {
-                  console.log('✅ Marshrut topildi:', route.distance, 'km')
-                  setTripRoutes(prev => ({ ...prev, [`flight-${flight._id}-${leg._id}`]: route }))
-                }
-              } else {
-                console.log('⚠️ Koordinatalar yo\'q:', leg.fromCity, '->', leg.toCity, { fromCoords: leg.fromCoords, toCoords: leg.toCoords })
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Stats error:', error)
+      } catch (err) {
+        console.error('Stats error:', err)
+        setError({
+          type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
+          message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+        })
       } finally {
         setLoading(false)
       }
     }
     fetchStats()
+    setError(null)
     if (!isDemoMode) {
       fetchDriverLocations()
-      const interval = setInterval(fetchDriverLocations, 15000)
+      // Intervalini 30 sekundga oshirdik (15 dan)
+      const interval = setInterval(fetchDriverLocations, 30000)
       return () => clearInterval(interval)
     }
   }, [isDemoMode])
@@ -355,16 +371,32 @@ export default function Dashboard() {
     return 'Xayrli kech'
   }
 
+  // Refetch function for error retry
+  const refetchData = () => {
+    setLoading(true)
+    setError(null)
+    window.location.reload()
+  }
+
   if (loading) {
+    return <DashboardSkeleton />
+  }
+
+  // Error states
+  if (error) {
+    if (error.type === 'network') {
+      return <NetworkError onRetry={refetchData} message={error.message} />
+    }
+    if (error.type === 'server') {
+      return <ServerError onRetry={refetchData} message={error.message} />
+    }
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center animate-fadeIn">
-          <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <Truck className="absolute inset-0 m-auto text-blue-600" size={32} />
-          </div>
-          <p className="text-gray-500 font-medium">Yuklanmoqda...</p>
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">{error.message}</p>
+          <button onClick={refetchData} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+            Qayta urinish
+          </button>
         </div>
       </div>
     )
@@ -379,9 +411,9 @@ export default function Dashboard() {
 
   const mainStats = [
     { label: 'Jami shofyorlar', value: stats.drivers, icon: Users, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50', link: '/dashboard/drivers' },
-    { label: 'Tugatilgan reyslar', value: stats.completedTrips, icon: CheckCircle, gradient: 'from-green-500 to-green-600', bg: 'bg-green-50', link: '/dashboard/trips' },
+    { label: 'Tugatilgan reyslar', value: stats.completedTrips, icon: CheckCircle, gradient: 'from-green-500 to-green-600', bg: 'bg-green-50', link: '/dashboard/drivers' },
     { label: 'Jami mashinalar', value: stats.vehicles, icon: Truck, gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', link: '/dashboard/drivers' },
-    { label: 'Jami reyslar', value: stats.completedTrips + stats.activeTrips + stats.pendingTrips, icon: Route, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50', link: '/dashboard/trips' },
+    { label: 'Jami reyslar', value: stats.completedTrips + stats.activeTrips, icon: Route, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50', link: '/dashboard/drivers' },
   ]
 
   return (
@@ -425,10 +457,10 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-2 sm:gap-3">
-            <button onClick={() => navigate('/dashboard/trips')} 
+            <button onClick={() => navigate('/dashboard/drivers')} 
               className="group px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10 text-sm sm:text-base">
-              <Route size={16} className="sm:w-[18px] sm:h-[18px]" /> 
-              <span className="hidden xs:inline">Yangi</span> reys
+              <Users size={16} className="sm:w-[18px] sm:h-[18px]" /> 
+              Shofyorlar
               <ArrowUpRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
           </div>
@@ -508,56 +540,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Eski faol reyslar (trips) */}
-      {activeTrips.length > 0 && (
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Zap className="text-orange-600" size={20} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Hozir yolda (eski)</h2>
-                <p className="text-sm text-gray-500">{activeTrips.length} ta faol reys</p>
-              </div>
-            </div>
-            <button onClick={() => fetchDriverLocations(true)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition">
-              <RefreshCw size={18} />
-            </button>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeTrips.map((trip) => (
-              <div key={trip._id} 
-                onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
-                className="group relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-blue-200">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
-                      {trip.driver?.fullName?.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{trip.driver?.fullName}</p>
-                      <p className="text-sm text-gray-500">{trip.vehicle?.plateNumber}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                    <span>{trip.startAddress} - {trip.endAddress}</span>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                      Yolda
-                    </span>
-                    <ArrowUpRight size={16} className="text-gray-400 group-hover:text-blue-600 transition" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -678,54 +661,28 @@ export default function Dashboard() {
                 </Marker>
               ))}
               
-              {/* Faol reyslar uchun marshrut chiziqlari (eski trips) */}
-              {activeTrips.map((trip) => {
-                const route = tripRoutes[trip._id]
-                return (
-                  <span key={`route-${trip._id}`}>
-                    {route && route.coordinates && (
-                      <Polyline positions={route.coordinates} color="#3b82f6" weight={4} opacity={0.8} />
-                    )}
-                    {trip.startCoords && (
-                      <Marker position={[trip.startCoords.lat, trip.startCoords.lng]} icon={startIcon}>
-                        <Popup>
-                          <div className="text-center">
-                            <p className="font-bold text-green-600">🟢 Boshlanish</p>
-                            <p className="text-xs">{trip.startAddress}</p>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-                    {trip.endCoords && (
-                      <Marker position={[trip.endCoords.lat, trip.endCoords.lng]} icon={endIcon}>
-                        <Popup>
-                          <div className="text-center">
-                            <p className="font-bold text-red-600">🔴 Manzil</p>
-                            <p className="text-xs">{trip.endAddress}</p>
-                            {route && <p className="text-xs text-blue-600 mt-1">{route.distance} km</p>}
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-                  </span>
-                )
-              })}
+
 
               {/* Yangi flights uchun marshrut chiziqlari */}
               {activeFlights.map((flight) => (
                 <span key={`flight-route-${flight._id}`}>
                   {flight.legs?.map((leg, idx) => {
                     const route = tripRoutes[`flight-${flight._id}-${leg._id}`]
-                    const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
-                    const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
+                    // Koordinatalarni leg dan yoki route dan olish
+                    const fromCoords = (leg.fromCoords?.lat && leg.fromCoords?.lng) 
+                      ? leg.fromCoords 
+                      : route?.fromCoords
+                    const toCoords = (leg.toCoords?.lat && leg.toCoords?.lng) 
+                      ? leg.toCoords 
+                      : route?.toCoords
                     
                     return (
                       <span key={`leg-${leg._id || idx}`}>
                         {route && route.coordinates && (
                           <Polyline positions={route.coordinates} color="#10b981" weight={4} opacity={0.8} />
                         )}
-                        {hasFromCoords && (
-                          <Marker position={[leg.fromCoords.lat, leg.fromCoords.lng]} icon={startIcon}>
+                        {fromCoords && (
+                          <Marker position={[fromCoords.lat, fromCoords.lng]} icon={startIcon}>
                             <Popup>
                               <div className="text-center">
                                 <p className="font-bold text-green-600">🟢 {leg.fromCity}</p>
@@ -734,8 +691,8 @@ export default function Dashboard() {
                             </Popup>
                           </Marker>
                         )}
-                        {hasToCoords && (
-                          <Marker position={[leg.toCoords.lat, leg.toCoords.lng]} icon={endIcon}>
+                        {toCoords && (
+                          <Marker position={[toCoords.lat, toCoords.lng]} icon={endIcon}>
                             <Popup>
                               <div className="text-center">
                                 <p className="font-bold text-red-600">🔴 {leg.toCity}</p>
@@ -882,8 +839,11 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-xs font-medium truncate">{driver.fullName}</p>
-                      <p className={`text-[10px] ${driver.status === 'busy' ? 'text-orange-400' : 'text-emerald-400'}`}>
-                        {driver.status === 'busy' ? 'Reysda' : 'Bo\'sh'}
+                      <p className={`text-[10px] ${
+                        !driver.lastLocation ? 'text-gray-500' :
+                        driver.status === 'busy' ? 'text-orange-400' : 'text-emerald-400'
+                      }`}>
+                        {!driver.lastLocation ? '📵 Offline' : driver.status === 'busy' ? 'Reysda' : 'Bo\'sh'}
                         {driver.lastLocation?.speed > 0 && ` • ${Math.round(driver.lastLocation.speed * 3.6)} km/h`}
                       </p>
                     </div>
@@ -898,19 +858,19 @@ export default function Dashboard() {
               )}
             </div>
             
-            {/* Active Trips */}
-            {activeTrips.length > 0 && (
+            {/* Active Flights */}
+            {activeFlights.length > 0 && (
               <div className="border-t border-white/10 p-3">
                 <h4 className="text-white text-xs font-semibold mb-2 flex items-center gap-1.5">
-                  <Activity size={12} className="text-blue-400" />
+                  <Activity size={12} className="text-emerald-400" />
                   Faol reyslar
-                  <span className="px-1 py-0.5 bg-blue-500/20 rounded text-blue-400 text-[10px]">{activeTrips.length}</span>
+                  <span className="px-1 py-0.5 bg-emerald-500/20 rounded text-emerald-400 text-[10px]">{activeFlights.length}</span>
                 </h4>
                 <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                  {activeTrips.slice(0, 4).map((trip) => (
-                    <div key={trip._id} className="p-2 bg-white/5 rounded-lg">
-                      <p className="text-white text-[11px] font-medium truncate">{trip.driver?.fullName}</p>
-                      <p className="text-slate-400 text-[10px] truncate">{trip.startAddress} → {trip.endAddress}</p>
+                  {activeFlights.slice(0, 4).map((flight) => (
+                    <div key={flight._id} className="p-2 bg-white/5 rounded-lg">
+                      <p className="text-white text-[11px] font-medium truncate">{flight.driver?.fullName}</p>
+                      <p className="text-slate-400 text-[10px] truncate">{flight.name || 'Yangi reys'}</p>
                     </div>
                   ))}
                 </div>
@@ -971,55 +931,28 @@ export default function Dashboard() {
               </Marker>
             ))}
             
-            {/* Fullscreen: Faol reyslar uchun marshrut chiziqlari (eski trips) */}
-            {activeTrips.map((trip) => {
-              const route = tripRoutes[trip._id]
-              return (
-                <span key={`fs-route-${trip._id}`}>
-                  {route && route.coordinates && (
-                    <Polyline positions={route.coordinates} color="#3b82f6" weight={5} opacity={0.9} />
-                  )}
-                  {trip.startCoords && (
-                    <Marker position={[trip.startCoords.lat, trip.startCoords.lng]} icon={startIcon}>
-                      <Popup>
-                        <div className="text-center">
-                          <p className="font-bold text-green-600">🟢 Boshlanish</p>
-                          <p className="text-xs">{trip.startAddress}</p>
-                          <p className="text-xs text-gray-500 mt-1">{trip.driver?.fullName}</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
-                  {trip.endCoords && (
-                    <Marker position={[trip.endCoords.lat, trip.endCoords.lng]} icon={endIcon}>
-                      <Popup>
-                        <div className="text-center">
-                          <p className="font-bold text-red-600">🔴 Manzil</p>
-                          <p className="text-xs">{trip.endAddress}</p>
-                          {route && <p className="text-xs text-blue-600 mt-1">{route.distance} km • {route.duration} daq</p>}
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
-                </span>
-              )
-            })}
+
 
             {/* Fullscreen: Yangi flights uchun marshrut chiziqlari */}
             {activeFlights.map((flight) => (
               <span key={`fs-flight-route-${flight._id}`}>
                 {flight.legs?.map((leg, idx) => {
                   const route = tripRoutes[`flight-${flight._id}-${leg._id}`]
-                  const hasFromCoords = leg.fromCoords && leg.fromCoords.lat && leg.fromCoords.lng
-                  const hasToCoords = leg.toCoords && leg.toCoords.lat && leg.toCoords.lng
+                  // Koordinatalarni leg dan yoki route dan olish
+                  const fromCoords = (leg.fromCoords?.lat && leg.fromCoords?.lng) 
+                    ? leg.fromCoords 
+                    : route?.fromCoords
+                  const toCoords = (leg.toCoords?.lat && leg.toCoords?.lng) 
+                    ? leg.toCoords 
+                    : route?.toCoords
                   
                   return (
                     <span key={`fs-leg-${leg._id || idx}`}>
                       {route && route.coordinates && (
                         <Polyline positions={route.coordinates} color="#10b981" weight={5} opacity={0.9} />
                       )}
-                      {hasFromCoords && (
-                        <Marker position={[leg.fromCoords.lat, leg.fromCoords.lng]} icon={startIcon}>
+                      {fromCoords && (
+                        <Marker position={[fromCoords.lat, fromCoords.lng]} icon={startIcon}>
                           <Popup>
                             <div className="text-center">
                               <p className="font-bold text-green-600">🟢 {leg.fromCity}</p>
@@ -1029,8 +962,8 @@ export default function Dashboard() {
                           </Popup>
                         </Marker>
                       )}
-                      {hasToCoords && (
-                        <Marker position={[leg.toCoords.lat, leg.toCoords.lng]} icon={endIcon}>
+                      {toCoords && (
+                        <Marker position={[toCoords.lat, toCoords.lng]} icon={endIcon}>
                           <Popup>
                             <div className="text-center">
                               <p className="font-bold text-red-600">🔴 {leg.toCity}</p>
