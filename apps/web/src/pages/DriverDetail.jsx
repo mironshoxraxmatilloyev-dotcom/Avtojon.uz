@@ -324,37 +324,37 @@ export default function DriverDetail() {
               const activeFlight = flights.find(f => f.status === 'active')
               if (activeFlight) {
                 return (
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <div 
                       onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 cursor-pointer shadow-xl shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300 hover:scale-[1.02]"
+                      className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
                     >
                       {/* Background pattern */}
                       <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                        <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-white rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12"></div>
                       </div>
                       
-                      <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                            <Route size={28} className="text-white" />
+                      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <Route size={22} className="sm:w-7 sm:h-7 text-white" />
                           </div>
-                          <div>
-                            <p className="text-white/70 text-xs uppercase tracking-wider mb-1">Faol reys</p>
-                            <p className="font-bold text-white text-lg">{activeFlight.name || 'Joriy reys'}</p>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-white/80 text-sm flex items-center gap-1">
-                                <MapPin size={12} /> {activeFlight.legs?.length || 0} bosqich
+                          <div className="min-w-0">
+                            <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">Faol reys</p>
+                            <p className="font-bold text-white text-base sm:text-lg truncate">{activeFlight.name || 'Joriy reys'}</p>
+                            <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1">
+                              <span className="text-white/80 text-xs sm:text-sm flex items-center gap-1">
+                                <MapPin size={10} className="sm:w-3 sm:h-3" /> {activeFlight.legs?.length || 0} bosqich
                               </span>
-                              <span className="text-white/80 text-sm">{activeFlight.totalDistance || 0} km</span>
+                              <span className="text-white/80 text-xs sm:text-sm">{activeFlight.totalDistance || 0} km</span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm rounded-xl group-hover:bg-white/30 transition">
-                          <Play size={18} className="text-white" />
-                          <span className="text-white font-semibold">Davom ettirish</span>
-                          <ChevronRight size={18} className="text-white group-hover:translate-x-1 transition-transform" />
+                        <div className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl group-hover:bg-white/30 transition w-full sm:w-auto">
+                          <Play size={16} className="sm:w-[18px] sm:h-[18px] text-white" />
+                          <span className="text-white font-semibold text-sm sm:text-base">Davom ettirish</span>
+                          <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] text-white group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
                     </div>
@@ -362,32 +362,32 @@ export default function DriverDetail() {
                 )
               } else if (driver.status !== 'busy') {
                 return (
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <div 
                       onClick={() => setShowFlightModal(true)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02]"
+                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
                     >
                       {/* Background pattern */}
                       <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
+                        <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-white rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12"></div>
                       </div>
                       
-                      <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                            <Truck size={28} className="text-white" />
+                      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <Truck size={22} className="sm:w-7 sm:h-7 text-white" />
                           </div>
-                          <div>
-                            <p className="text-white/70 text-xs uppercase tracking-wider mb-1">Haydovchi bo'sh</p>
-                            <p className="font-bold text-white text-lg">Yangi reys boshlash</p>
-                            <p className="text-white/80 text-sm mt-1">Yo'nalish va xarajatlarni kiriting</p>
+                          <div className="min-w-0">
+                            <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">Haydovchi bo'sh</p>
+                            <p className="font-bold text-white text-base sm:text-lg">Yangi reys boshlash</p>
+                            <p className="text-white/80 text-xs sm:text-sm mt-0.5 sm:mt-1">Yo'nalish va xarajatlarni kiriting</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm rounded-xl group-hover:bg-white/30 transition">
-                          <Play size={18} className="text-white" />
-                          <span className="text-white font-semibold">Boshlash</span>
-                          <ChevronRight size={18} className="text-white group-hover:translate-x-1 transition-transform" />
+                        <div className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl group-hover:bg-white/30 transition w-full sm:w-auto">
+                          <Play size={16} className="sm:w-[18px] sm:h-[18px] text-white" />
+                          <span className="text-white font-semibold text-sm sm:text-base">Boshlash</span>
+                          <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] text-white group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
                     </div>
@@ -402,7 +402,7 @@ export default function DriverDetail() {
 
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Financial Stats */}
@@ -469,67 +469,67 @@ export default function DriverDetail() {
           </div>
 
           {/* Flights History */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Route className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Route className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Reyslar tarixi</h2>
-                  <p className="text-gray-500 text-sm">{flights.length} ta reys</p>
+                  <h2 className="text-base sm:text-xl font-bold text-gray-900">Reyslar tarixi</h2>
+                  <p className="text-gray-500 text-xs sm:text-sm">{flights.length} ta reys</p>
                 </div>
               </div>
               {flights.filter(f => f.status === 'active').length > 0 && (
-                <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl text-sm font-medium animate-pulse">
-                  {flights.filter(f => f.status === 'active').length} ta faol reys
+                <span className="px-2 sm:px-4 py-1 sm:py-2 bg-orange-100 text-orange-700 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-medium animate-pulse">
+                  {flights.filter(f => f.status === 'active').length} ta faol
                 </span>
               )}
             </div>
 
             {flights.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {flights.slice(0, 10).map((flight) => (
                   <div 
                     key={flight._id} 
                     onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                    className="group flex items-center gap-4 p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-blue-200"
+                    className="group flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl sm:rounded-2xl cursor-pointer transition-all border border-transparent hover:border-blue-200"
                   >
-                    <div className={`w-12 h-12 bg-gradient-to-br ${
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${
                       flight.status === 'active' ? 'from-orange-500 to-amber-600' : 
                       flight.status === 'completed' ? 'from-emerald-500 to-teal-600' : 'from-gray-400 to-gray-500'
-                    } rounded-xl flex items-center justify-center shadow-lg`}>
-                      <Route size={20} className="text-white" />
+                    } rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                      <Route size={16} className="sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{flight.name || 'Reys'}</p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-sm text-gray-500">{formatDate(flight.createdAt)}</span>
-                        <span className="text-sm text-gray-400">• {flight.totalDistance || 0} km</span>
-                        <span className="text-sm text-gray-400">• {flight.legs?.length || 0} bosqich</span>
+                      <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Reys'}</p>
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-0.5 sm:mt-1">
+                        <span className="text-[10px] sm:text-sm text-gray-500">{formatDate(flight.createdAt)}</span>
+                        <span className="text-[10px] sm:text-sm text-gray-400">• {flight.totalDistance || 0} km</span>
+                        <span className="text-[10px] sm:text-sm text-gray-400 hidden sm:inline">• {flight.legs?.length || 0} bosqich</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                    <div className="text-right flex-shrink-0">
+                      <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium ${
                         flight.status === 'active' ? 'bg-orange-100 text-orange-700' : 
                         flight.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
                       </span>
                       {flight.totalPayment > 0 && (
-                        <p className="text-sm font-bold text-emerald-600 mt-2">{formatMoney(flight.totalPayment)} so'm</p>
+                        <p className="text-[10px] sm:text-sm font-bold text-emerald-600 mt-1 sm:mt-2">{formatMoney(flight.totalPayment)}</p>
                       )}
                     </div>
-                    <ChevronRight size={20} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                    <ChevronRight size={16} className="sm:w-5 sm:h-5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all hidden sm:block" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                  <Route size={40} className="text-gray-300" />
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Route size={28} className="sm:w-10 sm:h-10 text-gray-300" />
                 </div>
-                <p className="text-gray-500">Hali reyslar yo'q</p>
+                <p className="text-gray-500 text-sm sm:text-base">Hali reyslar yo'q</p>
               </div>
             )}
           </div>
@@ -537,28 +537,28 @@ export default function DriverDetail() {
 
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Personal Info */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <User className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Shaxsiy ma'lumotlar</h2>
-                <p className="text-gray-500 text-sm">Hujjatlar</p>
+                <h2 className="text-base sm:text-xl font-bold text-gray-900">Shaxsiy ma'lumotlar</h2>
+                <p className="text-gray-500 text-xs sm:text-sm">Hujjatlar</p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="group p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl border border-gray-100 hover:border-blue-200 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                    <Phone size={20} className="text-blue-600 group-hover:text-white transition-colors" />
+            <div className="space-y-3 sm:space-y-4">
+              <div className="group p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-blue-200 transition-all">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors flex-shrink-0">
+                    <Phone size={16} className="sm:w-5 sm:h-5 text-blue-600 group-hover:text-white transition-colors" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Telefon</p>
-                    <p className="font-semibold text-gray-900">{driver.phone || 'Kiritilmagan'}</p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Telefon</p>
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{driver.phone || 'Kiritilmagan'}</p>
                   </div>
                 </div>
               </div>
@@ -566,52 +566,52 @@ export default function DriverDetail() {
           </div>
 
           {/* Assigned Vehicle */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <Truck className="w-6 h-6 text-white" />
+          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Biriktirilgan mashina</h2>
-                <p className="text-gray-500 text-sm">Transport vositasi</p>
+                <h2 className="text-base sm:text-xl font-bold text-gray-900">Biriktirilgan mashina</h2>
+                <p className="text-gray-500 text-xs sm:text-sm">Transport vositasi</p>
               </div>
             </div>
 
             {vehicle ? (
-              <div className="space-y-4">
-                <div className="p-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl text-white">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-                      <Truck size={32} className="text-white" />
+              <div className="space-y-3 sm:space-y-4">
+                <div className="p-4 sm:p-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl text-white">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+                      <Truck size={24} className="sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <div>
-                      <p className="text-3xl font-bold">{vehicle.plateNumber}</p>
-                      <p className="text-blue-200">{vehicle.brand} {vehicle.model}</p>
+                    <div className="min-w-0">
+                      <p className="text-xl sm:text-3xl font-bold truncate">{vehicle.plateNumber}</p>
+                      <p className="text-blue-200 text-sm sm:text-base truncate">{vehicle.brand} {vehicle.model}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-xl text-center">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Yil</p>
-                  <p className="text-xl font-bold text-gray-900">{vehicle.year || '-'}</p>
+                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl text-center">
+                  <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-1">Yil</p>
+                  <p className="text-lg sm:text-xl font-bold text-gray-900">{vehicle.year || '-'}</p>
                 </div>
 
                 {vehicle.capacity && (
-                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                    <p className="text-xs text-amber-600 uppercase tracking-wider mb-1">Yuk sig'imi</p>
-                    <p className="text-xl font-bold text-amber-700">{vehicle.capacity} tonna</p>
+                  <div className="p-3 sm:p-4 bg-amber-50 rounded-lg sm:rounded-xl border border-amber-100">
+                    <p className="text-[10px] sm:text-xs text-amber-600 uppercase tracking-wider mb-0.5 sm:mb-1">Yuk sig'imi</p>
+                    <p className="text-lg sm:text-xl font-bold text-amber-700">{vehicle.capacity} tonna</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-10">
-                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                  <Truck size={40} className="text-gray-300" />
+              <div className="text-center py-6 sm:py-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Truck size={28} className="sm:w-10 sm:h-10 text-gray-300" />
                 </div>
-                <p className="text-gray-500 mb-4">Mashina biriktirilmagan</p>
+                <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">Mashina biriktirilmagan</p>
                 <button 
                   onClick={() => navigate('/dashboard/vehicles')}
-                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg sm:rounded-xl text-sm font-medium hover:bg-blue-700 transition"
                 >
                   Mashina biriktirish
                 </button>
@@ -620,37 +620,37 @@ export default function DriverDetail() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white">
-            <h3 className="font-bold mb-4 flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-400" />
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 text-white">
+            <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Sparkles size={16} className="sm:w-[18px] sm:h-[18px] text-amber-400" />
               Tezkor amallar
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {driver.status !== 'busy' && (
                 <button 
                   onClick={() => setShowFlightModal(true)}
-                  className="w-full p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 rounded-xl text-left transition flex items-center gap-3 border border-emerald-500/30"
+                  className="w-full p-3 sm:p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3 border border-emerald-500/30"
                 >
-                  <Play size={20} className="text-emerald-400" />
-                  <span className="font-medium">Reys ochish</span>
-                  <ChevronRight size={18} className="ml-auto text-emerald-400" />
+                  <Play size={18} className="sm:w-5 sm:h-5 text-emerald-400" />
+                  <span className="font-medium text-sm sm:text-base">Reys ochish</span>
+                  <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-emerald-400" />
                 </button>
               )}
               <button 
                 onClick={() => navigate('/dashboard/trips')}
-                className="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl text-left transition flex items-center gap-3"
+                className="w-full p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3"
               >
-                <Route size={20} className="text-blue-400" />
-                <span>Barcha reyslar</span>
-                <ChevronRight size={18} className="ml-auto text-slate-400" />
+                <Route size={18} className="sm:w-5 sm:h-5 text-blue-400" />
+                <span className="text-sm sm:text-base">Barcha reyslar</span>
+                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-slate-400" />
               </button>
               <button 
                 onClick={() => navigate('/dashboard/salaries')}
-                className="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl text-left transition flex items-center gap-3"
+                className="w-full p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3"
               >
-                <Wallet size={20} className="text-emerald-400" />
-                <span>Maosh hisoblash</span>
-                <ChevronRight size={18} className="ml-auto text-slate-400" />
+                <Wallet size={18} className="sm:w-5 sm:h-5 text-emerald-400" />
+                <span className="text-sm sm:text-base">Maosh hisoblash</span>
+                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-slate-400" />
               </button>
             </div>
           </div>

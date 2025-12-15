@@ -517,35 +517,35 @@ export default function FlightDetail() {
   return (
     <div className="space-y-6 pb-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white p-6 md:p-8 rounded-3xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl -ml-32 -mb-32"></div>
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl">
+        <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-emerald-500/20 rounded-full blur-3xl -mr-24 sm:-mr-32 md:-mr-48 -mt-24 sm:-mt-32 md:-mt-48"></div>
+        <div className="absolute bottom-0 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-teal-500/20 rounded-full blur-3xl -ml-16 sm:-ml-24 md:-ml-32 -mb-16 sm:-mb-24 md:-mb-32"></div>
         
         <div className="relative">
           {/* Back button */}
           <button 
             onClick={() => navigate('/dashboard/drivers')}
-            className="flex items-center gap-2 text-emerald-300 hover:text-white mb-4 transition"
+            className="flex items-center gap-1.5 sm:gap-2 text-emerald-300 hover:text-white mb-3 sm:mb-4 transition text-sm sm:text-base"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
             <span>Orqaga</span>
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg ${
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl md:text-2xl shadow-lg flex-shrink-0 ${
                 isActive ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
               }`}>
                 {flight.driver?.fullName?.charAt(0) || '?'}
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">{flight.name || 'Yangi reys'}</h1>
-                <p className="text-emerald-200">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
+                <p className="text-emerald-200 text-xs sm:text-sm truncate">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <span className={`px-4 py-2 rounded-xl font-medium ${
+            <div className="flex items-center">
+              <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm ${
                 isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
               }`}>
                 {isActive ? '🟢 Faol reys' : '✅ Yopilgan'}
@@ -554,65 +554,65 @@ export default function FlightDetail() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                  <Route size={18} className="text-white" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
+                  <Route size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{flight.legs?.length || 0}</p>
-                  <p className="text-emerald-200 text-xs">Bosqichlar</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                  <TrendingUp size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold">{formatMoney(flight.totalPayment)}</p>
-                  <p className="text-emerald-200 text-xs">Mijozdan</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{flight.legs?.length || 0}</p>
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">Bosqichlar</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-                  <Wallet size={18} className="text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-orange-300">{formatMoney(flight.totalGivenBudget)}</p>
-                  <p className="text-emerald-200 text-xs">Yo'l uchun</p>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-lg md:text-xl font-bold truncate">{formatMoney(flight.totalPayment)}</p>
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">Mijozdan</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center flex-shrink-0">
+                  <Wallet size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-lg md:text-xl font-bold text-orange-300 truncate">{formatMoney(flight.totalGivenBudget)}</p>
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">Yo'l uchun</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${
                   (flight.finalBalance || 0) >= 0 ? 'bg-gradient-to-br from-cyan-400 to-cyan-600' : 'bg-gradient-to-br from-red-400 to-red-600'
                 }`}>
-                  <DollarSign size={18} className="text-white" />
+                  <DollarSign size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
                 </div>
-                <div>
-                  <p className={`text-xl font-bold ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-300' : 'text-red-300'}`}>
+                <div className="min-w-0">
+                  <p className={`text-sm sm:text-lg md:text-xl font-bold truncate ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-300' : 'text-red-300'}`}>
                     {formatMoney(Math.abs(flight.finalBalance || 0))}
                   </p>
-                  <p className="text-emerald-200 text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-400 to-red-600">
-                  <TrendingDown size={18} className="text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10 col-span-2 sm:col-span-1">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-gradient-to-br from-red-400 to-red-600 flex-shrink-0">
+                  <TrendingDown size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-red-300">
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-lg md:text-xl font-bold text-red-300 truncate">
                     -{formatMoney(flight.totalExpenses || 0)}
                   </p>
-                  <p className="text-emerald-200 text-xs">Sarflangan</p>
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">Sarflangan</p>
                 </div>
               </div>
             </div>
@@ -621,30 +621,30 @@ export default function FlightDetail() {
       </div>
 
       {/* Main Content - 2 column layout on desktop */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {/* Left Column - Odometer, Fuel, Legs */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
           {/* Odometer & Fuel Info */}
-          <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Gauge className="text-blue-600" size={16} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Gauge className="text-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <h3 className="font-semibold text-gray-900 text-sm">Odometr</h3>
+            <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Odometr</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-gray-50 rounded-lg p-2">
-              <p className="text-[10px] text-gray-400">Boshlang'ich</p>
-              <p className="text-sm font-bold text-gray-900">{formatMoney(flight.startOdometer || 0)} km</p>
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
+              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{formatMoney(flight.startOdometer || 0)} km</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2">
-              <p className="text-[10px] text-gray-400">Tugash</p>
-              <p className="text-sm font-bold text-gray-900">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
+            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-gray-400">Tugash</p>
+              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-2">
-              <p className="text-[10px] text-blue-500">Jami yurgan</p>
-              <p className="text-sm font-bold text-blue-600">
+            <div className="bg-blue-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-blue-500">Jami yurgan</p>
+              <p className="text-xs sm:text-sm font-bold text-blue-600 truncate">
                 {flight.endOdometer && flight.startOdometer 
                   ? formatMoney(flight.endOdometer - flight.startOdometer) 
                   : formatMoney(flight.totalDistance || 0)} km
@@ -653,25 +653,25 @@ export default function FlightDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Fuel className="text-amber-600" size={16} />
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Fuel className="text-amber-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <h3 className="font-semibold text-gray-900 text-sm">Yoqilg'i</h3>
+            <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Yoqilg'i</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-gray-50 rounded-lg p-2">
-              <p className="text-[10px] text-gray-400">Boshlang'ich</p>
-              <p className="text-sm font-bold text-gray-900">{flight.startFuel || 0} L</p>
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
+              <p className="text-xs sm:text-sm font-bold text-gray-900">{flight.startFuel || 0} L</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2">
-              <p className="text-[10px] text-gray-400">Qoldiq</p>
-              <p className="text-sm font-bold text-gray-900">{flight.endFuel || '-'} L</p>
+            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
+              <p className="text-xs sm:text-sm font-bold text-gray-900">{flight.endFuel || '-'} L</p>
             </div>
-            <div className="bg-amber-50 rounded-lg p-2">
-              <p className="text-[10px] text-amber-500">Jami sarflangan</p>
-              <p className="text-sm font-bold text-amber-600">
+            <div className="bg-amber-50 rounded-lg p-1.5 sm:p-2">
+              <p className="text-[9px] sm:text-[10px] text-amber-500">Jami sarflangan</p>
+              <p className="text-xs sm:text-sm font-bold text-amber-600">
                 {(() => {
                   // Xarajatlardan yoqilg'i miqdorini hisoblash
                   const totalFuel = flight.expenses?.reduce((sum, exp) => {
@@ -689,15 +689,15 @@ export default function FlightDetail() {
       </div>
 
       {/* Legs Section */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <Route className="text-emerald-600" size={16} />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Route className="text-emerald-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm">Bosqichlar</h3>
-              <p className="text-xs text-gray-500">{flight.legs?.length || 0} ta bosqich</p>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Bosqichlar</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500">{flight.legs?.length || 0} ta bosqich</p>
             </div>
           </div>
           {isActive && (
@@ -711,38 +711,38 @@ export default function FlightDetail() {
                 })
                 setShowLegModal(true)
               }}
-              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-medium hover:shadow-lg transition flex items-center gap-1"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:shadow-lg transition flex items-center gap-1 flex-shrink-0"
             >
-              <Plus size={14} /> Bosqich qo'shish
+              <Plus size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline">Bosqich</span> <span className="xs:hidden">+</span>
             </button>
           )}
         </div>
 
         {/* Legs Timeline - scrollable */}
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+        <div className="space-y-1.5 sm:space-y-2 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-1">
           {flight.legs?.map((leg, idx) => (
-            <div key={leg._id || idx} className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0 ${
+            <div key={leg._id || idx} className="bg-gradient-to-r from-gray-50 to-white p-2 sm:p-3 rounded-lg sm:rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0 ${
                   leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
                 }`}>
                   {idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 text-sm">
-                    <span className="font-medium text-gray-900 truncate">{leg.fromCity}</span>
-                    <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
-                    <span className="font-medium text-gray-900 truncate">{leg.toCity}</span>
+                  <div className="flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm">
+                    <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">{leg.fromCity}</span>
+                    <ChevronRight size={12} className="sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">{leg.toCity}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 sm:gap-2 mt-0.5 text-[10px] sm:text-xs text-gray-500">
                     <span>{leg.distance || 0} km</span>
-                    {leg.status === 'completed' && <span className="text-emerald-600">✓ Tugatilgan</span>}
-                    {leg.status === 'in_progress' && <span className="text-blue-600">🚛 Yo'lda</span>}
+                    {leg.status === 'completed' && <span className="text-emerald-600">✓</span>}
+                    {leg.status === 'in_progress' && <span className="text-blue-600">🚛</span>}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-emerald-600 text-sm">{formatMoney(leg.payment)}</p>
-                  <p className="text-[10px] text-gray-400">mijozdan</p>
+                  <p className="font-bold text-emerald-600 text-xs sm:text-sm">{formatMoney(leg.payment)}</p>
+                  <p className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">mijozdan</p>
                 </div>
               </div>
             </div>
@@ -750,9 +750,9 @@ export default function FlightDetail() {
         </div>
 
         {(!flight.legs || flight.legs.length === 0) && (
-          <div className="text-center py-8 text-gray-400">
-            <Route size={40} className="mx-auto mb-2 opacity-50" />
-            <p>Hali bosqichlar yo'q</p>
+          <div className="text-center py-6 sm:py-8 text-gray-400">
+            <Route size={32} className="sm:w-10 sm:h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-xs sm:text-sm">Hali bosqichlar yo'q</p>
           </div>
         )}
       </div>
@@ -761,53 +761,52 @@ export default function FlightDetail() {
         {/* Right Column - Expenses */}
         <div className="lg:sticky lg:top-4 lg:self-start">
       {/* Expenses Section */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-              <Wallet className="text-red-600" size={20} />
+      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <Wallet className="text-red-600 w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm">Xarajatlar</h3>
-              <p className="text-xs text-gray-500">Jami: {formatMoney(flight.totalExpenses)} so'm</p>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Xarajatlar</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500 truncate">Jami: {formatMoney(flight.totalExpenses)} so'm</p>
             </div>
           </div>
           {isActive && (
             <button
               onClick={() => setShowExpenseModal(true)}
-              className="px-3 py-1.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-xs font-medium hover:shadow-lg transition flex items-center gap-1"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:shadow-lg transition flex items-center gap-1 flex-shrink-0"
             >
-              <Plus size={14} /> Xarajat qo'shish
+              <Plus size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline">Xarajat</span> <span className="xs:hidden">+</span>
             </button>
           )}
         </div>
 
-        <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+        <div className="space-y-1.5 sm:space-y-2 max-h-[300px] sm:max-h-[500px] overflow-y-auto pr-1">
           {flight.expenses?.map((exp) => {
             const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
             const isFuel = exp.type && exp.type.startsWith('fuel_')
             return (
-              <div key={exp._id} className="bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors">
+              <div key={exp._id} className="bg-gray-50 p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-2">
-                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-lg flex-shrink-0`}>
+                  <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-sm sm:text-lg flex-shrink-0`}>
                     {expType?.icon || '📦'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">{expType?.label || exp.type}</p>
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{expType?.label || exp.type}</p>
                     {/* Yoqilg'i uchun qo'shimcha info */}
                     {isFuel && exp.quantity && (
-                      <p className="text-[10px] text-gray-400">
+                      <p className="text-[9px] sm:text-[10px] text-gray-400 truncate">
                         {exp.quantity} {exp.quantityUnit || 'L'} 
                         {exp.odometer && ` • ${formatMoney(exp.odometer)} km`}
-                        {exp.stationName && ` • ${exp.stationName}`}
                       </p>
                     )}
                     {!isFuel && exp.description && (
-                      <p className="text-[10px] text-gray-400 truncate">{exp.description}</p>
+                      <p className="text-[9px] sm:text-[10px] text-gray-400 truncate">{exp.description}</p>
                     )}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-red-600 text-sm">-{formatMoney(exp.amount)}</p>
+                    <p className="font-bold text-red-600 text-xs sm:text-sm">-{formatMoney(exp.amount)}</p>
                   </div>
                 </div>
               </div>
@@ -816,9 +815,9 @@ export default function FlightDetail() {
         </div>
 
         {(!flight.expenses || flight.expenses.length === 0) && (
-          <div className="text-center py-8 text-gray-400">
-            <Wallet size={40} className="mx-auto mb-2 opacity-50" />
-            <p>Hali xarajatlar yo'q</p>
+          <div className="text-center py-6 sm:py-8 text-gray-400">
+            <Wallet size={32} className="sm:w-10 sm:h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-xs sm:text-sm">Hali xarajatlar yo'q</p>
           </div>
         )}
       </div>
@@ -829,15 +828,15 @@ export default function FlightDetail() {
       {flight.flightType === 'international' && (
         <>
           {/* Chegara xarajatlari */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <Flag className="text-indigo-600" size={20} />
+          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Flag className="text-indigo-600 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Chegara xarajatlari</h3>
-                  <p className="text-sm text-gray-500">Bojxona, tranzit, sug'urta</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Chegara xarajatlari</h3>
+                  <p className="text-xs sm:text-sm text-gray-500">Bojxona, tranzit, sug'urta</p>
                 </div>
               </div>
               {isActive && (
@@ -858,69 +857,68 @@ export default function FlightDetail() {
                     })
                     setShowBorderModal(true)
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition flex items-center gap-2"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:shadow-lg transition flex items-center gap-1 sm:gap-2 flex-shrink-0"
                 >
-                  <Plus size={18} /> Qo'shish
+                  <Plus size={14} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden sm:inline">Qo'shish</span><span className="sm:hidden">+</span>
                 </button>
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {flight.borderCrossings?.map((bc) => (
-                <div key={bc._id} className="bg-gradient-to-r from-gray-50 to-indigo-50 p-4 rounded-xl border border-indigo-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{COUNTRIES[bc.fromCountry]?.flag}</span>
-                      <ArrowRight size={16} className="text-gray-400" />
-                      <span className="text-xl">{COUNTRIES[bc.toCountry]?.flag}</span>
-                      {bc.borderName && <span className="text-sm text-gray-500 ml-2">({bc.borderName})</span>}
+                <div key={bc._id} className="bg-gradient-to-r from-gray-50 to-indigo-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border border-indigo-100">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-base sm:text-xl">{COUNTRIES[bc.fromCountry]?.flag}</span>
+                      <ArrowRight size={12} className="sm:w-4 sm:h-4 text-gray-400" />
+                      <span className="text-base sm:text-xl">{COUNTRIES[bc.toCountry]?.flag}</span>
+                      {bc.borderName && <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2 truncate max-w-[80px] sm:max-w-none">({bc.borderName})</span>}
                     </div>
                     {isActive && (
                       <button 
                         onClick={() => handleDeleteBorderCrossing(bc._id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                        className="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div className="bg-white p-2 rounded-lg text-center">
-                      <p className="text-xs text-gray-400">Bojxona</p>
-                      <p className="font-semibold">${bc.customsFee || 0}</p>
+                  <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
+                      <p className="text-[9px] sm:text-xs text-gray-400">Bojxona</p>
+                      <p className="font-semibold text-xs sm:text-sm">${bc.customsFee || 0}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg text-center">
-                      <p className="text-xs text-gray-400">Tranzit</p>
-                      <p className="font-semibold">${bc.transitFee || 0}</p>
+                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
+                      <p className="text-[9px] sm:text-xs text-gray-400">Tranzit</p>
+                      <p className="font-semibold text-xs sm:text-sm">${bc.transitFee || 0}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg text-center">
-                      <p className="text-xs text-gray-400">Sug'urta</p>
-                      <p className="font-semibold">${bc.insuranceFee || 0}</p>
+                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
+                      <p className="text-[9px] sm:text-xs text-gray-400">Sug'urta</p>
+                      <p className="font-semibold text-xs sm:text-sm">${bc.insuranceFee || 0}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg text-center">
-                      <p className="text-xs text-gray-400">Jami</p>
-                      <p className="font-bold text-indigo-600">${(bc.totalInUSD || 0).toFixed(2)}</p>
-                      <p className="text-[10px] text-gray-400">{formatMoney(bc.totalInUZS || Math.round((bc.totalInUSD || 0) * 12800))} so'm</p>
+                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
+                      <p className="text-[9px] sm:text-xs text-gray-400">Jami</p>
+                      <p className="font-bold text-indigo-600 text-xs sm:text-sm">${(bc.totalInUSD || 0).toFixed(2)}</p>
                     </div>
                   </div>
-                  {bc.note && <p className="text-xs text-gray-400 mt-2">{bc.note}</p>}
+                  {bc.note && <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 sm:mt-2 truncate">{bc.note}</p>}
                 </div>
               ))}
               
               {(!flight.borderCrossings || flight.borderCrossings.length === 0) && (
-                <div className="text-center py-6 text-gray-400">
-                  <Flag size={32} className="mx-auto mb-2 opacity-50" />
-                  <p>Chegara xarajatlari kiritilmagan</p>
+                <div className="text-center py-4 sm:py-6 text-gray-400">
+                  <Flag size={28} className="sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs sm:text-sm">Chegara xarajatlari kiritilmagan</p>
                 </div>
               )}
 
               {flight.borderCrossingsTotalUSD > 0 && (
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-xl text-white">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-3 sm:p-4 rounded-lg sm:rounded-xl text-white">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Jami chegara xarajatlari:</span>
+                    <span className="font-medium text-xs sm:text-sm">Jami chegara:</span>
                     <div className="text-right">
-                      <p className="text-2xl font-bold">${flight.borderCrossingsTotalUSD.toFixed(2)}</p>
-                      <p className="text-indigo-200 text-sm">
+                      <p className="text-lg sm:text-2xl font-bold">${flight.borderCrossingsTotalUSD.toFixed(2)}</p>
+                      <p className="text-indigo-200 text-[10px] sm:text-sm">
                         {formatMoney(flight.borderCrossingsTotalUZS || Math.round(flight.borderCrossingsTotalUSD * 12800))} so'm
                       </p>
                     </div>
@@ -932,15 +930,15 @@ export default function FlightDetail() {
 
           {/* Platon (Rossiya) */}
           {flight.countriesInRoute?.includes('RU') && (
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-xl">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-rose-100 rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-xl flex-shrink-0">
                     🚛
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Platon</h3>
-                    <p className="text-sm text-gray-500">Rossiya yo'l to'lovi (12+ tonna)</p>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Platon</h3>
+                    <p className="text-xs sm:text-sm text-gray-500">Rossiya yo'l to'lovi</p>
                   </div>
                 </div>
                 {isActive && (
@@ -954,7 +952,7 @@ export default function FlightDetail() {
                       })
                       setShowPlatonModal(true)
                     }}
-                    className="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-xl font-medium hover:shadow-lg transition"
+                    className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:shadow-lg transition flex-shrink-0"
                   >
                     {flight.platon?.amount ? 'Tahrirlash' : 'Qo\'shish'}
                   </button>
@@ -962,25 +960,25 @@ export default function FlightDetail() {
               </div>
 
               {flight.platon?.amount > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-4 rounded-xl text-center">
-                    <p className="text-xs text-gray-500 mb-1">Summa</p>
-                    <p className="text-xl font-bold text-rose-600">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Summa</p>
+                    <p className="text-sm sm:text-xl font-bold text-rose-600">
                       {flight.platon.amount} {CURRENCIES[flight.platon.currency]?.symbol || '₽'}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-4 rounded-xl text-center">
-                    <p className="text-xs text-gray-500 mb-1">USD da</p>
-                    <p className="text-xl font-bold text-rose-600">${(flight.platon.amountInUSD || 0).toFixed(2)}</p>
+                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">USD da</p>
+                    <p className="text-sm sm:text-xl font-bold text-rose-600">${(flight.platon.amountInUSD || 0).toFixed(2)}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-4 rounded-xl text-center">
-                    <p className="text-xs text-gray-500 mb-1">Masofa (RU)</p>
-                    <p className="text-xl font-bold text-rose-600">{flight.platon.distanceKm || 0} km</p>
+                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Masofa</p>
+                    <p className="text-sm sm:text-xl font-bold text-rose-600">{flight.platon.distanceKm || 0} km</p>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-400">
-                  <p>Platon kiritilmagan</p>
+                <div className="text-center py-4 sm:py-6 text-gray-400">
+                  <p className="text-xs sm:text-sm">Platon kiritilmagan</p>
                 </div>
               )}
             </div>
@@ -988,42 +986,42 @@ export default function FlightDetail() {
 
           {/* Davlatlar bo'yicha xulosa */}
           {flight.countryExpenses && (
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
-                  <Globe className="text-cyan-600" size={20} />
+            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyan-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Globe className="text-cyan-600 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Davlatlar bo'yicha xulosa</h3>
-                  <p className="text-sm text-gray-500">Har bir davlatdagi xarajatlar</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Davlatlar bo'yicha</h3>
+                  <p className="text-xs sm:text-sm text-gray-500">Har bir davlatdagi xarajatlar</p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
                 {['uzb', 'kz', 'ru'].map(code => {
                   const country = COUNTRIES[code.toUpperCase()]
                   const data = flight.countryExpenses[code] || {}
                   
                   return (
-                    <div key={code} className="bg-gradient-to-br from-gray-50 to-slate-50 p-4 rounded-xl">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">{country?.flag}</span>
-                        <span className="font-bold text-gray-900">{country?.name}</span>
+                    <div key={code} className="bg-gradient-to-br from-gray-50 to-slate-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                        <span className="text-lg sm:text-2xl">{country?.flag}</span>
+                        <span className="font-bold text-gray-900 text-xs sm:text-sm">{country?.name}</span>
                       </div>
-                      <div className="space-y-2 text-sm">
+                      <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Masofa:</span>
                           <span className="font-medium">{data.distanceKm || 0} km</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Yoqilg'i:</span>
-                          <span className="font-medium">{data.fuelLiters || 0} L (${(data.fuelCostUSD || 0).toFixed(2)})</span>
+                          <span className="font-medium">{data.fuelLiters || 0} L</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Yo'l xarajati:</span>
+                          <span className="text-gray-500">Yo'l:</span>
                           <span className="font-medium">${(data.roadExpensesUSD || 0).toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between pt-2 border-t border-gray-200">
+                        <div className="flex justify-between pt-1.5 sm:pt-2 border-t border-gray-200">
                           <span className="font-semibold text-gray-700">Jami:</span>
                           <span className="font-bold text-cyan-600">${(data.totalUSD || 0).toFixed(2)}</span>
                         </div>
@@ -1039,12 +1037,12 @@ export default function FlightDetail() {
 
       {/* Action Buttons */}
       {isActive && (
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <button
             onClick={() => setShowCompleteModal(true)}
-            className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold hover:shadow-xl transition flex items-center justify-center gap-2"
+            className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base hover:shadow-xl transition flex items-center justify-center gap-1.5 sm:gap-2"
           >
-            <CheckCircle size={20} /> Reysni yopish
+            <CheckCircle size={18} className="sm:w-5 sm:h-5" /> Reysni yopish
           </button>
         </div>
       )}
@@ -1054,34 +1052,34 @@ export default function FlightDetail() {
       {/* Add Leg Modal */}
       {showLegModal && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0" onClick={() => setShowLegModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 sm:p-6 border-b border-white/10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                      <Route className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Route className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Yangi bosqich</h2>
-                      <p className="text-emerald-300 text-sm">{legForm.fromCity || lastLeg?.toCity || 'Boshlanish'} dan</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-bold text-white">Yangi bosqich</h2>
+                      <p className="text-emerald-300 text-xs sm:text-sm truncate">{legForm.fromCity || lastLeg?.toCity || 'Boshlanish'} dan</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowLegModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
-                    <X size={20} />
+                  <button onClick={() => setShowLegModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleAddLeg} className="p-6 space-y-4">
+              <form onSubmit={handleAddLeg} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Xaritadan tanlash */}
                 <button
                   type="button"
                   onClick={openLocationPicker}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:shadow-lg transition"
+                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-medium flex items-center justify-center gap-2 hover:shadow-lg transition"
                 >
-                  <Map size={18} /> Xaritadan tanlash
+                  <Map size={16} className="sm:w-[18px] sm:h-[18px]" /> Xaritadan tanlash
                 </button>
 
                 <div className="relative">
@@ -1089,12 +1087,12 @@ export default function FlightDetail() {
                     <div className="w-full border-t border-white/10"></div>
                   </div>
                   <div className="relative flex justify-center">
-                    <span className="px-3 bg-slate-900 text-slate-500 text-sm">yoki qo'lda kiriting</span>
+                    <span className="px-3 bg-slate-900 text-slate-500 text-xs sm:text-sm">yoki qo'lda kiriting</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Qayerdan</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qayerdan</label>
                   <AddressAutocomplete
                     value={legForm.fromCity}
                     onChange={(val) => setLegForm({ ...legForm, fromCity: val })}
@@ -1106,7 +1104,7 @@ export default function FlightDetail() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Qayerga *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qayerga *</label>
                   <AddressAutocomplete
                     value={legForm.toCity}
                     onChange={(val) => setLegForm({ ...legForm, toCity: val })}
@@ -1117,52 +1115,52 @@ export default function FlightDetail() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Mijozdan to'lov</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Mijozdan to'lov</label>
                     <input
                       type="number"
                       value={legForm.payment}
                       onChange={(e) => setLegForm({ ...legForm, payment: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                       placeholder="500000"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Yo'l xarajati</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Yo'l xarajati</label>
                     <input
                       type="number"
                       value={legForm.givenBudget}
                       onChange={(e) => setLegForm({ ...legForm, givenBudget: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
                       placeholder="200000"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Masofa (km)</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Masofa (km)</label>
                   <input
                     type="number"
                     value={legForm.distance}
                     onChange={(e) => setLegForm({ ...legForm, distance: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                     placeholder="150"
                   />
                 </div>
 
                 {/* Oldingi qoldiq ko'rsatish */}
                 {flight?.legs?.length > 0 && flight.legs[flight.legs.length - 1].balance > 0 && (
-                  <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                  <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-lg sm:rounded-xl border border-emerald-500/20">
                     <div className="flex items-center justify-between">
-                      <span className="text-emerald-300 text-sm">Oldingi qoldiq:</span>
-                      <span className="text-emerald-400 font-bold">+{formatMoney(flight.legs[flight.legs.length - 1].balance)} so'm</span>
+                      <span className="text-emerald-300 text-xs sm:text-sm">Oldingi qoldiq:</span>
+                      <span className="text-emerald-400 font-bold text-xs sm:text-sm">+{formatMoney(flight.legs[flight.legs.length - 1].balance)} so'm</span>
                     </div>
-                    <p className="text-xs text-emerald-300/70 mt-1">Bu summa avtomatik qo'shiladi</p>
+                    <p className="text-[10px] sm:text-xs text-emerald-300/70 mt-1">Bu summa avtomatik qo'shiladi</p>
                   </div>
                 )}
 
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition">
+                <button type="submit" className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition">
                   Qo'shish
                 </button>
               </form>
@@ -1175,31 +1173,31 @@ export default function FlightDetail() {
       {/* Add Expense Modal */}
       {showExpenseModal && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0" onClick={() => setShowExpenseModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-                      <Wallet className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Xarajat qo'shish</h2>
-                      <p className="text-orange-300 text-sm">{flight.name}</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-bold text-white">Xarajat qo'shish</h2>
+                      <p className="text-orange-300 text-xs sm:text-sm truncate">{flight.name}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowExpenseModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
-                    <X size={20} />
+                  <button onClick={() => setShowExpenseModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleAddExpense} className="p-6 space-y-4">
+              <form onSubmit={handleAddExpense} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Asosiy kategoriyalar */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Xarajat turi</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Xarajat turi</label>
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                     {EXPENSE_CATEGORIES.map(({ value, label, icon }) => (
                       <button
                         key={value}
@@ -1210,14 +1208,14 @@ export default function FlightDetail() {
                           type: value === 'fuel' ? 'fuel_benzin' : value,
                           quantity: value === 'fuel' ? expenseForm.quantity : ''
                         })}
-                        className={`p-3 rounded-xl border text-center transition ${
+                        className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border text-center transition ${
                           expenseForm.category === value
                             ? 'border-orange-500 bg-orange-500/20 text-white'
                             : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
                         }`}
                       >
-                        <span className="text-xl">{icon}</span>
-                        <p className="text-xs mt-1">{label}</p>
+                        <span className="text-base sm:text-xl">{icon}</span>
+                        <p className="text-[10px] sm:text-xs mt-0.5 sm:mt-1">{label}</p>
                       </button>
                     ))}
                   </div>
@@ -1226,11 +1224,11 @@ export default function FlightDetail() {
                 {/* Yoqilg'i turi - select */}
                 {expenseForm.category === 'fuel' && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Yoqilg'i turi</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Yoqilg'i turi</label>
                     <select
                       value={expenseForm.type}
                       onChange={(e) => setExpenseForm({ ...expenseForm, type: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-green-500 focus:outline-none appearance-none cursor-pointer"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-green-500 focus:outline-none appearance-none cursor-pointer"
                     >
                       {FUEL_TYPES.map(({ value, label, icon }) => (
                         <option key={value} value={value} className="bg-slate-800 text-white">
@@ -1244,14 +1242,14 @@ export default function FlightDetail() {
                 {/* Yoqilg'i uchun miqdor (ixtiyoriy) */}
                 {expenseForm.category === 'fuel' && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
                       Miqdori ({FUEL_TYPES.find(f => f.value === expenseForm.type)?.unit || 'litr'}) - ixtiyoriy
                     </label>
                     <input
                       type="number"
                       value={expenseForm.quantity}
                       onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-green-500 focus:outline-none"
                       placeholder="50"
                     />
                   </div>
@@ -1260,18 +1258,18 @@ export default function FlightDetail() {
                 {/* Odometr - faqat yoqilg'i uchun */}
                 {expenseForm.category === 'fuel' && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                      <Gauge size={14} className="inline mr-1" /> Odometr (km) - ixtiyoriy
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
+                      <Gauge size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> Odometr (km) - ixtiyoriy
                     </label>
                     <input
                       type="number"
                       value={expenseForm.odometer}
                       onChange={(e) => setExpenseForm({ ...expenseForm, odometer: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
                       placeholder={flight?.startOdometer ? `Boshlang'ich: ${flight.startOdometer} km` : "123456"}
                     />
                     {flight?.startOdometer > 0 && expenseForm.odometer && (
-                      <p className="text-xs text-blue-400 mt-1">
+                      <p className="text-[10px] sm:text-xs text-blue-400 mt-1">
                         Yurgan masofa: {Number(expenseForm.odometer) - flight.startOdometer} km
                       </p>
                     )}
@@ -1281,12 +1279,12 @@ export default function FlightDetail() {
                 {/* AZS nomi va joylashuv - faqat yoqilg'i uchun */}
                 {expenseForm.category === 'fuel' && (
                   <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        <MapPin size={14} className="inline mr-1" /> Joylashuv
+                      <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
+                        <MapPin size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> Joylashuv
                       </label>
                       
                       {/* GPS tugmasi */}
-                      <div className="flex gap-2 mb-2">
+                      <div className="flex gap-2 mb-1.5 sm:mb-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -1326,9 +1324,9 @@ export default function FlightDetail() {
                               showToast.error('GPS qo\'llab-quvvatlanmaydi')
                             }
                           }}
-                          className="flex-1 py-2.5 bg-blue-500/20 text-blue-400 rounded-xl text-sm font-medium hover:bg-blue-500/30 transition flex items-center justify-center gap-2 border border-blue-500/30"
+                          className="flex-1 py-2 sm:py-2.5 bg-blue-500/20 text-blue-400 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5 sm:gap-2 border border-blue-500/30"
                         >
-                          <Navigation size={16} />
+                          <Navigation size={14} className="sm:w-4 sm:h-4" />
                           GPS bilan aniqlash
                         </button>
                       </div>
@@ -1351,19 +1349,19 @@ export default function FlightDetail() {
                       
                       {/* Aniqlangan joylashuv */}
                       {expenseForm.location && (
-                        <div className="mt-2 p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-emerald-400 text-xs">
-                            <CheckCircle size={14} />
-                            <span>
+                        <div className="mt-1.5 sm:mt-2 p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 text-[10px] sm:text-xs min-w-0">
+                            <CheckCircle size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                            <span className="truncate">
                               {expenseForm.location.name || `${expenseForm.location.lat?.toFixed(4)}, ${expenseForm.location.lng?.toFixed(4)}`}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => setExpenseForm({ ...expenseForm, location: null })}
-                            className="text-slate-400 hover:text-red-400"
+                            className="text-slate-400 hover:text-red-400 flex-shrink-0"
                           >
-                            <X size={14} />
+                            <X size={12} className="sm:w-3.5 sm:h-3.5" />
                           </button>
                         </div>
                       )}
@@ -1372,17 +1370,17 @@ export default function FlightDetail() {
 
                 {/* Summa */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Summa (so'm) *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Summa (so'm) *</label>
                   <input
                     type="number"
                     value={expenseForm.amount}
                     onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-lg font-semibold"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-base sm:text-lg font-semibold"
                     placeholder="100000"
                     required
                   />
                   {expenseForm.amount && (
-                    <p className="text-xs text-orange-400 mt-1">
+                    <p className="text-[10px] sm:text-xs text-orange-400 mt-1">
                       {new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)} so'm
                     </p>
                   )}
@@ -1390,23 +1388,23 @@ export default function FlightDetail() {
 
                 {/* Izoh */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Izoh</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
                   <input
                     type="text"
                     value={expenseForm.description}
                     onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
                     placeholder="Qo'shimcha ma'lumot..."
                   />
                 </div>
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Saqlanmoqda...
                     </>
                   ) : 'Qo\'shish'}
@@ -1421,38 +1419,38 @@ export default function FlightDetail() {
       {/* Complete Flight Modal */}
       {showCompleteModal && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0" onClick={() => setShowCompleteModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 sm:p-6 border-b border-white/10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Reysni yopish</h2>
-                      <p className="text-blue-300 text-sm">{flight.name}</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-bold text-white">Reysni yopish</h2>
+                      <p className="text-blue-300 text-xs sm:text-sm truncate">{flight.name}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowCompleteModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
-                    <X size={20} />
+                  <button onClick={() => setShowCompleteModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleComplete} className="p-6 space-y-4">
+              <form onSubmit={handleComplete} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Summary */}
-                <div className="bg-white/5 rounded-xl p-4 space-y-2">
-                  <div className="flex justify-between">
+                <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-slate-400">Jami to'lov:</span>
                     <span className="text-emerald-400 font-bold">{formatMoney(flight.totalPayment)} so'm</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-slate-400">Jami xarajat:</span>
                     <span className="text-red-400 font-bold">{formatMoney(flight.totalExpenses)} so'm</span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-white/10">
+                  <div className="flex justify-between pt-1.5 sm:pt-2 border-t border-white/10 text-xs sm:text-sm">
                     <span className="text-white font-semibold">{flight.profit >= 0 ? 'Foyda:' : 'Zarar:'}</span>
                     <span className={`font-bold ${flight.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))} so'm
@@ -1460,30 +1458,30 @@ export default function FlightDetail() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Tugash odometr (km)</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Tugash odometr</label>
                     <input
                       type="number"
                       value={completeForm.endOdometer}
                       onChange={(e) => setCompleteForm({ ...completeForm, endOdometer: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
                       placeholder={String((flight.startOdometer || 0) + (flight.totalDistance || 0))}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Qoldiq yoqilg'i (L)</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qoldiq yoqilg'i</label>
                     <input
                       type="number"
                       value={completeForm.endFuel}
                       onChange={(e) => setCompleteForm({ ...completeForm, endFuel: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
                       placeholder="50"
                     />
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transition">
+                <button type="submit" className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition">
                   Reysni yopish
                 </button>
               </form>
@@ -1510,34 +1508,34 @@ export default function FlightDetail() {
       {/* Border Crossing Modal (Xalqaro reyslar uchun) */}
       {showBorderModal && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0" onClick={() => setShowBorderModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                      <Flag className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Flag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Chegara xarajati</h2>
-                      <p className="text-indigo-300 text-sm">
-                        {COUNTRIES[borderForm.fromCountry]?.flag} {COUNTRIES[borderForm.fromCountry]?.name} → {COUNTRIES[borderForm.toCountry]?.flag} {COUNTRIES[borderForm.toCountry]?.name}
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-bold text-white">Chegara xarajati</h2>
+                      <p className="text-indigo-300 text-xs sm:text-sm truncate">
+                        {COUNTRIES[borderForm.fromCountry]?.flag} → {COUNTRIES[borderForm.toCountry]?.flag} {COUNTRIES[borderForm.toCountry]?.name}
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => setShowBorderModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
-                    <X size={20} />
+                  <button onClick={() => setShowBorderModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleAddBorderCrossing} className="p-6 space-y-4">
+              <form onSubmit={handleAddBorderCrossing} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Chegara yo'nalishi - reysda tanlangan davlatlar asosida */}
                 {flight.countriesInRoute && flight.countriesInRoute.length > 2 && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Qaysi chegara?</label>
-                    <div className="flex gap-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qaysi chegara?</label>
+                    <div className="flex gap-1.5 sm:gap-2">
                       {flight.countriesInRoute.slice(0, -1).map((fromCode, idx) => {
                         const toCode = flight.countriesInRoute[idx + 1]
                         const isSelected = borderForm.fromCountry === fromCode && borderForm.toCountry === toCode
@@ -1546,15 +1544,15 @@ export default function FlightDetail() {
                             key={`${fromCode}-${toCode}`}
                             type="button"
                             onClick={() => setBorderForm({ ...borderForm, fromCountry: fromCode, toCountry: toCode })}
-                            className={`flex-1 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                            className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 transition-all flex items-center justify-center gap-1 sm:gap-2 ${
                               isSelected
                                 ? 'border-indigo-500 bg-indigo-500/20 text-white'
                                 : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
                             }`}
                           >
-                            <span className="text-lg">{COUNTRIES[fromCode]?.flag}</span>
-                            <ArrowRight size={14} />
-                            <span className="text-lg">{COUNTRIES[toCode]?.flag}</span>
+                            <span className="text-sm sm:text-lg">{COUNTRIES[fromCode]?.flag}</span>
+                            <ArrowRight size={12} className="sm:w-3.5 sm:h-3.5" />
+                            <span className="text-sm sm:text-lg">{COUNTRIES[toCode]?.flag}</span>
                           </button>
                         )
                       })}
@@ -1564,7 +1562,7 @@ export default function FlightDetail() {
 
                 {/* Chegara nomi - AddressAutocomplete bilan */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Chegara punkti</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Chegara punkti</label>
                   <AddressAutocomplete
                     value={borderForm.borderName}
                     onChange={(val) => setBorderForm({ ...borderForm, borderName: val })}
@@ -1577,11 +1575,11 @@ export default function FlightDetail() {
 
                 {/* Valyuta */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Valyuta</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Valyuta</label>
                   <select
                     value={borderForm.currency}
                     onChange={(e) => setBorderForm({ ...borderForm, currency: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-indigo-500 focus:outline-none"
                   >
                     {Object.entries(CURRENCIES).map(([code, c]) => (
                       <option key={code} value={code} className="bg-slate-900">{c.symbol} - {c.name}</option>
@@ -1590,44 +1588,44 @@ export default function FlightDetail() {
                 </div>
 
                 {/* Xarajatlar */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">🛂 Bojxona</label>
+                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🛂 Bojxona</label>
                     <input
                       type="number"
                       value={borderForm.customsFee}
                       onChange={(e) => setBorderForm({ ...borderForm, customsFee: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">🚛 Tranzit</label>
+                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🚛 Tranzit</label>
                     <input
                       type="number"
                       value={borderForm.transitFee}
                       onChange={(e) => setBorderForm({ ...borderForm, transitFee: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">🛡️ Sug'urta</label>
+                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🛡️ Sug'urta</label>
                     <input
                       type="number"
                       value={borderForm.insuranceFee}
                       onChange={(e) => setBorderForm({ ...borderForm, insuranceFee: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">📦 Boshqa</label>
+                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">📦 Boshqa</label>
                     <input
                       type="number"
                       value={borderForm.otherFees}
                       onChange={(e) => setBorderForm({ ...borderForm, otherFees: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                       placeholder="0"
                     />
                   </div>
@@ -1635,12 +1633,12 @@ export default function FlightDetail() {
 
                 {/* Izoh */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Izoh</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
                   <input
                     type="text"
                     value={borderForm.note}
                     onChange={(e) => setBorderForm({ ...borderForm, note: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                     placeholder="Qo'shimcha ma'lumot"
                   />
                 </div>
@@ -1648,7 +1646,7 @@ export default function FlightDetail() {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold disabled:opacity-50"
+                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold disabled:opacity-50"
                 >
                   {submitting ? 'Saqlanmoqda...' : 'Qo\'shish'}
                 </button>
@@ -1662,44 +1660,44 @@ export default function FlightDetail() {
       {/* Platon Modal (Rossiya yo'l to'lovi) */}
       {showPlatonModal && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
             <div className="absolute inset-0" onClick={() => setShowPlatonModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 sm:p-6 border-b border-white/10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-red-600 rounded-xl flex items-center justify-center text-2xl">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-rose-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
                       🚛
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Platon to'lovi</h2>
-                      <p className="text-rose-300 text-sm">Rossiya yo'l to'lovi (12+ tonna)</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-bold text-white">Platon to'lovi</h2>
+                      <p className="text-rose-300 text-xs sm:text-sm">Rossiya yo'l to'lovi</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowPlatonModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
-                    <X size={20} />
+                  <button onClick={() => setShowPlatonModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                    <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleSavePlaton} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSavePlaton} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Summa</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Summa</label>
                     <input
                       type="number"
                       value={platonForm.amount}
                       onChange={(e) => setPlatonForm({ ...platonForm, amount: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
                       placeholder="5000"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Valyuta</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Valyuta</label>
                     <select
                       value={platonForm.currency}
                       onChange={(e) => setPlatonForm({ ...platonForm, currency: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-rose-500 focus:outline-none"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-rose-500 focus:outline-none"
                     >
                       <option value="RUB" className="bg-slate-900">₽ Rubl</option>
                       <option value="USD" className="bg-slate-900">$ Dollar</option>
@@ -1708,23 +1706,23 @@ export default function FlightDetail() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Rossiyada yurgan masofa (km)</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Rossiyada yurgan masofa (km)</label>
                   <input
                     type="number"
                     value={platonForm.distanceKm}
                     onChange={(e) => setPlatonForm({ ...platonForm, distanceKm: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
                     placeholder="2500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Izoh</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
                   <input
                     type="text"
                     value={platonForm.note}
                     onChange={(e) => setPlatonForm({ ...platonForm, note: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
                     placeholder="Qo'shimcha ma'lumot"
                   />
                 </div>
@@ -1732,7 +1730,7 @@ export default function FlightDetail() {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="w-full py-3 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-xl font-bold disabled:opacity-50"
+                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold disabled:opacity-50"
                 >
                   {submitting ? 'Saqlanmoqda...' : 'Saqlash'}
                 </button>
