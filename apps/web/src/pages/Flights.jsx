@@ -150,26 +150,28 @@ export default function Flights() {
     const fuelType = FUEL_TYPES.find(f => f.value === expenseForm.type)
     const expenseLabel = isFuel ? fuelType?.label : EXPENSE_CATEGORIES.find(c => c.value === expenseForm.category)?.label
 
-    setSubmitting(true)
-    try {
-      await api.post(`/flights/${selectedFlight._id}/expenses`, {
-        type: isFuel ? expenseForm.type : expenseForm.category,
-        amount: Number(expenseForm.amount),
-        description: expenseForm.description,
-        quantity: isFuel && expenseForm.quantity ? Number(expenseForm.quantity) : null,
-        quantityUnit: isFuel && expenseForm.quantity ? fuelType?.unit || 'litr' : null
-      })
-      
-      const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
-      alert.success('Xarajat qo\'shildi! 💰', `${expenseLabel}: ${formattedAmount} so'm`)
-      setShowExpenseModal(false)
-      setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '' })
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik yuz berdi', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+    // Darhol modal yopilsin
+    const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
+    const expenseData = {
+      type: isFuel ? expenseForm.type : expenseForm.category,
+      amount: Number(expenseForm.amount),
+      description: expenseForm.description,
+      quantity: isFuel && expenseForm.quantity ? Number(expenseForm.quantity) : null,
+      quantityUnit: isFuel && expenseForm.quantity ? fuelType?.unit || 'litr' : null
     }
+    const flightId = selectedFlight._id
+    
+    setShowExpenseModal(false)
+    setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '' })
+    showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
+    
+    // Fonda API so'rovi
+    api.post(`/flights/${flightId}/expenses`, expenseData)
+      .then(() => fetchData())
+      .catch((error) => {
+        showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
+        fetchData()
+      })
   }
 
   // Reysni yopish

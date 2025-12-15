@@ -325,39 +325,38 @@ export default function FlightDetail() {
     const fuelType = FUEL_TYPES.find(f => f.value === expenseForm.type)
     const expenseLabel = isFuel ? fuelType?.label : EXPENSE_CATEGORIES.find(c => c.value === expenseForm.category)?.label
 
-    setSubmitting(true)
-    try {
-      const payload = {
-        type: isFuel ? expenseForm.type : expenseForm.category,
-        amount: Number(expenseForm.amount),
-        description: expenseForm.description
-      }
-
-      // Yoqilg'i uchun qo'shimcha ma'lumotlar
-      if (isFuel) {
-        payload.quantity = expenseForm.quantity ? Number(expenseForm.quantity) : null
-        payload.quantityUnit = expenseForm.quantity ? fuelType?.unit || 'litr' : null
-        payload.pricePerUnit = expenseForm.pricePerUnit ? Number(expenseForm.pricePerUnit) : null
-        payload.odometer = expenseForm.odometer ? Number(expenseForm.odometer) : null
-        payload.stationName = expenseForm.stationName || null
-        payload.location = expenseForm.location || null
-      }
-
-      await api.post(`/flights/${id}/expenses`, payload)
-      
-      const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
-      alert.success('Xarajat qo\'shildi! 💰', `${expenseLabel}: ${formattedAmount} so'm`)
-      setShowExpenseModal(false)
-      setExpenseForm({ 
-        category: 'fuel', type: 'fuel_benzin', amount: '', description: '', 
-        quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null 
-      })
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik yuz berdi', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+    // Darhol modal yopilsin
+    const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
+    const payload = {
+      type: isFuel ? expenseForm.type : expenseForm.category,
+      amount: Number(expenseForm.amount),
+      description: expenseForm.description
     }
+
+    // Yoqilg'i uchun qo'shimcha ma'lumotlar
+    if (isFuel) {
+      payload.quantity = expenseForm.quantity ? Number(expenseForm.quantity) : null
+      payload.quantityUnit = expenseForm.quantity ? fuelType?.unit || 'litr' : null
+      payload.pricePerUnit = expenseForm.pricePerUnit ? Number(expenseForm.pricePerUnit) : null
+      payload.odometer = expenseForm.odometer ? Number(expenseForm.odometer) : null
+      payload.stationName = expenseForm.stationName || null
+      payload.location = expenseForm.location || null
+    }
+
+    setShowExpenseModal(false)
+    setExpenseForm({ 
+      category: 'fuel', type: 'fuel_benzin', amount: '', description: '', 
+      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null 
+    })
+    showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
+    
+    // Fonda API so'rovi
+    api.post(`/flights/${id}/expenses`, payload)
+      .then(() => fetchFlight())
+      .catch((error) => {
+        showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
+        fetchFlight()
+      })
   }
 
   // Xarajat o'chirish
