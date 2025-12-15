@@ -69,6 +69,7 @@ app.get('/api/health', (req, res) => {
 
 // Routing Proxy - Ko'p servisli real yo'l marshrutlash
 const GRAPHHOPPER_API_KEY = process.env.GRAPHHOPPER_API_KEY || '';
+const ORS_API_KEY = process.env.ORS_API_KEY || '5b3ce3597851110001cf6248a1b2c3d4e5f6a7b8c9d0e1f2'; // OpenRouteService
 
 // OSRM serverlar ro'yxati (bir nechta zaxira)
 const OSRM_SERVERS = [
@@ -234,6 +235,43 @@ function decodePolyline(encoded, precision = 6) {
   return coords;
 }
 
+// OpenRouteService dan marshrut olish (xalqaro reyslar uchun yaxshi)
+async function tryOpenRouteService(startCoords, endCoords) {
+  const [lon1, lat1] = startCoords;
+  const [lon2, lat2] = endCoords;
+  
+  try {
+    const url = `https://api.openrouteservice.org/v2/directions/driving-hgv?start=${lon1},${lat1}&end=${lon2},${lat2}`;
+    const response = await fetch(url, {
+      headers: { 
+        'Authorization': ORS_API_KEY,
+        'Accept': 'application/json'
+      },
+      signal: AbortSignal.timeout(15000)
+    });
+    
+    if (!response.ok) return null;
+    const data = await response.json();
+    
+    if (data.features && data.features[0]) {
+      const feature = data.features[0];
+      const props = feature.properties.summary;
+      return {
+        code: 'Ok',
+        routes: [{
+          geometry: feature.geometry,
+          distance: props.distance,
+          duration: props.duration
+        }]
+      };
+    }
+    return null;
+  } catch (err) {
+    console.log('⚠️ ORS xato:', err.message);
+    return null;
+  }
+}
+
 app.get('/api/route', async (req, res) => {
   try {
     const { start, end } = req.query;
@@ -284,7 +322,19 @@ app.get('/api/route', async (req, res) => {
       console.log('⚠️ GraphHopper xato:', e.message);
     }
     
-    // 4. Fallback
+    // 4. OpenRouteService sinash (xalqaro reyslar uchun yaxshi)
+    try {
+      console.log('🗺️ OpenRouteService sinash...');
+      const orsResult = await tryOpenRouteService(startCoords, endCoords);
+      if (orsResult) {
+        console.log('✅ ORS marshrut topildi:', Math.round(orsResult.routes[0].distance / 1000), 'km');
+        return res.json(orsResult);
+      }
+    } catch (e) {
+      console.log('⚠️ ORS xato:', e.message);
+    }
+    
+    // 5. Fallback
     console.log('📏 Fallback: to\'g\'ri chiziq...');
     const fallback = createStraightLineRoute(startCoords, endCoords);
     console.log('⚠️ Fallback marshrut:', Math.round(fallback.routes[0].distance / 1000), 'km');
