@@ -164,32 +164,37 @@ export default function DriverDetail() {
       return
     }
 
-    try {
-      const payload = {
-        driverId: id,
-        startOdometer: Number(flightForm.startOdometer) || 0,
-        startFuel: Number(flightForm.startFuel) || 0,
-        flightType: flightForm.flightType,
-        firstLeg: {
-          fromCity: flightForm.fromCity,
-          toCity: flightForm.toCity,
-          fromCoords: flightForm.fromCoords,
-          toCoords: flightForm.toCoords,
-          payment: Number(flightForm.payment) || 0,
-          givenBudget: Number(flightForm.givenBudget) || 0,
-          distance: Number(flightForm.distance) || 0
-        }
+    const payload = {
+      driverId: id,
+      startOdometer: Number(flightForm.startOdometer) || 0,
+      startFuel: Number(flightForm.startFuel) || 0,
+      flightType: flightForm.flightType,
+      firstLeg: {
+        fromCity: flightForm.fromCity,
+        toCity: flightForm.toCity,
+        fromCoords: flightForm.fromCoords,
+        toCoords: flightForm.toCoords,
+        payment: Number(flightForm.payment) || 0,
+        givenBudget: Number(flightForm.givenBudget) || 0,
+        distance: Number(flightForm.distance) || 0
       }
-
-      const res = await api.post('/flights', payload)
-      showToast.success('Reys ochildi!')
-      setShowFlightModal(false)
-      setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null, flightType: 'domestic' })
-      // Yangi reysga o'tish
-      navigate(`/dashboard/flights/${res.data.data._id}`)
-    } catch (error) {
-      showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
     }
+
+    // DARHOL modal yopilsin
+    const fromCity = flightForm.fromCity
+    const toCity = flightForm.toCity
+    setShowFlightModal(false)
+    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null, flightType: 'domestic' })
+    showToast.success(`Reys ochilmoqda: ${fromCity} → ${toCity}`)
+
+    // Fonda API
+    api.post('/flights', payload)
+      .then((res) => {
+        navigate(`/dashboard/flights/${res.data.data._id}`)
+      })
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+      })
   }
 
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
@@ -655,7 +660,7 @@ export default function DriverDetail() {
       {/* Reys ochish Modal */}
       {showFlightModal && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-[9999] bg-black/90 overflow-y-auto"
           onClick={() => setShowFlightModal(false)}
         >
           <div className="min-h-full flex items-center justify-center p-4">

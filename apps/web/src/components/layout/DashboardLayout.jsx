@@ -182,7 +182,7 @@ export default function DashboardLayout() {
       {/* Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden animate-fadeIn" 
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden" 
           onClick={() => setSidebarOpen(false)} 
         />
       )}

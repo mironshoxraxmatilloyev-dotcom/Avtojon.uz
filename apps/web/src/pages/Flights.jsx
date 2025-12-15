@@ -218,24 +218,28 @@ export default function Flights() {
   const handleAddBorderCrossing = async (e) => {
     e.preventDefault()
     if (submitting) return
-    setSubmitting(true)
-    try {
-      await api.post(`/flights/${selectedFlight._id}/border-crossing`, {
-        ...borderForm,
-        customsFee: Number(borderForm.customsFee) || 0,
-        transitFee: Number(borderForm.transitFee) || 0,
-        insuranceFee: Number(borderForm.insuranceFee) || 0,
-        otherFees: Number(borderForm.otherFees) || 0
-      })
-      alert.success('Chegara xarajati qo\'shildi! 🛂')
-      setShowBorderModal(false)
-      setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+
+    const flightId = selectedFlight._id
+    const data = {
+      ...borderForm,
+      customsFee: Number(borderForm.customsFee) || 0,
+      transitFee: Number(borderForm.transitFee) || 0,
+      insuranceFee: Number(borderForm.insuranceFee) || 0,
+      otherFees: Number(borderForm.otherFees) || 0
     }
+
+    // Darhol yopish
+    setShowBorderModal(false)
+    setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
+    showToast.success('Chegara xarajati qo\'shildi!')
+
+    // Fonda API
+    api.post(`/flights/${flightId}/border-crossing`, data)
+      .then(() => fetchData())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchData()
+      })
   }
 
   // Chegara xarajatini o'chirish
@@ -248,35 +252,40 @@ export default function Flights() {
       type: "danger"
     })
     if (!confirmed) return
-    try {
-      await api.delete(`/flights/${flightId}/border-crossing/${crossingId}`)
-      alert.success('O\'chirildi')
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik')
-    }
+    
+    showToast.success('O\'chirildi')
+    api.delete(`/flights/${flightId}/border-crossing/${crossingId}`)
+      .then(() => fetchData())
+      .catch(() => {
+        showToast.error('Xatolik')
+        fetchData()
+      })
   }
 
   // Platon saqlash (Rossiya yo'l to'lovi)
   const handleSavePlaton = async (e) => {
     e.preventDefault()
     if (submitting) return
-    setSubmitting(true)
-    try {
-      await api.put(`/flights/${selectedFlight._id}/platon`, {
-        ...platonForm,
-        amount: Number(platonForm.amount) || 0,
-        distanceKm: Number(platonForm.distanceKm) || 0
-      })
-      alert.success('Platon saqlandi! 🚛')
-      setShowPlatonModal(false)
-      setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
-      fetchData()
-    } catch (error) {
-      alert.error('Xatolik', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+
+    const flightId = selectedFlight._id
+    const data = {
+      ...platonForm,
+      amount: Number(platonForm.amount) || 0,
+      distanceKm: Number(platonForm.distanceKm) || 0
     }
+
+    // Darhol yopish
+    setShowPlatonModal(false)
+    setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
+    showToast.success('Platon saqlandi!')
+
+    // Fonda API
+    api.put(`/flights/${flightId}/platon`, data)
+      .then(() => fetchData())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchData()
+      })
   }
 
   // Xarajat o'chirish
@@ -752,7 +761,7 @@ export default function Flights() {
 
       {/* Add Leg Modal */}
       {showLegModal && selectedFlight && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowLegModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -823,7 +832,7 @@ export default function Flights() {
 
       {/* Add Expense Modal */}
       {showExpenseModal && selectedFlight && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowExpenseModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -954,7 +963,7 @@ export default function Flights() {
 
       {/* Complete Flight Modal */}
       {showCompleteModal && selectedFlight && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowCompleteModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1029,7 +1038,7 @@ export default function Flights() {
 
       {/* Border Crossing Modal (Xalqaro reyslar uchun) */}
       {showBorderModal && selectedFlight && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowBorderModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1177,7 +1186,7 @@ export default function Flights() {
 
       {/* Platon Modal (Rossiya yo'l to'lovi) */}
       {showPlatonModal && selectedFlight && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowPlatonModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>

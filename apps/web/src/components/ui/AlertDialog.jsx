@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, useCallback } from 'react'
+import { useEffect, createContext, useContext, useCallback, useState } from 'react'
 import { X, AlertTriangle, CheckCircle, XCircle, Info, Trash2, AlertCircle } from 'lucide-react'
 
 // Alert Context
@@ -88,16 +88,8 @@ function AlertContainer({ alerts, onRemove }) {
 
 // Single Alert Item with inline styles
 function AlertItem({ type, title, message, onRemove }) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [isLeaving, setIsLeaving] = useState(false)
-
-  useEffect(() => {
-    requestAnimationFrame(() => setIsVisible(true))
-  }, [])
-
   const handleRemove = () => {
-    setIsLeaving(true)
-    setTimeout(onRemove, 200)
+    onRemove()
   }
 
   const config = {
@@ -146,9 +138,7 @@ function AlertItem({ type, title, message, onRemove }) {
         borderRadius: '12px',
         padding: '16px',
         boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.2s ease-out',
-        opacity: isVisible && !isLeaving ? 1 : 0,
-        transform: isVisible && !isLeaving ? 'translateX(0)' : 'translateX(30px)'
+        opacity: 1
       }}
     >
       <div style={{ display: 'flex', gap: '12px' }}>
@@ -211,10 +201,7 @@ function ConfirmDialog({
   onConfirm,
   onCancel
 }) {
-  const [isVisible, setIsVisible] = useState(false)
-
   useEffect(() => {
-    requestAnimationFrame(() => setIsVisible(true))
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = 'unset'
@@ -222,13 +209,11 @@ function ConfirmDialog({
   }, [])
 
   const handleCancel = () => {
-    setIsVisible(false)
-    setTimeout(onCancel, 150)
+    onCancel()
   }
 
   const handleConfirm = () => {
-    setIsVisible(false)
-    setTimeout(onConfirm, 150)
+    onConfirm()
   }
 
   const typeConfig = {
@@ -268,9 +253,7 @@ function ConfirmDialog({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        transition: 'all 0.15s',
-        backgroundColor: isVisible ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
-        backdropFilter: isVisible ? 'blur(4px)' : 'none'
+        backgroundColor: 'rgba(0, 0, 0, 0.6)'
       }}
       onClick={handleCancel}
     >
@@ -281,10 +264,7 @@ function ConfirmDialog({
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           maxWidth: '400px',
           width: '100%',
-          padding: '24px',
-          transition: 'all 0.15s ease-out',
-          opacity: isVisible ? 1 : 0,
-          transform: isVisible ? 'scale(1)' : 'scale(0.95)'
+          padding: '24px'
         }}
         onClick={e => e.stopPropagation()}
       >

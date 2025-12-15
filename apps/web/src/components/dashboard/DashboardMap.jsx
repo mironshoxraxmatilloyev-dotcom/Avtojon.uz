@@ -128,10 +128,10 @@ export const DashboardMap = memo(function DashboardMap({
 
   if (isFullScreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/80">
+      <div className="fixed inset-0 z-[9999] bg-black/90">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-3 bg-white rounded-xl shadow-lg"
+          className="absolute top-4 right-4 z-[10000] p-3 bg-white rounded-xl shadow-lg"
         >
           <X size={24} />
         </button>

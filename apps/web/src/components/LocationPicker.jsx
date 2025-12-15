@@ -206,7 +206,7 @@ export default function LocationPicker({ onSelect, onClose, initialStart, initia
     }
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[200] flex flex-col">
+        <div className="fixed inset-0 bg-black/95 z-[9999] flex flex-col">
             {/* Header */}
             <div className="bg-slate-900 border-b border-white/10 p-3 shrink-0">
                 <div className="flex items-center justify-between">

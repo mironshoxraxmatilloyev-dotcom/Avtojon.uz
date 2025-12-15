@@ -441,22 +441,25 @@ export default function FlightDetail() {
   const handleSavePlaton = async (e) => {
     e.preventDefault()
     if (submitting) return
-    setSubmitting(true)
-    try {
-      await api.put(`/flights/${id}/platon`, {
-        ...platonForm,
-        amount: Number(platonForm.amount) || 0,
-        distanceKm: Number(platonForm.distanceKm) || 0
-      })
-      alert.success('Platon saqlandi! 🚛')
-      setShowPlatonModal(false)
-      setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
-      fetchFlight()
-    } catch (error) {
-      alert.error('Xatolik', error.response?.data?.message || 'Serverda xatolik')
-    } finally {
-      setSubmitting(false)
+
+    const data = {
+      ...platonForm,
+      amount: Number(platonForm.amount) || 0,
+      distanceKm: Number(platonForm.distanceKm) || 0
     }
+
+    // Darhol yopish
+    setShowPlatonModal(false)
+    setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
+    showToast.success('Platon saqlandi!')
+
+    // Fonda API
+    api.put(`/flights/${id}/platon`, data)
+      .then(() => fetchFlight())
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik')
+        fetchFlight()
+      })
   }
 
   // Reysni yopish
@@ -1050,7 +1053,7 @@ export default function FlightDetail() {
 
       {/* Add Leg Modal */}
       {showLegModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowLegModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1171,7 +1174,7 @@ export default function FlightDetail() {
 
       {/* Add Expense Modal */}
       {showExpenseModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowExpenseModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1417,7 +1420,7 @@ export default function FlightDetail() {
 
       {/* Complete Flight Modal */}
       {showCompleteModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowCompleteModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1506,7 +1509,7 @@ export default function FlightDetail() {
 
       {/* Border Crossing Modal (Xalqaro reyslar uchun) */}
       {showBorderModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowBorderModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -1658,7 +1661,7 @@ export default function FlightDetail() {
 
       {/* Platon Modal (Rossiya yo'l to'lovi) */}
       {showPlatonModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowPlatonModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>

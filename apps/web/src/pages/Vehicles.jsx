@@ -140,7 +140,7 @@ export default function Vehicles() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 z-[9999] overflow-y-auto">
           <div className="flex items-center justify-center min-h-full py-8 px-4">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="flex justify-between items-center p-4 border-b">

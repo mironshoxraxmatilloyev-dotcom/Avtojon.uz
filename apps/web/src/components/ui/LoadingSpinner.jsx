@@ -108,7 +108,7 @@ export function ProgressLoader({ progress = 0, color = 'violet', className = '' 
 // Full page loader
 export function PageLoader({ message = 'Yuklanmoqda...' }) {
   return (
-    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+    <div className="fixed inset-0 bg-white/90 dark:bg-gray-900/90 flex flex-col items-center justify-center z-[9999]">
       <TruckLoader size="lg" />
       <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">{message}</p>
     </div>

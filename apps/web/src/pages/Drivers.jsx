@@ -266,7 +266,6 @@ export default function Drivers() {
         startOdometer: Number(flightForm.startOdometer) || 0,
         startFuel: Number(flightForm.startFuel) || 0,
         flightType: flightForm.flightType,
-        // Xalqaro reyslar uchun davlatlar ro'yxati
         countriesInRoute: flightForm.flightType === 'international' ? (flightForm.countriesInRoute || ['UZB']) : [],
         firstLeg: {
           fromCity: flightForm.fromCity,
@@ -278,16 +277,21 @@ export default function Drivers() {
         }
       }
 
-      const response = await api.post('/flights', payload)
-      
-      alert.success(
-        'Reys muvaffaqiyatli ochildi! 🚛', 
-        `${flightForm.fromCity} → ${flightForm.toCity} (${distance} km)`
-      )
+      // DARHOL modal yopilsin - foydalanuvchi kutmasin
+      const fromCity = flightForm.fromCity
+      const toCity = flightForm.toCity
       setShowFlightModal(false)
       resetFlightForm()
       setSelectedDriver(null)
-      fetchData()
+      showToast.success(`Reys ochildi: ${fromCity} → ${toCity}`)
+
+      // Fonda API so'rovi
+      api.post('/flights', payload)
+        .then(() => fetchData())
+        .catch((err) => {
+          showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+          fetchData()
+        })
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Serverda xatolik yuz berdi'
       alert.error('Reys ochishda xatolik', errorMessage)
@@ -348,26 +352,46 @@ export default function Drivers() {
         perTripRate: form.paymentType === 'per_trip' ? Number(form.perTripRate) || 0 : 0
       }
 
-      if (editingDriver) {
-        await api.put(`/drivers/${editingDriver._id}`, driverPayload)
-        alert.success('Muvaffaqiyatli yangilandi', `${form.fullName} ma'lumotlari saqlandi`)
-      } else {
-        const driverRes = await api.post('/drivers', driverPayload)
-        const newDriver = driverRes.data.data
+      // DARHOL modal yopilsin
+      const driverName = form.fullName
+      const plateNum = form.plateNumber
+      const isEditing = !!editingDriver
+      const editId = editingDriver?._id
 
-        // Mashina yaratish (majburiy)
-        await api.post('/vehicles', {
-          plateNumber: form.plateNumber.trim().toUpperCase(),
-          brand: form.brand.trim(),
-          year: form.year ? Number(form.year) : undefined,
-          currentDriver: newDriver._id
-        })
-        alert.success('Muvaffaqiyatli qo\'shildi! 🎉', `${form.fullName} va ${form.plateNumber} tizimga qo'shildi`)
-      }
       setShowModal(false)
       setEditingDriver(null)
       resetForm()
-      fetchData()
+      showToast.success(isEditing ? 'Yangilanmoqda...' : 'Qo\'shilmoqda...')
+
+      // Fonda API so'rovi
+      if (isEditing) {
+        api.put(`/drivers/${editId}`, driverPayload)
+          .then(() => {
+            showToast.success(`${driverName} yangilandi`)
+            fetchData()
+          })
+          .catch((err) => {
+            showToast.error(err.response?.data?.message || 'Xatolik')
+            fetchData()
+          })
+      } else {
+        api.post('/drivers', driverPayload)
+          .then(async (driverRes) => {
+            const newDriver = driverRes.data.data
+            await api.post('/vehicles', {
+              plateNumber: plateNum.trim().toUpperCase(),
+              brand: form.brand?.trim() || '',
+              year: form.year ? Number(form.year) : undefined,
+              currentDriver: newDriver._id
+            })
+            showToast.success(`${driverName} qo'shildi!`)
+            fetchData()
+          })
+          .catch((err) => {
+            showToast.error(err.response?.data?.message || 'Xatolik')
+            fetchData()
+          })
+      }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Serverda xatolik yuz berdi'
       alert.error('Xatolik yuz berdi', errorMessage)
@@ -704,7 +728,7 @@ export default function Drivers() {
 
       {/* Add/Edit Modal - Pro Design */}
       {showModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => setShowModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
@@ -905,7 +929,7 @@ export default function Drivers() {
 
       {/* Reys ochish Modal */}
       {showFlightModal && selectedDriver && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="absolute inset-0" onClick={() => { setShowFlightModal(false); resetFlightForm(); setSelectedDriver(null) }} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
@@ -924,7 +948,7 @@ export default function Drivers() {
                   </div>
                   <button
                     onClick={() => { setShowFlightModal(false); resetFlightForm(); setSelectedDriver(null) }}
-                    className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition"
+                    className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white"
                   >
                     <X size={24} />
                   </button>

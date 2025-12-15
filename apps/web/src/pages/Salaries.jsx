@@ -349,7 +349,7 @@ export default function Salaries() {
             )}
 
             {showModal && (
-                <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80">
                     <div className="flex min-h-full items-center justify-center p-4" onClick={() => setShowModal(false)}>
                         <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-3xl">
@@ -396,7 +396,7 @@ export default function Salaries() {
             )}
 
             {selectedSalary && (
-                <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80">
                     <div className="flex min-h-full items-center justify-center p-4" onClick={() => setSelectedSalary(null)}>
                         <div className="relative bg-white rounded-3xl w-full max-w-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className={`bg-gradient-to-r ${statusConfig[selectedSalary.status]?.gradient} p-6 rounded-t-3xl`}>

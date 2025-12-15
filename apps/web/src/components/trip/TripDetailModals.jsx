@@ -54,7 +54,7 @@ export function FuelModal({ tripId, tripType, rates, onClose, onSuccess }) {
   const totalUSD = form.currency === 'USD' ? total : total / (rates[form.currency] || 1)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-3xl w-full max-w-md p-6">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
           <Fuel className="text-orange-500" /> Yoqilg'i qo'shish
@@ -166,7 +166,7 @@ export function RoadExpenseModal({ tripId, country, currentData, rates, onClose,
   const total = Number(form.border) + Number(form.gai) + Number(form.toll) + Number(form.parking)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-3xl w-full max-w-md p-6">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
           <span className="text-2xl">{countryInfo?.flag}</span>
@@ -246,7 +246,7 @@ export function UnexpectedModal({ tripId, rates, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-3xl w-full max-w-md p-6">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
           <AlertTriangle className="text-red-500" /> Kutilmagan xarajat
@@ -340,7 +340,7 @@ export function EditTripModal({ trip, rates, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-3xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
           <Edit3 className="text-blue-500" /> Reysni tahrirlash
