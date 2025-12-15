@@ -751,7 +751,7 @@ export default function FlightDetail() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="space-y-3 max-h-[600px] overflow-y-auto">
           {flight.expenses?.map((exp) => {
             const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
             const isFuel = exp.type && exp.type.startsWith('fuel_')
