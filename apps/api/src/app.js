@@ -17,7 +17,38 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS sozlamalari - telefon va localhost uchun
+const corsOptions = {
+  origin: function (origin, callback) {
+    // origin bo'lmasa (curl, postman, mobil app) ruxsat berish
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://192.168.1.100:5173',
+      /^http:\/\/192\.168\.\d+\.\d+:\d+$/ // Barcha local IP lar
+    ];
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('⚠️ CORS blocked:', origin);
+      callback(null, true); // Development uchun hamma ruxsat
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
 app.use(morgan('dev'));
 app.use(express.json());
 

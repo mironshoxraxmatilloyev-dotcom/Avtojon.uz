@@ -544,9 +544,21 @@ export default function DriverHome() {
     }
     const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
     const formatDate = (d) => d ? new Date(d).toLocaleString('uz-UZ') : '-'
+    
+    // Flights dan statistika (yangi tizim)
+    const completedFlights = flights.filter(f => f.status === 'completed').length
+    const totalProfit = flights.reduce((sum, f) => sum + (f.profit > 0 ? f.profit : 0), 0)
+    const totalLoss = flights.reduce((sum, f) => sum + (f.profit < 0 ? Math.abs(f.profit) : 0), 0)
+    
+    // Eski trips dan ham (orqaga moslik)
     const completedTrips = trips.filter(t => t.status === 'completed').length
     const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
     const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
+    
+    // Jami statistika (flights + trips)
+    const totalCompletedTrips = completedFlights + completedTrips
+    const totalBonusAmount = totalProfit + totalBonus
+    const totalPenaltyAmount = totalLoss + totalPenalty
 
     if (loading) return <DriverHomeSkeleton />
 
@@ -896,15 +908,15 @@ export default function DriverHome() {
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-violet-500/30 group-hover:scale-110 transition-transform">
                                         <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                     </div>
-                                    <p className="text-3xl sm:text-4xl font-bold text-white mb-0.5 sm:mb-1">{completedTrips}</p>
+                                    <p className="text-3xl sm:text-4xl font-bold text-white mb-0.5 sm:mb-1">{totalCompletedTrips}</p>
                                     <p className="text-violet-300 text-xs sm:text-sm">Tugatilgan reyslar</p>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 group overflow-hidden">
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
                                         <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                     </div>
-                                    <p className="text-lg sm:text-2xl font-bold text-emerald-400 mb-0.5 sm:mb-1 truncate">+{formatMoney(totalBonus)}</p>
-                                    <p className="text-violet-300 text-xs sm:text-sm">Jami bonuslar</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-emerald-400 mb-0.5 sm:mb-1 truncate">+{formatMoney(totalBonusAmount)}</p>
+                                    <p className="text-violet-300 text-xs sm:text-sm">Jami foyda</p>
                                 </div>
                             </div>
                         </div>
@@ -1137,7 +1149,7 @@ export default function DriverHome() {
 
                             <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-center overflow-hidden">
                                 <p className="text-violet-200 text-xs sm:text-sm mb-2">Jami oylik maosh</p>
-                                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-1 truncate">{formatMoney((user?.baseSalary || 0) + totalBonus - totalPenalty)}</p>
+                                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-1 truncate">{formatMoney((user?.baseSalary || 0) + totalBonusAmount - totalPenaltyAmount)}</p>
                                 <p className="text-violet-200 text-sm">som</p>
                             </div>
 
@@ -1153,22 +1165,22 @@ export default function DriverHome() {
                                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500/20 rounded-xl flex items-center justify-center mb-2 sm:mb-3">
                                         <Star className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                                     </div>
-                                    <p className="text-lg sm:text-2xl font-bold text-white">{completedTrips}</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-white">{totalCompletedTrips}</p>
                                     <p className="text-violet-300 text-xs sm:text-sm">Reyslar</p>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 overflow-hidden">
                                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-2 sm:mb-3">
                                         <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
                                     </div>
-                                    <p className="text-lg sm:text-2xl font-bold text-emerald-400 truncate">+{formatMoney(totalBonus)}</p>
-                                    <p className="text-violet-300 text-xs sm:text-sm">Bonuslar</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-emerald-400 truncate">+{formatMoney(totalBonusAmount)}</p>
+                                    <p className="text-violet-300 text-xs sm:text-sm">Foyda</p>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 overflow-hidden">
                                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500/20 rounded-xl flex items-center justify-center mb-2 sm:mb-3">
                                         <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
                                     </div>
-                                    <p className="text-lg sm:text-2xl font-bold text-red-400 truncate">-{formatMoney(totalPenalty)}</p>
-                                    <p className="text-violet-300 text-xs sm:text-sm">Jarimalar</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-red-400 truncate">-{formatMoney(totalPenaltyAmount)}</p>
+                                    <p className="text-violet-300 text-xs sm:text-sm">Zarar</p>
                                 </div>
                             </div>
                         </div>

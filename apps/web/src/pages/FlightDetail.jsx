@@ -14,6 +14,7 @@ import {
   Trash2,
   DollarSign,
   TrendingUp,
+  TrendingDown,
   Navigation,
   ChevronRight,
   Map,
@@ -499,7 +500,7 @@ export default function FlightDetail() {
   const lastLeg = flight.legs?.[flight.legs.length - 1]
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white p-6 md:p-8 rounded-3xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -mr-48 -mt-48"></div>
@@ -589,16 +590,14 @@ export default function FlightDetail() {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  flight.profit >= 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-red-600'
-                }`}>
-                  <Navigation size={18} className="text-white" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-400 to-red-600">
+                  <TrendingDown size={18} className="text-white" />
                 </div>
                 <div>
-                  <p className={`text-xl font-bold ${flight.profit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))}
+                  <p className="text-xl font-bold text-red-300">
+                    -{formatMoney(flight.totalExpenses || 0)}
                   </p>
-                  <p className="text-emerald-200 text-xs">{flight.profit >= 0 ? 'Sof foyda' : 'Zarar'}</p>
+                  <p className="text-emerald-200 text-xs">Sarflangan</p>
                 </div>
               </div>
             </div>
@@ -606,8 +605,12 @@ export default function FlightDetail() {
         </div>
       </div>
 
-      {/* Odometer & Fuel Info */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Main Content - 2 column layout on desktop */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Left Column - Odometer, Fuel, Legs */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Odometer & Fuel Info */}
+          <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -709,33 +712,7 @@ export default function FlightDetail() {
                   </div>
                 </div>
                 
-                {/* Budget va Balance */}
-                {(leg.givenBudget > 0 || leg.previousBalance > 0) && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-4 gap-2 text-xs">
-                    {leg.previousBalance > 0 && (
-                      <div className="text-center p-2 bg-blue-50 rounded-lg">
-                        <p className="text-blue-600 font-semibold">{formatMoney(leg.previousBalance)}</p>
-                        <p className="text-blue-400">Qoldiq</p>
-                      </div>
-                    )}
-                    <div className="text-center p-2 bg-orange-50 rounded-lg">
-                      <p className="text-orange-600 font-semibold">{formatMoney(leg.givenBudget)}</p>
-                      <p className="text-orange-400">Berildi</p>
-                    </div>
-                    <div className="text-center p-2 bg-red-50 rounded-lg">
-                      <p className="text-red-600 font-semibold">{formatMoney(leg.spentAmount)}</p>
-                      <p className="text-red-400">Sarflandi</p>
-                    </div>
-                    <div className={`text-center p-2 rounded-lg ${leg.balance >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                      <p className={`font-semibold ${leg.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {formatMoney(Math.abs(leg.balance))}
-                      </p>
-                      <p className={leg.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                        {leg.balance >= 0 ? 'Qoldiq' : 'Kamomad'}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {/* Budget va Balance - header da bor, shu yerda kerak emas */}
               </div>
             </div>
           ))}
@@ -748,9 +725,12 @@ export default function FlightDetail() {
           </div>
         )}
       </div>
+        </div>
 
+        {/* Right Column - Expenses */}
+        <div className="space-y-6">
       {/* Expenses Section */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm sticky top-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
@@ -842,6 +822,8 @@ export default function FlightDetail() {
             <p>Hali xarajatlar yo'q</p>
           </div>
         )}
+      </div>
+        </div>
       </div>
 
       {/* ============ XALQARO REYS BO'LIMLARI ============ */}
@@ -1068,33 +1050,7 @@ export default function FlightDetail() {
         </div>
       )}
 
-      {/* Completed Summary */}
-      {!isActive && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200">
-          <div className="flex items-center gap-3 mb-4">
-            <CheckCircle className="text-emerald-600" size={24} />
-            <h3 className="font-bold text-emerald-800">Reys yakunlandi</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-700">{formatMoney(flight.totalPayment)}</p>
-              <p className="text-sm text-emerald-600">Jami to'lov</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{formatMoney(flight.totalExpenses)}</p>
-              <p className="text-sm text-red-500">Jami xarajat</p>
-            </div>
-            <div className="text-center">
-              <p className={`text-2xl font-bold ${flight.profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))}
-              </p>
-              <p className={`text-sm ${flight.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                {flight.profit >= 0 ? 'Sof foyda' : 'Zarar'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Completed Summary - olib tashlandi, header da bor */}
 
       {/* Add Leg Modal */}
       {showLegModal && createPortal(
@@ -1268,98 +1224,64 @@ export default function FlightDetail() {
                   </div>
                 </div>
 
-                {/* Yoqilg'i turlari - faqat fuel tanlanganda */}
+                {/* Yoqilg'i turi - select */}
                 {expenseForm.category === 'fuel' && (
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">Yoqilg'i turi</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <select
+                      value={expenseForm.type}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, type: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-green-500 focus:outline-none appearance-none cursor-pointer"
+                    >
                       {FUEL_TYPES.map(({ value, label, icon }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setExpenseForm({ ...expenseForm, type: value })}
-                          className={`p-2.5 rounded-xl border text-center transition ${
-                            expenseForm.type === value
-                              ? 'border-green-500 bg-green-500/20 text-white'
-                              : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                          }`}
-                        >
-                          <span className="text-lg">{icon}</span>
-                          <p className="text-[10px] mt-0.5">{label}</p>
-                        </button>
+                        <option key={value} value={value} className="bg-slate-800 text-white">
+                          {icon} {label}
+                        </option>
                       ))}
-                    </div>
+                    </select>
                   </div>
                 )}
 
-                {/* Yoqilg'i uchun batafsil maydonlar */}
+                {/* Yoqilg'i uchun miqdor (ixtiyoriy) */}
                 {expenseForm.category === 'fuel' && (
-                  <>
-                    {/* Miqdor va narx */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">
-                          Miqdori ({FUEL_TYPES.find(f => f.value === expenseForm.type)?.unit || 'litr'})
-                        </label>
-                        <input
-                          type="number"
-                          value={expenseForm.quantity}
-                          onChange={(e) => {
-                            const qty = e.target.value
-                            const price = expenseForm.pricePerUnit
-                            setExpenseForm({ 
-                              ...expenseForm, 
-                              quantity: qty,
-                              amount: qty && price ? Math.round(Number(qty) * Number(price)) : expenseForm.amount
-                            })
-                          }}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none"
-                          placeholder="50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">
-                          1 {FUEL_TYPES.find(f => f.value === expenseForm.type)?.unit || 'litr'} narxi
-                        </label>
-                        <input
-                          type="number"
-                          value={expenseForm.pricePerUnit}
-                          onChange={(e) => {
-                            const price = e.target.value
-                            const qty = expenseForm.quantity
-                            setExpenseForm({ 
-                              ...expenseForm, 
-                              pricePerUnit: price,
-                              amount: qty && price ? Math.round(Number(qty) * Number(price)) : expenseForm.amount
-                            })
-                          }}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none"
-                          placeholder="12500"
-                        />
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Miqdori ({FUEL_TYPES.find(f => f.value === expenseForm.type)?.unit || 'litr'}) - ixtiyoriy
+                    </label>
+                    <input
+                      type="number"
+                      value={expenseForm.quantity}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none"
+                      placeholder="50"
+                    />
+                  </div>
+                )}
 
-                    {/* Odometr */}
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        <Gauge size={14} className="inline mr-1" /> Odometr (km)
-                      </label>
-                      <input
-                        type="number"
-                        value={expenseForm.odometer}
-                        onChange={(e) => setExpenseForm({ ...expenseForm, odometer: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                        placeholder={flight?.startOdometer ? `Boshlang'ich: ${flight.startOdometer} km` : "123456"}
-                      />
-                      {flight?.startOdometer > 0 && expenseForm.odometer && (
-                        <p className="text-xs text-blue-400 mt-1">
-                          Yurgan masofa: {Number(expenseForm.odometer) - flight.startOdometer} km
-                        </p>
-                      )}
-                    </div>
+                {/* Odometr - faqat yoqilg'i uchun */}
+                {expenseForm.category === 'fuel' && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      <Gauge size={14} className="inline mr-1" /> Odometr (km) - ixtiyoriy
+                    </label>
+                    <input
+                      type="number"
+                      value={expenseForm.odometer}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, odometer: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                      placeholder={flight?.startOdometer ? `Boshlang'ich: ${flight.startOdometer} km` : "123456"}
+                    />
+                    {flight?.startOdometer > 0 && expenseForm.odometer && (
+                      <p className="text-xs text-blue-400 mt-1">
+                        Yurgan masofa: {Number(expenseForm.odometer) - flight.startOdometer} km
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                    {/* AZS nomi va joylashuv */}
-                    <div>
+                {/* AZS nomi va joylashuv - faqat yoqilg'i uchun */}
+                {expenseForm.category === 'fuel' && (
+                  <div>
                       <label className="block text-sm font-medium text-slate-400 mb-2">
                         <MapPin size={14} className="inline mr-1" /> Joylashuv
                       </label>
@@ -1446,8 +1368,7 @@ export default function FlightDetail() {
                           </button>
                         </div>
                       )}
-                    </div>
-                  </>
+                  </div>
                 )}
 
                 {/* Summa */}

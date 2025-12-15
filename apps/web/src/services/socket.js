@@ -7,10 +7,11 @@ const getSocketURL = () => {
   
   console.log('🔗 Socket URL aniqlash:', { apiUrl, hostname })
   
-  // Agar VITE_API_URL berilgan bo'lsa
+  // Agar VITE_API_URL berilgan bo'lsa - /api ni olib tashlash
   if (apiUrl) {
-    console.log('🔗 Socket URL (env):', apiUrl)
-    return apiUrl
+    const socketUrl = apiUrl.replace('/api', '').replace(/\/$/, '')
+    console.log('🔗 Socket URL (env):', socketUrl)
+    return socketUrl
   }
   
   // Localhost da
