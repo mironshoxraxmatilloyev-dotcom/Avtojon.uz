@@ -13,9 +13,21 @@ import { showToast } from '../../components/Toast'
 import { connectSocket, joinDriverRoom } from '../../services/socket'
 import { DriverHomeSkeleton } from '../../components/ui'
 
-const truckIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3097/3097180.png',
-    iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
+// Yashil dumaloq nuqta - haydovchi joylashuvi uchun
+const driverLocationIcon = L.divIcon({
+    className: 'driver-location-marker',
+    html: `
+        <div style="position: relative; width: 24px; height: 24px;">
+            <div style="position: absolute; inset: 0; background: #10b981; border-radius: 50%; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; opacity: 0.75;"></div>
+            <div style="position: relative; width: 24px; height: 24px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);"></div>
+        </div>
+        <style>
+            @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        </style>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12]
 })
 
 const startIcon = new L.Icon({
@@ -1031,7 +1043,7 @@ export default function DriverHome() {
                                         />
                                         
                                         {/* Haydovchi joylashuvi */}
-                                        <Marker position={[currentLocation.lat, currentLocation.lng]} icon={truckIcon}>
+                                        <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverLocationIcon}>
                                             <Popup>
                                                 <div className="text-center p-2">
                                                     <p className="font-bold">{user?.fullName}</p>
