@@ -47,6 +47,7 @@ router.post('/register', registerLimiter, validate(authSchemas.register), asyncH
 
 // Umumiy login (admin va shofyor uchun)
 router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(async (req, res) => {
+  console.log('🔑 Login so\'rovi keldi:', req.body?.username);
   const { username, password } = req.body;
   const cleanUsername = username.toLowerCase().trim();
 
