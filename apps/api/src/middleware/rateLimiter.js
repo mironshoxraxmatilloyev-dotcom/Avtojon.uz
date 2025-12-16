@@ -77,6 +77,7 @@ const apiLimiter = createRateLimiter({
 });
 
 // Login limiter - 5 ta urinishdan keyin 1 soat blok
+// Username + IP kombinatsiyasi
 const loginLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000, // 1 soat
   max: 5,
