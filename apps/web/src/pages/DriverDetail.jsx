@@ -637,7 +637,7 @@ export default function DriverDetail() {
                 </button>
               )}
               <button 
-                onClick={() => navigate('/dashboard/trips')}
+                onClick={() => navigate('/dashboard/flights')}
                 className="w-full p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3"
               >
                 <Route size={18} className="sm:w-5 sm:h-5 text-blue-400" />

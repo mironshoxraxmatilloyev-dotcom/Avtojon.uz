@@ -124,7 +124,8 @@ export default function FlightDetail() {
   const [submitting, setSubmitting] = useState(false)
 
   const fetchFlight = useCallback(async (showLoader = true) => {
-    if (showLoader) setLoading(true)
+    // Agar flight allaqachon mavjud bo'lsa, loading ko'rsatmaymiz
+    if (showLoader && !flight) setLoading(true)
     setError(null)
     try {
       const res = await api.get(`/flights/${id}`)
@@ -141,10 +142,10 @@ export default function FlightDetail() {
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, flight])
 
   // Dastlabki yuklash
-  useEffect(() => { fetchFlight() }, [fetchFlight])
+  useEffect(() => { fetchFlight() }, [id]) // faqat id o'zgarganda
   
   // Socket orqali realtime yangilanishlar
   useEffect(() => {
@@ -301,14 +302,30 @@ export default function FlightDetail() {
       distance: Number(legForm.distance) || 0
     }
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    const tempLeg = {
+      _id: 'temp_' + Date.now(),
+      ...legData,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    }
+    setFlight(prev => ({
+      ...prev,
+      legs: [...(prev.legs || []), tempLeg],
+      totalPayment: (prev.totalPayment || 0) + (legData.payment || 0),
+      totalGivenBudget: (prev.totalGivenBudget || 0) + (legData.givenBudget || 0),
+      totalDistance: (prev.totalDistance || 0) + (legData.distance || 0),
+      name: prev.legs?.length === 0 ? `${legData.fromCity} → ${legData.toCity}` : prev.name
+    }))
     setShowLegModal(false)
     setLegForm({ fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
     showToast.success(`${fromCity} → ${legForm.toCity} qo'shildi`)
 
     // Fonda API
     api.post(`/flights/${id}/legs`, legData)
-      .then(() => fetchFlight())
+      .then((res) => {
+        if (res.data?.data) setFlight(res.data.data)
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
         fetchFlight()
@@ -348,6 +365,18 @@ export default function FlightDetail() {
       payload.location = expenseForm.location || null
     }
 
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    const tempExpense = {
+      _id: 'temp_' + Date.now(),
+      ...payload,
+      createdAt: new Date().toISOString()
+    }
+    setFlight(prev => ({
+      ...prev,
+      expenses: [...(prev.expenses || []), tempExpense],
+      totalExpenses: (prev.totalExpenses || 0) + payload.amount,
+      finalBalance: (prev.totalGivenBudget || 0) - ((prev.totalExpenses || 0) + payload.amount)
+    }))
     setShowExpenseModal(false)
     setExpenseForm({ 
       category: 'fuel', type: 'fuel_benzin', amount: '', description: '', 
@@ -357,7 +386,9 @@ export default function FlightDetail() {
     
     // Fonda API so'rovi
     api.post(`/flights/${id}/expenses`, payload)
-      .then(() => fetchFlight())
+      .then((res) => {
+        if (res.data?.data) setFlight(res.data.data)
+      })
       .catch((error) => {
         showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
         fetchFlight()
@@ -376,11 +407,21 @@ export default function FlightDetail() {
 
     if (!confirmed) return
 
+    // 🚀 OPTIMISTIC UPDATE - UI dan darhol o'chirish
+    const deletedExpense = flight.expenses?.find(e => e._id === expenseId)
+    setFlight(prev => ({
+      ...prev,
+      expenses: prev.expenses?.filter(e => e._id !== expenseId) || [],
+      totalExpenses: (prev.totalExpenses || 0) - (deletedExpense?.amount || 0),
+      finalBalance: (prev.totalGivenBudget || 0) - ((prev.totalExpenses || 0) - (deletedExpense?.amount || 0))
+    }))
     showToast.success('Xarajat o\'chirildi')
 
     // Fonda API
     api.delete(`/flights/${id}/expenses/${expenseId}`)
-      .then(() => fetchFlight())
+      .then((res) => {
+        if (res.data?.data) setFlight(res.data.data)
+      })
       .catch(() => {
         showToast.error('Xarajatni o\'chirishda xatolik')
         fetchFlight()
@@ -482,15 +523,27 @@ export default function FlightDetail() {
       endFuel: Number(completeForm.endFuel) || 0
     }
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    setFlight(prev => ({
+      ...prev,
+      status: 'completed',
+      endOdometer: completeData.endOdometer,
+      endFuel: completeData.endFuel
+    }))
     setShowCompleteModal(false)
     showToast.success('Reys yopildi!')
 
     // Fonda API
     api.put(`/flights/${id}/complete`, completeData)
-      .then(() => fetchFlight())
+      .then((res) => {
+        // Haqiqiy data bilan yangilash
+        if (res.data?.data) {
+          setFlight(res.data.data)
+        }
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
+        // Xatolik - qayta yuklash
         fetchFlight()
       })
   }

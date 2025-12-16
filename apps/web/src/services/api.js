@@ -3,9 +3,17 @@ import axios from 'axios'
 // 🚀 API base URL
 const getBaseURL = () => {
   const apiUrl = import.meta.env.VITE_API_URL
-  if (apiUrl) {
+  
+  // Agar VITE_API_URL berilmagan yoki bo'sh bo'lsa - proxy ishlatish
+  if (!apiUrl || apiUrl === '/api') {
+    return '/api'
+  }
+  
+  // To'liq URL berilgan bo'lsa
+  if (apiUrl.startsWith('http')) {
     return apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api'
   }
+  
   return '/api'
 }
 
@@ -84,9 +92,10 @@ const api = axios.create({
   timeout: 15000 // 15 sekund timeout
 })
 
-// 🎯 Simple request cache (GET uchun)
+// 🎯 Advanced request cache (GET uchun)
 const cache = new Map()
-const CACHE_TTL = 5000 // 5 sekund
+const CACHE_TTL = 30000 // 30 sekund - uzoqroq cache
+const STALE_TTL = 60000 // 1 daqiqa - stale data ham ishlatiladi
 
 // 🎯 Retry configuration
 const MAX_RETRIES = 2
@@ -99,20 +108,29 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
   
-  // 🚀 GET request caching
+  // 🚀 GET request caching - SWR pattern
   if (config.method === 'get' && !config.params?.noCache) {
     const cacheKey = config.url + JSON.stringify(config.params || {})
     const cached = cache.get(cacheKey)
     
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      config.adapter = () => Promise.resolve({
-        data: cached.data,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config,
-        request: {}
-      })
+    if (cached) {
+      const age = Date.now() - cached.timestamp
+      
+      // Fresh cache - darhol qaytarish
+      if (age < CACHE_TTL) {
+        config.adapter = () => Promise.resolve({
+          data: cached.data,
+          status: 200,
+          statusText: 'OK',
+          headers: { 'x-cache': 'HIT' },
+          config,
+          request: {}
+        })
+      }
+      // Stale cache - darhol qaytarish, fonda yangilash
+      else if (age < STALE_TTL && !config.params?.forceRefresh) {
+        config._staleData = cached.data
+      }
     }
   }
   

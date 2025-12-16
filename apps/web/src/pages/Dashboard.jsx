@@ -722,7 +722,7 @@ export default function Dashboard() {
                 <p className="text-xs sm:text-sm text-gray-500">Oxirgi faoliyat</p>
               </div>
             </div>
-            <button onClick={() => navigate('/dashboard/trips')} className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1">
+            <button onClick={() => navigate('/dashboard/flights')} className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1">
               Barchasi <ArrowUpRight size={12} className="sm:w-3.5 sm:h-3.5" />
             </button>
           </div>

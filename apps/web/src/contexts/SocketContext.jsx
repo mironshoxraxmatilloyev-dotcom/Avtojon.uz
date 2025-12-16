@@ -6,19 +6,27 @@ const SocketContext = createContext(null)
 
 // 🚀 Socket URL - bir marta hisoblash
 const getSocketURL = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_SOCKET_URL
+  const socketUrl = import.meta.env.VITE_SOCKET_URL
+  const apiUrl = import.meta.env.VITE_API_URL
   const hostname = window.location.hostname
   
-  // VITE_API_URL dan /api ni olib tashlash (socket uchun)
-  if (apiUrl) {
-    const socketUrl = apiUrl.replace('/api', '').replace(/\/$/, '')
-    console.log('🔌 Socket URL (env):', socketUrl)
+  // Agar VITE_SOCKET_URL berilgan bo'lsa
+  if (socketUrl && socketUrl.startsWith('http')) {
     return socketUrl
   }
   
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3000'
+  // Agar VITE_API_URL to'liq URL bo'lsa (http bilan boshlansa)
+  if (apiUrl && apiUrl.startsWith('http')) {
+    return apiUrl.replace('/api', '').replace(/\/$/, '')
   }
+  
+  // Development - proxy orqali (relative URL)
+  // Socket ham shu host orqali ulanadi
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://${hostname}:3000`
+  }
+  
+  // Boshqa holatlar - joriy host
   return `http://${hostname}:3000`
 }
 

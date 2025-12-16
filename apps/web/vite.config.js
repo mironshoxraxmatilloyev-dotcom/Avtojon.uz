@@ -46,13 +46,13 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: env.VITE_PROXY_TARGET || 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path
         },
         '/socket.io': {
-          target: 'http://localhost:3000',
+          target: env.VITE_PROXY_TARGET || 'http://localhost:3000',
           changeOrigin: true,
           ws: true
         }
