@@ -41,9 +41,6 @@ router.post('/calculate', protect, businessOnly, async (req, res) => {
     const endDate = new Date(periodEnd);
     endDate.setHours(23, 59, 59, 999);
 
-    console.log('Calculating salary for driver:', driverId);
-    console.log('Period:', startDate, 'to', endDate);
-
     // Tugatilgan reyslarni olish - user va driver bo'yicha filter
     const trips = await Trip.find({
       user: req.user._id,
@@ -51,25 +48,13 @@ router.post('/calculate', protect, businessOnly, async (req, res) => {
       status: 'completed'
     });
     
-    console.log('All completed trips for driver:', trips.length);
-    console.log('Trips details:', trips.map(t => ({
-      id: t._id,
-      completedAt: t.completedAt,
-      createdAt: t.createdAt,
-      tripPayment: t.tripPayment
-    })));
-    
     // Sana bo'yicha filter - completedAt yoki createdAt ishlatish
     const filteredTrips = trips.filter(t => {
       const completedDate = t.completedAt || t.createdAt;
       if (!completedDate) return false;
       const completed = new Date(completedDate);
-      const inRange = completed >= startDate && completed <= endDate;
-      console.log(`Trip ${t._id}: completedAt=${t.completedAt}, createdAt=${t.createdAt}, inRange=${inRange}`);
-      return inRange;
+      return completed >= startDate && completed <= endDate;
     });
-    
-    console.log('Filtered trips in period:', filteredTrips.length);
 
     // Xarajatlarni olish
     const expenses = await Expense.find({
@@ -83,7 +68,6 @@ router.post('/calculate', protect, businessOnly, async (req, res) => {
     const totalBonus = filteredTrips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0);
     const totalPenalty = filteredTrips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0);
     
-    console.log('Calculated:', { tripsCount, tripsPayment, totalBonus, totalPenalty });
     const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
     const netSalary = driver.baseSalary + tripsPayment + totalBonus - totalPenalty;

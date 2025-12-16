@@ -409,12 +409,16 @@ export default function FlightDetail() {
 
     // 🚀 OPTIMISTIC UPDATE - UI dan darhol o'chirish
     const deletedExpense = flight.expenses?.find(e => e._id === expenseId)
-    setFlight(prev => ({
-      ...prev,
-      expenses: prev.expenses?.filter(e => e._id !== expenseId) || [],
-      totalExpenses: (prev.totalExpenses || 0) - (deletedExpense?.amount || 0),
-      finalBalance: (prev.totalGivenBudget || 0) - ((prev.totalExpenses || 0) - (deletedExpense?.amount || 0))
-    }))
+    const deletedAmount = deletedExpense?.amount || 0
+    setFlight(prev => {
+      const newTotalExpenses = (prev.totalExpenses || 0) - deletedAmount
+      return {
+        ...prev,
+        expenses: prev.expenses?.filter(e => e._id !== expenseId) || [],
+        totalExpenses: newTotalExpenses,
+        finalBalance: (prev.totalGivenBudget || 0) - newTotalExpenses
+      }
+    })
     showToast.success('Xarajat o\'chirildi')
 
     // Fonda API
@@ -1230,17 +1234,17 @@ export default function FlightDetail() {
             <div className="absolute inset-0" onClick={() => setShowExpenseModal(false)} />
             <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                       <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h2 className="text-base sm:text-lg font-bold text-white">Xarajat qo'shish</h2>
-                      <p className="text-orange-300 text-xs sm:text-sm truncate">{flight.name}</p>
+                      <p className="text-orange-300 text-xs sm:text-sm truncate max-w-[200px] sm:max-w-[280px]">{flight.name}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowExpenseModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
+                  <button onClick={() => setShowExpenseModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400 flex-shrink-0">
                     <X size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>

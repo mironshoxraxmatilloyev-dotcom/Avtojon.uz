@@ -2,11 +2,14 @@ const mongoose = require('mongoose');
 
 // ============ XALQARO REYS UCHUN SXEMALAR ============
 
+// Qo'llab-quvvatlanadigan davlatlar
+const SUPPORTED_COUNTRIES = ['UZB', 'KZ', 'RU', 'TJ', 'KG', 'TM', 'AF', 'CN', 'TR', 'IR', 'AZ', 'GE', 'BY', 'UA', 'PL', 'DE', 'LT', 'LV', 'EE', 'FI'];
+
 // Yo'nalish nuqtasi (waypoint) sxemasi
 const waypointSchema = new mongoose.Schema({
   country: {
     type: String,
-    enum: ['UZB', 'KZ', 'RU'],
+    enum: SUPPORTED_COUNTRIES,
     required: true
   },
   city: {
@@ -32,12 +35,12 @@ const waypointSchema = new mongoose.Schema({
 const borderCrossingSchema = new mongoose.Schema({
   fromCountry: {
     type: String,
-    enum: ['UZB', 'KZ', 'RU'],
+    enum: SUPPORTED_COUNTRIES,
     required: true
   },
   toCountry: {
     type: String,
-    enum: ['UZB', 'KZ', 'RU'],
+    enum: SUPPORTED_COUNTRIES,
     required: true
   },
   borderName: String,
@@ -199,7 +202,7 @@ const flightSchema = new mongoose.Schema({
   // Qaysi davlatlardan o'tadi
   countriesInRoute: [{
     type: String,
-    enum: ['UZB', 'KZ', 'RU']
+    enum: SUPPORTED_COUNTRIES
   }],
   
   // Boshlang'ich ma'lumotlar

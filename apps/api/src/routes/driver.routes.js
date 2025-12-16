@@ -15,20 +15,7 @@ router.get('/locations', protect, businessOnly, async (req, res) => {
     
     const drivers = await Driver.find({ user: req.user._id, isActive: true })
       .select('fullName phone status lastLocation')
-      .lean(); // Tezroq ishlash uchun
-    
-    // Debug: Joylashuvlarni ko'rsatish
-    console.log('📍 Shofyorlar joylashuvi so\'raldi:');
-    console.log('   Biznesmen ID:', req.user._id);
-    console.log('   Topilgan shofyorlar:', drivers.length);
-    drivers.forEach(d => {
-      if (d.lastLocation?.lat) {
-        const updatedAt = d.lastLocation.updatedAt ? new Date(d.lastLocation.updatedAt).toLocaleTimeString() : '?';
-        console.log(`   ✅ ${d.fullName}: ${d.lastLocation.lat.toFixed(4)}, ${d.lastLocation.lng.toFixed(4)} (±${d.lastLocation.accuracy || '?'}m) @ ${updatedAt}`);
-      } else {
-        console.log(`   ❌ ${d.fullName}: Joylashuv yo'q`);
-      }
-    });
+      .lean();
     
     res.json({ success: true, data: drivers, timestamp: Date.now() });
   } catch (error) {

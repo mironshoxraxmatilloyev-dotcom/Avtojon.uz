@@ -20,6 +20,21 @@ body {
   /* GPU acceleration */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  overflow-x: hidden;
+}
+
+/* Modal ochilganda scroll yo'qotish */
+body[style*="overflow: hidden"],
+body[style*="overflow:hidden"],
+html[style*="overflow: hidden"],
+html[style*="overflow:hidden"] {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+
+/* Modal container - horizontal scroll yo'qotish */
+.fixed.inset-0 {
+  overflow-x: hidden !important;
 }
 
 /* 🚀 GPU Acceleration for animations */
@@ -114,6 +129,26 @@ body {
 /* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Modal scrollbar yashirish */
+.fixed.inset-0 {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden !important;
+}
+
+.fixed.inset-0::-webkit-scrollbar {
+  display: none;
+}
+
+.fixed.inset-0 * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fixed.inset-0 *::-webkit-scrollbar {
+  display: none;
+}
 
 /* Mobile map fixes */
 @media (max-width: 640px) {

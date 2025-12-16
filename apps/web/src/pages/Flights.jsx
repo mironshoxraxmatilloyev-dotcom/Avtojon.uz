@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { 
   Plus, X, Route, Calendar, Globe, Flag,
   Activity, CheckCircle, Fuel, Gauge, Wallet,

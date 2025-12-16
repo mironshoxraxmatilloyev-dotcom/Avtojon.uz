@@ -63,33 +63,24 @@ async function getAddressFromCoords(lat, lng) {
 // OSRM API orqali yo'l bo'ylab marshrut olish (backend proxy orqali)
 async function getRouteFromOSRM(startLat, startLng, endLat, endLng) {
     try {
-        console.log('🗺️ Marshrut so\'rov yuborilmoqda...')
-        
         // Backend proxy orqali so'rov
         const start = `${startLng},${startLat}`
         const end = `${endLng},${endLat}`
         const url = `/api/route?start=${start}&end=${end}`
         
-        console.log('🗺️ URL:', url)
-        
         const response = await fetch(url)
         const data = await response.json()
         
-        console.log('🗺️ Javob:', data)
-        
         if (data.code === 'Ok' && data.routes && data.routes[0]) {
             const route = data.routes[0]
-            console.log('✅ Marshrut topildi:', route.distance, 'm')
             return {
                 coordinates: route.geometry.coordinates.map(coord => [coord[1], coord[0]]), // [lat, lng]
                 distance: Math.round(route.distance / 1000), // km
                 duration: Math.round(route.duration / 60) // daqiqa
             }
         }
-        console.log('⚠️ Marshrut topilmadi:', data.code, data.message)
         return null
-    } catch (error) {
-        console.error('❌ Marshrut xatosi:', error)
+    } catch {
         return null
     }
 }

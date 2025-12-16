@@ -46,8 +46,6 @@ router.post('/me/location', protect, driverOnly, locationLimiter, validate(drive
       { new: true }
     );
 
-    console.log(`📍 GPS yangilandi: ${req.driver.fullName} - ${latNum.toFixed(4)}, ${lngNum.toFixed(4)} (±${accuracyNum || '?'}m)`);
-
     // 🔌 Socket.io orqali biznesmenga real-time yuborish
     const io = req.app.get('io');
     if (io) {
@@ -85,11 +83,9 @@ router.get('/me/vehicles', protect, driverOnly, async (req, res) => {
 // Shofyor reyslari (pending va in_progress ham)
 router.get('/me/trips', protect, driverOnly, async (req, res) => {
   try {
-    console.log('Driver ID:', req.driver._id);
     const trips = await Trip.find({ driver: req.driver._id })
       .populate('vehicle', 'plateNumber brand model')
       .sort({ createdAt: -1 });
-    console.log('Found trips:', trips.length);
     res.json({ success: true, data: trips });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -125,21 +121,10 @@ router.put('/me/trips/:id/start', protect, driverOnly, async (req, res) => {
     // 🔔 Socket.io orqali biznesmenga xabar yuborish
     const io = req.app.get('io');
     if (io) {
-      const businessId = trip.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-started', {
+      io.to(`business-${trip.user}`).emit('trip-started', {
         trip: populated,
         message: `${req.driver.fullName} reysni boshladi!`
       });
-      console.log(`📢 Reys boshlandi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
     }
 
     res.json({ success: true, data: populated });
@@ -180,21 +165,10 @@ router.post('/me/trips/start', protect, driverOnly, async (req, res) => {
     // 🔔 Socket.io orqali biznesmenga xabar yuborish
     const io = req.app.get('io');
     if (io) {
-      const businessId = driver.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-started', {
+      io.to(`business-${driver.user}`).emit('trip-started', {
         trip: populated,
         message: `${driver.fullName} yangi reys boshladi!`
       });
-      console.log(`📢 Yangi reys boshlandi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
     }
 
     res.status(201).json({ success: true, data: populated });
@@ -246,21 +220,10 @@ router.put('/me/trips/:id/complete', protect, driverOnly, async (req, res) => {
     // 🔔 Socket.io orqali biznesmenga xabar yuborish
     const io = req.app.get('io');
     if (io) {
-      const businessId = trip.user.toString();
-      const roomName = `business-${businessId}`;
-      
-      // Debug: xonadagi clientlar sonini ko'rish
-      const room = io.sockets.adapter.rooms.get(roomName);
-      const clientsCount = room ? room.size : 0;
-      console.log(`📊 Xona: ${roomName}, Clientlar soni: ${clientsCount}`);
-      
-      io.to(roomName).emit('trip-completed', {
+      io.to(`business-${trip.user}`).emit('trip-completed', {
         trip: populated,
         message: `${req.driver.fullName} reysni tugatdi!`
       });
-      console.log(`📢 Reys tugatildi xabari yuborildi: ${roomName}`);
-    } else {
-      console.log('⚠️ Socket.io topilmadi!');
     }
 
     res.json({ success: true, data: populated });
@@ -293,16 +256,6 @@ router.post('/me/expenses', protect, driverOnly, async (req, res) => {
     const rate = exchangeRate || 1;
     const amountNum = Number(amount);
     const amountInUSD = curr === 'USD' ? amountNum : amountNum / rate;
-    
-    console.log('📦 Xarajat qo\'shilmoqda:', {
-      amount: amountNum,
-      currency: curr,
-      exchangeRate: rate,
-      tripId,
-      expenseType,
-      tripBudget: trip.tripBudget,
-      currentTotalExpenses: trip.totalExpenses
-    });
 
     // Xarajat turiga qarab Trip modeliga qo'shish
     if (expenseType === 'fuel') {
@@ -368,8 +321,6 @@ router.post('/me/expenses', protect, driverOnly, async (req, res) => {
     }
 
     // totalExpenses va remainingBudget Trip model pre('save') da avtomatik hisoblanadi
-    console.log('✅ Xarajat qo\'shildi, trip.save() chaqirilmoqda...');
-
     await trip.save();
 
     // Eski Expense modeliga ham yozish (orqaga moslik)
@@ -490,7 +441,6 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
         flight: populatedFlight,
         message: `${req.driver.fullName} bosqichni tugatdi: ${leg.fromCity} → ${leg.toCity}`
       });
-      console.log(`📢 Bosqich tugatildi xabari yuborildi: business-${flight.user}`);
     }
 
     res.json({ success: true, data: populatedFlight });

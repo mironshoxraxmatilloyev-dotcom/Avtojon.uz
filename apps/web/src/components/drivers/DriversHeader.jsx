@@ -1,67 +1,58 @@
-import { memo } from 'react'
 import { Plus, Calendar, ArrowUpRight, Users, Activity, User, Truck } from 'lucide-react'
 
-// 🎯 Get greeting helper
-const getGreeting = () => {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Xayrli tong'
-  if (hour < 18) return 'Xayrli kun'
-  return 'Xayrli kech'
-}
+export default function DriversHeader({ user, drivers, vehicles, onAddDriver }) {
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Xayrli tong'
+    if (hour < 18) return 'Xayrli kun'
+    return 'Xayrli kech'
+  }
 
-// 🚀 Drivers Page Header
-export const DriversHeader = memo(function DriversHeader({ 
-  user, 
-  stats, 
-  onAddDriver 
-}) {
-  const quickStats = [
-    { label: 'Jami shofyorlar', value: stats.total, icon: Users, color: 'from-blue-400 to-blue-600' },
-    { label: 'Reysda', value: stats.busy, icon: Activity, color: 'from-orange-400 to-orange-600' },
-    { label: "Bo'sh", value: stats.free, icon: User, color: 'from-green-400 to-green-600' },
-    { label: 'Mashinalar', value: stats.vehicles, icon: Truck, color: 'from-purple-400 to-purple-600' },
+  const stats = [
+    { label: 'Jami', value: drivers.length, icon: Users, color: 'from-blue-400 to-blue-600' },
+    { label: 'Reysda', value: drivers.filter(d => d.status === 'busy').length, icon: Activity, color: 'from-orange-400 to-orange-600' },
+    { label: "Bo'sh", value: drivers.filter(d => d.status === 'free').length, icon: User, color: 'from-green-400 to-green-600' },
+    { label: 'Mashinalar', value: vehicles.length, icon: Truck, color: 'from-purple-400 to-purple-600' },
   ]
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
-      <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
-      <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
+    <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl">
+      <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-24 sm:-mr-32 md:-mr-48 -mt-24 sm:-mt-32 md:-mt-48" />
+      <div className="absolute bottom-0 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-16 sm:-ml-24 md:-ml-32 -mb-16 sm:-mb-24 md:-mb-32" />
 
-      <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
         <div>
-          <div className="flex items-center gap-2 text-blue-300 text-sm mb-2">
-            <Calendar size={14} />
+          <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1 sm:mb-2">
+            <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
             <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
             {getGreeting()}, {user?.companyName || 'Admin'}! 👋
           </h1>
-          <p className="text-blue-200">Shofyorlarni boshqaring va kuzating</p>
+          <p className="text-blue-200 text-sm sm:text-base">Shofyorlarni boshqaring va kuzating</p>
         </div>
-
-        <div className="flex gap-3">
-          <button 
-            onClick={onAddDriver}
-            className="group px-6 py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10"
-          >
-            <Plus size={18} />
-            Yangi shofyor
-            <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
-        </div>
+        <button 
+          onClick={onAddDriver} 
+          className="group px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-slate-900 rounded-lg sm:rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
+        >
+          <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <span className="hidden sm:inline">Yangi shofyor</span>
+          <span className="sm:hidden">Qo'shish</span>
+          <ArrowUpRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform hidden sm:block" />
+        </button>
       </div>
 
-      {/* Quick Stats */}
-      <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-        {quickStats.map((item, i) => (
-          <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                <item.icon size={18} className="text-white" />
+      {/* Stats */}
+      <div className="relative grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8">
+        {stats.map((item, i) => (
+          <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                <item.icon size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{item.value}</p>
-                <p className="text-blue-200 text-xs">{item.label}</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold">{item.value}</p>
+                <p className="text-blue-200 text-[10px] sm:text-xs">{item.label}</p>
               </div>
             </div>
           </div>
@@ -69,6 +60,4 @@ export const DriversHeader = memo(function DriversHeader({
       </div>
     </div>
   )
-})
-
-export default DriversHeader
+}

@@ -293,12 +293,10 @@ export default function DriverHome() {
 
     const sendLocation = async (position) => {
         const accuracy = position.coords.accuracy
-        console.log('🟢 GPS olindi:', position.coords.latitude, position.coords.longitude, '±', accuracy, 'm')
 
         // Juda yomon aniqlikni rad etish (100km dan ko'p = kesh yoki xato)
         if (accuracy > 100000) {
             setGpsStatus('waiting')
-            console.log('⚠️ GPS aniqlik juda yomon, kutilmoqda...')
             return
         }
 
@@ -333,28 +331,22 @@ export default function DriverHome() {
         // Server o'zi qaror qiladi - saqlash yoki yo'q
         try {
             await api.post('/driver/me/location', loc)
-            console.log('✅ GPS serverga yuborildi')
-        } catch (err) {
-            console.log('❌ GPS yuborishda xatolik:', err.message)
+        } catch {
+            // Silent - GPS xatosi
         }
     }
 
     const handleGpsError = (error, setRetry) => {
-        console.log('🔴 GPS xatolik:', error.code, error.message)
         if (error.code === 1) {
             setGpsStatus('denied')
-            console.log('GPS ruxsat berilmagan')
         } else if (error.code === 2) {
             setGpsStatus('unavailable')
-            console.log('GPS mavjud emas')
             if (setRetry) setGpsRetryCount(prev => prev + 1)
         } else if (error.code === 3) {
             setGpsStatus('timeout')
-            console.log('GPS timeout')
             if (setRetry) setGpsRetryCount(prev => prev + 1)
         } else {
             setGpsStatus('error')
-            console.log('GPS noma\'lum xatolik')
         }
     }
 

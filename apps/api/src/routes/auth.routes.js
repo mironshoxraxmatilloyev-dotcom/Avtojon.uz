@@ -28,7 +28,7 @@ router.post('/register', registerLimiter, validate(authSchemas.register), asyncH
   });
   
   // Token juftligi (access + refresh)
-  const tokens = generateTokenPair(user, 'admin');
+  const tokens = await generateTokenPair(user, 'admin');
 
   res.status(201).json({
     success: true,
@@ -54,7 +54,7 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
   // Avval admin tekshir
   const user = await User.findOne({ username: cleanUsername });
   if (user && await user.comparePassword(password)) {
-    const tokens = generateTokenPair(user, 'admin');
+    const tokens = await generateTokenPair(user, 'admin');
     return res.json({
       success: true,
       data: {
@@ -73,7 +73,7 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
   // Keyin shofyor tekshir (faqat aktiv shofyorlar)
   const driver = await Driver.findOne({ username: cleanUsername, isActive: true });
   if (driver && await driver.comparePassword(password)) {
-    const tokens = generateTokenPair(driver, 'driver');
+    const tokens = await generateTokenPair(driver, 'driver');
     return res.json({
       success: true,
       data: {
@@ -129,7 +129,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
 // Logout (barcha tokenlarni bekor qilish)
 router.post('/logout', protect, asyncHandler(async (req, res) => {
   const userId = req.driver?._id || req.user?._id;
-  const count = revokeAllUserTokens(userId);
+  const count = await revokeAllUserTokens(userId);
   
   res.json({
     success: true,
@@ -161,11 +161,11 @@ router.post('/change-password', protect, passwordLimiter, validate(authSchemas.c
   await user.save();
   
   // Barcha eski tokenlarni bekor qilish
-  revokeAllUserTokens(user._id);
+  await revokeAllUserTokens(user._id);
   
   // Yangi tokenlar
   const role = req.driver ? 'driver' : 'admin';
-  const tokens = generateTokenPair(user, role);
+  const tokens = await generateTokenPair(user, role);
   
   res.json({
     success: true,
@@ -194,7 +194,7 @@ router.post('/demo', loginLimiter, asyncHandler(async (req, res) => {
     });
   }
   
-  const tokens = generateTokenPair(demoUser, 'admin');
+  const tokens = await generateTokenPair(demoUser, 'admin');
   
   res.json({
     success: true,

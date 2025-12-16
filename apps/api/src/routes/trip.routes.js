@@ -193,7 +193,6 @@ router.post('/', protect, businessOnly, async (req, res) => {
         trip: populatedTrip,
         message: 'Sizga yangi reys tayinlandi!'
       });
-      console.log(`📢 Yangi reys xabari yuborildi: driver-${driverId}`);
     }
 
     res.status(201).json({ success: true, data: populatedTrip });
@@ -751,7 +750,6 @@ router.put('/:id/cancel', protect, async (req, res) => {
         trip: populatedTrip,
         message: 'Reys bekor qilindi!'
       });
-      console.log(`📢 Reys bekor qilindi xabari yuborildi: driver-${driverId}`);
     }
 
     res.json({ success: true, data: populatedTrip });

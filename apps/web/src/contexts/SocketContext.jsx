@@ -31,7 +31,6 @@ const getSocketURL = () => {
 }
 
 const SOCKET_URL = getSocketURL()
-console.log('🔌 Socket ulanish URL:', SOCKET_URL)
 
 export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null)

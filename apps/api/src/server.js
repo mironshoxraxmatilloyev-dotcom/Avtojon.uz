@@ -3,11 +3,15 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
 const connectDB = require('./config/database');
+const { connectRedis } = require('./config/redis');
 
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
 connectDB();
+
+// Connect to Redis (optional - fallback to memory if not available)
+connectRedis().catch(() => console.log('⚠️ Redis ishlamayapti, in-memory mode'));
 
 // HTTP server yaratish
 const server = http.createServer(app);
@@ -32,32 +36,14 @@ app.set('io', io);
 
 // Socket.io ulanishlar
 io.on('connection', (socket) => {
-  console.log('🔌 Client ulandi:', socket.id);
-
   // Biznesmen xonasiga qo'shilish
   socket.on('join-business', (businessId) => {
-    const roomName = `business-${businessId}`;
-    socket.join(roomName);
-    
-    // Debug: xonadagi clientlar sonini ko'rish
-    const room = io.sockets.adapter.rooms.get(roomName);
-    const clientsCount = room ? room.size : 0;
-    console.log(`📍 Biznesmen xonasiga qo'shildi: ${roomName}, Socket: ${socket.id}, Jami: ${clientsCount}`);
+    socket.join(`business-${businessId}`);
   });
 
   // Haydovchi xonasiga qo'shilish
   socket.on('join-driver', (driverId) => {
-    const roomName = `driver-${driverId}`;
-    socket.join(roomName);
-    
-    // Debug: xonadagi clientlar sonini ko'rish
-    const room = io.sockets.adapter.rooms.get(roomName);
-    const clientsCount = room ? room.size : 0;
-    console.log(`🚛 Haydovchi xonasiga qo'shildi: ${roomName}, Socket: ${socket.id}, Jami: ${clientsCount}`);
-  });
-
-  socket.on('disconnect', (reason) => {
-    console.log('❌ Client uzildi:', socket.id, 'Sabab:', reason);
+    socket.join(`driver-${driverId}`);
   });
 });
 

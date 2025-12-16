@@ -121,7 +121,6 @@ const driverSchemas = {
   })
 };
 
-
 // ==========================================
 // VEHICLE VALIDATSIYALARI
 // ==========================================
@@ -211,7 +210,7 @@ const flightSchemas = {
   }),
 
   addExpense: Joi.object({
-    type: Joi.string().valid('fuel', 'toll', 'food', 'repair', 'fine', 'other').required(),
+    type: Joi.string().valid('fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'toll', 'food', 'repair', 'fine', 'other').required(),
     amount: Joi.number().min(0).max(1000000000).required(),
     description: Joi.string().max(200).trim().allow(''),
     legIndex: Joi.number().integer().min(0)
@@ -226,7 +225,7 @@ const expenseSchemas = {
   create: Joi.object({
     trip: objectId,
     flight: objectId,
-    type: Joi.string().valid('fuel', 'toll', 'food', 'repair', 'fine', 'other').required(),
+    type: Joi.string().valid('fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'toll', 'food', 'repair', 'fine', 'other').required(),
     amount: Joi.number().min(0).max(1000000000).required(),
     description: Joi.string().max(500).trim().allow(''),
     date: Joi.date().max('now')
@@ -266,13 +265,14 @@ const paginationSchema = Joi.object({
 // NoSQL injection oldini olish
 const sanitizeInput = (input) => {
   if (typeof input === 'string') {
-    // $ va . bilan boshlanadigan kalitlarni olib tashlash
-    return input.replace(/[$.]/, '');
+    return input.replace(/[\$\.]/g, '');
   }
   if (typeof input === 'object' && input !== null) {
+    if (Array.isArray(input)) {
+      return input.map(item => sanitizeInput(item));
+    }
     const sanitized = {};
     for (const key of Object.keys(input)) {
-      // Xavfli kalitlarni o'tkazib yuborish
       if (key.startsWith('$') || key.includes('.')) continue;
       sanitized[key] = sanitizeInput(input[key]);
     }
@@ -298,7 +298,6 @@ const escapeHtml = (str) => {
 
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
-    // Input sanitizatsiyasi
     req[property] = sanitizeInput(req[property]);
     
     const { error, value } = schema.validate(req[property], {
@@ -324,11 +323,9 @@ const validate = (schema, property = 'body') => {
   };
 };
 
-// Query parametrlarini validatsiya qilish
 const validateQuery = (schema) => validate(schema, 'query');
 const validateParams = (schema) => validate(schema, 'params');
 
-// ObjectId parametrini validatsiya qilish
 const validateObjectId = (paramName = 'id') => {
   return (req, res, next) => {
     const id = req.params[paramName];
@@ -343,7 +340,6 @@ const validateObjectId = (paramName = 'id') => {
 };
 
 module.exports = {
-  // Schemas
   authSchemas,
   driverSchemas,
   vehicleSchemas,
@@ -352,18 +348,12 @@ module.exports = {
   expenseSchemas,
   salarySchemas,
   paginationSchema,
-  
-  // Validators
   validate,
   validateQuery,
   validateParams,
   validateObjectId,
-  
-  // Sanitizers
   sanitizeInput,
   escapeHtml,
-  
-  // Common rules
   objectId,
   phoneNumber,
   strongPassword,

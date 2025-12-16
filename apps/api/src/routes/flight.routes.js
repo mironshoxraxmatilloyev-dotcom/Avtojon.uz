@@ -4,43 +4,35 @@ const Flight = require('../models/Flight');
 const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
 const { protect, businessOnly } = require('../middleware/auth');
+const { asyncHandler, ApiError } = require('../middleware/errorHandler');
+const { validateObjectId } = require('../utils/validators');
 
 // Barcha reyslar
-router.get('/', protect, businessOnly, async (req, res) => {
-  try {
-    const { status, driverId } = req.query;
-    const filter = { user: req.user._id };
-    
-    if (status) filter.status = status;
-    if (driverId) filter.driver = driverId;
+router.get('/', protect, businessOnly, asyncHandler(async (req, res) => {
+  const { status, driverId } = req.query;
+  const filter = { user: req.user._id };
+  
+  if (status) filter.status = status;
+  if (driverId) filter.driver = driverId;
 
-    const flights = await Flight.find(filter)
-      .populate('driver', 'fullName phone')
-      .populate('vehicle', 'plateNumber brand')
-      .sort({ createdAt: -1 });
+  const flights = await Flight.find(filter)
+    .populate('driver', 'fullName phone')
+    .populate('vehicle', 'plateNumber brand')
+    .sort({ createdAt: -1 });
 
-    res.json({ success: true, data: flights });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+  res.json({ success: true, data: flights });
+}));
 
 // Bitta reys
-router.get('/:id', protect, async (req, res) => {
-  try {
-    const flight = await Flight.findById(req.params.id)
-      .populate('driver', 'fullName phone')
-      .populate('vehicle', 'plateNumber brand');
+router.get('/:id', protect, validateObjectId('id'), asyncHandler(async (req, res) => {
+  const flight = await Flight.findById(req.params.id)
+    .populate('driver', 'fullName phone')
+    .populate('vehicle', 'plateNumber brand');
 
-    if (!flight) {
-      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
-    }
+  if (!flight) throw new ApiError(404, 'Reys topilmadi');
 
-    res.json({ success: true, data: flight });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+  res.json({ success: true, data: flight });
+}));
 
 // Yangi reys ochish (boshlash)
 router.post('/', protect, businessOnly, async (req, res) => {

@@ -43,12 +43,8 @@ const corsOptions = {
       return allowed === origin;
     });
     
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log('⚠️ CORS blocked:', origin);
-      callback(null, true); // Development uchun hamma ruxsat
-    }
+    // Development uchun hamma ruxsat
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -278,7 +274,6 @@ async function tryOpenRouteService(startCoords, endCoords) {
     }
     return null;
   } catch (err) {
-    console.log('⚠️ ORS xato:', err.message);
     return null;
   }
 }
@@ -286,7 +281,6 @@ async function tryOpenRouteService(startCoords, endCoords) {
 app.get('/api/route', async (req, res) => {
   try {
     const { start, end } = req.query;
-    console.log('🗺️ Route so\'rov:', { start, end });
     
     if (!start || !end) {
       return res.status(400).json({ success: false, message: 'start va end parametrlari kerak' });
@@ -298,61 +292,33 @@ app.get('/api/route', async (req, res) => {
     // 1. OSRM serverlarni sinab ko'rish
     for (const server of OSRM_SERVERS) {
       try {
-        console.log(`🗺️ OSRM sinash: ${server}`);
         const result = await tryOSRM(start, end, server);
-        if (result) {
-          console.log('✅ OSRM marshrut topildi:', Math.round(result.routes[0].distance / 1000), 'km');
-          return res.json(result);
-        }
-      } catch (e) {
-        console.log(`⚠️ OSRM xato (${server}):`, e.message);
-      }
+        if (result) return res.json(result);
+      } catch (e) { /* silent */ }
     }
     
     // 2. Valhalla sinash
     try {
-      console.log('🗺️ Valhalla sinash...');
       const valhallaResult = await tryValhalla(startCoords, endCoords);
-      if (valhallaResult) {
-        console.log('✅ Valhalla marshrut topildi:', Math.round(valhallaResult.routes[0].distance / 1000), 'km');
-        return res.json(valhallaResult);
-      }
-    } catch (e) {
-      console.log('⚠️ Valhalla xato:', e.message);
-    }
+      if (valhallaResult) return res.json(valhallaResult);
+    } catch (e) { /* silent */ }
     
     // 3. GraphHopper sinash
     try {
-      console.log('🗺️ GraphHopper sinash...');
       const ghResult = await tryGraphHopper(startCoords, endCoords);
-      if (ghResult) {
-        console.log('✅ GraphHopper marshrut topildi:', Math.round(ghResult.routes[0].distance / 1000), 'km');
-        return res.json(ghResult);
-      }
-    } catch (e) {
-      console.log('⚠️ GraphHopper xato:', e.message);
-    }
+      if (ghResult) return res.json(ghResult);
+    } catch (e) { /* silent */ }
     
-    // 4. OpenRouteService sinash (xalqaro reyslar uchun yaxshi)
+    // 4. OpenRouteService sinash
     try {
-      console.log('🗺️ OpenRouteService sinash...');
       const orsResult = await tryOpenRouteService(startCoords, endCoords);
-      if (orsResult) {
-        console.log('✅ ORS marshrut topildi:', Math.round(orsResult.routes[0].distance / 1000), 'km');
-        return res.json(orsResult);
-      }
-    } catch (e) {
-      console.log('⚠️ ORS xato:', e.message);
-    }
+      if (orsResult) return res.json(orsResult);
+    } catch (e) { /* silent */ }
     
-    // 5. Fallback
-    console.log('📏 Fallback: to\'g\'ri chiziq...');
-    const fallback = createStraightLineRoute(startCoords, endCoords);
-    console.log('⚠️ Fallback marshrut:', Math.round(fallback.routes[0].distance / 1000), 'km');
-    return res.json(fallback);
+    // 5. Fallback - to'g'ri chiziq
+    return res.json(createStraightLineRoute(startCoords, endCoords));
     
   } catch (error) {
-    console.error('❌ Routing xatosi:', error.message);
     res.json({ code: 'Error', message: 'Marshrut olishda xatolik' });
   }
 });
