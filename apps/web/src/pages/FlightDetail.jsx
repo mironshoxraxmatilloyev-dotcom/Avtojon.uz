@@ -766,7 +766,7 @@ export default function FlightDetail() {
               }}
               className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition flex items-center gap-1.5 flex-shrink-0"
             >
-              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Bosqich</span>
+              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Qo'shish</span>
             </button>
           )}
         </div>
@@ -830,7 +830,7 @@ export default function FlightDetail() {
               onClick={() => setShowExpenseModal(true)}
               className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition flex items-center gap-1.5 flex-shrink-0"
             >
-              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Xarajat</span>
+              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Qo'shish</span>
             </button>
           )}
         </div>
