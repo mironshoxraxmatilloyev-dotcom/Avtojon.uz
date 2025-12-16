@@ -1,13 +1,9 @@
 // ==========================================
-// RATE LIMITER - SODDALASHTIRILGAN
+// RATE LIMITER
 // ==========================================
 
 // GLOBAL xotirada so'rovlarni saqlash
 const store = new Map();
-
-// Debug uchun
-const DEBUG = true;
-const log = (...args) => DEBUG && console.log('[RateLimiter]', ...args);
 
 /**
  * Rate limiter yaratish
@@ -33,15 +29,12 @@ const createRateLimiter = (options = {}) => {
         resetTime: now + windowMs
       };
       store.set(key, record);
-      log(`Yangi record: ${key}`);
     }
     
     record.count++;
     
     const remaining = Math.max(0, max - record.count);
     const resetSeconds = Math.ceil((record.resetTime - now) / 1000);
-    
-    log(`${key}: count=${record.count}, max=${max}, remaining=${remaining}`);
     
     // Headers
     res.setHeader('X-RateLimit-Limit', max);
@@ -50,7 +43,6 @@ const createRateLimiter = (options = {}) => {
     
     // BLOKLASH - count > max bo'lganda
     if (record.count > max) {
-      log(`⛔ BLOKLANDI: ${key}, ${record.count}/${max}`);
       res.setHeader('Retry-After', resetSeconds);
       return res.status(429).json({
         success: false,
@@ -60,7 +52,6 @@ const createRateLimiter = (options = {}) => {
       });
     }
     
-    log(`✅ RUXSAT: ${key}, ${record.count}/${max}`);
     next();
   };
 };
