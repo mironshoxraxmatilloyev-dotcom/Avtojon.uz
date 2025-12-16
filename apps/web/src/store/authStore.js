@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../services/api'
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
+  refreshToken: localStorage.getItem('refreshToken'),
   loading: false,
   error: null,
 
@@ -21,15 +22,25 @@ export const useAuthStore = create((set, get) => ({
     try {
       const { data } = await api.post('/auth/login', { username, password })
       
-      if (!data.data?.token || !data.data?.user) {
-        throw new Error('Server javobida xatolik')
+      if (!data.data?.accessToken || !data.data?.user) {
+        // Eski format (token) ni ham qo'llab-quvvatlash
+        if (!data.data?.token || !data.data?.user) {
+          throw new Error('Server javobida xatolik')
+        }
       }
       
-      localStorage.setItem('token', data.data.token)
+      const accessToken = data.data.accessToken || data.data.token
+      const refreshToken = data.data.refreshToken
+      
+      localStorage.setItem('token', accessToken)
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
       localStorage.setItem('user', JSON.stringify(data.data.user))
       set({ 
         user: data.data.user, 
-        token: data.data.token, 
+        token: accessToken,
+        refreshToken: refreshToken || null,
         loading: false,
         error: null 
       })
@@ -51,14 +62,17 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Demo login uchun - token va user to'g'ridan-to'g'ri set qilish
-  setAuth: (token, user) => {
+  setAuth: (token, user, refreshToken = null) => {
     if (!token || !user) {
       console.error('setAuth: token yoki user yo\'q')
       return
     }
     localStorage.setItem('token', token)
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken)
+    }
     localStorage.setItem('user', JSON.stringify(user))
-    set({ user, token, error: null })
+    set({ user, token, refreshToken, error: null })
   },
 
   register: async ({ username, password, fullName, companyName, phone }) => {
@@ -87,15 +101,24 @@ export const useAuthStore = create((set, get) => ({
         phone: phone || ''
       })
       
-      if (!data.data?.token || !data.data?.user) {
-        throw new Error('Server javobida xatolik')
+      if (!data.data?.accessToken || !data.data?.user) {
+        if (!data.data?.token || !data.data?.user) {
+          throw new Error('Server javobida xatolik')
+        }
       }
       
-      localStorage.setItem('token', data.data.token)
+      const accessToken = data.data.accessToken || data.data.token
+      const refreshToken = data.data.refreshToken
+      
+      localStorage.setItem('token', accessToken)
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
       localStorage.setItem('user', JSON.stringify(data.data.user))
       set({ 
         user: data.data.user, 
-        token: data.data.token, 
+        token: accessToken,
+        refreshToken: refreshToken || null,
         loading: false,
         error: null 
       })
@@ -111,10 +134,18 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    // Server'ga logout so'rovi (tokenlarni bekor qilish)
+    try {
+      await api.post('/auth/logout')
+    } catch (e) {
+      // Xato bo'lsa ham davom etamiz
+    }
+    
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
-    set({ user: null, token: null, error: null })
+    set({ user: null, token: null, refreshToken: null, error: null })
   },
 
   // Update user data

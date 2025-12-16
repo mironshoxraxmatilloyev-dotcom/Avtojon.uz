@@ -6,6 +6,9 @@ const Vehicle = require('../models/Vehicle');
 const Expense = require('../models/Expense');
 const Driver = require('../models/Driver');
 const { protect, driverOnly } = require('../middleware/auth');
+const { locationLimiter } = require('../middleware/rateLimiter');
+const { validate, driverSchemas, flightSchemas, validateObjectId } = require('../utils/validators');
+const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 // Shofyor o'z ma'lumotlari
 router.get('/me', protect, driverOnly, async (req, res) => {
@@ -18,23 +21,12 @@ router.get('/me', protect, driverOnly, async (req, res) => {
 });
 
 // GPS joylashuvni yuborish - Real-time Socket.io
-router.post('/me/location', protect, driverOnly, async (req, res) => {
-  try {
-    const { lat, lng, accuracy, speed, heading, timestamp } = req.body;
-    
-    // Koordinatalarni tekshirish
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      return res.status(400).json({ success: false, message: 'Noto\'g\'ri koordinatalar' });
-    }
-
-    // Koordinatalar oqilona chegarada ekanligini tekshirish
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
-      return res.status(400).json({ success: false, message: 'Koordinatalar chegaradan tashqarida' });
-    }
-
-    const accuracyNum = accuracy ? parseFloat(accuracy) : null;
+router.post('/me/location', protect, driverOnly, locationLimiter, validate(driverSchemas.location), asyncHandler(async (req, res) => {
+  const { lat, lng, accuracy, speed, heading, timestamp } = req.body;
+  
+  const latNum = lat;
+  const lngNum = lng;
+  const accuracyNum = accuracy || null;
     const isAccurate = accuracyNum ? accuracyNum < 100 : true;
     
     const locationData = { 
@@ -66,17 +58,13 @@ router.post('/me/location', protect, driverOnly, async (req, res) => {
       });
     }
 
-    res.json({ 
-      success: true, 
-      message: 'Joylashuv yangilandi',
-      accuracy: accuracyNum ? `${accuracyNum.toFixed(1)}m` : null,
-      isAccurate
-    });
-  } catch (error) {
-    console.error('GPS xatolik:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+  res.json({ 
+    success: true, 
+    message: 'Joylashuv yangilandi',
+    accuracy: accuracyNum ? `${accuracyNum.toFixed(1)}m` : null,
+    isAccurate
+  });
+}));
 
 // Shofyorga biriktirilgan mashinalar
 router.get('/me/vehicles', protect, driverOnly, async (req, res) => {

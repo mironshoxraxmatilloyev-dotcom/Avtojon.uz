@@ -101,6 +101,37 @@ const STALE_TTL = 60000 // 1 daqiqa - stale data ham ishlatiladi
 const MAX_RETRIES = 2
 const RETRY_DELAY = 1000
 
+// 🔄 Token refresh state
+let isRefreshing = false
+let refreshSubscribers = []
+
+const subscribeTokenRefresh = (callback) => {
+  refreshSubscribers.push(callback)
+}
+
+const onTokenRefreshed = (newToken) => {
+  refreshSubscribers.forEach(callback => callback(newToken))
+  refreshSubscribers = []
+}
+
+// 🔄 Refresh token function
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) {
+    throw new Error('No refresh token')
+  }
+  
+  const response = await axios.post(`${getBaseURL()}/auth/refresh`, { refreshToken })
+  const { accessToken, refreshToken: newRefreshToken } = response.data.data
+  
+  localStorage.setItem('token', accessToken)
+  if (newRefreshToken) {
+    localStorage.setItem('refreshToken', newRefreshToken)
+  }
+  
+  return accessToken
+}
+
 // Token qo'shish
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -167,15 +198,56 @@ api.interceptors.response.use(
       return api(config)
     }
 
-    // 🎯 401 - Unauthorized
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+    // 🎯 401 - Unauthorized - Token refresh urinish
+    if (error.response?.status === 401 && !config._retry) {
+      const refreshToken = localStorage.getItem('refreshToken')
       
-      // Faqat dashboard sahifalarida redirect qilish
-      if (window.location.pathname.startsWith('/dashboard') || 
-          window.location.pathname.startsWith('/driver')) {
-        window.location.href = '/login'
+      // Refresh token mavjud bo'lsa, yangilashga urinish
+      if (refreshToken) {
+        if (isRefreshing) {
+          // Boshqa so'rov allaqachon refresh qilmoqda - kutish
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((newToken) => {
+              config.headers.Authorization = `Bearer ${newToken}`
+              config._retry = true
+              resolve(api(config))
+            })
+          })
+        }
+        
+        isRefreshing = true
+        config._retry = true
+        
+        try {
+          const newToken = await refreshAccessToken()
+          isRefreshing = false
+          onTokenRefreshed(newToken)
+          
+          config.headers.Authorization = `Bearer ${newToken}`
+          return api(config)
+        } catch (refreshError) {
+          isRefreshing = false
+          refreshSubscribers = []
+          
+          // Refresh ham muvaffaqiyatsiz - logout
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
+          
+          if (window.location.pathname.startsWith('/dashboard') || 
+              window.location.pathname.startsWith('/driver')) {
+            window.location.href = '/login'
+          }
+        }
+      } else {
+        // Refresh token yo'q - logout
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        
+        if (window.location.pathname.startsWith('/dashboard') || 
+            window.location.pathname.startsWith('/driver')) {
+          window.location.href = '/login'
+        }
       }
     }
 

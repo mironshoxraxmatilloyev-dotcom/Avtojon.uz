@@ -636,8 +636,8 @@ export default function DriverHome() {
             {/* Header - Premium */}
             <header className="relative z-20 px-3 sm:px-4 pt-4 sm:pt-5 pb-2">
                 <div className="max-w-lg mx-auto">
-                    <div className="relative overflow-hidden bg-slate-800/50 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-5 shadow-2xl">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-violet-500 to-transparent"></div>
+                    <div className="relative overflow-hidden bg-slate-800/50 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl">
+
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3 sm:gap-4">
                                 <div className="relative">
@@ -692,14 +692,14 @@ export default function DriverHome() {
             </header>
 
             {/* Tabs - Premium */}
-            <nav className="relative z-20 px-3 sm:px-4 py-3 sticky top-0 bg-gradient-to-b from-slate-950/90 to-transparent backdrop-blur-lg">
+            <nav className="relative z-20 px-3 sm:px-4 py-3 sticky top-0">
                 <div className="max-w-lg mx-auto">
-                    <div className="bg-slate-800/60 backdrop-blur-2xl rounded-2xl border border-white/10 p-1.5 sm:p-2 flex gap-1 shadow-xl">
+                    <div className="bg-slate-800/60 backdrop-blur-2xl rounded-2xl p-1.5 sm:p-2 flex gap-1 shadow-xl">
                         {[
                             { id: 'home', label: 'Asosiy', icon: Target },
                             { id: 'map', label: 'Xarita', icon: Map },
                             { id: 'history', label: 'Tarix', icon: History },
-                            { id: 'salary', label: 'Maosh', icon: CircleDollarSign }
+                            // { id: 'salary', label: 'Maosh', icon: CircleDollarSign }
                         ].map(({ id, label, icon: Icon }) => (
                             <button key={id} onClick={() => setTab(id)}
                                 className={`flex-1 py-3 sm:py-3.5 px-2 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold transition-all duration-200 ${tab === id ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/40' : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -795,21 +795,7 @@ export default function DriverHome() {
                                             </div>
                                         </div>
 
-                                        {/* Joriy bosqichni tugatish - Premium Button */}
-                                        {activeFlight.legs?.some(leg => leg.status === 'in_progress') && (
-                                            <button 
-                                                onClick={handleCompleteLeg}
-                                                disabled={actionLoading}
-                                                className="w-full bg-white text-emerald-600 py-4 sm:py-5 rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 shadow-2xl shadow-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                            >
-                                                {actionLoading ? (
-                                                    <div className="w-5 h-5 sm:w-6 sm:h-6 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                                ) : (
-                                                    <CheckCircle size={22} className="sm:w-6 sm:h-6" />
-                                                )}
-                                                {actionLoading ? 'Kutilmoqda...' : 'Bosqichni tugatish'}
-                                            </button>
-                                        )}
+                                        {/* Bosqichni tugatish - faqat biznesmen panelida */}
 
                                     </div>
                                 </div>
@@ -1181,6 +1167,7 @@ export default function DriverHome() {
                         </div>
                     )}
 
+                    {/* Maosh bo'limi - hozircha o'chirilgan
                     {tab === 'salary' && (
                         <div className="space-y-5 pt-2">
                             <h2 className="text-white font-bold text-lg flex items-center gap-2">
@@ -1225,6 +1212,7 @@ export default function DriverHome() {
                             </div>
                         </div>
                     )}
+                    */}
                 </div>
             </main>
 

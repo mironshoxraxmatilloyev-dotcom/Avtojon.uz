@@ -180,13 +180,7 @@ export default function Login() {
           <p className="text-violet-300 text-sm sm:text-base">Hisobingizga kiring</p>
         </div>
 
-        {/* Badge */}
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10">
-            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
-            <span className="text-xs sm:text-sm text-violet-200">Xavfsiz tizimga kirish</span>
-          </div>
-        </div>
+
 
         {/* Login Card */}
         <Card3D className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-5 sm:p-8 shadow-2xl shadow-violet-500/10">

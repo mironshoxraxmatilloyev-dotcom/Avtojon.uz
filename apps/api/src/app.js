@@ -3,6 +3,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
+// Middleware
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { apiLimiter } = require('./middleware/rateLimiter');
+
 // Routes
 const authRoutes = require('./routes/auth.routes');
 const driverRoutes = require('./routes/driver.routes');
@@ -14,6 +18,9 @@ const driverPanelRoutes = require('./routes/driverPanel.routes');
 const flightRoutes = require('./routes/flight.routes');
 
 const app = express();
+
+// Trust proxy (rate limiter uchun)
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
@@ -50,7 +57,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' })); // Body size limit
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Rate limiting (barcha API uchun)
+app.use('/api', apiLimiter);
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -346,13 +357,10 @@ app.get('/api/route', async (req, res) => {
   }
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Server xatosi'
-  });
-});
+// 404 handler
+app.use(notFoundHandler);
+
+// Error handler (xavfsiz - stack trace yo'q)
+app.use(errorHandler);
 
 module.exports = app;
