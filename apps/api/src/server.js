@@ -3,15 +3,11 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
 const connectDB = require('./config/database');
-const { connectRedis } = require('./config/redis');
 
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
 connectDB();
-
-// Connect to Redis (optional - fallback to memory if not available)
-connectRedis().catch(() => console.log('⚠️ Redis ishlamayapti, in-memory mode'));
 
 // HTTP server yaratish
 const server = http.createServer(app);
