@@ -1087,11 +1087,18 @@ export default function DriverHome() {
                                         onClick={() => setIsNavigating(!isNavigating)}
                                         className={`absolute bottom-4 right-4 z-[1000] px-4 py-3 rounded-2xl shadow-lg transition-all flex items-center gap-2 ${
                                             isNavigating 
-                                                ? 'bg-blue-600 text-white shadow-blue-500/50' 
+                                                ? 'bg-emerald-600 text-white shadow-emerald-500/50' 
                                                 : 'bg-white text-gray-700 hover:bg-gray-100 shadow-xl'
                                         }`}
                                     >
-                                        <Navigation size={20} className={isNavigating ? 'animate-pulse' : ''} />
+                                        {isNavigating ? (
+                                            <span className="relative flex h-5 w-5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500"></span>
+                                            </span>
+                                        ) : (
+                                            <Navigation size={20} />
+                                        )}
                                         <span className="text-sm font-medium">{isNavigating ? 'Kuzatish' : 'Meni ko\'rsat'}</span>
                                     </button>
                                     
