@@ -586,11 +586,12 @@ export default function DriverHome() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a1a]">
-            {/* Background Effects */}
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0f172a] to-slate-950">
+            {/* Background Effects - Premium */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/15 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[120px]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px]"></div>
             </div>
 
             {/* 🔔 Yangi reys notification */}
@@ -620,24 +621,25 @@ export default function DriverHome() {
                 </div>
             )}
 
-            {/* Header */}
-            <header className="relative z-20 px-3 sm:px-4 pt-3 sm:pt-4 pb-2">
+            {/* Header - Premium */}
+            <header className="relative z-20 px-3 sm:px-4 pt-4 sm:pt-5 pb-2">
                 <div className="max-w-lg mx-auto">
-                    <div className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-4">
+                    <div className="relative overflow-hidden bg-slate-800/50 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-5 shadow-2xl">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-violet-500 to-transparent"></div>
                         <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="flex items-center gap-3 sm:gap-4">
                                 <div className="relative">
-                                    <div className="w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                                        <Truck className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl sm:rounded-2xl blur-md opacity-60"></div>
+                                    <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl">
+                                        <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                                     </div>
-                                    <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 rounded-full border-2 border-[#0a0a1a] flex items-center justify-center">
-                                        <Zap size={8} className="sm:hidden text-white" />
-                                        <Zap size={10} className="hidden sm:block text-white" />
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full border-2 border-slate-800 flex items-center justify-center shadow-lg">
+                                        <Zap size={10} className="sm:w-3 sm:h-3 text-white" />
                                     </div>
                                 </div>
                                 <div>
-                                    <h1 className="text-base sm:text-xl font-bold text-white flex items-center gap-1 sm:gap-2">Avtojon <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400" /></h1>
-                                    <p className="text-xs sm:text-sm text-violet-300 truncate max-w-[100px] sm:max-w-[150px]">{user?.fullName || 'Haydovchi'}</p>
+                                    <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">Avtojon <Sparkles className="w-4 h-4 text-amber-400" /></h1>
+                                    <p className="text-sm text-slate-300 truncate max-w-[120px] sm:max-w-[160px]">{user?.fullName || 'Haydovchi'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -668,9 +670,8 @@ export default function DriverHome() {
                                         <span>±{Math.round(gpsAccuracy)}m</span>
                                     )}
                                 </div>
-                                <button onClick={handleLogout} className="p-2 sm:p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-lg sm:rounded-xl border border-red-500/20">
-                                    <LogOut size={16} className="sm:hidden text-red-400" />
-                                    <LogOut size={20} className="hidden sm:block text-red-400" />
+                                <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl sm:rounded-2xl border border-red-500/20 transition-all hover:scale-105 active:scale-95">
+                                    <LogOut size={18} className="sm:w-5 sm:h-5 text-red-400" />
                                 </button>
                             </div>
                         </div>
@@ -678,10 +679,10 @@ export default function DriverHome() {
                 </div>
             </header>
 
-            {/* Tabs */}
-            <nav className="relative z-20 px-3 sm:px-4 py-2 sm:py-3 sticky top-0">
+            {/* Tabs - Premium */}
+            <nav className="relative z-20 px-3 sm:px-4 py-3 sticky top-0 bg-gradient-to-b from-slate-950/90 to-transparent backdrop-blur-lg">
                 <div className="max-w-lg mx-auto">
-                    <div className="bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 p-1 sm:p-1.5 flex gap-0.5 sm:gap-1">
+                    <div className="bg-slate-800/60 backdrop-blur-2xl rounded-2xl border border-white/10 p-1.5 sm:p-2 flex gap-1 shadow-xl">
                         {[
                             { id: 'home', label: 'Asosiy', icon: Target },
                             { id: 'map', label: 'Xarita', icon: Map },
@@ -689,10 +690,9 @@ export default function DriverHome() {
                             { id: 'salary', label: 'Maosh', icon: CircleDollarSign }
                         ].map(({ id, label, icon: Icon }) => (
                             <button key={id} onClick={() => setTab(id)}
-                                className={`flex-1 py-2.5 sm:py-3 px-1 sm:px-2 rounded-xl flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm font-semibold transition-all ${tab === id ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30' : 'text-violet-300 hover:bg-white/5'
+                                className={`flex-1 py-3 sm:py-3.5 px-2 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold transition-all duration-200 ${tab === id ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/40' : 'text-slate-400 hover:text-white hover:bg-white/5'
                                     }`}>
-                                <Icon size={16} className="sm:hidden" />
-                                <Icon size={18} className="hidden sm:block" />
+                                <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
                                 {label}
                             </button>
                         ))}
@@ -706,82 +706,94 @@ export default function DriverHome() {
 
                     {tab === 'home' && (
                         <div className="space-y-5 pt-2">
-                            {/* FLIGHT TIZIMI - Yangi */}
+                            {/* FLIGHT TIZIMI - Premium */}
                             {activeFlight ? (
-                                <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 rounded-3xl p-4 sm:p-6">
-                                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+                                <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-emerald-900/40">
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-xl"></div>
+                                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-teal-400/20 rounded-full -ml-16 -mb-16 blur-xl"></div>
 
                                     <div className="relative">
-                                        <div className="flex items-center justify-between mb-4 sm:mb-5">
-                                            <div className="flex items-center gap-2 sm:gap-3">
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                                                    <Route size={20} className="sm:hidden text-white" />
-                                                    <Route size={24} className="hidden sm:block text-white" />
+                                        <div className="flex items-center justify-between mb-5 sm:mb-6">
+                                            <div className="flex items-center gap-3 sm:gap-4">
+                                                <div className="relative">
+                                                    <div className="absolute inset-0 bg-white/30 rounded-xl sm:rounded-2xl blur-md"></div>
+                                                    <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20">
+                                                        <Route size={22} className="sm:w-7 sm:h-7 text-white" />
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-white font-bold text-base sm:text-lg">{activeFlight.name || 'Faol reys'}</h3>
-                                                    <p className="text-green-200 text-xs sm:text-sm flex items-center gap-1">
-                                                        {activeFlight.flightType === 'international' ? '🌍 Xalqaro' : '🇺🇿 Mahalliy'}
+                                                    <h3 className="text-white font-bold text-lg sm:text-xl">{activeFlight.name || 'Faol reys'}</h3>
+                                                    <p className="text-emerald-100 text-sm flex items-center gap-1.5">
+                                                        {activeFlight.flightType === 'international' ? '🌍 Xalqaro reys' : '🇺🇿 Mahalliy reys'}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-emerald-500/20 rounded-full border border-emerald-400/30">
-                                                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                                                <span className="text-emerald-300 text-xs sm:text-sm font-semibold">LIVE</span>
+                                            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 shadow-lg">
+                                                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white rounded-full animate-pulse shadow-lg shadow-white/50"></span>
+                                                <span className="text-white text-xs sm:text-sm font-bold tracking-wider">LIVE</span>
                                             </div>
                                         </div>
 
-                                        {/* Bosqichlar */}
-                                        <div className="bg-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 border border-white/10">
-                                            <p className="text-green-200 text-xs font-medium mb-2 sm:mb-3">BOSQICHLAR ({activeFlight.legs?.length || 0})</p>
-                                            <div className="space-y-2">
+                                        {/* Bosqichlar - Premium */}
+                                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-5 mb-4 sm:mb-5 border border-white/20">
+                                            <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                                <p className="text-white/80 text-xs sm:text-sm font-semibold uppercase tracking-wider">Bosqichlar</p>
+                                                <span className="px-2.5 py-1 bg-white/20 rounded-full text-white text-xs font-bold">{activeFlight.legs?.length || 0}</span>
+                                            </div>
+                                            <div className="space-y-2.5">
                                                 {activeFlight.legs?.map((leg, idx) => (
-                                                    <div key={leg._id || idx} className="flex items-center gap-2 sm:gap-3">
-                                                        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                                                            leg.status === 'completed' ? 'bg-emerald-500 text-white' : 
-                                                            leg.status === 'in_progress' ? 'bg-amber-500 text-white animate-pulse' : 
+                                                    <div key={leg._id || idx} className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl transition-all ${
+                                                        leg.status === 'in_progress' ? 'bg-white/20 border border-white/30' : 'bg-white/5'
+                                                    }`}>
+                                                        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg ${
+                                                            leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white' : 
+                                                            leg.status === 'in_progress' ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white animate-pulse' : 
                                                             'bg-white/20 text-white/60'
                                                         }`}>
-                                                            {idx + 1}
+                                                            {leg.status === 'completed' ? '✓' : idx + 1}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-white text-xs sm:text-sm font-medium truncate">{leg.fromCity} → {leg.toCity}</p>
-                                                            <p className="text-green-300 text-[10px] sm:text-xs">{leg.distance || 0} km • {formatMoney(leg.payment)} so'm</p>
+                                                            <p className="text-white text-sm sm:text-base font-semibold truncate">{leg.fromCity} → {leg.toCity}</p>
+                                                            <p className="text-emerald-200 text-xs sm:text-sm">{leg.distance || 0} km • {formatMoney(leg.payment)} so'm</p>
                                                         </div>
-                                                        {leg.status === 'completed' && <CheckCircle size={14} className="sm:hidden text-emerald-400 flex-shrink-0" />}
-                                                        {leg.status === 'completed' && <CheckCircle size={16} className="hidden sm:block text-emerald-400 flex-shrink-0" />}
+                                                        {leg.status === 'in_progress' && (
+                                                            <span className="px-2 py-1 bg-amber-500/30 rounded-lg text-amber-200 text-[10px] sm:text-xs font-semibold">Yo'lda</span>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        {/* Statistika */}
-                                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-4 sm:mb-5">
-                                            <div className="bg-white/10 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center border border-white/10">
-                                                <p className="text-green-200 text-[10px] sm:text-xs mb-0.5 sm:mb-1">Masofa</p>
-                                                <p className="text-white font-bold text-xs sm:text-sm">{activeFlight.totalDistance || 0} km</p>
+                                        {/* Statistika - Premium */}
+                                        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+                                            <div className="bg-white/15 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-white/20">
+                                                <p className="text-emerald-100 text-[10px] sm:text-xs font-medium mb-1">Masofa</p>
+                                                <p className="text-white font-bold text-base sm:text-lg">{activeFlight.totalDistance || 0}</p>
+                                                <p className="text-emerald-200 text-[10px] sm:text-xs">km</p>
                                             </div>
-                                            <div className="bg-white/10 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center border border-white/10">
-                                                <p className="text-green-200 text-[10px] sm:text-xs mb-0.5 sm:mb-1">To'lov</p>
-                                                <p className="text-emerald-300 font-bold text-xs sm:text-sm truncate">{formatMoney(activeFlight.totalPayment)}</p>
+                                            <div className="bg-white/15 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-white/20">
+                                                <p className="text-emerald-100 text-[10px] sm:text-xs font-medium mb-1">To'lov</p>
+                                                <p className="text-white font-bold text-sm sm:text-base truncate">{formatMoney(activeFlight.totalPayment)}</p>
+                                                <p className="text-emerald-200 text-[10px] sm:text-xs">so'm</p>
                                             </div>
-                                            <div className="bg-white/10 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center border border-white/10">
-                                                <p className="text-green-200 text-[10px] sm:text-xs mb-0.5 sm:mb-1">Xarajat</p>
-                                                <p className="text-amber-300 font-bold text-xs sm:text-sm truncate">{formatMoney(activeFlight.totalExpenses)}</p>
+                                            <div className="bg-white/15 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-white/20">
+                                                <p className="text-emerald-100 text-[10px] sm:text-xs font-medium mb-1">Xarajat</p>
+                                                <p className="text-amber-300 font-bold text-sm sm:text-base truncate">{formatMoney(activeFlight.totalExpenses)}</p>
+                                                <p className="text-emerald-200 text-[10px] sm:text-xs">so'm</p>
                                             </div>
                                         </div>
 
-                                        {/* Joriy bosqichni tugatish */}
+                                        {/* Joriy bosqichni tugatish - Premium Button */}
                                         {activeFlight.legs?.some(leg => leg.status === 'in_progress') && (
                                             <button 
                                                 onClick={handleCompleteLeg}
                                                 disabled={actionLoading}
-                                                className="w-full bg-white text-emerald-600 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-1.5 sm:gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base mb-2"
+                                                className="w-full bg-white text-emerald-600 py-4 sm:py-5 rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 shadow-2xl shadow-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                                             >
                                                 {actionLoading ? (
-                                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                    <div className="w-5 h-5 sm:w-6 sm:h-6 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
                                                 ) : (
-                                                    <CheckCircle size={18} className="sm:w-[22px] sm:h-[22px]" />
+                                                    <CheckCircle size={22} className="sm:w-6 sm:h-6" />
                                                 )}
                                                 {actionLoading ? 'Kutilmoqda...' : 'Bosqichni tugatish'}
                                             </button>
@@ -893,30 +905,39 @@ export default function DriverHome() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-center border border-white/10">
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-violet-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-5">
-                                        <Truck size={32} className="sm:hidden text-violet-400" />
-                                        <Truck size={40} className="hidden sm:block text-violet-400" />
+                                <div className="relative overflow-hidden bg-slate-800/40 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/10 shadow-2xl">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-transparent"></div>
+                                    <div className="relative">
+                                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-violet-500/20 to-indigo-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5 sm:mb-6 border border-violet-500/20">
+                                            <Truck size={40} className="sm:w-12 sm:h-12 text-violet-400" />
+                                        </div>
+                                        <h3 className="text-white font-bold text-xl sm:text-2xl mb-2 sm:mb-3">Reys yo'q</h3>
+                                        <p className="text-slate-400 text-sm sm:text-base max-w-xs mx-auto">Hozirda sizga biriktirilgan reys yo'q. Yangi reys tayinlanganda xabar olasiz.</p>
                                     </div>
-                                    <h3 className="text-white font-bold text-lg sm:text-xl mb-1 sm:mb-2">Reys yo'q</h3>
-                                    <p className="text-violet-300 text-sm sm:text-base">Hozirda sizga biriktirilgan reys yo'q</p>
                                 </div>
                             )}
 
+                            {/* Statistika kartochkalari - Premium */}
                             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 group overflow-hidden">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-violet-500/30 group-hover:scale-110 transition-transform">
-                                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                <div className="relative overflow-hidden bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/10 group">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                                    <div className="relative">
+                                        <div className="w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-xl shadow-violet-500/30 group-hover:scale-110 transition-transform">
+                                            <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                                        </div>
+                                        <p className="text-4xl sm:text-5xl font-bold text-white mb-1">{totalCompletedTrips}</p>
+                                        <p className="text-slate-400 text-xs sm:text-sm font-medium">Tugatilgan reyslar</p>
                                     </div>
-                                    <p className="text-3xl sm:text-4xl font-bold text-white mb-0.5 sm:mb-1">{totalCompletedTrips}</p>
-                                    <p className="text-violet-300 text-xs sm:text-sm">Tugatilgan reyslar</p>
                                 </div>
-                                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-5 border border-white/10 group overflow-hidden">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
-                                        <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                <div className="relative overflow-hidden bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/10 group">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                                    <div className="relative">
+                                        <div className="w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-xl shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+                                            <Award className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                                        </div>
+                                        <p className="text-xl sm:text-2xl font-bold text-emerald-400 mb-1 truncate">+{formatMoney(totalBonusAmount)}</p>
+                                        <p className="text-slate-400 text-xs sm:text-sm font-medium">Jami foyda</p>
                                     </div>
-                                    <p className="text-lg sm:text-2xl font-bold text-emerald-400 mb-0.5 sm:mb-1 truncate">+{formatMoney(totalBonusAmount)}</p>
-                                    <p className="text-violet-300 text-xs sm:text-sm">Jami foyda</p>
                                 </div>
                             </div>
                         </div>
