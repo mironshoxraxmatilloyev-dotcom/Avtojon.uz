@@ -2,10 +2,171 @@ import { useEffect, useState } from 'react'
 import { 
   BarChart3, TrendingUp, Users, Route, Fuel, Calendar, 
   ArrowUpRight, Activity, DollarSign, Clock, CheckCircle,
-  X, ChevronLeft, ChevronRight, Filter, Sparkles
+  X, ChevronLeft, ChevronRight, Filter, Sparkles, Download, FileSpreadsheet
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
+
+// Excel export funksiyasi
+const exportToExcel = (data, filename) => {
+  // Excel XML format
+  const xmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="header">
+      <Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/>
+      <Interior ss:Color="#3B82F6" ss:Pattern="Solid"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="title">
+      <Font ss:Bold="1" ss:Size="14" ss:Color="#1E40AF"/>
+      <Alignment ss:Horizontal="Center"/>
+    </Style>
+    <Style ss:ID="data">
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E5E7EB"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="number">
+      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+      <NumberFormat ss:Format="#,##0"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E5E7EB"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="total">
+      <Font ss:Bold="1" ss:Size="11"/>
+      <Interior ss:Color="#F3F4F6" ss:Pattern="Solid"/>
+      <Alignment ss:Horizontal="Right"/>
+    </Style>
+  </Styles>`
+
+  let xml = xmlHeader
+
+  // Shofyorlar sheet
+  xml += `
+  <Worksheet ss:Name="Shofyorlar">
+    <Table>
+      <Column ss:Width="50"/>
+      <Column ss:Width="150"/>
+      <Column ss:Width="100"/>
+      <Row ss:Height="30">
+        <Cell ss:StyleID="header"><Data ss:Type="String">№</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Ism</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Holat</Data></Cell>
+      </Row>`
+  
+  data.drivers.forEach((d, i) => {
+    xml += `
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="Number">${i + 1}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${d.fullName || ''}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${d.status === 'busy' ? 'Band' : 'Bosh'}</Data></Cell>
+      </Row>`
+  })
+  xml += `
+    </Table>
+  </Worksheet>`
+
+  // Reyslar sheet
+  xml += `
+  <Worksheet ss:Name="Reyslar">
+    <Table>
+      <Column ss:Width="50"/>
+      <Column ss:Width="150"/>
+      <Column ss:Width="120"/>
+      <Column ss:Width="100"/>
+      <Row ss:Height="30">
+        <Cell ss:StyleID="header"><Data ss:Type="String">№</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Shofyor</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Sana</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Holat</Data></Cell>
+      </Row>`
+  
+  data.flights.forEach((f, i) => {
+    xml += `
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="Number">${i + 1}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${f.driver?.fullName || 'Noma\'lum'}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${new Date(f.createdAt).toLocaleDateString('uz-UZ')}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${f.status === 'completed' ? 'Tugatilgan' : 'Faol'}</Data></Cell>
+      </Row>`
+  })
+  xml += `
+    </Table>
+  </Worksheet>`
+
+  // Statistika sheet
+  xml += `
+  <Worksheet ss:Name="Statistika">
+    <Table>
+      <Column ss:Width="200"/>
+      <Column ss:Width="150"/>
+      <Row ss:Height="35">
+        <Cell ss:MergeAcross="1" ss:StyleID="title"><Data ss:Type="String">📊 Hisobot - ${filename}</Data></Cell>
+      </Row>
+      <Row><Cell/></Row>
+      <Row ss:Height="25">
+        <Cell ss:StyleID="header"><Data ss:Type="String">Ko'rsatkich</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Qiymat</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">👥 Jami shofyorlar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.total}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bosh shofyorlar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.free}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">🚗 Band shofyorlar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.busy}</Data></Cell>
+      </Row>
+      <Row><Cell/></Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">📦 Jami reyslar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.total}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">✔️ Tugatilgan reyslar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.completed}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">🔄 Faol reyslar</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.active}</Data></Cell>
+      </Row>
+      <Row><Cell/></Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">💰 Jami xarajat (so'm)</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.total}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">⛽ Yoqilg'i (so'm)</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.fuel}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="data"><Data ss:Type="String">📋 Boshqa (so'm)</Data></Cell>
+        <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.other}</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>`
+
+  // Download
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${filename}.xls`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const PERIODS = [
   { key: 'daily', label: 'Kunlik' },
@@ -517,6 +678,19 @@ export default function Reports() {
               </div>
             </h1>
           </div>
+          
+          {/* Excel Download Button */}
+          <button
+            onClick={() => exportToExcel(
+              { drivers: rawData.drivers, flights: stats.flights.list || [], stats },
+              `Hisobot_${getPeriodLabel().replace(/\s/g, '_')}`
+            )}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95"
+          >
+            <FileSpreadsheet size={18} />
+            <span className="hidden sm:inline">Excel yuklab olish</span>
+            <Download size={16} />
+          </button>
         </div>
 
         {/* Period Selector - Pro Style */}
