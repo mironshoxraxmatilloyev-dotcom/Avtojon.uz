@@ -455,6 +455,7 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
   if (!isOpen) return null
   
   return createPortal(
+<<<<<<< HEAD
     <div 
       className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
@@ -465,6 +466,11 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
         onClick={e => e.stopPropagation()}
       >
         <div className={`bg-gradient-to-r ${color} p-4 sm:p-5 rounded-t-2xl`}>
+=======
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className={`sticky top-0 bg-gradient-to-r ${color} p-5 sm:p-6`}>
+>>>>>>> de79186 (fix: Reports modal createPortal bilan tuzatildi)
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-white">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -480,7 +486,11 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
             </button>
           </div>
         </div>
+<<<<<<< HEAD
         <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto">{children}</div>
+=======
+        <div className="p-5 sm:p-6 overflow-auto max-h-[calc(85vh-100px)]">{children}</div>
+>>>>>>> de79186 (fix: Reports modal createPortal bilan tuzatildi)
       </div>
     </div>,
     document.body
