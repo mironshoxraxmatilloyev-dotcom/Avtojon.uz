@@ -1510,7 +1510,7 @@ export default function FlightDetail() {
                       <span className={`font-bold text-sm sm:text-base ${flight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {flight.profit > 0 
                           ? `${formatMoney(Math.round(flight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
-                          : '0 so'm (zarar bo\'lgani uchun)'
+                          : "0 so'm (zarar bo'lgani uchun)"
                         }
                       </span>
                     </div>

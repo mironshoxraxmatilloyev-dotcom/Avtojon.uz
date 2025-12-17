@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { 
-  LayoutDashboard, Users, LogOut, Menu, X, Calculator, 
+  LayoutDashboard, Users, LogOut, Menu, X, BarChart3, 
   Truck, ChevronRight, Sparkles
 } from 'lucide-react'
 import { useState, createContext, useContext, useEffect, memo } from 'react'
@@ -15,7 +15,8 @@ const navItems = [
   { path: '/dashboard/drivers', icon: Users, label: 'Shofyorlar', description: 'Haydovchilar ro\'yxati' },
   // { path: '/dashboard/flights', icon: Route, label: 'Reyslar', description: 'Faol va tugatilgan' },
   // { path: '/dashboard/trips', icon: Route, label: 'Eski reyslar', description: 'Barcha reyslar' },
-  { path: '/dashboard/salaries', icon: Calculator, label: 'Maoshlar', description: 'Moliya boshqaruvi' },
+  // { path: '/dashboard/salaries', icon: Calculator, label: 'Maoshlar', description: 'Moliya boshqaruvi' },
+  { path: '/dashboard/reports', icon: BarChart3, label: 'Hisobotlar', description: 'Statistika va grafiklar' },
 ]
 
 // 🚀 Optimized nav item with memo
