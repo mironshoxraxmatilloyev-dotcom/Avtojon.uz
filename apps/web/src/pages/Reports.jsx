@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { 
   BarChart3, TrendingUp, Users, Route, Fuel, Calendar, 
   ArrowUpRight, Activity, DollarSign, Clock, CheckCircle,
@@ -445,46 +446,44 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
     }
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
   }, [isOpen])
 
   if (!isOpen) return null
   
-  return (
+  return createPortal(
     <div 
-      className="fixed top-0 left-0 right-0 bottom-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      style={{ position: 'fixed', margin: 0 }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl"
-        style={{ margin: 'auto' }}
+        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl transform"
         onClick={e => e.stopPropagation()}
       >
-        <div className={`bg-gradient-to-r ${color} p-5 sm:p-6`}>
+        <div className={`bg-gradient-to-r ${color} p-4 sm:p-5 rounded-t-2xl`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-white">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-                <Icon size={24} />
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Icon size={20} />
               </div>
               <div>
-                <h3 className="text-xl font-bold">{title}</h3>
-                <p className="text-white/70 text-sm">Batafsil ma'lumot</p>
+                <h3 className="text-lg font-bold">{title}</h3>
+                <p className="text-white/70 text-xs">Batafsil ma'lumot</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2.5 hover:bg-white/20 rounded-xl transition-colors">
-              <X size={22} className="text-white" />
+            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+              <X size={20} className="text-white" />
             </button>
           </div>
         </div>
-        <div className="p-5 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 100px)' }}>{children}</div>
+        <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
