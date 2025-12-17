@@ -226,8 +226,8 @@ const ProLineChart = ({ data }) => {
           style={{ strokeDasharray: animated ? 'none' : '200', strokeDashoffset: animated ? 0 : 200 }}
         />
         
-        {/* Data points */}
-        {points.map((p, i) => (
+        {/* Data points - faqat kam nuqtali chartlarda ko'rsatish */}
+        {points.length <= 10 && points.map((p, i) => (
           <g key={i} className={`transition-all duration-500 ${animated ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: `${i * 50}ms` }}>
             <circle cx={p.x} cy={p.y} r="1.5" fill="white" stroke="url(#lineGradient)" strokeWidth="0.5" />
             <circle cx={p.x} cy={p.y} r="0.8" fill="#3b82f6" />
@@ -235,24 +235,36 @@ const ProLineChart = ({ data }) => {
         ))}
       </svg>
       
-      {/* X-axis labels */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2">
-        {data.map((d, i) => (
-          <div key={i} className="text-center">
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{d.label}</span>
-            {d.range && <span className="block text-[8px] text-gray-400">({d.range}-kun)</span>}
-          </div>
-        ))}
+      {/* X-axis labels - oylik uchun optimallashtirilgan */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1">
+        {data.length <= 10 ? (
+          // Kam nuqtali - hammasi ko'rsatiladi
+          data.map((d, i) => (
+            <div key={i} className="text-center flex-1">
+              <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{d.label}</span>
+            </div>
+          ))
+        ) : (
+          // Ko'p nuqtali (oylik) - faqat ba'zilari ko'rsatiladi
+          <>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">1</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">5</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">10</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">15</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">20</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">25</span>
+            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{data.length}</span>
+          </>
+        )}
       </div>
       
-      {/* Hover tooltip area */}
+      {/* Hover tooltip */}
       <div className="absolute inset-0 flex">
         {data.map((d, i) => (
           <div key={i} className="flex-1 group relative cursor-pointer">
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl whitespace-nowrap z-10 shadow-lg">
-              <p className="font-semibold">{d.fullLabel || d.label}</p>
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl whitespace-nowrap z-10 shadow-lg pointer-events-none">
+              <p className="font-semibold">{d.fullLabel || d.label || `${d.day}-kun`}</p>
               <p className="text-blue-300">{d.value} ta reys</p>
-              {d.date && <p className="text-gray-400 text-[10px]">{d.date}-kun</p>}
             </div>
           </div>
         ))}
@@ -399,21 +411,20 @@ export default function Reports() {
         data.push({ label: shortDays[d], fullLabel: days[d], value: count, date: dayDate.getDate() })
       }
     } else {
-      // Oylik: 4 hafta (1-hafta, 2-hafta, 3-hafta, 4-hafta)
-      const weeks = [
-        { label: '1-hafta', start: 1, end: 7 },
-        { label: '2-hafta', start: 8, end: 14 },
-        { label: '3-hafta', start: 15, end: 21 },
-        { label: '4-hafta', start: 22, end: 31 }
-      ]
-      weeks.forEach(week => {
+      // Oylik: har bir kun uchun alohida
+      const daysInMonth = end.getDate()
+      for (let d = 1; d <= daysInMonth; d++) {
         const count = flights.filter(f => {
           const fDate = new Date(f.createdAt)
-          const day = fDate.getDate()
-          return day >= week.start && day <= week.end && fDate.getMonth() === start.getMonth()
+          return fDate.getDate() === d && fDate.getMonth() === start.getMonth() && fDate.getFullYear() === start.getFullYear()
         }).length
-        data.push({ label: week.label, value: count, range: `${week.start}-${week.end}` })
-      })
+        data.push({ 
+          label: d % 5 === 1 || d === daysInMonth ? String(d) : '', // Faqat 1, 6, 11, 16, 21, 26, 31 ko'rsatiladi
+          fullLabel: `${d}-kun`,
+          value: count,
+          day: d
+        })
+      }
     }
     return data
   }
