@@ -716,11 +716,11 @@ export default function Reports() {
               { drivers: rawData.drivers, flights: stats.flights.list || [], stats },
               `Hisobot_${getPeriodLabel().replace(/\s/g, '_')}`
             )}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 min-w-[140px] sm:min-w-0"
           >
-            <FileSpreadsheet size={18} />
-            <span className="hidden sm:inline">Excel yuklab olish</span>
-            <Download size={16} />
+            <FileSpreadsheet size={18} className="flex-shrink-0" />
+            <span className="text-sm whitespace-nowrap">Excel</span>
+            <Download size={16} className="flex-shrink-0" />
           </button>
         </div>
 
