@@ -130,14 +130,13 @@ const ProDonutChart = ({ data, title, total }) => {
   )
 }
 
-// Pro Vertical Bar Chart - chiroyli ustunli grafik
+// Professional Area Chart
 const ProLineChart = ({ data }) => {
-  const [animated, setAnimated] = useState(false)
-  useEffect(() => { setTimeout(() => setAnimated(true), 100) }, [])
+  const [hovered, setHovered] = useState(null)
   
   if (!data || data.length === 0) {
     return (
-      <div className="h-52 flex items-center justify-center text-gray-400">
+      <div className="h-56 flex items-center justify-center text-gray-400">
         <div className="text-center">
           <BarChart3 size={40} className="mx-auto mb-2 opacity-30" />
           <p>Ma'lumot yo'q</p>
@@ -148,70 +147,121 @@ const ProLineChart = ({ data }) => {
   
   const maxValue = Math.max(...data.map(d => d.value), 1)
   const total = data.reduce((sum, d) => sum + d.value, 0)
+  
+  // Chart dimensions
+  const width = 500
+  const height = 200
+  const padding = { top: 20, right: 20, bottom: 40, left: 45 }
+  const chartWidth = width - padding.left - padding.right
+  const chartHeight = height - padding.top - padding.bottom
 
-  // Oylik uchun faqat ba'zi labellarni ko'rsatish
-  const showLabel = (index, length) => {
-    if (length <= 10) return true
-    // Oylik: 1, 5, 10, 15, 20, 25, oxirgi
-    const day = index + 1
-    return day === 1 || day % 5 === 0 || index === length - 1
+  // Calculate points
+  const points = data.map((d, i) => ({
+    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
+    y: padding.top + chartHeight - (d.value / maxValue) * chartHeight,
+    ...d
+  }))
+
+  // Create smooth path
+  const createPath = () => {
+    if (points.length < 2) return `M ${points[0]?.x || 0} ${points[0]?.y || 0}`
+    let path = `M ${points[0].x} ${points[0].y}`
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1]
+      const curr = points[i]
+      const cpx1 = prev.x + (curr.x - prev.x) / 3
+      const cpx2 = prev.x + (curr.x - prev.x) * 2 / 3
+      path += ` C ${cpx1} ${prev.y}, ${cpx2} ${curr.y}, ${curr.x} ${curr.y}`
+    }
+    return path
+  }
+
+  const linePath = createPath()
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z`
+
+  // Y-axis labels
+  const yLabels = [0, Math.ceil(maxValue / 4), Math.ceil(maxValue / 2), Math.ceil(maxValue * 3 / 4), maxValue]
+
+  // X-axis labels (show only some for monthly)
+  const getXLabels = () => {
+    if (data.length <= 7) return data.map((d, i) => ({ index: i, label: d.label }))
+    // Monthly: show 1, 8, 15, 22, last
+    const indices = [0, 7, 14, 21, data.length - 1]
+    return indices.filter(i => i < data.length).map(i => ({ index: i, label: data[i].day || i + 1 }))
   }
 
   return (
-    <div className="space-y-4">
-      {/* Jami ko'rsatkich */}
-      <div className="flex items-center justify-between px-1">
-        <span className="text-sm text-gray-500">Jami reyslar:</span>
-        <span className="text-lg font-bold text-gray-900">{total} ta</span>
+    <div className="space-y-2">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          {hovered !== null ? (
+            <span className="text-gray-900 font-medium">
+              {data[hovered]?.fullLabel || data[hovered]?.label || `${data[hovered]?.day}-kun`}: <span className="text-blue-600">{data[hovered]?.value} ta reys</span>
+            </span>
+          ) : (
+            <span>Grafik ustiga kuring</span>
+          )}
+        </div>
+        <div className="text-right">
+          <span className="text-2xl font-bold text-gray-900">{total}</span>
+          <span className="text-sm text-gray-500 ml-1">ta reys</span>
+        </div>
       </div>
-      
-      {/* Bar chart */}
-      <div className="relative h-44">
-        <div className="absolute inset-0 flex items-end gap-[2px] px-1">
-          {data.map((d, i) => {
-            const heightPercent = (d.value / maxValue) * 100
+
+      {/* Chart */}
+      <div className="relative">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: '220px' }}>
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+            </linearGradient>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines */}
+          {yLabels.map((val, i) => {
+            const y = padding.top + chartHeight - (val / maxValue) * chartHeight
             return (
-              <div key={i} className="flex-1 flex flex-col items-center group relative">
-                {/* Tooltip */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl whitespace-nowrap z-20 shadow-xl pointer-events-none">
-                  <p className="font-semibold">{d.fullLabel || d.label || `${d.day || i + 1}-kun`}</p>
-                  <p className="text-blue-300">{d.value} ta reys</p>
-                </div>
-                
-                {/* Bar */}
-                <div 
-                  className="w-full rounded-t-sm bg-gradient-to-t from-blue-600 via-blue-500 to-indigo-400 group-hover:from-blue-500 group-hover:to-indigo-300 transition-all duration-300 cursor-pointer relative overflow-hidden"
-                  style={{ 
-                    height: animated ? `${Math.max(heightPercent, 2)}%` : '0%',
-                    transitionDelay: `${i * 15}ms`,
-                    minHeight: d.value > 0 ? '4px' : '2px'
-                  }}
-                >
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </div>
+              <g key={i}>
+                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e5e7eb" strokeDasharray="4,4" />
+                <text x={padding.left - 8} y={y + 4} textAnchor="end" className="text-[11px] fill-gray-400">{val}</text>
+              </g>
             )
           })}
-        </div>
-        
-        {/* Y-axis grid lines */}
-        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-          {[0, 1, 2, 3, 4].map(i => (
-            <div key={i} className="border-b border-gray-100 border-dashed" />
+
+          {/* Area */}
+          <path d={areaPath} fill="url(#areaGrad)" />
+
+          {/* Line */}
+          <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Data points */}
+          {points.map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={hovered === i ? 8 : 5} fill="white" stroke="#3b82f6" strokeWidth="2" 
+                className="transition-all duration-200 cursor-pointer" style={{ filter: hovered === i ? 'drop-shadow(0 2px 4px rgba(59,130,246,0.4))' : 'none' }} />
+              {hovered === i && <circle cx={p.x} cy={p.y} r="3" fill="#3b82f6" />}
+            </g>
           ))}
-        </div>
-      </div>
-      
-      {/* X-axis labels */}
-      <div className="flex gap-[2px] px-1">
-        {data.map((d, i) => (
-          <div key={i} className="flex-1 text-center">
-            <span className={`text-[9px] sm:text-[10px] font-medium ${showLabel(i, data.length) ? 'text-gray-500' : 'text-transparent'}`}>
-              {d.label || d.day || i + 1}
-            </span>
-          </div>
-        ))}
+
+          {/* Hover areas */}
+          {points.map((p, i) => (
+            <rect key={`hover-${i}`} x={p.x - chartWidth / data.length / 2} y={padding.top} width={chartWidth / data.length} height={chartHeight}
+              fill="transparent" onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)} className="cursor-pointer" />
+          ))}
+
+          {/* X-axis labels */}
+          {getXLabels().map(({ index, label }) => (
+            <text key={index} x={points[index]?.x} y={height - 10} textAnchor="middle" className="text-[11px] fill-gray-500 font-medium">
+              {label}
+            </text>
+          ))}
+        </svg>
       </div>
     </div>
   )
