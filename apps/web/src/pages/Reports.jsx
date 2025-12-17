@@ -401,14 +401,26 @@ const ProLineChart = ({ data }) => {
           {/* Line */}
           <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="3" strokeLinecap="round" />
 
-          {/* Data points */}
-          {points.map((p, i) => (
-            <g key={i}>
-              <circle cx={p.x} cy={p.y} r={hovered === i ? 8 : 5} fill="white" stroke="#3b82f6" strokeWidth="2" 
-                className="transition-all duration-200 cursor-pointer" style={{ filter: hovered === i ? 'drop-shadow(0 2px 4px rgba(59,130,246,0.4))' : 'none' }} />
-              {hovered === i && <circle cx={p.x} cy={p.y} r="3" fill="#3b82f6" />}
-            </g>
-          ))}
+          {/* Data points - faqat qiymat > 0 yoki hover bo'lganda ko'rsatish */}
+          {points.map((p, i) => {
+            const showPoint = p.value > 0 || hovered === i
+            if (!showPoint && data.length > 10) return null // Oylik uchun 0 nuqtalarni yashirish
+            return (
+              <g key={i}>
+                <circle 
+                  cx={p.x} 
+                  cy={p.y} 
+                  r={hovered === i ? 7 : (p.value > 0 ? 4 : 2)} 
+                  fill={p.value > 0 ? 'white' : '#e5e7eb'} 
+                  stroke={p.value > 0 ? '#3b82f6' : '#d1d5db'} 
+                  strokeWidth={p.value > 0 ? 2 : 1}
+                  className="transition-all duration-200 cursor-pointer" 
+                  style={{ filter: hovered === i ? 'drop-shadow(0 2px 4px rgba(59,130,246,0.4))' : 'none' }} 
+                />
+                {hovered === i && <circle cx={p.x} cy={p.y} r="3" fill="#3b82f6" />}
+              </g>
+            )
+          })}
 
           {/* Hover areas */}
           {points.map((p, i) => (
