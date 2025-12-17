@@ -442,11 +442,31 @@ const ProLineChart = ({ data }) => {
 
 // Detail Modal Component
 const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl animate-slideUp" onClick={e => e.stopPropagation()}>
-        <div className={`sticky top-0 bg-gradient-to-r ${color} p-5 sm:p-6`}>
+    <div 
+      className="fixed top-0 left-0 right-0 bottom-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      style={{ position: 'fixed', margin: 0 }}
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl"
+        style={{ margin: 'auto' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={`bg-gradient-to-r ${color} p-5 sm:p-6`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-white">
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
@@ -462,7 +482,7 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
             </button>
           </div>
         </div>
-        <div className="p-5 sm:p-6 overflow-auto max-h-[calc(90vh-100px)]">{children}</div>
+        <div className="p-5 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 100px)' }}>{children}</div>
       </div>
     </div>
   )
