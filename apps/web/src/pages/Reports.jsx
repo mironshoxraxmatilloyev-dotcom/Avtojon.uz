@@ -130,7 +130,7 @@ const ProDonutChart = ({ data, title, total }) => {
   )
 }
 
-// Pro Line/Area Chart with smooth curves
+// Pro Vertical Bar Chart - chiroyli ustunli grafik
 const ProLineChart = ({ data }) => {
   const [animated, setAnimated] = useState(false)
   useEffect(() => { setTimeout(() => setAnimated(true), 100) }, [])
@@ -147,125 +147,69 @@ const ProLineChart = ({ data }) => {
   }
   
   const maxValue = Math.max(...data.map(d => d.value), 1)
-  const padding = { top: 20, right: 10, bottom: 30, left: 10 }
-  const width = 100
-  const height = 60
-  
-  const points = data.map((d, i) => ({
-    x: padding.left + (i / Math.max(data.length - 1, 1)) * (width - padding.left - padding.right),
-    y: padding.top + (1 - d.value / maxValue) * (height - padding.top - padding.bottom),
-    value: d.value,
-    label: d.label
-  }))
+  const total = data.reduce((sum, d) => sum + d.value, 0)
 
-  // Smooth curve using bezier
-  const getPath = () => {
-    if (points.length < 2) return ''
-    let path = `M ${points[0].x} ${points[0].y}`
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1]
-      const curr = points[i]
-      const cpx = (prev.x + curr.x) / 2
-      path += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`
-    }
-    return path
+  // Oylik uchun faqat ba'zi labellarni ko'rsatish
+  const showLabel = (index, length) => {
+    if (length <= 10) return true
+    // Oylik: 1, 5, 10, 15, 20, 25, oxirgi
+    const day = index + 1
+    return day === 1 || day % 5 === 0 || index === length - 1
   }
 
-  const linePath = getPath()
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`
-
   return (
-    <div className="relative h-52">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#06b6d4" />
-          </linearGradient>
-          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-          <line
-            key={i}
-            x1={padding.left}
-            y1={padding.top + ratio * (height - padding.top - padding.bottom)}
-            x2={width - padding.right}
-            y2={padding.top + ratio * (height - padding.top - padding.bottom)}
-            stroke="#e5e7eb"
-            strokeWidth="0.3"
-            strokeDasharray="2,2"
-          />
-        ))}
-        
-        {/* Area fill */}
-        <path
-          d={areaPath}
-          fill="url(#areaGradient)"
-          className={`transition-opacity duration-1000 ${animated ? 'opacity-100' : 'opacity-0'}`}
-        />
-        
-        {/* Line */}
-        <path
-          d={linePath}
-          fill="none"
-          stroke="url(#lineGradient)"
-          strokeWidth="0.8"
-          strokeLinecap="round"
-          filter="url(#glow)"
-          className={`transition-all duration-1000 ${animated ? 'opacity-100' : 'opacity-0'}`}
-          style={{ strokeDasharray: animated ? 'none' : '200', strokeDashoffset: animated ? 0 : 200 }}
-        />
-        
-        {/* Data points - faqat kam nuqtali chartlarda ko'rsatish */}
-        {points.length <= 10 && points.map((p, i) => (
-          <g key={i} className={`transition-all duration-500 ${animated ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: `${i * 50}ms` }}>
-            <circle cx={p.x} cy={p.y} r="1.5" fill="white" stroke="url(#lineGradient)" strokeWidth="0.5" />
-            <circle cx={p.x} cy={p.y} r="0.8" fill="#3b82f6" />
-          </g>
-        ))}
-      </svg>
-      
-      {/* X-axis labels - oylik uchun optimallashtirilgan */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1">
-        {data.length <= 10 ? (
-          // Kam nuqtali - hammasi ko'rsatiladi
-          data.map((d, i) => (
-            <div key={i} className="text-center flex-1">
-              <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{d.label}</span>
-            </div>
-          ))
-        ) : (
-          // Ko'p nuqtali (oylik) - faqat ba'zilari ko'rsatiladi
-          <>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">1</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">5</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">10</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">15</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">20</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">25</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{data.length}</span>
-          </>
-        )}
+    <div className="space-y-4">
+      {/* Jami ko'rsatkich */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-sm text-gray-500">Jami reyslar:</span>
+        <span className="text-lg font-bold text-gray-900">{total} ta</span>
       </div>
       
-      {/* Hover tooltip */}
-      <div className="absolute inset-0 flex">
+      {/* Bar chart */}
+      <div className="relative h-44">
+        <div className="absolute inset-0 flex items-end gap-[2px] px-1">
+          {data.map((d, i) => {
+            const heightPercent = (d.value / maxValue) * 100
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center group relative">
+                {/* Tooltip */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl whitespace-nowrap z-20 shadow-xl pointer-events-none">
+                  <p className="font-semibold">{d.fullLabel || d.label || `${d.day || i + 1}-kun`}</p>
+                  <p className="text-blue-300">{d.value} ta reys</p>
+                </div>
+                
+                {/* Bar */}
+                <div 
+                  className="w-full rounded-t-sm bg-gradient-to-t from-blue-600 via-blue-500 to-indigo-400 group-hover:from-blue-500 group-hover:to-indigo-300 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                  style={{ 
+                    height: animated ? `${Math.max(heightPercent, 2)}%` : '0%',
+                    transitionDelay: `${i * 15}ms`,
+                    minHeight: d.value > 0 ? '4px' : '2px'
+                  }}
+                >
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        
+        {/* Y-axis grid lines */}
+        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+          {[0, 1, 2, 3, 4].map(i => (
+            <div key={i} className="border-b border-gray-100 border-dashed" />
+          ))}
+        </div>
+      </div>
+      
+      {/* X-axis labels */}
+      <div className="flex gap-[2px] px-1">
         {data.map((d, i) => (
-          <div key={i} className="flex-1 group relative cursor-pointer">
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl whitespace-nowrap z-10 shadow-lg pointer-events-none">
-              <p className="font-semibold">{d.fullLabel || d.label || `${d.day}-kun`}</p>
-              <p className="text-blue-300">{d.value} ta reys</p>
-            </div>
+          <div key={i} className="flex-1 text-center">
+            <span className={`text-[9px] sm:text-[10px] font-medium ${showLabel(i, data.length) ? 'text-gray-500' : 'text-transparent'}`}>
+              {d.label || d.day || i + 1}
+            </span>
           </div>
         ))}
       </div>
