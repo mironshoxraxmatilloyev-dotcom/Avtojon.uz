@@ -316,7 +316,7 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
 // Reysni yopish (tugatish)
 router.put('/:id/complete', protect, businessOnly, async (req, res) => {
   try {
-    const { endOdometer, endFuel } = req.body;
+    const { endOdometer, endFuel, driverProfitPercent } = req.body;
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
@@ -338,6 +338,22 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     flight.completedAt = new Date();
     if (endOdometer) flight.endOdometer = endOdometer;
     if (endFuel !== undefined) flight.endFuel = endFuel;
+
+    // Shofyor ulushi (foydadan %)
+    const percent = Number(driverProfitPercent) || 0;
+    flight.driverProfitPercent = percent;
+    
+    // Foyda hisoblash (save() da avtomatik hisoblanadi, lekin bu yerda ham)
+    const totalPayment = flight.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+    const totalExpenses = flight.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const profit = totalPayment - totalExpenses;
+    
+    // Faqat foyda musbat bo'lsa shofyorga ulush beriladi
+    if (profit > 0 && percent > 0) {
+      flight.driverProfitAmount = Math.round(profit * percent / 100);
+    } else {
+      flight.driverProfitAmount = 0;
+    }
 
     await flight.save();
 

@@ -115,7 +115,7 @@ export default function FlightDetail() {
     stationName: '',
     location: null
   })
-  const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
+  const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
   const [borderForm, setBorderForm] = useState({
     fromCountry: 'UZB', toCountry: 'KZ', borderName: '',
     customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: ''
@@ -511,10 +511,18 @@ export default function FlightDetail() {
   const handleComplete = async (e) => {
     e.preventDefault()
     
+    const driverPercent = Number(completeForm.driverProfitPercent) || 0
+    const profit = (flight.totalPayment || 0) - (flight.totalExpenses || 0)
+    const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
+    
     // Tasdiqlash
+    const confirmMessage = profit > 0 && driverPercent > 0
+      ? `${flight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nShofyorga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
+      : `${flight.name} reysini yopishni xohlaysizmi? Yopilgandan keyin yangi bosqich yoki xarajat qo'shib bo'lmaydi.`
+    
     const confirmed = await alert.confirm({
       title: "Reysni yopish",
-      message: `${flight.name} reysini yopishni xohlaysizmi? Yopilgandan keyin yangi bosqich yoki xarajat qo'shib bo'lmaydi.`,
+      message: confirmMessage,
       confirmText: "Ha, yopish",
       cancelText: "Bekor qilish",
       type: "warning"
@@ -524,7 +532,8 @@ export default function FlightDetail() {
 
     const completeData = {
       endOdometer: Number(completeForm.endOdometer) || 0,
-      endFuel: Number(completeForm.endFuel) || 0
+      endFuel: Number(completeForm.endFuel) || 0,
+      driverProfitPercent: driverPercent
     }
 
     // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
@@ -532,9 +541,12 @@ export default function FlightDetail() {
       ...prev,
       status: 'completed',
       endOdometer: completeData.endOdometer,
-      endFuel: completeData.endFuel
+      endFuel: completeData.endFuel,
+      driverProfitPercent: driverPercent,
+      driverProfitAmount: driverAmount
     }))
     setShowCompleteModal(false)
+    setCompleteForm({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
     showToast.success('Reys yopildi!')
 
     // Fonda API
@@ -674,6 +686,29 @@ export default function FlightDetail() {
               </div>
             </div>
           </div>
+
+          {/* Yopilgan reys uchun shofyor ulushi */}
+          {!isActive && (flight.driverProfitPercent > 0 || flight.driverProfitAmount > 0) && (
+            <div className="mt-3 sm:mt-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-500/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm sm:text-lg">💰</span>
+                  </div>
+                  <div>
+                    <p className="text-emerald-200 text-[10px] sm:text-xs">Shofyor ulushi ({flight.driverProfitPercent || 0}%)</p>
+                    <p className="text-sm sm:text-lg md:text-xl font-bold text-emerald-300">{formatMoney(flight.driverProfitAmount || 0)} so'm</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-emerald-200 text-[10px] sm:text-xs">Foyda</p>
+                  <p className={`text-xs sm:text-sm font-bold ${(flight.profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                    {formatMoney(flight.profit || 0)} so'm
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1333,60 +1368,12 @@ export default function FlightDetail() {
                   </div>
                 )}
 
-                {/* AZS nomi va joylashuv - faqat yoqilg'i uchun */}
+                {/* AZS nomi - faqat yoqilg'i uchun */}
                 {expenseForm.category === 'fuel' && (
                   <div>
                       <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
-                        <MapPin size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> Joylashuv
+                        <MapPin size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> AZS nomi (ixtiyoriy)
                       </label>
-                      
-                      {/* GPS tugmasi */}
-                      <div className="flex gap-2 mb-1.5 sm:mb-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (navigator.geolocation) {
-                              navigator.geolocation.getCurrentPosition(
-                                async (position) => {
-                                  const { latitude, longitude } = position.coords
-                                  // Reverse geocoding - koordinatadan manzil olish
-                                  try {
-                                    const res = await fetch(
-                                      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-                                    )
-                                    const data = await res.json()
-                                    const address = data.address
-                                    const locationName = address?.city || address?.town || address?.village || address?.county || data.display_name?.split(',')[0] || 'Noma\'lum'
-                                    
-                                    setExpenseForm({
-                                      ...expenseForm,
-                                      stationName: locationName,
-                                      location: { lat: latitude, lng: longitude, name: locationName }
-                                    })
-                                    showToast.success(`📍 Joylashuv aniqlandi: ${locationName}`)
-                                  } catch {
-                                    setExpenseForm({
-                                      ...expenseForm,
-                                      location: { lat: latitude, lng: longitude, name: null }
-                                    })
-                                    showToast.success('📍 GPS koordinatalar aniqlandi')
-                                  }
-                                },
-                                (error) => {
-                                  showToast.error('GPS xatosi: ' + (error.message || 'Joylashuvni aniqlab bo\'lmadi'))
-                                },
-                                { enableHighAccuracy: true, timeout: 10000 }
-                              )
-                            } else {
-                              showToast.error('GPS qo\'llab-quvvatlanmaydi')
-                            }
-                          }}
-                          className="flex-1 py-2 sm:py-2.5 bg-blue-500/20 text-blue-400 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5 sm:gap-2 border border-blue-500/30"
-                        >
-                          <Navigation size={14} className="sm:w-4 sm:h-4" />
-                          GPS bilan aniqlash
-                        </button>
-                      </div>
                       
                       {/* Qo'lda yozish - AddressAutocomplete */}
                       <AddressAutocomplete
@@ -1403,25 +1390,6 @@ export default function FlightDetail() {
                         focusColor="blue"
                         domesticOnly={true}
                       />
-                      
-                      {/* Aniqlangan joylashuv */}
-                      {expenseForm.location && (
-                        <div className="mt-1.5 sm:mt-2 p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 sm:gap-2 text-emerald-400 text-[10px] sm:text-xs min-w-0">
-                            <CheckCircle size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                            <span className="truncate">
-                              {expenseForm.location.name || `${expenseForm.location.lat?.toFixed(4)}, ${expenseForm.location.lng?.toFixed(4)}`}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setExpenseForm({ ...expenseForm, location: null })}
-                            className="text-slate-400 hover:text-red-400 flex-shrink-0"
-                          >
-                            <X size={12} className="sm:w-3.5 sm:h-3.5" />
-                          </button>
-                        </div>
-                      )}
                   </div>
                 )}
 
@@ -1513,6 +1481,40 @@ export default function FlightDetail() {
                       {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))} so'm
                     </span>
                   </div>
+                </div>
+
+                {/* Shofyor ulushi - har doim ko'rsatiladi */}
+                <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-emerald-500/20">
+                  <label className="block text-xs sm:text-sm font-medium text-emerald-300 mb-1.5 sm:mb-2">
+                    💰 Shofyorga foydadan necha % berasiz?
+                  </label>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={completeForm.driverProfitPercent}
+                      onChange={(e) => setCompleteForm({ ...completeForm, driverProfitPercent: e.target.value })}
+                      className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-emerald-500/30 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      placeholder="0"
+                    />
+                    <span className="text-emerald-400 font-bold text-lg">%</span>
+                  </div>
+                  {completeForm.driverProfitPercent > 0 && (
+                    <div className={`mt-2 sm:mt-3 p-2 sm:p-3 rounded-lg flex items-center justify-between ${
+                      flight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'
+                    }`}>
+                      <span className={`text-xs sm:text-sm ${flight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                        Shofyorga:
+                      </span>
+                      <span className={`font-bold text-sm sm:text-base ${flight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {flight.profit > 0 
+                          ? `${formatMoney(Math.round(flight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
+                          : '0 so'm (zarar bo\'lgani uchun)'
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:gap-4">

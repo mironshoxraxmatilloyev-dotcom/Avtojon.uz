@@ -209,25 +209,47 @@ export default function DriversNew() {
         const vehicle = getDriverVehicle(selectedDriver._id)
         if (!vehicle) { alert.error('Xatolik', 'Mashina biriktirilmagan'); return }
 
-        const payload = {
-            driverId: selectedDriver._id,
-            startOdometer: Number(flightForm.startOdometer) || 0,
-            startFuel: Number(flightForm.startFuel) || 0,
-            flightType: flightForm.flightType,
-            firstLeg: { fromCity: flightForm.fromCity, toCity: flightForm.toCity, fromCoords: flightForm.fromCoords, toCoords: flightForm.toCoords, givenBudget: Number(flightForm.givenBudget) || 0, distance: Number(flightForm.distance) || 0 }
+        const driverId = selectedDriver._id
+        const fromCity = flightForm.fromCity
+        const toCity = flightForm.toCity
+
+        // 🚀 OPTIMISTIC UPDATE - Darhol UI yangilanadi
+        const tempFlight = {
+            _id: 'temp_' + Date.now(),
+            name: `${fromCity} → ${toCity}`,
+            status: 'active',
+            driver: { _id: driverId, fullName: selectedDriver.fullName },
+            vehicle: { _id: vehicle._id, plateNumber: vehicle.plateNumber },
+            legs: [{ fromCity, toCity, status: 'in_progress' }],
+            totalDistance: Number(flightForm.distance) || 0,
+            totalGivenBudget: Number(flightForm.givenBudget) || 0
         }
 
-        const driverId = selectedDriver._id
-        const tempFlight = { _id: 'temp_' + Date.now(), name: `${flightForm.fromCity} → ${flightForm.toCity}`, status: 'active', legs: [{ fromCity: flightForm.fromCity, toCity: flightForm.toCity }] }
-
+        // Darhol modal yopiladi va UI yangilanadi
         dispatch({ type: 'START_FLIGHT', driverId, flight: tempFlight })
-        showToast.success(`Reys ochildi: ${flightForm.fromCity} → ${flightForm.toCity}`)
+        setShowFlightModal(false)
+        setSelectedDriver(null)
+        showToast.success(`Reys ochildi: ${fromCity} → ${toCity}`)
 
-        setTimeout(() => {
-            setShowFlightModal(false)
-            setSelectedDriver(null)
-            resetFlightForm()
-        }, 50)
+        // Form tozalanadi
+        const formData = { ...flightForm }
+        resetFlightForm()
+
+        // Fonda API so'rovi
+        const payload = {
+            driverId,
+            startOdometer: Number(formData.startOdometer) || 0,
+            startFuel: Number(formData.startFuel) || 0,
+            flightType: formData.flightType,
+            firstLeg: {
+                fromCity,
+                toCity,
+                fromCoords: formData.fromCoords,
+                toCoords: formData.toCoords,
+                givenBudget: Number(formData.givenBudget) || 0,
+                distance: Number(formData.distance) || 0
+            }
+        }
 
         api.post('/flights', payload)
             .then((res) => dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: res.data.data }))

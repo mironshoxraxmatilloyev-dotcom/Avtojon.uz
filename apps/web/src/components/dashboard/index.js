@@ -1,5 +1,5 @@
-// 🚀 Dashboard Components - Modular Export
-export { DemoBanner, DashboardHero } from './DashboardHeader'
-export { ActiveFlightsSection, ActiveTripsSection } from './ActiveFlights'
-export { MainStatsGrid, FinancialStats } from './StatsCards'
-export { DashboardMap, createDriverIcon, startIcon, endIcon } from './DashboardMap'
+export { QuickStats, MainStats, FinancialStats } from './StatsCards'
+export { DemoBanner, HeroHeader } from './DashboardHeader'
+export { ActiveFlights } from './ActiveFlights'
+export { RecentFlights } from './RecentFlights'
+export { LiveMap, createDriverIcon } from './LiveMap'

@@ -82,7 +82,7 @@ export default function Flights() {
     description: '', 
     quantity: '' 
   })
-  const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '' })
+  const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
   const [borderForm, setBorderForm] = useState({
     fromCountry: 'UZB', toCountry: 'KZ', borderName: '',
     customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: ''
@@ -122,20 +122,34 @@ export default function Flights() {
     }
 
     const flightId = selectedFlight._id
+    const lastLeg = selectedFlight.legs?.[selectedFlight.legs.length - 1]
     const legData = {
+      fromCity: lastLeg?.toCity || '',
       toCity: legForm.toCity,
       payment: Number(legForm.payment) || 0,
       distance: Number(legForm.distance) || 0
     }
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    const tempLeg = { _id: 'temp_' + Date.now(), ...legData, status: 'in_progress' }
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      legs: [...(f.legs || []), tempLeg],
+      totalPayment: (f.totalPayment || 0) + legData.payment,
+      totalDistance: (f.totalDistance || 0) + legData.distance
+    } : f))
+
     setShowLegModal(false)
     setLegForm({ toCity: '', payment: '', distance: '' })
     showToast.success('Bosqich qo\'shildi!')
 
     // Fonda API
     api.post(`/flights/${flightId}/legs`, legData)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
         fetchData()
@@ -156,9 +170,8 @@ export default function Flights() {
     const isFuel = expenseForm.category === 'fuel'
     const fuelType = FUEL_TYPES.find(f => f.value === expenseForm.type)
     const expenseLabel = isFuel ? fuelType?.label : EXPENSE_CATEGORIES.find(c => c.value === expenseForm.category)?.label
-
-    // Darhol modal yopilsin
     const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
+    
     const expenseData = {
       type: isFuel ? expenseForm.type : expenseForm.category,
       amount: Number(expenseForm.amount),
@@ -167,6 +180,15 @@ export default function Flights() {
       quantityUnit: isFuel && expenseForm.quantity ? fuelType?.unit || 'litr' : null
     }
     const flightId = selectedFlight._id
+
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    const tempExpense = { _id: 'temp_' + Date.now(), ...expenseData, date: new Date() }
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      expenses: [...(f.expenses || []), tempExpense],
+      totalExpenses: (f.totalExpenses || 0) + expenseData.amount,
+      profit: (f.totalPayment || 0) - ((f.totalExpenses || 0) + expenseData.amount)
+    } : f))
     
     setShowExpenseModal(false)
     setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '' })
@@ -174,7 +196,11 @@ export default function Flights() {
     
     // Fonda API so'rovi
     api.post(`/flights/${flightId}/expenses`, expenseData)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch((error) => {
         showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
         fetchData()
@@ -185,9 +211,17 @@ export default function Flights() {
   const handleComplete = async (e) => {
     e.preventDefault()
     
+    const driverPercent = Number(completeForm.driverProfitPercent) || 0
+    const profit = (selectedFlight.totalPayment || 0) - (selectedFlight.totalExpenses || 0)
+    const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
+    
+    const confirmMessage = profit > 0 && driverPercent > 0
+      ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nShofyorga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
+      : `${selectedFlight.name} reysini yopishni xohlaysizmi?`
+    
     const confirmed = await alert.confirm({
       title: "Reysni yopish",
-      message: `${selectedFlight.name} reysini yopishni xohlaysizmi?`,
+      message: confirmMessage,
       confirmText: "Ha, yopish",
       cancelText: "Bekor qilish",
       type: "warning"
@@ -198,17 +232,33 @@ export default function Flights() {
     const flightId = selectedFlight._id
     const completeData = {
       endOdometer: Number(completeForm.endOdometer) || 0,
-      endFuel: Number(completeForm.endFuel) || 0
+      endFuel: Number(completeForm.endFuel) || 0,
+      driverProfitPercent: driverPercent
     }
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      status: 'completed',
+      endOdometer: completeData.endOdometer,
+      endFuel: completeData.endFuel,
+      driverProfitPercent: driverPercent,
+      driverProfitAmount: driverAmount,
+      completedAt: new Date()
+    } : f))
+
     setShowCompleteModal(false)
-    setCompleteForm({ endOdometer: '', endFuel: '' })
+    setCompleteForm({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
+    setExpandedFlight(null)
     showToast.success('Reys yopildi!')
 
     // Fonda API
     api.put(`/flights/${flightId}/complete`, completeData)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
         fetchData()
@@ -228,15 +278,27 @@ export default function Flights() {
       insuranceFee: Number(borderForm.insuranceFee) || 0,
       otherFees: Number(borderForm.otherFees) || 0
     }
+    const totalUSD = data.customsFee + data.transitFee + data.insuranceFee + data.otherFees
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE
+    const tempBorder = { _id: 'temp_' + Date.now(), ...data, totalInUSD: totalUSD }
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      borderCrossings: [...(f.borderCrossings || []), tempBorder],
+      borderCrossingsTotalUSD: (f.borderCrossingsTotalUSD || 0) + totalUSD
+    } : f))
+
     setShowBorderModal(false)
     setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
     showToast.success('Chegara xarajati qo\'shildi!')
 
     // Fonda API
     api.post(`/flights/${flightId}/border-crossing`, data)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
         fetchData()
@@ -253,10 +315,25 @@ export default function Flights() {
       type: "danger"
     })
     if (!confirmed) return
+
+    // 🚀 OPTIMISTIC UPDATE
+    const flight = flights.find(f => f._id === flightId)
+    const crossing = flight?.borderCrossings?.find(bc => bc._id === crossingId)
+    const crossingAmount = crossing?.totalInUSD || 0
+
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      borderCrossings: f.borderCrossings?.filter(bc => bc._id !== crossingId) || [],
+      borderCrossingsTotalUSD: (f.borderCrossingsTotalUSD || 0) - crossingAmount
+    } : f))
     
     showToast.success('O\'chirildi')
     api.delete(`/flights/${flightId}/border-crossing/${crossingId}`)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch(() => {
         showToast.error('Xatolik')
         fetchData()
@@ -275,14 +352,23 @@ export default function Flights() {
       distanceKm: Number(platonForm.distanceKm) || 0
     }
 
-    // Darhol yopish
+    // 🚀 OPTIMISTIC UPDATE
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      platon: { ...data, amountInUSD: data.amount / 90 }
+    } : f))
+
     setShowPlatonModal(false)
     setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
     showToast.success('Platon saqlandi!')
 
     // Fonda API
     api.put(`/flights/${flightId}/platon`, data)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch((err) => {
         showToast.error(err.response?.data?.message || 'Xatolik')
         fetchData()
@@ -301,11 +387,27 @@ export default function Flights() {
 
     if (!confirmed) return
 
+    // 🚀 OPTIMISTIC UPDATE - UI dan darhol o'chirish
+    const flight = flights.find(f => f._id === flightId)
+    const expense = flight?.expenses?.find(e => e._id === expenseId)
+    const expenseAmount = expense?.amount || 0
+
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      expenses: f.expenses?.filter(e => e._id !== expenseId) || [],
+      totalExpenses: (f.totalExpenses || 0) - expenseAmount,
+      profit: (f.totalPayment || 0) - ((f.totalExpenses || 0) - expenseAmount)
+    } : f))
+
     showToast.success('Xarajat o\'chirildi')
 
     // Fonda API
     api.delete(`/flights/${flightId}/expenses/${expenseId}`)
-      .then(() => fetchData())
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
       .catch(() => {
         showToast.error('Xarajatni o\'chirishda xatolik')
         fetchData()
@@ -1002,6 +1104,36 @@ export default function Flights() {
                       {formatMoney(selectedFlight.profit)} so'm
                     </span>
                   </div>
+                </div>
+
+                {/* Shofyor ulushi - har doim ko'rsatiladi */}
+                <div className={`bg-gradient-to-r ${selectedFlight.profit > 0 ? 'from-emerald-500/10 to-teal-500/10 border-emerald-500/20' : 'from-red-500/10 to-orange-500/10 border-red-500/20'} rounded-xl p-4 border`}>
+                  <label className={`block text-sm font-medium mb-2 ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                    💰 Shofyorga foydadan necha % berasiz?
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={completeForm.driverProfitPercent}
+                      onChange={(e) => setCompleteForm({ ...completeForm, driverProfitPercent: e.target.value })}
+                      className={`flex-1 px-4 py-3 bg-white/10 border rounded-xl text-white placeholder-slate-500 focus:outline-none ${selectedFlight.profit > 0 ? 'border-emerald-500/30 focus:border-emerald-500' : 'border-red-500/30 focus:border-red-500'}`}
+                      placeholder="0"
+                    />
+                    <span className={`font-bold text-lg ${selectedFlight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>%</span>
+                  </div>
+                  {completeForm.driverProfitPercent > 0 && (
+                    <div className={`mt-3 p-3 rounded-lg flex items-center justify-between ${selectedFlight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+                      <span className={`text-sm ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>Shofyorga:</span>
+                      <span className={`font-bold ${selectedFlight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {selectedFlight.profit > 0 
+                          ? `${formatMoney(Math.round(selectedFlight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
+                          : "0 so'm (zarar bo'lgani uchun)"
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

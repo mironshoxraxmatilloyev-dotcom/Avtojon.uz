@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore'
 import {
     LogOut, Truck, Play, CheckCircle, History, Wallet, Route, MapPin, Map,
     Clock, TrendingUp, TrendingDown, Award, Navigation, X, Sparkles, Zap, Target,
-    Star, CircleDollarSign, Bell, WifiOff, RefreshCw
+    Star, CircleDollarSign, Bell, WifiOff, RefreshCw, Fuel, ChevronRight, Eye
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -45,7 +45,7 @@ const endIcon = new L.Icon({
 // Navigator rejimi - haydovchini kuzatib borish
 function NavigatorMode({ position, isNavigating, routeCoords, endCoords }) {
     const map = useMap()
-    
+
     useEffect(() => {
         if (isNavigating && position) {
             // Navigator rejimida - haydovchini markazda ushlab turish
@@ -116,6 +116,7 @@ export default function DriverHome() {
 
     const [driverId, setDriverId] = useState(null)
     const [newTripNotification, setNewTripNotification] = useState(null)
+    const [selectedFlight, setSelectedFlight] = useState(null) // Tarix modal uchun
 
     const [error, setError] = useState(null)
 
@@ -127,28 +128,28 @@ export default function DriverHome() {
                 api.get('/driver/me'),
                 api.get('/driver/me/flights').catch(() => ({ data: { data: [] } }))
             ])
-            
+
             const allTrips = tripsRes.data.data || []
             setTrips(allTrips)
             setActiveTrip(allTrips.find(t => t.status === 'in_progress') || null)
             setPendingTrips(allTrips.filter(t => t.status === 'pending'))
-            
+
             // Flight (yangi tizim)
             const allFlights = flightsRes.data.data || []
             setFlights(allFlights)
             setActiveFlight(allFlights.find(f => f.status === 'active') || null)
-            
+
             // Serverdan oxirgi joylashuvni olish
             const driverData = profileRes.data.data
-            
+
             // Driver ID ni saqlash (socket uchun)
             if (driverData?._id) {
                 setDriverId(driverData._id)
             }
-            
+
             if (driverData?.lastLocation) {
                 const loc = driverData.lastLocation
-                
+
                 if (loc.lat && loc.lng) {
                     setCurrentLocation({
                         lat: loc.lat,
@@ -178,18 +179,18 @@ export default function DriverHome() {
             if (activeFlight && activeFlight.legs && activeFlight.legs.length > 0) {
                 const firstLeg = activeFlight.legs[0]
                 const lastLeg = activeFlight.legs[activeFlight.legs.length - 1]
-                
+
                 // Koordinatalar mavjud bo'lsa
                 if (firstLeg.fromCoords && lastLeg.toCoords) {
                     setTripStartCoords(firstLeg.fromCoords)
                     setTripEndCoords(lastLeg.toCoords)
-                    
+
 
                     const route = await getRouteFromAPI(
                         firstLeg.fromCoords.lat, firstLeg.fromCoords.lng,
                         lastLeg.toCoords.lat, lastLeg.toCoords.lng
                     )
-                    
+
                     if (route && route.coordinates && route.coordinates.length > 2) {
                         setRouteCoords(route.coordinates)
                         setRouteInfo({ distance: route.distance, duration: route.duration })
@@ -208,13 +209,13 @@ export default function DriverHome() {
                             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(lastLeg.toCity)}&limit=1`)
                         ])
                         const [startData, endData] = await Promise.all([startRes.json(), endRes.json()])
-                        
+
                         if (startData[0] && endData[0]) {
                             const start = { lat: parseFloat(startData[0].lat), lng: parseFloat(startData[0].lon) }
                             const end = { lat: parseFloat(endData[0].lat), lng: parseFloat(endData[0].lon) }
                             setTripStartCoords(start)
                             setTripEndCoords(end)
-                            
+
                             const route = await getRouteFromAPI(start.lat, start.lng, end.lat, end.lng)
                             if (route && route.coordinates && route.coordinates.length > 2) {
                                 setRouteCoords(route.coordinates)
@@ -230,18 +231,18 @@ export default function DriverHome() {
                 }
                 return // Flight bor bo'lsa, Trip ni tekshirmaymiz
             }
-            
+
             // Trip tizimi (eski)
             if (activeTrip && activeTrip.startCoords && activeTrip.endCoords) {
                 setTripStartCoords(activeTrip.startCoords)
                 setTripEndCoords(activeTrip.endCoords)
-                
+
 
                 const route = await getRouteFromAPI(
                     activeTrip.startCoords.lat, activeTrip.startCoords.lng,
                     activeTrip.endCoords.lat, activeTrip.endCoords.lng
                 )
-                
+
                 if (route && route.coordinates && route.coordinates.length > 2) {
                     setRouteCoords(route.coordinates)
                     setRouteInfo({ distance: route.distance, duration: route.duration })
@@ -252,10 +253,10 @@ export default function DriverHome() {
                     ])
                     const dist = Math.round(
                         6371 * Math.acos(
-                            Math.cos(activeTrip.startCoords.lat * Math.PI / 180) * 
-                            Math.cos(activeTrip.endCoords.lat * Math.PI / 180) * 
-                            Math.cos((activeTrip.endCoords.lng - activeTrip.startCoords.lng) * Math.PI / 180) + 
-                            Math.sin(activeTrip.startCoords.lat * Math.PI / 180) * 
+                            Math.cos(activeTrip.startCoords.lat * Math.PI / 180) *
+                            Math.cos(activeTrip.endCoords.lat * Math.PI / 180) *
+                            Math.cos((activeTrip.endCoords.lng - activeTrip.startCoords.lng) * Math.PI / 180) +
+                            Math.sin(activeTrip.startCoords.lat * Math.PI / 180) *
                             Math.sin(activeTrip.endCoords.lat * Math.PI / 180)
                         )
                     )
@@ -268,13 +269,13 @@ export default function DriverHome() {
                         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(activeTrip.endAddress)}&countrycodes=uz&limit=1`)
                     ])
                     const [startData, endData] = await Promise.all([startRes.json(), endRes.json()])
-                    
+
                     if (startData[0] && endData[0]) {
                         const start = { lat: parseFloat(startData[0].lat), lng: parseFloat(startData[0].lon) }
                         const end = { lat: parseFloat(endData[0].lat), lng: parseFloat(endData[0].lon) }
                         setTripStartCoords(start)
                         setTripEndCoords(end)
-                        
+
                         const route = await getRouteFromAPI(start.lat, start.lng, end.lat, end.lng)
                         if (route && route.coordinates && route.coordinates.length > 2) {
                             setRouteCoords(route.coordinates)
@@ -357,7 +358,7 @@ export default function DriverHome() {
         }
 
         const socket = connectSocket()
-        
+
         // Socket ulanganidan keyin xonaga qo'shilish
         const joinRoom = () => {
             joinDriverRoom(driverId)
@@ -373,10 +374,10 @@ export default function DriverHome() {
         const handleNewTrip = (data) => {
             showToast.success('🚛 Yangi reys!', data.message || 'Sizga yangi reys tayinlandi')
             setNewTripNotification(data.trip)
-            
+
             // Ma'lumotlarni yangilash
             fetchData()
-            
+
             // 5 sekunddan keyin notification ni yashirish
             setTimeout(() => setNewTripNotification(null), 5000)
         }
@@ -385,20 +386,44 @@ export default function DriverHome() {
         const handleNewFlight = (data) => {
             showToast.success('🚛 Yangi reys!', data.message || 'Sizga yangi reys tayinlandi')
             setNewTripNotification(data.flight)
-            
+
             // Ma'lumotlarni yangilash
             fetchData()
-            
+
             // 5 sekunddan keyin notification ni yashirish
             setTimeout(() => setNewTripNotification(null), 5000)
         }
-        
-        // Flight yangilanganda
+
+        // Flight yangilanganda (xarajat qo'shilganda, bosqich qo'shilganda va h.k.)
         const handleFlightUpdated = (data) => {
-            // Ma'lumotlarni yangilash
+            // Agar faol reys yangilangan bo'lsa, darhol UI ni yangilash
+            if (data.flight) {
+                setActiveFlight(prev => {
+                    if (prev && prev._id === data.flight._id) {
+                        // Yangi xarajat qo'shilganini tekshirish
+                        const oldExpensesCount = prev.expenses?.length || 0
+                        const newExpensesCount = data.flight.expenses?.length || 0
+                        if (newExpensesCount > oldExpensesCount) {
+                            const newExpense = data.flight.expenses[newExpensesCount - 1]
+                            const expenseLabels = {
+                                fuel_benzin: 'Benzin', fuel_diesel: 'Dizel', fuel_gas: 'Gaz',
+                                fuel_metan: 'Metan', fuel_propan: 'Propan', food: 'Ovqat',
+                                repair: 'Ta\'mir', toll: 'Yo\'l to\'lovi', fine: 'Jarima', other: 'Boshqa'
+                            }
+                            const amount = newExpense?.amount ? new Intl.NumberFormat('uz-UZ').format(newExpense.amount) : '0'
+                            showToast.info(`💰 Yangi xarajat: ${expenseLabels[newExpense?.type] || 'Xarajat'} - ${amount} so'm`)
+                        }
+                        return data.flight
+                    }
+                    return prev
+                })
+                // Flights ro'yxatini ham yangilash
+                setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+            }
+            // Har holda ma'lumotlarni yangilash
             fetchData()
         }
-        
+
         // Flight yopilganda
         const handleFlightCompleted = (data) => {
             showToast.success('✅ Reys yopildi!', data.message || 'Reys muvaffaqiyatli yopildi')
@@ -408,7 +433,7 @@ export default function DriverHome() {
         // Reys bekor qilinganda
         const handleTripCancelled = (data) => {
             showToast.error('❌ Reys bekor qilindi!', data.message || 'Sizning reysingiz bekor qilindi')
-            
+
             // Ma'lumotlarni yangilash
             fetchData()
         }
@@ -501,64 +526,64 @@ export default function DriverHome() {
     const [actionLoading, setActionLoading] = useState(false)
 
     const handleLogout = () => { logout(); window.location.href = '/login' }
-    
+
     const handleCompleteTrip = async () => {
         if (!activeTrip || actionLoading) return
         setActionLoading(true)
-        try { 
+        try {
             await api.put(`/driver/me/trips/${activeTrip._id}/complete`)
             showToast.success('Reys tugatildi!')
-            fetchData() 
+            fetchData()
         }
         catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
         finally { setActionLoading(false) }
     }
-    
+
     // Flight bosqichini tugatish
     const handleCompleteLeg = async () => {
         if (!activeFlight || actionLoading) return
-        
+
         // Joriy in_progress bosqichni topish
         const currentLeg = activeFlight.legs?.find(leg => leg.status === 'in_progress')
         if (!currentLeg) {
             showToast.error('Faol bosqich topilmadi')
             return
         }
-        
+
         setActionLoading(true)
-        try { 
+        try {
             await api.put(`/driver/me/flights/${activeFlight._id}/legs/${currentLeg._id}/complete`)
             showToast.success('Bosqich tugatildi!')
-            fetchData() 
+            fetchData()
         }
         catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
         finally { setActionLoading(false) }
     }
-    
+
     const handleStartPendingTrip = async (tripId) => {
         if (actionLoading) return
         setActionLoading(true)
-        try { 
+        try {
             await api.put(`/driver/me/trips/${tripId}/start`)
             showToast.success('Reys boshlandi!')
-            fetchData() 
+            fetchData()
         }
         catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
         finally { setActionLoading(false) }
     }
     const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
     const formatDate = (d) => d ? new Date(d).toLocaleString('uz-UZ') : '-'
-    
+
     // Flights dan statistika (yangi tizim)
     const completedFlights = flights.filter(f => f.status === 'completed').length
     const totalProfit = flights.reduce((sum, f) => sum + (f.profit > 0 ? f.profit : 0), 0)
     const totalLoss = flights.reduce((sum, f) => sum + (f.profit < 0 ? Math.abs(f.profit) : 0), 0)
-    
+
     // Eski trips dan ham (orqaga moslik)
     const completedTrips = trips.filter(t => t.status === 'completed').length
     const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
     const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
-    
+
     // Jami statistika (flights + trips)
     const totalCompletedTrips = completedFlights + completedTrips
     const totalBonusAmount = totalProfit + totalBonus
@@ -613,7 +638,7 @@ export default function DriverHome() {
                                         {newTripNotification.name || `${newTripNotification.startAddress || newTripNotification.legs?.[0]?.fromCity} → ${newTripNotification.endAddress || newTripNotification.legs?.[newTripNotification.legs?.length - 1]?.toCity}`}
                                     </p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setNewTripNotification(null)}
                                     className="p-2 hover:bg-white/10 rounded-lg"
                                 >
@@ -646,38 +671,9 @@ export default function DriverHome() {
                                     <p className="text-sm text-slate-300 truncate max-w-[120px] sm:max-w-[160px]">{user?.fullName || 'Haydovchi'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2">
-                                <div className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold ${gpsStatus === 'excellent' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                                    gpsStatus === 'good' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                                        gpsStatus === 'active' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                                            gpsStatus === 'waiting' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                                gpsStatus === 'denied' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                                    gpsStatus === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                                        'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                    }`}>
-                                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${gpsStatus === 'excellent' || gpsStatus === 'good' ? 'bg-emerald-400 animate-pulse' :
-                                        gpsStatus === 'active' ? 'bg-blue-400 animate-pulse' :
-                                            gpsStatus === 'waiting' ? 'bg-amber-400 animate-pulse' :
-                                                'bg-red-400'
-                                        }`}></span>
-                                    <span className="hidden sm:inline">{gpsStatus === 'excellent' ? '📍 GPS' :
-                                        gpsStatus === 'good' ? '📍 GPS' :
-                                            gpsStatus === 'active' ? 'GPS' :
-                                                gpsStatus === 'waiting' ? '⏳' :
-                                                    gpsStatus === 'denied' ? '🚫' : 'GPS'}</span>
-                                    <span className="sm:hidden">{gpsStatus === 'excellent' ? '📍' :
-                                        gpsStatus === 'good' ? '📍' :
-                                            gpsStatus === 'active' ? 'GPS' :
-                                                gpsStatus === 'waiting' ? '⏳' :
-                                                    gpsStatus === 'denied' ? '🚫' : 'GPS'}</span>
-                                    {gpsAccuracy && gpsStatus !== 'error' && gpsStatus !== 'denied' && (
-                                        <span>±{Math.round(gpsAccuracy)}m</span>
-                                    )}
-                                </div>
-                                <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl sm:rounded-2xl border border-red-500/20 transition-all hover:scale-105 active:scale-95">
-                                    <LogOut size={18} className="sm:w-5 sm:h-5 text-red-400" />
-                                </button>
-                            </div>
+                            <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl sm:rounded-2xl border border-red-500/20 transition-all hover:scale-105 active:scale-95">
+                                <LogOut size={18} className="sm:w-5 sm:h-5 text-red-400" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -746,14 +742,12 @@ export default function DriverHome() {
                                             </div>
                                             <div className="space-y-2.5">
                                                 {activeFlight.legs?.map((leg, idx) => (
-                                                    <div key={leg._id || idx} className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl transition-all ${
-                                                        leg.status === 'in_progress' ? 'bg-white/20 border border-white/30' : 'bg-white/5'
-                                                    }`}>
-                                                        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg ${
-                                                            leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white' : 
-                                                            leg.status === 'in_progress' ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white animate-pulse' : 
-                                                            'bg-white/20 text-white/60'
+                                                    <div key={leg._id || idx} className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-xl transition-all ${leg.status === 'in_progress' ? 'bg-white/20 border border-white/30' : 'bg-white/5'
                                                         }`}>
+                                                        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg ${leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white' :
+                                                            leg.status === 'in_progress' ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white animate-pulse' :
+                                                                'bg-white/20 text-white/60'
+                                                            }`}>
                                                             {leg.status === 'completed' ? '✓' : idx + 1}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -769,7 +763,7 @@ export default function DriverHome() {
                                         </div>
 
                                         {/* Statistika - Premium */}
-                                        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+                                        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
                                             <div className="bg-white/15 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-white/20">
                                                 <p className="text-emerald-100 text-[10px] sm:text-xs font-medium mb-1">Masofa</p>
                                                 <p className="text-white font-bold text-base sm:text-lg">{activeFlight.totalDistance || 0}</p>
@@ -787,7 +781,68 @@ export default function DriverHome() {
                                             </div>
                                         </div>
 
-                                        {/* Bosqichni tugatish - faqat biznesmen panelida */}
+                                        {/* Xarajatlar ro'yxati - Realtime */}
+                                        {activeFlight.expenses && activeFlight.expenses.length > 0 && (
+                                            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <p className="text-white/80 text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+                                                        <Wallet size={14} /> Xarajatlar
+                                                    </p>
+                                                    <span className="px-2.5 py-1 bg-amber-500/20 rounded-full text-amber-300 text-xs font-bold">
+                                                        {activeFlight.expenses.length} ta
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                                    {activeFlight.expenses.slice(-5).reverse().map((exp, idx) => {
+                                                        const isFuel = exp.type?.startsWith('fuel_')
+                                                        const expenseLabels = {
+                                                            fuel_benzin: '⛽ Benzin',
+                                                            fuel_diesel: '🛢️ Dizel',
+                                                            fuel_gas: '🔵 Gaz',
+                                                            fuel_metan: '🟢 Metan',
+                                                            fuel_propan: '🟡 Propan',
+                                                            food: '🍽️ Ovqat',
+                                                            repair: '🔧 Ta\'mir',
+                                                            toll: '🛣️ Yo\'l to\'lovi',
+                                                            fine: '📋 Jarima',
+                                                            other: '📦 Boshqa'
+                                                        }
+                                                        return (
+                                                            <div key={exp._id || idx} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-lg">{expenseLabels[exp.type]?.split(' ')[0] || '📦'}</span>
+                                                                    <div>
+                                                                        <p className="text-white text-sm font-medium">
+                                                                            {expenseLabels[exp.type]?.split(' ').slice(1).join(' ') || exp.type}
+                                                                        </p>
+                                                                        {isFuel && exp.quantity && (
+                                                                            <p className="text-emerald-300 text-[10px]">{exp.quantity} {exp.quantityUnit || 'L'}</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-amber-300 font-bold text-sm">-{formatMoney(exp.amount)}</p>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                                {activeFlight.expenses.length > 5 && (
+                                                    <p className="text-center text-emerald-200 text-xs mt-2">
+                                                        +{activeFlight.expenses.length - 5} ta boshqa xarajat
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Qoldiq */}
+                                        <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-emerald-100 text-sm">Qoldiq (yo'l xarajati):</span>
+                                                <span className={`font-bold text-lg ${(activeFlight.finalBalance || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                                                    {formatMoney(Math.abs(activeFlight.finalBalance || 0))} so'm
+                                                    {(activeFlight.finalBalance || 0) < 0 && ' (kamomad)'}
+                                                </span>
+                                            </div>
+                                        </div>
 
                                     </div>
                                 </div>
@@ -854,8 +909,8 @@ export default function DriverHome() {
                                         )}
 
                                         <div className="flex gap-2 sm:gap-3">
-                                            <button 
-                                                onClick={handleCompleteTrip} 
+                                            <button
+                                                onClick={handleCompleteTrip}
                                                 disabled={actionLoading}
                                                 className="flex-1 bg-white text-violet-600 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-1.5 sm:gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                                             >
@@ -881,8 +936,8 @@ export default function DriverHome() {
                                                     <p className="text-white font-semibold mt-2 text-sm sm:text-base truncate">{trip.startAddress} → {trip.endAddress}</p>
                                                     <p className="text-violet-300 text-xs sm:text-sm">{trip.vehicle?.plateNumber}</p>
                                                 </div>
-                                                <button 
-                                                    onClick={() => handleStartPendingTrip(trip._id)} 
+                                                <button
+                                                    onClick={() => handleStartPendingTrip(trip._id)}
                                                     disabled={actionLoading}
                                                     className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-3 sm:px-5 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-bold flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-violet-500/30 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
                                                 >
@@ -1000,7 +1055,7 @@ export default function DriverHome() {
                                         </div>
                                         <div className="bg-white/10 rounded-xl p-3 text-center">
                                             <p className="text-2xl font-bold text-white">
-                                                {routeInfo.duration < 60 ? routeInfo.duration + ' daq' : Math.round(routeInfo.duration/60) + ' soat'}
+                                                {routeInfo.duration < 60 ? routeInfo.duration + ' daq' : Math.round(routeInfo.duration / 60) + ' soat'}
                                             </p>
                                             <p className="text-amber-300 text-xs">taxminiy vaqt</p>
                                         </div>
@@ -1011,94 +1066,93 @@ export default function DriverHome() {
                             <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10" style={{ height: '400px' }}>
                                 {currentLocation ? (
                                     <>
-                                    <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={isNavigating ? 16 : ((activeFlight || activeTrip) && routeCoords.length > 0 ? 10 : 16)} style={{ height: '100%', width: '100%' }}>
-                                        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                                        <NavigatorMode 
-                                            position={[currentLocation.lat, currentLocation.lng]} 
-                                            isNavigating={isNavigating}
-                                            routeCoords={routeCoords}
-                                            endCoords={tripEndCoords}
-                                        />
-                                        
-                                        {/* Haydovchi joylashuvi */}
-                                        <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverLocationIcon}>
-                                            <Popup>
-                                                <div className="text-center p-2">
-                                                    <p className="font-bold">{user?.fullName}</p>
-                                                    <p className="text-xs text-gray-500">±{Math.round(gpsAccuracy || 0)}m aniqlik</p>
-                                                    {currentLocation.speed > 0 && (
-                                                        <p className="text-xs text-blue-600">{Math.round(currentLocation.speed * 3.6)} km/h</p>
-                                                    )}
-                                                </div>
-                                            </Popup>
-                                        </Marker>
-
-                                        {/* Marshrut chizig'i */}
-                                        {routeCoords.length > 1 && (
-                                            <Polyline
-                                                positions={routeCoords}
-                                                color="#3b82f6"
-                                                weight={4}
-                                                opacity={0.8}
+                                        <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={isNavigating ? 16 : ((activeFlight || activeTrip) && routeCoords.length > 0 ? 10 : 16)} style={{ height: '100%', width: '100%' }}>
+                                            <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                                            <NavigatorMode
+                                                position={[currentLocation.lat, currentLocation.lng]}
+                                                isNavigating={isNavigating}
+                                                routeCoords={routeCoords}
+                                                endCoords={tripEndCoords}
                                             />
-                                        )}
 
-                                        {/* Boshlanish nuqtasi */}
-                                        {tripStartCoords && (
-                                            <Marker position={[tripStartCoords.lat, tripStartCoords.lng]} icon={startIcon}>
+                                            {/* Haydovchi joylashuvi */}
+                                            <Marker position={[currentLocation.lat, currentLocation.lng]} icon={driverLocationIcon}>
                                                 <Popup>
-                                                    <div className="text-center">
-                                                        <p className="font-bold text-green-600">Boshlanish</p>
-                                                        <p className="text-xs">
-                                                            {activeFlight?.legs?.[0]?.fromCity || activeTrip?.startAddress}
-                                                        </p>
+                                                    <div className="text-center p-2">
+                                                        <p className="font-bold">{user?.fullName}</p>
+                                                        <p className="text-xs text-gray-500">±{Math.round(gpsAccuracy || 0)}m aniqlik</p>
+                                                        {currentLocation.speed > 0 && (
+                                                            <p className="text-xs text-blue-600">{Math.round(currentLocation.speed * 3.6)} km/h</p>
+                                                        )}
                                                     </div>
                                                 </Popup>
                                             </Marker>
-                                        )}
 
-                                        {/* Tugash nuqtasi */}
-                                        {tripEndCoords && (
-                                            <Marker position={[tripEndCoords.lat, tripEndCoords.lng]} icon={endIcon}>
-                                                <Popup>
-                                                    <div className="text-center">
-                                                        <p className="font-bold text-red-600">Manzil</p>
-                                                        <p className="text-xs">
-                                                            {activeFlight?.legs?.[activeFlight.legs.length - 1]?.toCity || activeTrip?.endAddress}
-                                                        </p>
-                                                    </div>
-                                                </Popup>
-                                            </Marker>
-                                        )}
-                                    </MapContainer>
-                                    
-                                    {/* Meni ko'rsat tugmasi */}
-                                    <button
-                                        onClick={() => setIsNavigating(!isNavigating)}
-                                        className={`absolute bottom-4 right-4 z-[1000] px-4 py-3 rounded-2xl shadow-lg transition-all flex items-center gap-2 ${
-                                            isNavigating 
-                                                ? 'bg-emerald-600 text-white shadow-emerald-500/50' 
+                                            {/* Marshrut chizig'i */}
+                                            {routeCoords.length > 1 && (
+                                                <Polyline
+                                                    positions={routeCoords}
+                                                    color="#3b82f6"
+                                                    weight={4}
+                                                    opacity={0.8}
+                                                />
+                                            )}
+
+                                            {/* Boshlanish nuqtasi */}
+                                            {tripStartCoords && (
+                                                <Marker position={[tripStartCoords.lat, tripStartCoords.lng]} icon={startIcon}>
+                                                    <Popup>
+                                                        <div className="text-center">
+                                                            <p className="font-bold text-green-600">Boshlanish</p>
+                                                            <p className="text-xs">
+                                                                {activeFlight?.legs?.[0]?.fromCity || activeTrip?.startAddress}
+                                                            </p>
+                                                        </div>
+                                                    </Popup>
+                                                </Marker>
+                                            )}
+
+                                            {/* Tugash nuqtasi */}
+                                            {tripEndCoords && (
+                                                <Marker position={[tripEndCoords.lat, tripEndCoords.lng]} icon={endIcon}>
+                                                    <Popup>
+                                                        <div className="text-center">
+                                                            <p className="font-bold text-red-600">Manzil</p>
+                                                            <p className="text-xs">
+                                                                {activeFlight?.legs?.[activeFlight.legs.length - 1]?.toCity || activeTrip?.endAddress}
+                                                            </p>
+                                                        </div>
+                                                    </Popup>
+                                                </Marker>
+                                            )}
+                                        </MapContainer>
+
+                                        {/* Meni ko'rsat tugmasi */}
+                                        <button
+                                            onClick={() => setIsNavigating(!isNavigating)}
+                                            className={`absolute bottom-4 right-4 z-[1000] px-4 py-3 rounded-2xl shadow-lg transition-all flex items-center gap-2 ${isNavigating
+                                                ? 'bg-emerald-600 text-white shadow-emerald-500/50'
                                                 : 'bg-white text-gray-700 hover:bg-gray-100 shadow-xl'
-                                        }`}
-                                    >
-                                        {isNavigating ? (
-                                            <span className="relative flex h-5 w-5">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500"></span>
-                                            </span>
-                                        ) : (
-                                            <Navigation size={20} />
+                                                }`}
+                                        >
+                                            {isNavigating ? (
+                                                <span className="relative flex h-5 w-5">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500"></span>
+                                                </span>
+                                            ) : (
+                                                <Navigation size={20} />
+                                            )}
+                                            <span className="text-sm font-medium">{isNavigating ? 'Kuzatish' : 'Meni ko\'rsat'}</span>
+                                        </button>
+
+                                        {/* Tezlik ko'rsatkichi */}
+                                        {isNavigating && currentLocation?.speed > 0 && (
+                                            <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg">
+                                                <p className="text-2xl font-bold text-gray-800">{Math.round(currentLocation.speed * 3.6)}</p>
+                                                <p className="text-xs text-gray-500">km/h</p>
+                                            </div>
                                         )}
-                                        <span className="text-sm font-medium">{isNavigating ? 'Kuzatish' : 'Meni ko\'rsat'}</span>
-                                    </button>
-                                    
-                                    {/* Tezlik ko'rsatkichi */}
-                                    {isNavigating && currentLocation?.speed > 0 && (
-                                        <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg">
-                                            <p className="text-2xl font-bold text-gray-800">{Math.round(currentLocation.speed * 3.6)}</p>
-                                            <p className="text-xs text-gray-500">km/h</p>
-                                        </div>
-                                    )}
                                     </>
                                 ) : (
                                     <div className="h-full flex items-center justify-center">
@@ -1124,7 +1178,86 @@ export default function DriverHome() {
                             <h2 className="text-white font-bold text-lg flex items-center gap-2">
                                 <History className="text-violet-400" size={22} /> Reyslar tarixi
                             </h2>
-                            {trips.length > 0 ? trips.map((trip) => (
+
+                            {/* Yangi Flight tizimi reyslari */}
+                            {flights.length > 0 && flights.map((flight) => (
+                                <button
+                                    key={flight._id}
+                                    type="button"
+                                    className="w-full text-left bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                    onClick={() => setSelectedFlight(flight)}
+                                >
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${flight.status === 'completed' ? 'bg-emerald-500/20' :
+                                                flight.status === 'active' ? 'bg-violet-500/20' : 'bg-red-500/20'
+                                                }`}>
+                                                <Route size={18} className={
+                                                    flight.status === 'completed' ? 'text-emerald-400' :
+                                                        flight.status === 'active' ? 'text-violet-400' : 'text-red-400'
+                                                } />
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-semibold">{flight.name || 'Reys'}</p>
+                                                <p className="text-violet-300 text-xs">{formatDate(flight.createdAt)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${flight.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                flight.status === 'active' ? 'bg-violet-500/20 text-violet-400' : 'bg-red-500/20 text-red-400'
+                                                }`}>
+                                                {flight.status === 'completed' ? 'Tugatilgan' : flight.status === 'active' ? 'Faol' : 'Bekor'}
+                                            </span>
+                                            <ChevronRight size={18} className="text-violet-400" />
+                                        </div>
+                                    </div>
+
+                                    {/* Flight statistikasi */}
+                                    <div className="grid grid-cols-3 gap-2 mb-3">
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <p className="text-violet-300 text-[10px]">Bosqichlar</p>
+                                            <p className="text-white font-bold text-sm">{flight.legs?.length || 0}</p>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <p className="text-violet-300 text-[10px]">Masofa</p>
+                                            <p className="text-white font-bold text-sm">{flight.totalDistance || 0} km</p>
+                                        </div>
+                                        <div className="bg-white/5 rounded-lg p-2 text-center">
+                                            <p className="text-violet-300 text-[10px]">To'lov</p>
+                                            <p className="text-emerald-400 font-bold text-sm">{formatMoney(flight.totalPayment)}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Foyda/Zarar va shofyor ulushi */}
+                                    {flight.status === 'completed' && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {flight.profit > 0 && (
+                                                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
+                                                    <TrendingUp size={12} className="flex-shrink-0" /> Foyda: {formatMoney(flight.profit)}
+                                                </span>
+                                            )}
+                                            {flight.profit < 0 && (
+                                                <span className="flex items-center gap-1 text-red-400 bg-red-500/10 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
+                                                    <TrendingDown size={12} className="flex-shrink-0" /> Zarar: {formatMoney(Math.abs(flight.profit))}
+                                                </span>
+                                            )}
+                                            {flight.driverProfitAmount > 0 && (
+                                                <span className="flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
+                                                    <Award size={12} className="flex-shrink-0" /> Ulush: {formatMoney(flight.driverProfitAmount)} ({flight.driverProfitPercent}%)
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Batafsil ko'rish hint */}
+                                    <p className="text-violet-400 text-xs text-center mt-3 flex items-center justify-center gap-1">
+                                        <Eye size={12} /> Batafsil ko'rish uchun bosing
+                                    </p>
+                                </button>
+                            ))}
+
+                            {/* Eski Trip tizimi reyslari */}
+                            {trips.length > 0 && trips.map((trip) => (
                                 <div key={trip._id} className="bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/10">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
@@ -1150,10 +1283,13 @@ export default function DriverHome() {
                                         </div>
                                     )}
                                 </div>
-                            )) : (
+                            ))}
+
+                            {/* Hech qanday reys yo'q */}
+                            {flights.length === 0 && trips.length === 0 && (
                                 <div className="bg-white/5 rounded-2xl p-10 text-center border border-white/10">
                                     <History size={48} className="mx-auto mb-3 text-violet-400/50" />
-                                    <p className="text-violet-300">Reyslar yoq</p>
+                                    <p className="text-violet-300">Reyslar yo'q</p>
                                 </div>
                             )}
                         </div>
@@ -1208,6 +1344,118 @@ export default function DriverHome() {
                 </div>
             </main>
 
+            {/* Flight batafsil modal */}
+            {selectedFlight && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/95 flex items-start justify-center pt-10 pb-10 px-4 overflow-y-auto"
+                    onClick={() => setSelectedFlight(null)}
+                >
+                    <div
+                        className="bg-slate-900 rounded-2xl w-full max-w-md border border-white/20 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 rounded-t-2xl ${selectedFlight.status === 'completed' ? 'bg-emerald-600' :
+                            selectedFlight.status === 'active' ? 'bg-violet-600' : 'bg-red-600'
+                            }`}>
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <Route className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-white">{selectedFlight.name || 'Reys'}</h2>
+                                        <p className="text-white/80 text-xs">{formatDate(selectedFlight.createdAt)}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedFlight(null)}
+                                    className="p-2 bg-white/20 rounded-lg text-white hover:bg-white/30"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 space-y-4">
+                            {/* Statistika */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                    <p className="text-violet-300 text-xs mb-1">Jami to'lov</p>
+                                    <p className="text-emerald-400 font-bold">{formatMoney(selectedFlight.totalPayment)}</p>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                    <p className="text-violet-300 text-xs mb-1">Jami xarajat</p>
+                                    <p className="text-amber-400 font-bold">{formatMoney(selectedFlight.totalExpenses)}</p>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                    <p className="text-violet-300 text-xs mb-1">Masofa</p>
+                                    <p className="text-white font-bold">{selectedFlight.totalDistance || 0} km</p>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                    <p className="text-violet-300 text-xs mb-1">{(selectedFlight.profit || 0) >= 0 ? 'Foyda' : 'Zarar'}</p>
+                                    <p className={`font-bold ${(selectedFlight.profit || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {formatMoney(Math.abs(selectedFlight.profit || 0))}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Shofyor ulushi */}
+                            {selectedFlight.driverProfitAmount > 0 && (
+                                <div className="bg-amber-500/20 rounded-xl p-3 border border-amber-500/30">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-amber-300 text-sm">Sizning ulushingiz ({selectedFlight.driverProfitPercent}%)</span>
+                                        <span className="text-amber-400 font-bold">{formatMoney(selectedFlight.driverProfitAmount)} so'm</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Bosqichlar */}
+                            {selectedFlight.legs && selectedFlight.legs.length > 0 && (
+                                <div>
+                                    <h3 className="text-white font-semibold mb-2 text-sm">Bosqichlar ({selectedFlight.legs.length})</h3>
+                                    <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                                        {selectedFlight.legs.map((leg, idx) => (
+                                            <div key={leg._id || idx} className="bg-white/5 rounded-lg p-2 text-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-white">{idx + 1}. {leg.fromCity} → {leg.toCity}</span>
+                                                    <span className="text-emerald-400 font-semibold">{formatMoney(leg.payment)}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Xarajatlar */}
+                            {selectedFlight.expenses && selectedFlight.expenses.length > 0 && (
+                                <div>
+                                    <h3 className="text-white font-semibold mb-2 text-sm">Xarajatlar ({selectedFlight.expenses.length})</h3>
+                                    <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                                        {selectedFlight.expenses.map((exp, idx) => (
+                                            <div key={exp._id || idx} className="bg-white/5 rounded-lg p-2 text-sm flex justify-between">
+                                                <span className="text-white">{exp.type}</span>
+                                                <span className="text-amber-400">-{formatMoney(exp.amount)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Qoldiq */}
+                            <div className={`rounded-xl p-3 ${(selectedFlight.finalBalance || 0) >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-white text-sm">Qoldiq:</span>
+                                    <span className={`font-bold ${(selectedFlight.finalBalance || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {formatMoney(Math.abs(selectedFlight.finalBalance || 0))} so'm
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     )

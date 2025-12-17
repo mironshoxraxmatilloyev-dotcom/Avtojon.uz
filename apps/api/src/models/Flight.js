@@ -225,7 +225,11 @@ const flightSchema = new mongoose.Schema({
   totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar)
   totalDistance: { type: Number, default: 0 }, // Jami masofa
   finalBalance: { type: Number, default: 0 }, // Oxirgi qoldiq (qaytarilishi kerak)
-  profit: { type: Number, default: 0 }, // Foyda = totalPayment - totalGivenBudget
+  profit: { type: Number, default: 0 }, // Foyda = totalPayment - totalExpenses
+  
+  // Shofyor ulushi (foydadan %)
+  driverProfitPercent: { type: Number, default: 0 }, // Foydadan necha % shofyorga
+  driverProfitAmount: { type: Number, default: 0 }, // Shofyorga beriladigan summa (so'm)
   
   status: {
     type: String,
