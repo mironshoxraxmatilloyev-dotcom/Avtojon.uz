@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import {
     LogOut, Truck, Play, CheckCircle, History, Wallet, Route, MapPin, Map,
@@ -120,9 +120,13 @@ export default function DriverHome() {
 
     const [error, setError] = useState(null)
 
-    const fetchData = useCallback(async () => {
-        setError(null)
+    // 🚀 Optimizatsiya: fetchData faqat kerakli ma'lumotlarni oladi
+    const fetchData = useCallback(async (options = {}) => {
+        const { silent = false } = options
+        if (!silent) setError(null)
+
         try {
+            // Parallel so'rovlar - tezroq
             const [tripsRes, profileRes, flightsRes] = await Promise.all([
                 api.get('/driver/me/trips'),
                 api.get('/driver/me'),
@@ -130,44 +134,31 @@ export default function DriverHome() {
             ])
 
             const allTrips = tripsRes.data.data || []
+            const allFlights = flightsRes.data.data || []
+            const driverData = profileRes.data.data
+
+            // 🚀 Batch state update - bir marta render
             setTrips(allTrips)
             setActiveTrip(allTrips.find(t => t.status === 'in_progress') || null)
             setPendingTrips(allTrips.filter(t => t.status === 'pending'))
-
-            // Flight (yangi tizim)
-            const allFlights = flightsRes.data.data || []
             setFlights(allFlights)
             setActiveFlight(allFlights.find(f => f.status === 'active') || null)
 
-            // Serverdan oxirgi joylashuvni olish
-            const driverData = profileRes.data.data
+            if (driverData?._id) setDriverId(driverData._id)
 
-            // Driver ID ni saqlash (socket uchun)
-            if (driverData?._id) {
-                setDriverId(driverData._id)
-            }
-
-            if (driverData?.lastLocation) {
+            if (driverData?.lastLocation?.lat && driverData?.lastLocation?.lng) {
                 const loc = driverData.lastLocation
-
-                if (loc.lat && loc.lng) {
-                    setCurrentLocation({
-                        lat: loc.lat,
-                        lng: loc.lng,
-                        accuracy: loc.accuracy || 100,
-                        speed: loc.speed || 0
-                    })
-                    setGpsAccuracy(loc.accuracy || 100)
-                    setGpsStatus(loc.accuracy < 50 ? 'excellent' : loc.accuracy < 200 ? 'good' : 'active')
-                }
+                setCurrentLocation({ lat: loc.lat, lng: loc.lng, accuracy: loc.accuracy || 100, speed: loc.speed || 0 })
+                setGpsAccuracy(loc.accuracy || 100)
+                setGpsStatus(loc.accuracy < 50 ? 'excellent' : loc.accuracy < 200 ? 'good' : 'active')
             }
         } catch (err) {
-            setError({
-                type: err.isNetworkError ? 'network' : 'generic',
-                message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
-            })
+            if (!silent) {
+                setError({ type: err.isNetworkError ? 'network' : 'generic', message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik' })
+            }
+        } finally {
+            setLoading(false)
         }
-        finally { setLoading(false) }
     }, [])
 
     const [gpsAccuracy, setGpsAccuracy] = useState(null)
@@ -394,48 +385,49 @@ export default function DriverHome() {
             setTimeout(() => setNewTripNotification(null), 5000)
         }
 
-        // Flight yangilanganda (xarajat qo'shilganda, bosqich qo'shilganda va h.k.)
+        // 🚀 Flight yangilanganda - optimized, fetchData chaqirmasdan
         const handleFlightUpdated = (data) => {
-            // Agar faol reys yangilangan bo'lsa, darhol UI ni yangilash
-            if (data.flight) {
-                setActiveFlight(prev => {
-                    if (prev && prev._id === data.flight._id) {
-                        // Yangi xarajat qo'shilganini tekshirish
-                        const oldExpensesCount = prev.expenses?.length || 0
-                        const newExpensesCount = data.flight.expenses?.length || 0
-                        if (newExpensesCount > oldExpensesCount) {
-                            const newExpense = data.flight.expenses[newExpensesCount - 1]
-                            const expenseLabels = {
-                                fuel_benzin: 'Benzin', fuel_diesel: 'Dizel', fuel_gas: 'Gaz',
-                                fuel_metan: 'Metan', fuel_propan: 'Propan', food: 'Ovqat',
-                                repair: 'Ta\'mir', toll: 'Yo\'l to\'lovi', fine: 'Jarima', other: 'Boshqa'
-                            }
-                            const amount = newExpense?.amount ? new Intl.NumberFormat('uz-UZ').format(newExpense.amount) : '0'
-                            showToast.info(`💰 Yangi xarajat: ${expenseLabels[newExpense?.type] || 'Xarajat'} - ${amount} so'm`)
-                        }
-                        return data.flight
+            if (!data.flight) return
+
+            setActiveFlight(prev => {
+                if (!prev || prev._id !== data.flight._id) return prev
+
+                // Yangi xarajat qo'shilganini tekshirish
+                const oldCount = prev.expenses?.length || 0
+                const newCount = data.flight.expenses?.length || 0
+                if (newCount > oldCount) {
+                    const newExpense = data.flight.expenses[newCount - 1]
+                    const labels = {
+                        fuel_benzin: 'Benzin', fuel_diesel: 'Dizel', fuel_gas: 'Gaz',
+                        fuel_metan: 'Metan', fuel_propan: 'Propan', food: 'Ovqat',
+                        repair: 'Ta\'mir', toll: 'Yo\'l to\'lovi', fine: 'Jarima', other: 'Boshqa'
                     }
-                    return prev
-                })
-                // Flights ro'yxatini ham yangilash
-                setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-            }
-            // Har holda ma'lumotlarni yangilash
-            fetchData()
+                    showToast.info(`💰 Yangi xarajat: ${labels[newExpense?.type] || 'Xarajat'} - ${formatMoney(newExpense?.amount)} so'm`)
+                }
+                return data.flight
+            })
+
+            // Flights ro'yxatini ham yangilash (fetchData o'rniga)
+            setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
         }
 
-        // Flight yopilganda
+        // 🚀 Flight yopilganda - optimistic update
         const handleFlightCompleted = (data) => {
             showToast.success('✅ Reys yopildi!', data.message || 'Reys muvaffaqiyatli yopildi')
-            fetchData()
+            if (data.flight) {
+                setActiveFlight(null)
+                setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+            } else {
+                fetchData({ silent: true })
+            }
         }
 
-        // Reys bekor qilinganda
+        // 🚀 Reys bekor qilinganda - optimistic update
         const handleTripCancelled = (data) => {
             showToast.error('❌ Reys bekor qilindi!', data.message || 'Sizning reysingiz bekor qilindi')
-
-            // Ma'lumotlarni yangilash
-            fetchData()
+            setActiveTrip(null)
+            setActiveFlight(null)
+            fetchData({ silent: true })
         }
 
         socket.on('new-trip', handleNewTrip)
@@ -456,6 +448,7 @@ export default function DriverHome() {
         }
     }, [driverId, fetchData])
 
+    // 🚀 Optimizatsiya: GPS intervallarni kamaytirish
     useEffect(() => {
         fetchData()
 
@@ -465,8 +458,7 @@ export default function DriverHome() {
         }
 
         let watchId = null
-        let retryInterval = null
-        let highAccuracyRetry = null
+        let gpsInterval = null
 
         setGpsStatus('checking')
 
@@ -474,52 +466,28 @@ export default function DriverHome() {
         navigator.geolocation.getCurrentPosition(
             sendLocation,
             (err) => handleGpsError(err, false),
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
         )
 
-        // 2. Aniq GPS kuzatish
-        setTimeout(() => {
-            watchId = navigator.geolocation.watchPosition(
-                sendLocation,
-                (err) => handleGpsError(err, true),
-                {
-                    enableHighAccuracy: true,
-                    timeout: 60000,
-                    maximumAge: 10000
-                }
-            )
-        }, 500)
+        // 2. Aniq GPS kuzatish - asosiy
+        watchId = navigator.geolocation.watchPosition(
+            sendLocation,
+            (err) => handleGpsError(err, true),
+            { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
+        )
 
-        // 3. Har 10 sekundda yangi GPS so'rash
-        retryInterval = setInterval(() => {
+        // 3. Har 15 sekundda yangilash (10 va 30 o'rniga bitta)
+        gpsInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(
                 sendLocation,
                 () => { },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 30000,
-                    maximumAge: 5000
-                }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 3000 }
             )
-        }, 10000)
-
-        // 4. Har 30 sekundda high accuracy bilan qayta urinish
-        highAccuracyRetry = setInterval(() => {
-            navigator.geolocation.getCurrentPosition(
-                sendLocation,
-                () => { },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 45000,
-                    maximumAge: 0
-                }
-            )
-        }, 30000)
+        }, 15000)
 
         return () => {
             if (watchId) navigator.geolocation.clearWatch(watchId)
-            if (retryInterval) clearInterval(retryInterval)
-            if (highAccuracyRetry) clearInterval(highAccuracyRetry)
+            if (gpsInterval) clearInterval(gpsInterval)
         }
     }, [])
 
@@ -527,67 +495,97 @@ export default function DriverHome() {
 
     const handleLogout = () => { logout(); window.location.href = '/login' }
 
+    // 🚀 Optimistic update - darhol UI yangilanadi
     const handleCompleteTrip = async () => {
         if (!activeTrip || actionLoading) return
-        setActionLoading(true)
-        try {
-            await api.put(`/driver/me/trips/${activeTrip._id}/complete`)
-            showToast.success('Reys tugatildi!')
-            fetchData()
-        }
-        catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
-        finally { setActionLoading(false) }
+
+        const tripId = activeTrip._id
+        // Optimistic: darhol UI yangilash
+        setActiveTrip(null)
+        setTrips(prev => prev.map(t => t._id === tripId ? { ...t, status: 'completed' } : t))
+        showToast.success('Reys tugatildi!')
+
+        // Fonda API so'rov
+        api.put(`/driver/me/trips/${tripId}/complete`)
+            .catch(err => {
+                showToast.error(err.response?.data?.message || 'Xatolik')
+                fetchData({ silent: true }) // Xatolikda qayta yuklash
+            })
     }
 
-    // Flight bosqichini tugatish
+    // 🚀 Flight bosqichini tugatish - optimistic
     const handleCompleteLeg = async () => {
         if (!activeFlight || actionLoading) return
 
-        // Joriy in_progress bosqichni topish
         const currentLeg = activeFlight.legs?.find(leg => leg.status === 'in_progress')
         if (!currentLeg) {
             showToast.error('Faol bosqich topilmadi')
             return
         }
 
-        setActionLoading(true)
-        try {
-            await api.put(`/driver/me/flights/${activeFlight._id}/legs/${currentLeg._id}/complete`)
-            showToast.success('Bosqich tugatildi!')
-            fetchData()
-        }
-        catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
-        finally { setActionLoading(false) }
+        const flightId = activeFlight._id
+        const legId = currentLeg._id
+
+        // Optimistic: darhol UI yangilash
+        setActiveFlight(prev => ({
+            ...prev,
+            legs: prev.legs.map(leg =>
+                leg._id === legId ? { ...leg, status: 'completed' } : leg
+            )
+        }))
+        showToast.success('Bosqich tugatildi!')
+
+        // Fonda API so'rov
+        api.put(`/driver/me/flights/${flightId}/legs/${legId}/complete`)
+            .then(res => {
+                if (res.data.data) setActiveFlight(res.data.data)
+            })
+            .catch(err => {
+                showToast.error(err.response?.data?.message || 'Xatolik')
+                fetchData({ silent: true })
+            })
     }
 
+    // 🚀 Pending trip boshlash - optimistic
     const handleStartPendingTrip = async (tripId) => {
         if (actionLoading) return
-        setActionLoading(true)
-        try {
-            await api.put(`/driver/me/trips/${tripId}/start`)
-            showToast.success('Reys boshlandi!')
-            fetchData()
-        }
-        catch (error) { showToast.error(error.response?.data?.message || 'Xatolik') }
-        finally { setActionLoading(false) }
+
+        const trip = pendingTrips.find(t => t._id === tripId)
+        if (!trip) return
+
+        // Optimistic: darhol UI yangilash
+        setPendingTrips(prev => prev.filter(t => t._id !== tripId))
+        setActiveTrip({ ...trip, status: 'in_progress' })
+        showToast.success('Reys boshlandi!')
+
+        // Fonda API so'rov
+        api.put(`/driver/me/trips/${tripId}/start`)
+            .catch(err => {
+                showToast.error(err.response?.data?.message || 'Xatolik')
+                fetchData({ silent: true })
+            })
     }
-    const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
-    const formatDate = (d) => d ? new Date(d).toLocaleString('uz-UZ') : '-'
+    // 🚀 Memoized formatters
+    const formatMoney = useCallback((n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0', [])
+    const formatDate = useCallback((d) => d ? new Date(d).toLocaleString('uz-UZ') : '-', [])
 
-    // Flights dan statistika (yangi tizim)
-    const completedFlights = flights.filter(f => f.status === 'completed').length
-    const totalProfit = flights.reduce((sum, f) => sum + (f.profit > 0 ? f.profit : 0), 0)
-    const totalLoss = flights.reduce((sum, f) => sum + (f.profit < 0 ? Math.abs(f.profit) : 0), 0)
+    // 🚀 Memoized statistika - faqat flights/trips o'zgarganda qayta hisoblanadi
+    const stats = useMemo(() => {
+        const completedFlights = flights.filter(f => f.status === 'completed').length
+        const totalProfit = flights.reduce((sum, f) => sum + (f.profit > 0 ? f.profit : 0), 0)
+        const totalLoss = flights.reduce((sum, f) => sum + (f.profit < 0 ? Math.abs(f.profit) : 0), 0)
+        const completedTrips = trips.filter(t => t.status === 'completed').length
+        const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
+        const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
 
-    // Eski trips dan ham (orqaga moslik)
-    const completedTrips = trips.filter(t => t.status === 'completed').length
-    const totalBonus = trips.reduce((sum, t) => sum + (t.bonusAmount || 0), 0)
-    const totalPenalty = trips.reduce((sum, t) => sum + (t.penaltyAmount || 0), 0)
+        return {
+            totalCompletedTrips: completedFlights + completedTrips,
+            totalBonusAmount: totalProfit + totalBonus,
+            totalPenaltyAmount: totalLoss + totalPenalty
+        }
+    }, [flights, trips])
 
-    // Jami statistika (flights + trips)
-    const totalCompletedTrips = completedFlights + completedTrips
-    const totalBonusAmount = totalProfit + totalBonus
-    const totalPenaltyAmount = totalLoss + totalPenalty
+    const { totalCompletedTrips, totalBonusAmount, totalPenaltyAmount } = stats
 
     if (loading) return <DriverHomeSkeleton />
 

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Driver = require('../models/Driver');
+const Businessman = require('../models/Businessman');
 
 // Umumiy auth middleware
 exports.protect = async (req, res, next) => {
@@ -17,12 +18,33 @@ exports.protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    if (decoded.role === 'admin') {
+    // Super Admin
+    if (decoded.role === 'super_admin') {
+      req.user = { 
+        _id: 'super_admin', 
+        role: 'super_admin', 
+        fullName: 'Super Admin',
+        username: decoded.username 
+      };
+      req.isSuperAdmin = true;
+    }
+    // Admin (eski foydalanuvchilar)
+    else if (decoded.role === 'admin') {
       req.user = await User.findById(decoded.id).select('-password');
       if (!req.user) {
         return res.status(401).json({ success: false, message: 'Foydalanuvchi topilmadi' });
       }
-    } else if (decoded.role === 'driver') {
+    }
+    // Biznesmen
+    else if (decoded.role === 'business') {
+      req.businessman = await Businessman.findById(decoded.id).select('-password');
+      if (!req.businessman) {
+        return res.status(401).json({ success: false, message: 'Biznesmen topilmadi' });
+      }
+      req.user = req.businessman; // Compatibility uchun
+    }
+    // Shofyor
+    else if (decoded.role === 'driver') {
       req.driver = await Driver.findById(decoded.id).select('-password');
       if (!req.driver) {
         return res.status(401).json({ success: false, message: 'Shofyor topilmadi' });
@@ -31,6 +53,7 @@ exports.protect = async (req, res, next) => {
       req.user = await User.findById(req.driver.user);
     }
 
+    req.userRole = decoded.role;
     next();
   } catch (error) {
     res.status(401).json({ success: false, message: 'Token yaroqsiz' });

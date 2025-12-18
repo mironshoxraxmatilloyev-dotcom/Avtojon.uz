@@ -27,7 +27,7 @@ const DEMO_VEHICLES = [
 ]
 
 const INITIAL_FORM = { username: '', password: '', fullName: '', phone: '', paymentType: 'monthly', baseSalary: 0, perTripRate: 0, plateNumber: '', brand: '', year: '' }
-const INITIAL_FLIGHT = { startOdometer: '', startFuel: '', fromCity: '', toCity: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null, flightType: 'domestic' }
+const INITIAL_FLIGHT = { startOdometer: '', startFuel: '', fromCity: '', toCity: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr' }
 
 // Reducer
 const dataReducer = (state, action) => {
@@ -240,14 +240,15 @@ export default function DriversNew() {
             driverId,
             startOdometer: Number(formData.startOdometer) || 0,
             startFuel: Number(formData.startFuel) || 0,
+            fuelType: formData.fuelType || 'benzin',
+            fuelUnit: formData.fuelUnit || 'litr',
             flightType: formData.flightType,
             firstLeg: {
                 fromCity,
                 toCity,
                 fromCoords: formData.fromCoords,
                 toCoords: formData.toCoords,
-                givenBudget: Number(formData.givenBudget) || 0,
-                distance: Number(formData.distance) || 0
+                givenBudget: Number(formData.givenBudget) || 0
             }
         }
 

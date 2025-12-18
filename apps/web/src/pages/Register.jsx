@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore'
 import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
-import { validateForm, SCHEMAS } from '../utils/validation'
 
 const Scene3D = lazy(() => import('../components/3d/Scene3D'))
 
@@ -149,7 +148,7 @@ export default function Register() {
       const result = await register(form)
       if (result.success) {
         alert.success("Muvaffaqiyatli!", "Ro'yxatdan o'tdingiz. Xush kelibsiz!")
-        navigate('/dashboard')
+        navigate('/fleet')
       } else {
         alert.error("Xatolik", result.message || "Ro'yxatdan o'tishda xatolik yuz berdi")
       }

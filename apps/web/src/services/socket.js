@@ -24,6 +24,7 @@ const getSocketURL = () => {
 }
 
 let socket = null
+let pendingRooms = { driver: null, business: null } // Qayta ulanishda xonalarga qo'shilish uchun
 
 export const connectSocket = () => {
   if (socket?.connected) {
@@ -40,11 +41,20 @@ export const connectSocket = () => {
     timeout: 20000
   })
 
-  if (isDev) {
-    socket.on('connect', () => {
-      console.log('✅ Socket ulandi:', socket.id)
-    })
+  // Qayta ulanganda xonalarga avtomatik qo'shilish
+  socket.on('connect', () => {
+    if (isDev) console.log('✅ Socket ulandi:', socket.id)
+    
+    // Oldingi xonalarga qayta qo'shilish
+    if (pendingRooms.driver) {
+      socket.emit('join-driver', pendingRooms.driver)
+    }
+    if (pendingRooms.business) {
+      socket.emit('join-business', pendingRooms.business)
+    }
+  })
 
+  if (isDev) {
     socket.on('disconnect', (reason) => {
       console.log('❌ Socket uzildi:', reason)
     })
@@ -64,19 +74,26 @@ export const disconnectSocket = () => {
     socket.disconnect()
     socket = null
   }
+  pendingRooms = { driver: null, business: null }
 }
 
 // Shofyor xonasiga qo'shilish
 export const joinDriverRoom = (driverId) => {
-  if (socket?.connected && driverId) {
-    socket.emit('join-driver', driverId)
+  if (driverId) {
+    pendingRooms.driver = driverId // Qayta ulanish uchun saqlash
+    if (socket?.connected) {
+      socket.emit('join-driver', driverId)
+    }
   }
 }
 
 // Biznesmen xonasiga qo'shilish
 export const joinBusinessRoom = (businessId) => {
-  if (socket?.connected && businessId) {
-    socket.emit('join-business', businessId.toString())
+  if (businessId) {
+    pendingRooms.business = businessId.toString() // Qayta ulanish uchun saqlash
+    if (socket?.connected) {
+      socket.emit('join-business', businessId.toString())
+    }
   }
 }
 

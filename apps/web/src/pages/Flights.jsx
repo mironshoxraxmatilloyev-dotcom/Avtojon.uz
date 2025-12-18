@@ -80,7 +80,8 @@ export default function Flights() {
     type: 'fuel_benzin', // yoqilg'i turi (faqat fuel kategoriyasi uchun)
     amount: '', 
     description: '', 
-    quantity: '' 
+    quantity: '',
+    date: new Date().toISOString().split('T')[0] // bugungi sana
   })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
   const [borderForm, setBorderForm] = useState({
@@ -177,12 +178,13 @@ export default function Flights() {
       amount: Number(expenseForm.amount),
       description: expenseForm.description,
       quantity: isFuel && expenseForm.quantity ? Number(expenseForm.quantity) : null,
-      quantityUnit: isFuel && expenseForm.quantity ? fuelType?.unit || 'litr' : null
+      quantityUnit: isFuel && expenseForm.quantity ? fuelType?.unit || 'litr' : null,
+      date: expenseForm.date ? new Date(expenseForm.date) : new Date()
     }
     const flightId = selectedFlight._id
 
     // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
-    const tempExpense = { _id: 'temp_' + Date.now(), ...expenseData, date: new Date() }
+    const tempExpense = { _id: 'temp_' + Date.now(), ...expenseData }
     setFlights(prev => prev.map(f => f._id === flightId ? {
       ...f,
       expenses: [...(f.expenses || []), tempExpense],
@@ -191,7 +193,7 @@ export default function Flights() {
     } : f))
     
     setShowExpenseModal(false)
-    setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '' })
+    setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '', date: new Date().toISOString().split('T')[0] })
     showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
     
     // Fonda API so'rovi
@@ -446,7 +448,12 @@ export default function Flights() {
         <div className="relative">
           <div className="flex items-center gap-2 text-green-300 text-sm mb-2">
             <Calendar size={14} />
-            <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            <span>{(() => {
+              const date = new Date()
+              const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+              const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+              return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
+            })()}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Reyslar 🚛</h1>
           <p className="text-green-200">Faol va tugatilgan reyslar</p>
@@ -1024,16 +1031,27 @@ export default function Flights() {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Summa (so'm) *</label>
-                  <input
-                    type="number"
-                    value={expenseForm.amount}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
-                    placeholder="100000"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Summa (so'm) *</label>
+                    <input
+                      type="number"
+                      value={expenseForm.amount}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                      placeholder="100000"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Sana</label>
+                    <input
+                      type="date"
+                      value={expenseForm.date}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Izoh</label>

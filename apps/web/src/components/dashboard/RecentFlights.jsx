@@ -62,7 +62,7 @@ export function RecentFlights({ flights }) {
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm truncate">{flight.driver?.fullName || 'Nomalum'}</p>
+                <p className="font-medium text-gray-900 text-sm truncate">{flight.driver?.fullName || 'Noma\'lum'}</p>
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <MapPin size={12} />
                   <span className="truncate">{flight.name || 'Yangi reys'}</span>

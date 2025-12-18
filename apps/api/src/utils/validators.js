@@ -56,13 +56,13 @@ const username = Joi.string()
 const authSchemas = {
   register: Joi.object({
     username: username.required(),
-    password: strongPassword.required(),
+    password: simplePassword.required(), // strongPassword o'rniga simplePassword - foydalanuvchi uchun oson
     fullName: Joi.string().min(2).max(100).trim().required().messages({
       'string.min': 'Ism kamida 2 ta belgidan iborat bo\'lishi kerak',
       'any.required': 'To\'liq ism kiritilishi shart'
     }),
-    companyName: Joi.string().max(100).trim().allow(''),
-    phone: phoneNumber.allow('')
+    companyName: Joi.string().max(100).trim().allow('').optional(),
+    phone: Joi.string().allow('', null).optional() // phoneNumber o'rniga oddiy string - telefon ixtiyoriy
   }),
 
   login: Joi.object({
@@ -76,7 +76,7 @@ const authSchemas = {
 
   changePassword: Joi.object({
     currentPassword: Joi.string().required(),
-    newPassword: strongPassword.required(),
+    newPassword: simplePassword.required(), // Oddiy parol - kamida 6 ta belgi
     confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
       'any.only': 'Parollar mos kelmayapti'
     })

@@ -5,7 +5,7 @@ export function QuickStats({ stats }) {
   const quickStats = [
     { label: 'Faol reyslar', value: stats.activeTrips, icon: Activity, color: 'from-orange-400 to-orange-600' },
     { label: 'Yoldagi shofyorlar', value: stats.busyDrivers, icon: Truck, color: 'from-blue-400 to-blue-600' },
-    { label: 'Bosh shofyorlar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
+    { label: 'Bo\'sh shofyorlar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
     { label: 'Kutilayotgan', value: stats.pendingTrips, icon: Clock, color: 'from-purple-400 to-purple-600' },
   ]
 

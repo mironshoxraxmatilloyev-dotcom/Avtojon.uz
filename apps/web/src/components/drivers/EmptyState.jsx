@@ -14,7 +14,7 @@ export default function EmptyState({ searchQuery, onAddDriver }) {
         onClick={onAddDriver} 
         className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition"
       >
-        Birinchi shofyorni qoshing
+        Birinchi shofyorni qo'shing
       </button>
     </div>
   )

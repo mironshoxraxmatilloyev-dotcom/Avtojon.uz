@@ -5,6 +5,22 @@
 // GLOBAL xotirada so'rovlarni saqlash
 const store = new Map();
 
+// 🧹 Eskirgan yozuvlarni tozalash (har 5 daqiqada)
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  for (const [key, record] of store.entries()) {
+    if (now > record.resetTime) {
+      store.delete(key);
+      cleaned++;
+    }
+  }
+  if (cleaned > 0 && process.env.NODE_ENV === 'development') {
+    console.log(`🧹 Rate limiter: ${cleaned} ta eskirgan yozuv tozalandi. Qoldi: ${store.size}`);
+  }
+}, CLEANUP_INTERVAL);
+
 /**
  * Rate limiter yaratish
  */

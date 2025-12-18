@@ -140,7 +140,14 @@ export default function Login() {
       const result = await login(username, password)
       if (result.success) {
         alert.success('Xush kelibsiz!', `Salom, ${result.user?.fullName || username}`)
-        navigate(result.role === 'driver' ? '/driver' : '/dashboard')
+        // Role ga qarab yo'naltirish
+        const redirectPath = {
+          'driver': '/driver',
+          'super_admin': '/super-admin',
+          'business': '/dashboard',
+          'admin': '/fleet'
+        }[result.role] || '/fleet'
+        navigate(redirectPath)
       } else {
         alert.error("Kirish xatosi", result.message || "Username yoki parol noto'g'ri")
       }

@@ -16,6 +16,9 @@ const Flights = lazy(() => import('./pages/Flights'))
 const FlightDetail = lazy(() => import('./pages/FlightDetail'))
 const Reports = lazy(() => import('./pages/Reports'))
 const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
+const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
+const BusinessDashboard = lazy(() => import('./pages/business/BusinessDashboard'))
+const FleetDashboard = lazy(() => import('./pages/fleet/FleetDashboard'))
 
 import DashboardLayout from './components/layout/DashboardLayout'
 
@@ -70,14 +73,31 @@ function useAuthValidation() {
   return { isValidating, isValid, token }
 }
 
-// Protected Route - Admin uchun
-const ProtectedRoute = ({ children }) => {
+// Protected Route - Business uchun (Super Admin yaratgan - /dashboard)
+const BusinessRoute = ({ children }) => {
   const { user } = useAuthStore()
   const { isValidating, isValid, token } = useAuthValidation()
   
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
+  if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
+  if (user?.role === 'admin') return <Navigate to="/fleet" replace />
+  // business role - /dashboard ga kirishi mumkin
+  return children
+}
+
+// Protected Route - Fleet (Register qilganlar - admin role)
+const FleetRoute = ({ children }) => {
+  const { user } = useAuthStore()
+  const { isValidating, isValid, token } = useAuthValidation()
+  
+  if (isValidating) return <MiniLoader />
+  if (!token || !isValid) return <Navigate to="/login" replace />
+  if (user?.role === 'driver') return <Navigate to="/driver" replace />
+  if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
+  if (user?.role === 'business') return <Navigate to="/dashboard" replace />
+  // admin role - /fleet ga kirishi mumkin
   return children
 }
 
@@ -88,7 +108,20 @@ const DriverRoute = ({ children }) => {
   
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
-  if (user?.role === 'admin' || user?.role === 'business') return <Navigate to="/dashboard" replace />
+  if (user?.role === 'admin') return <Navigate to="/fleet" replace />
+  if (user?.role === 'business') return <Navigate to="/dashboard" replace />
+  if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
+  return children
+}
+
+// Protected Route - Super Admin uchun
+const SuperAdminRoute = ({ children }) => {
+  const { user } = useAuthStore()
+  const { isValidating, isValid, token } = useAuthValidation()
+  
+  if (isValidating) return <MiniLoader />
+  if (!token || !isValid) return <Navigate to="/login" replace />
+  if (user?.role !== 'super_admin') return <Navigate to="/login" replace />
   return children
 }
 
@@ -103,8 +136,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Admin */}
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          {/* Business - Super Admin yaratgan biznesmenlar uchun */}
+          <Route path="/dashboard" element={<BusinessRoute><DashboardLayout /></BusinessRoute>}>
             <Route index element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
             <Route path="drivers" element={<Suspense fallback={<PageLoader />}><Drivers /></Suspense>} />
             <Route path="drivers/:id" element={<Suspense fallback={<PageLoader />}><DriverDetail /></Suspense>} />
@@ -116,6 +149,14 @@ function App() {
 
           {/* Driver */}
           <Route path="/driver" element={<DriverRoute><Suspense fallback={<PageLoader />}><DriverHome /></Suspense></DriverRoute>} />
+
+          {/* Super Admin */}
+          <Route path="/super-admin" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><SuperAdminPanel /></Suspense></SuperAdminRoute>} />
+
+          {/* Fleet - Register qilganlar uchun */}
+          <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
+
+
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />

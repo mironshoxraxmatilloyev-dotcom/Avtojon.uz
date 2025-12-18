@@ -32,7 +32,7 @@ export default function DriverModal({
                   {editingDriver ? 'Tahrirlash' : 'Yangi shofyor'}
                 </h2>
                 <p className="text-blue-300 text-sm">
-                  {editingDriver ? 'Malumotlarni yangilang' : 'Yangi shofyor qoshing'}
+                  {editingDriver ? 'Ma\'lumotlarni yangilang' : 'Yangi shofyor qo\'shing'}
                 </p>
               </div>
             </div>

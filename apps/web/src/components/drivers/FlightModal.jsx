@@ -44,32 +44,62 @@ export default function FlightModal({
 
         {/* Form */}
         <form onSubmit={onSubmit} className="p-6 space-y-5">
-          {/* Odometer & Fuel */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-green-200 mb-2">
-                <Gauge size={14} className="inline mr-1" /> Odometr (km)
-              </label>
-              <input 
-                type="number" 
-                value={form.startOdometer} 
-                onChange={(e) => setForm({ ...form, startOdometer: e.target.value })} 
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
-                placeholder="0" 
-              />
+          {/* Odometer */}
+          <div>
+            <label className="block text-sm font-semibold text-green-200 mb-2">
+              <Gauge size={14} className="inline mr-1" /> Odometr (km)
+            </label>
+            <input 
+              type="number" 
+              value={form.startOdometer} 
+              onChange={(e) => setForm({ ...form, startOdometer: e.target.value })} 
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
+              placeholder="0" 
+            />
+          </div>
+
+          {/* Yoqilg'i turi */}
+          <div>
+            <label className="block text-sm font-semibold text-green-200 mb-2">
+              <Fuel size={14} className="inline mr-1" /> Yoqilg'i turi
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {[
+                { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
+                { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' },
+                { value: 'gas', label: 'Gaz', icon: '🔵', unit: 'kub' },
+                { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
+                { value: 'propan', label: 'Propan', icon: '🟡', unit: 'litr' }
+              ].map(fuel => (
+                <button
+                  key={fuel.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, fuelType: fuel.value, fuelUnit: fuel.unit })}
+                  className={`p-2 rounded-xl border text-center transition ${
+                    form.fuelType === fuel.value
+                      ? 'border-green-500 bg-green-500/20 text-white'
+                      : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-lg">{fuel.icon}</span>
+                  <p className="text-[10px] mt-0.5">{fuel.label}</p>
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-green-200 mb-2">
-                <Fuel size={14} className="inline mr-1" /> Yoqilg'i (L)
-              </label>
-              <input 
-                type="number" 
-                value={form.startFuel} 
-                onChange={(e) => setForm({ ...form, startFuel: e.target.value })} 
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
-                placeholder="0" 
-              />
-            </div>
+          </div>
+
+          {/* Yoqilg'i miqdori */}
+          <div>
+            <label className="block text-sm font-semibold text-green-200 mb-2">
+              Yoqilg'i miqdori ({form.fuelUnit || 'litr'})
+            </label>
+            <input 
+              type="number" 
+              value={form.startFuel} 
+              onChange={(e) => setForm({ ...form, startFuel: e.target.value })} 
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
+              placeholder="0" 
+            />
           </div>
 
           {/* Flight Type */}
@@ -143,27 +173,15 @@ export default function FlightModal({
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-green-200 mb-2">Masofa (km)</label>
-                  <input 
-                    type="number" 
-                    value={form.distance} 
-                    onChange={(e) => setForm({ ...form, distance: e.target.value })} 
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
-                    placeholder="0" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-green-200 mb-2">Yo'l puli (so'm)</label>
-                  <input 
-                    type="number" 
-                    value={form.givenBudget} 
-                    onChange={(e) => setForm({ ...form, givenBudget: e.target.value })} 
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
-                    placeholder="0" 
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-green-200 mb-2">Yo'l puli (so'm)</label>
+                <input 
+                  type="number" 
+                  value={form.givenBudget} 
+                  onChange={(e) => setForm({ ...form, givenBudget: e.target.value })} 
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none transition" 
+                  placeholder="0" 
+                />
               </div>
             </div>
           </div>

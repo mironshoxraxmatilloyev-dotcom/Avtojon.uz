@@ -48,10 +48,11 @@ export default function DriverDetail() {
     toCity: '',
     payment: '',
     givenBudget: '',
-    distance: '',
     fromCoords: null,
     toCoords: null,
-    flightType: 'domestic' // 'domestic' - mahalliy, 'international' - xalqaro
+    flightType: 'domestic',
+    fuelType: 'benzin',
+    fuelUnit: 'litr'
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
@@ -168,6 +169,8 @@ export default function DriverDetail() {
       driverId: id,
       startOdometer: Number(flightForm.startOdometer) || 0,
       startFuel: Number(flightForm.startFuel) || 0,
+      fuelType: flightForm.fuelType || 'benzin',
+      fuelUnit: flightForm.fuelUnit || 'litr',
       flightType: flightForm.flightType,
       firstLeg: {
         fromCity: flightForm.fromCity,
@@ -175,8 +178,7 @@ export default function DriverDetail() {
         fromCoords: flightForm.fromCoords,
         toCoords: flightForm.toCoords,
         payment: Number(flightForm.payment) || 0,
-        givenBudget: Number(flightForm.givenBudget) || 0,
-        distance: Number(flightForm.distance) || 0
+        givenBudget: Number(flightForm.givenBudget) || 0
       }
     }
 
@@ -184,7 +186,7 @@ export default function DriverDetail() {
     const fromCity = flightForm.fromCity
     const toCity = flightForm.toCity
     setShowFlightModal(false)
-    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null, flightType: 'domestic' })
+    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr' })
     showToast.success(`Reys ochilmoqda: ${fromCity} → ${toCity}`)
 
     // Fonda API
@@ -733,32 +735,62 @@ export default function DriverDetail() {
                   </div>
                 </div>
 
-                {/* Odometr va Yoqilg'i */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-emerald-200 mb-2">
-                      <Gauge size={14} className="inline mr-1" /> Odometr (km)
-                    </label>
-                    <input
-                      type="number"
-                      value={flightForm.startOdometer}
-                      onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="123456"
-                    />
+                {/* Odometr */}
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
+                    <Gauge size={14} className="inline mr-1" /> Odometr (km)
+                  </label>
+                  <input
+                    type="number"
+                    value={flightForm.startOdometer}
+                    onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    placeholder="123456"
+                  />
+                </div>
+
+                {/* Yoqilg'i turi */}
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
+                    <Fuel size={14} className="inline mr-1" /> Yoqilg'i turi
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
+                      { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' },
+                      { value: 'gas', label: 'Gaz', icon: '🔵', unit: 'kub' },
+                      { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
+                      { value: 'propan', label: 'Propan', icon: '🟡', unit: 'litr' }
+                    ].map(fuel => (
+                      <button
+                        key={fuel.value}
+                        type="button"
+                        onClick={() => setFlightForm({ ...flightForm, fuelType: fuel.value, fuelUnit: fuel.unit })}
+                        className={`p-2 rounded-xl border text-center transition ${
+                          flightForm.fuelType === fuel.value
+                            ? 'border-emerald-500 bg-emerald-500/20 text-white'
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                        }`}
+                      >
+                        <span className="text-lg">{fuel.icon}</span>
+                        <p className="text-[10px] mt-0.5">{fuel.label}</p>
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-emerald-200 mb-2">
-                      <Fuel size={14} className="inline mr-1" /> Yoqilg'i (L)
-                    </label>
-                    <input
-                      type="number"
-                      value={flightForm.startFuel}
-                      onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="100"
-                    />
-                  </div>
+                </div>
+
+                {/* Yoqilg'i miqdori */}
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
+                    Yoqilg'i miqdori ({flightForm.fuelUnit || 'litr'})
+                  </label>
+                  <input
+                    type="number"
+                    value={flightForm.startFuel}
+                    onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    placeholder="100"
+                  />
                 </div>
 
                 {/* Birinchi bosqich */}
@@ -800,27 +832,15 @@ export default function DriverDetail() {
                         domesticOnly={flightForm.flightType === 'domestic'}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">Yo'l xarajati</label>
-                        <input
-                          type="number"
-                          value={flightForm.givenBudget}
-                          onChange={(e) => setFlightForm({ ...flightForm, givenBudget: e.target.value })}
-                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-sm"
-                          placeholder="200000"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-slate-400 mb-1">Masofa (km)</label>
-                        <input
-                          type="number"
-                          value={flightForm.distance}
-                          onChange={(e) => setFlightForm({ ...flightForm, distance: e.target.value })}
-                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
-                          placeholder="300"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Yo'l xarajati (so'm)</label>
+                      <input
+                        type="number"
+                        value={flightForm.givenBudget}
+                        onChange={(e) => setFlightForm({ ...flightForm, givenBudget: e.target.value })}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-sm"
+                        placeholder="200000"
+                      />
                     </div>
                   </div>
                 </div>

@@ -207,7 +207,17 @@ const flightSchema = new mongoose.Schema({
   
   // Boshlang'ich ma'lumotlar
   startOdometer: { type: Number, default: 0 }, // Boshlang'ich odometr (km)
-  startFuel: { type: Number, default: 0 }, // Bakdagi yoqilg'i (litr)
+  startFuel: { type: Number, default: 0 }, // Bakdagi yoqilg'i
+  fuelType: { 
+    type: String, 
+    enum: ['benzin', 'diesel', 'gas', 'metan', 'propan'],
+    default: 'benzin'
+  },
+  fuelUnit: {
+    type: String,
+    enum: ['litr', 'kub'],
+    default: 'litr'
+  },
   
   // Tugatish ma'lumotlari
   endOdometer: { type: Number, default: 0 },

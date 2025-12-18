@@ -29,7 +29,7 @@ export function SalaryCard({ salary, onApprove, onPay, onDelete, onView }) {
               {salary.driver?.fullName?.charAt(0) || '?'}
             </div>
             <div>
-              <p className="font-bold text-lg">{salary.driver?.fullName || 'Nomalum'}</p>
+              <p className="font-bold text-lg">{salary.driver?.fullName || 'Noma\'lum'}</p>
               <div className="flex items-center gap-2 text-white/80 text-sm mt-1">
                 <Calendar size={14} />
                 <span>{formatDate(salary.periodStart)} - {formatDate(salary.periodEnd)}</span>

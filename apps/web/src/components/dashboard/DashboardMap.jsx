@@ -38,7 +38,7 @@ export const endIcon = new L.Icon({
 export const createDriverIcon = (name, status) => {
   const color = status === 'busy' ? '#f97316' : '#10b981'
   const initial = name?.charAt(0)?.toUpperCase() || '?'
-  const firstName = name?.split(' ')[0] || 'Nomalum'
+  const firstName = name?.split(' ')[0] || 'Noma\'lum'
   
   return L.divIcon({
     className: '',

@@ -24,7 +24,12 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver }) 
         <div>
           <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1 sm:mb-2">
             <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
-            <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            <span>{(() => {
+              const date = new Date()
+              const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+              const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+              return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
+            })()}</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
             {getGreeting()}, {user?.companyName || 'Admin'}! 👋

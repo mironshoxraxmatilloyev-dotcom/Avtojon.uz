@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Driver = require('../models/Driver');
+const Businessman = require('../models/Businessman');
 const { generateToken } = require('../utils/jwt');
 const { generateTokenPair, refreshTokens, revokeAllUserTokens } = require('../utils/tokenManager');
 const { protect } = require('../middleware/auth');
@@ -45,13 +46,35 @@ router.post('/register', registerLimiter, validate(authSchemas.register), asyncH
   });
 }));
 
-// Umumiy login (admin va shofyor uchun)
+// Super Admin credentials from .env
+const SUPER_ADMIN = {
+  login: process.env.SUPER_ADMIN_LOGIN || 'super_admin',
+  password: process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin@2024'
+};
+
+// Umumiy login (super_admin, admin, biznesmen va shofyor uchun)
 router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(async (req, res) => {
-  console.log('🔑 Login so\'rovi keldi:', req.body?.username);
   const { username, password } = req.body;
   const cleanUsername = username.toLowerCase().trim();
 
-  // Avval admin tekshir
+  // 1. Super Admin tekshir (.env dan)
+  if (cleanUsername === SUPER_ADMIN.login.toLowerCase() && password === SUPER_ADMIN.password) {
+    const tokens = await generateTokenPair({ _id: 'super_admin', username: SUPER_ADMIN.login }, 'super_admin');
+    return res.json({
+      success: true,
+      data: {
+        user: {
+          id: 'super_admin',
+          username: SUPER_ADMIN.login,
+          fullName: 'Super Admin',
+          role: 'super_admin'
+        },
+        ...tokens
+      }
+    });
+  }
+
+  // 2. Avval admin tekshir
   const user = await User.findOne({ username: cleanUsername });
   if (user && await user.comparePassword(password)) {
     const tokens = await generateTokenPair(user, 'admin');
@@ -68,6 +91,30 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
         ...tokens
       }
     });
+  }
+
+  // Keyin biznesmen tekshir
+  const businessman = await Businessman.findOne({ username: cleanUsername, isActive: true });
+  console.log('Biznesmen topildi:', businessman ? businessman.username : 'YOQ', 'Username:', cleanUsername);
+  if (businessman) {
+    const isMatch = await businessman.comparePassword(password);
+    console.log('Parol togri:', isMatch);
+    if (isMatch) {
+      const tokens = await generateTokenPair(businessman, 'business');
+      return res.json({
+        success: true,
+        data: {
+          user: { 
+            id: businessman._id, 
+            username: businessman.username, 
+            fullName: businessman.fullName,
+            businessType: businessman.businessType,
+            role: 'business'
+          },
+          ...tokens
+        }
+      });
+    }
   }
 
   // Keyin shofyor tekshir (faqat aktiv shofyorlar)

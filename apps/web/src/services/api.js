@@ -96,6 +96,23 @@ const api = axios.create({
 const cache = new Map()
 const CACHE_TTL = 30000 // 30 sekund - uzoqroq cache
 const STALE_TTL = 60000 // 1 daqiqa - stale data ham ishlatiladi
+const MAX_CACHE_SIZE = 100 // Maksimal cache hajmi
+
+// 🧹 Cache tozalash funksiyasi
+const cleanupCache = () => {
+  const now = Date.now()
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > STALE_TTL) {
+      cache.delete(key)
+    }
+  }
+  // Agar hali ham katta bo'lsa, eng eskilarini o'chirish
+  if (cache.size > MAX_CACHE_SIZE) {
+    const entries = [...cache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp)
+    const toDelete = entries.slice(0, cache.size - MAX_CACHE_SIZE)
+    toDelete.forEach(([key]) => cache.delete(key))
+  }
+}
 
 // 🎯 Retry configuration
 const MAX_RETRIES = 2
@@ -181,6 +198,10 @@ api.interceptors.response.use(
         data: response.data,
         timestamp: Date.now()
       })
+      // Vaqti-vaqti bilan cache tozalash
+      if (cache.size > MAX_CACHE_SIZE / 2) {
+        cleanupCache()
+      }
     }
     return response
   },
@@ -199,7 +220,9 @@ api.interceptors.response.use(
     }
 
     // 🎯 401 - Unauthorized - Token refresh urinish
-    if (error.response?.status === 401 && !config._retry) {
+    // Login/register so'rovlari uchun refresh qilmaslik
+    const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register')
+    if (error.response?.status === 401 && !config._retry && !isAuthEndpoint) {
       const refreshToken = localStorage.getItem('refreshToken')
       
       // Refresh token mavjud bo'lsa, yangilashga urinish

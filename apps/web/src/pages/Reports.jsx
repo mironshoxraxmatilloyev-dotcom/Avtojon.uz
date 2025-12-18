@@ -68,7 +68,7 @@ const exportToExcel = (data, filename) => {
       <Row>
         <Cell ss:StyleID="data"><Data ss:Type="Number">${i + 1}</Data></Cell>
         <Cell ss:StyleID="data"><Data ss:Type="String">${d.fullName || ''}</Data></Cell>
-        <Cell ss:StyleID="data"><Data ss:Type="String">${d.status === 'busy' ? 'Band' : 'Bosh'}</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">${d.status === 'busy' ? 'Band' : 'Bo\'sh'}</Data></Cell>
       </Row>`
   })
   xml += `
@@ -122,7 +122,7 @@ const exportToExcel = (data, filename) => {
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bosh shofyorlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bo'sh shofyorlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.free}</Data></Cell>
       </Row>
       <Row>
@@ -455,42 +455,25 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
   if (!isOpen) return null
   
   return createPortal(
-<<<<<<< HEAD
-    <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl transform"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className={`bg-gradient-to-r ${color} p-4 sm:p-5 rounded-t-2xl`}>
-=======
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className={`sticky top-0 bg-gradient-to-r ${color} p-5 sm:p-6`}>
->>>>>>> de79186 (fix: Reports modal createPortal bilan tuzatildi)
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-white">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <Icon size={20} />
+              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+                <Icon size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold">{title}</h3>
-                <p className="text-white/70 text-xs">Batafsil ma'lumot</p>
+                <h3 className="text-xl font-bold">{title}</h3>
+                <p className="text-white/70 text-sm">Batafsil ma'lumot</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-              <X size={20} className="text-white" />
+            <button onClick={onClose} className="p-2.5 hover:bg-white/20 rounded-xl transition-colors">
+              <X size={22} className="text-white" />
             </button>
           </div>
         </div>
-<<<<<<< HEAD
-        <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto">{children}</div>
-=======
         <div className="p-5 sm:p-6 overflow-auto max-h-[calc(85vh-100px)]">{children}</div>
->>>>>>> de79186 (fix: Reports modal createPortal bilan tuzatildi)
       </div>
     </div>,
     document.body
@@ -570,9 +553,12 @@ export default function Reports() {
 
   const getPeriodLabel = () => {
     const { start, end } = getPeriodRange()
-    if (period === 'daily') return start.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })
-    if (period === 'weekly') return `${start.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' })}`
-    return start.toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })
+    const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+    const shortMonths = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek']
+    
+    if (period === 'daily') return `${start.getDate()}-${months[start.getMonth()]}, ${start.getFullYear()}`
+    if (period === 'weekly') return `${start.getDate()}-${shortMonths[start.getMonth()]} - ${end.getDate()}-${shortMonths[end.getMonth()]}, ${end.getFullYear()}`
+    return `${months[start.getMonth()]}, ${start.getFullYear()}`
   }
 
   const filterByPeriod = (items, dateField = 'createdAt') => {
@@ -708,7 +694,7 @@ export default function Reports() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
                 <BarChart3 className="text-white" size={24} />
               </div>
               <div>
@@ -832,7 +818,7 @@ export default function Reports() {
           </div>
           <ProDonutChart 
             data={[
-              { label: 'Bosh', value: stats.drivers.free, color: '#10b981' },
+              { label: 'Bo\'sh', value: stats.drivers.free, color: '#10b981' },
               { label: 'Band', value: stats.drivers.busy, color: '#f97316' },
             ]}
             title="Jami"
@@ -953,7 +939,7 @@ export default function Reports() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 text-center border border-emerald-100">
               <p className="text-4xl font-bold text-emerald-600">{stats.drivers.free}</p>
-              <p className="text-sm text-emerald-700 mt-1">Bosh shofyorlar</p>
+              <p className="text-sm text-emerald-700 mt-1">Bo'sh shofyorlar</p>
             </div>
             <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-5 text-center border border-orange-100">
               <p className="text-4xl font-bold text-orange-600">{stats.drivers.busy}</p>
@@ -976,7 +962,7 @@ export default function Reports() {
                   <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
                     driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
                   }`}>
-                    {driver.status === 'busy' ? 'Band' : 'Bosh'}
+                    {driver.status === 'busy' ? 'Band' : 'Bo\'sh'}
                   </span>
                 </div>
               ))}

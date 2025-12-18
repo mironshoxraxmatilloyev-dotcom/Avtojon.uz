@@ -113,7 +113,8 @@ export default function FlightDetail() {
     pricePerUnit: '',
     odometer: '',
     stationName: '',
-    location: null
+    location: null,
+    date: new Date().toISOString().split('T')[0]
   })
   const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
   const [borderForm, setBorderForm] = useState({
@@ -352,7 +353,8 @@ export default function FlightDetail() {
     const payload = {
       type: isFuel ? expenseForm.type : expenseForm.category,
       amount: Number(expenseForm.amount),
-      description: expenseForm.description
+      description: expenseForm.description,
+      date: expenseForm.date ? new Date(expenseForm.date) : new Date()
     }
 
     // Yoqilg'i uchun qo'shimcha ma'lumotlar
@@ -380,7 +382,8 @@ export default function FlightDetail() {
     setShowExpenseModal(false)
     setExpenseForm({ 
       category: 'fuel', type: 'fuel_benzin', amount: '', description: '', 
-      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null 
+      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null,
+      date: new Date().toISOString().split('T')[0]
     })
     showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
     
@@ -1409,6 +1412,17 @@ export default function FlightDetail() {
                       {new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)} so'm
                     </p>
                   )}
+                </div>
+
+                {/* Sana */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Sana</label>
+                  <input
+                    type="date"
+                    value={expenseForm.date || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-orange-500 focus:outline-none"
+                  />
                 </div>
 
                 {/* Izoh */}

@@ -84,7 +84,7 @@ function MapCenterUpdater({ locations, selectedDriver, shouldCenter }) {
 const createDriverIcon = (name, status) => {
   const color = status === 'busy' ? '#f97316' : '#10b981'
   const initial = name?.charAt(0)?.toUpperCase() || '?'
-  const firstName = name?.split(' ')[0] || 'Nomalum'
+  const firstName = name?.split(' ')[0] || 'Noma\'lum'
 
   return L.divIcon({
     className: '',
@@ -405,7 +405,7 @@ export default function Dashboard() {
   const quickStats = [
     { label: 'Faol reyslar', value: stats.activeTrips, icon: Activity, color: 'from-orange-400 to-orange-600' },
     { label: 'Yoldagi shofyorlar', value: stats.busyDrivers, icon: Truck, color: 'from-blue-400 to-blue-600' },
-    { label: 'Bosh shofyorlar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
+    { label: 'Bo\'sh shofyorlar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
     { label: 'Kutilayotgan', value: stats.pendingTrips, icon: Clock, color: 'from-purple-400 to-purple-600' },
   ]
 
@@ -444,25 +444,21 @@ export default function Dashboard() {
         <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
         <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
 
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+        <div className="relative">
           <div>
             <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1 sm:mb-2">
               <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
-              <span>{new Date().toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+              <span>{(() => {
+                const date = new Date()
+                const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+                const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+                return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
+              })()}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
               {getGreeting()}, {user?.companyName || 'Admin'}! 👋
             </h1>
             <p className="text-blue-200 text-sm sm:text-base">Bugungi biznes holatini korib chiqing</p>
-          </div>
-
-          <div className="flex gap-2 sm:gap-3">
-            <button onClick={() => navigate('/dashboard/drivers')}
-              className="group px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-slate-900 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg shadow-white/10 text-sm sm:text-base">
-              <Users size={16} className="sm:w-[18px] sm:h-[18px]" />
-              Shofyorlar
-              <ArrowUpRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </button>
           </div>
         </div>
 
@@ -742,7 +738,7 @@ export default function Dashboard() {
                     {flight.driver?.fullName?.charAt(0) || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.driver?.fullName || 'Nomalum'}</p>
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.driver?.fullName || 'Noma\'lum'}</p>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
                     <p className="text-[10px] sm:text-xs text-gray-400 truncate">
                       {flight.legs?.length || 0} bosqich • {flight.totalDistance || 0} km

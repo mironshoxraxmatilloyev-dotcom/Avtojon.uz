@@ -16,6 +16,7 @@ const expenseRoutes = require('./routes/expense.routes');
 const salaryRoutes = require('./routes/salary.routes');
 const driverPanelRoutes = require('./routes/driverPanel.routes');
 const flightRoutes = require('./routes/flight.routes');
+const superAdminRoutes = require('./routes/superAdmin.routes');
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/salaries', salaryRoutes);
 app.use('/api/driver', driverPanelRoutes);
 app.use('/api/flights', flightRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
