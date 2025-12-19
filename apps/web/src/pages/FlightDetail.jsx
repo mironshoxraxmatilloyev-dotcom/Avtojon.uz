@@ -33,7 +33,7 @@ import {
 } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import LocationPicker from '../components/LocationPicker'
-import { useSocket } from '../contexts/SocketContext'
+import { useSocket } from '../hooks/useSocket'
 
 // Davlatlar
 const COUNTRIES = {

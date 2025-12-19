@@ -7,7 +7,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
-import { useSocket } from '../contexts/SocketContext'
+import { useSocket } from '../hooks/useSocket'
 import { PageWrapper, AnimatedCard, AnimatedStatCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
 
 

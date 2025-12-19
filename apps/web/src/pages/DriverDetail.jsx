@@ -11,7 +11,7 @@ import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { useAlert, DriverDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
-import { useSocket } from '../contexts/SocketContext'
+import { useSocket } from '../hooks/useSocket'
 
 export default function DriverDetail() {
   const { id } = useParams()
