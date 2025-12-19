@@ -263,4 +263,48 @@ router.delete('/businessmen/:id', superAdminAuth, asyncHandler(async (req, res) 
   });
 }));
 
+// Barcha shofyorlarni olish
+router.get('/drivers', superAdminAuth, asyncHandler(async (req, res) => {
+  const drivers = await Driver.find({ isActive: true })
+    .select('-password')
+    .populate('user', 'fullName businessType')
+    .sort({ createdAt: -1 });
+  
+  res.json({
+    success: true,
+    data: drivers
+  });
+}));
+
+// Barcha reyslarni olish
+router.get('/flights', superAdminAuth, asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  const query = {};
+  if (status) query.status = status;
+  
+  const flights = await Flight.find(query)
+    .populate('driver', 'fullName phone')
+    .populate('vehicle', 'plateNumber brand')
+    .sort({ createdAt: -1 })
+    .limit(100);
+  
+  res.json({
+    success: true,
+    data: flights
+  });
+}));
+
+// Barcha mashinalarni olish
+router.get('/vehicles', superAdminAuth, asyncHandler(async (req, res) => {
+  const vehicles = await Vehicle.find({ isActive: true })
+    .populate('currentDriver', 'fullName')
+    .populate('user', 'fullName businessType')
+    .sort({ createdAt: -1 });
+  
+  res.json({
+    success: true,
+    data: vehicles
+  });
+}));
+
 module.exports = router;
