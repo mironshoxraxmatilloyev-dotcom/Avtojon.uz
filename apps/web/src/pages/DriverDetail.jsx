@@ -329,7 +329,7 @@ export default function DriverDetail() {
                   <div className="mt-3 sm:mt-4">
                     <div 
                       onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
+                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
                     >
                       {/* Background pattern */}
                       <div className="absolute inset-0 opacity-10">
@@ -367,7 +367,7 @@ export default function DriverDetail() {
                   <div className="mt-3 sm:mt-4">
                     <div 
                       onClick={() => setShowFlightModal(true)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
+                      className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
                     >
                       {/* Background pattern */}
                       <div className="absolute inset-0 opacity-10">
