@@ -6,7 +6,7 @@ import api from '../../services/api'
 import { 
   Shield, Users, Plus, LogOut, User, Copy, Check, 
   Trash2, Search, X, Power, Eye, EyeOff, Edit3, Key,
-  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3
+  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3, Route
 } from 'lucide-react'
 
 const MENU_ITEMS = [
