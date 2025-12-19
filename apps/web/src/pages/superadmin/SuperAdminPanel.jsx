@@ -11,6 +11,7 @@ import {
 
 const MENU_ITEMS = [
   { id: 'dashboard', label: 'Bosh sahifa', icon: LayoutDashboard },
+  { id: 'stats', label: 'Statistika', icon: Route },
   { id: 'businessmen', label: 'Biznesmenlar', icon: Users },
   { id: 'drivers', label: 'Shofyorlar', icon: Truck },
   { id: 'flights', label: 'Reyslar', icon: Route },
@@ -165,7 +166,60 @@ export default function SuperAdminPanel() {
 
   // Render sections
   const renderDashboard = () => (
-    <div className="space-y-6">
+    <div className="flex items-center justify-center min-h-[70vh]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
+        {/* Parollarni yangilang */}
+        <button 
+          onClick={() => setActiveTab('businessmen')}
+          className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-3xl p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-indigo-500/20"
+        >
+          {/* 3D Background Effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-400/30 transition-all duration-700" />
+          
+          <div className="relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Key className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
+            <p className="text-slate-400 group-hover:text-slate-300 transition-colors">Biznesmenlar parollarini boshqaring va yangilang</p>
+            <div className="mt-6 flex items-center gap-2 text-indigo-400 group-hover:text-indigo-300 transition-colors">
+              <span className="text-sm font-medium">Kirish</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </button>
+
+        {/* Statistikani ko'ring */}
+        <button 
+          onClick={() => setActiveTab('stats')}
+          className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-3xl p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-emerald-500/20"
+        >
+          {/* 3D Background Effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl group-hover:bg-teal-400/30 transition-all duration-700" />
+          
+          <div className="relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Route className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">Statistikani ko'ring</h3>
+            <p className="text-slate-400 group-hover:text-slate-300 transition-colors">Umumiy statistika va grafiklarni ko'ring</p>
+            <div className="mt-6 flex items-center gap-2 text-emerald-400 group-hover:text-emerald-300 transition-colors">
+              <span className="text-sm font-medium">Kirish</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  )
+
+  // Statistika sahifasi
+  const renderStats = () => (
+    <div className="space-y-6 animate-fadeIn">
       <h2 className="text-2xl font-bold text-white">Umumiy statistika</h2>
       {stats && (
         <>
@@ -183,24 +237,24 @@ export default function SuperAdminPanel() {
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Foydalanuvchilar taqsimoti */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
               <h3 className="text-lg font-semibold text-white mb-4">Foydalanuvchilar taqsimoti</h3>
               <div className="space-y-4">
                 <ProgressBar label="Biznesmenlar" value={stats.businessmen.total} max={stats.businessmen.total + stats.drivers.total} color="indigo" />
                 <ProgressBar label="Shofyorlar" value={stats.drivers.total} max={stats.businessmen.total + stats.drivers.total} color="blue" />
               </div>
-              <div className="mt-6 flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">{stats.businessmen.total + stats.drivers.total}</div>
-                  <div className="text-xs text-slate-400">Jami foydalanuvchilar</div>
+              <div className="mt-6 flex items-center justify-center">
+                <div className="text-center bg-slate-700/50 rounded-xl px-8 py-4">
+                  <div className="text-4xl font-bold text-white">{stats.businessmen.total + stats.drivers.total}</div>
+                  <div className="text-sm text-slate-400 mt-1">Jami foydalanuvchilar</div>
                 </div>
               </div>
             </div>
 
             {/* Reyslar holati */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
               <h3 className="text-lg font-semibold text-white mb-4">Reyslar holati</h3>
-              <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="flex items-center justify-center mb-4">
                 <DonutChart 
                   active={stats.flights.active} 
                   completed={stats.flights.completed} 
@@ -220,59 +274,26 @@ export default function SuperAdminPanel() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button 
-              onClick={() => setActiveTab('businessmen')}
-              className="group bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/30 hover:to-purple-600/30 border border-indigo-500/30 rounded-xl p-6 text-left transition-all duration-300"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Key className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Parollarni yangilang</h3>
-                  <p className="text-sm text-slate-400">Biznesmenlar parollarini boshqaring</p>
-                </div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => setActiveTab('flights')}
-              className="group bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 rounded-xl p-6 text-left transition-all duration-300"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Route className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Reyslarni ko'ring</h3>
-                  <p className="text-sm text-slate-400">Barcha reyslar statistikasi</p>
-                </div>
-              </div>
-            </button>
-          </div>
-
           {/* Shofyorlar holati */}
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+          <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-6 border border-slate-700">
             <h3 className="text-lg font-semibold text-white mb-4">Shofyorlar holati</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-amber-600/10 border border-amber-600/30 rounded-xl p-4 text-center">
-                <div className="text-4xl font-bold text-amber-400">{stats.drivers.busy}</div>
-                <div className="text-sm text-slate-400 mt-1">Band shofyorlar</div>
-                <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/10 border border-amber-600/30 rounded-xl p-6 text-center hover:border-amber-500/50 transition-all">
+                <div className="text-5xl font-bold text-amber-400">{stats.drivers.busy}</div>
+                <div className="text-sm text-slate-400 mt-2">Band shofyorlar</div>
+                <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000"
                     style={{ width: `${stats.drivers.total > 0 ? (stats.drivers.busy / stats.drivers.total) * 100 : 0}%` }}
                   />
                 </div>
               </div>
-              <div className="bg-green-600/10 border border-green-600/30 rounded-xl p-4 text-center">
-                <div className="text-4xl font-bold text-green-400">{stats.drivers.free}</div>
-                <div className="text-sm text-slate-400 mt-1">Bo'sh shofyorlar</div>
-                <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/10 border border-green-600/30 rounded-xl p-6 text-center hover:border-green-500/50 transition-all">
+                <div className="text-5xl font-bold text-green-400">{stats.drivers.free}</div>
+                <div className="text-sm text-slate-400 mt-2">Bo'sh shofyorlar</div>
+                <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-green-500 rounded-full transition-all duration-1000"
+                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-1000"
                     style={{ width: `${stats.drivers.total > 0 ? (stats.drivers.free / stats.drivers.total) * 100 : 0}%` }}
                   />
                 </div>
@@ -534,6 +555,7 @@ export default function SuperAdminPanel() {
           ) : (
             <>
               {activeTab === 'dashboard' && renderDashboard()}
+              {activeTab === 'stats' && renderStats()}
               {activeTab === 'businessmen' && renderBusinessmen()}
               {activeTab === 'drivers' && renderDrivers()}
               {activeTab === 'flights' && renderFlights()}
