@@ -18,8 +18,8 @@ export default function DriverModal({
   const [passwordUpdating, setPasswordUpdating] = useState(false)
 
   const handlePasswordUpdate = async () => {
-    if (!newPassword || newPassword.length < 4) {
-      alert('Parol kamida 4 ta belgidan iborat bo\'lishi kerak')
+    if (!newPassword || newPassword.length < 6) {
+      alert('Parol kamida 6 ta belgidan iborat bo\'lishi kerak')
       return
     }
     setPasswordUpdating(true)
@@ -29,7 +29,7 @@ export default function DriverModal({
       setShowNewPassword(false)
       alert('Parol muvaffaqiyatli yangilandi')
     } catch (error) {
-      alert('Xatolik: ' + (error.message || 'Parolni yangilab bo\'lmadi'))
+      alert('Xatolik: ' + (error.response?.data?.message || error.message || 'Parolni yangilab bo\'lmadi'))
     } finally {
       setPasswordUpdating(false)
     }

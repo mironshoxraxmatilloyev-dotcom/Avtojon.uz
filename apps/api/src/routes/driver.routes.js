@@ -120,8 +120,8 @@ router.put('/:id/password', protect, businessOnly, async (req, res) => {
   try {
     const { password } = req.body;
     
-    if (!password || password.length < 4) {
-      return res.status(400).json({ success: false, message: 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak' });
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak' });
     }
 
     const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
@@ -134,6 +134,7 @@ router.put('/:id/password', protect, businessOnly, async (req, res) => {
 
     res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi' });
   } catch (error) {
+    console.error('Password update error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
