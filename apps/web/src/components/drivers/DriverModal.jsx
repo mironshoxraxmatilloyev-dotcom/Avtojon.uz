@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { X, User, Eye, EyeOff } from 'lucide-react'
+import { X, User, Eye, EyeOff, RefreshCw } from 'lucide-react'
 import { PhoneInputDark } from '../PhoneInput'
 import { useState } from 'react'
 
@@ -13,33 +13,53 @@ export default function DriverModal({
   onPasswordUpdate
 }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [editingPassword, setEditingPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
-  const [passwordUpdating, setPasswordUpdating] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handlePasswordUpdate = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      alert('Parol kamida 6 ta belgidan iborat bo\'lishi kerak')
-      return
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    // Parol yangilash kerak bo'lsa
+    if (editingDriver && editingPassword && newPassword) {
+      if (newPassword.length < 6) {
+        alert('Parol kamida 6 ta belgidan iborat bo\'lishi kerak')
+        return
+      }
+      setSaving(true)
+      try {
+        await onPasswordUpdate(editingDriver._id, newPassword)
+      } catch (error) {
+        alert('Parol yangilashda xatolik: ' + (error.response?.data?.message || error.message))
+        setSaving(false)
+        return
+      }
     }
-    setPasswordUpdating(true)
+    
+    // Asosiy form submit
+    setSaving(true)
     try {
-      await onPasswordUpdate(editingDriver._id, newPassword)
+      await onSubmit(e)
+      setEditingPassword(false)
       setNewPassword('')
-      setShowNewPassword(false)
-      alert('Parol muvaffaqiyatli yangilandi')
-    } catch (error) {
-      alert('Xatolik: ' + (error.response?.data?.message || error.message || 'Parolni yangilab bo\'lmadi'))
     } finally {
-      setPasswordUpdating(false)
+      setSaving(false)
     }
+  }
+
+  const handleClose = () => {
+    setEditingPassword(false)
+    setNewPassword('')
+    setShowNewPassword(false)
+    onClose()
   }
 
   if (!show) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4">
-      <div className="absolute inset-0" onClick={onClose} />
+      <div className="absolute inset-0" onClick={handleClose} />
       <div 
         className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto" 
         onClick={(e) => e.stopPropagation()}
@@ -62,7 +82,7 @@ export default function DriverModal({
               </div>
             </div>
             <button 
-              onClick={onClose} 
+              onClick={handleClose} 
               className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition"
             >
               <X size={24} />
@@ -71,7 +91,7 @@ export default function DriverModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={onSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-blue-200 mb-2">Username *</label>
@@ -145,18 +165,33 @@ export default function DriverModal({
             />
           </div>
 
-          {/* Parol yangilash (faqat tahrirlash rejimida) */}
+          {/* Parol (faqat tahrirlash rejimida) */}
           {editingDriver && (
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-lg font-semibold text-white mb-4">🔐 Parolni yangilash</h3>
-              <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-blue-200">Parol</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPassword(!editingPassword)
+                    setNewPassword('')
+                    setShowNewPassword(false)
+                  }}
+                  className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition"
+                >
+                  <RefreshCw size={14} />
+                  {editingPassword ? 'Bekor qilish' : 'Yangilash'}
+                </button>
+              </div>
+              {editingPassword ? (
                 <div className="relative">
                   <input 
                     type={showNewPassword ? 'text' : 'password'} 
                     value={newPassword} 
                     onChange={(e) => setNewPassword(e.target.value)} 
-                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                    placeholder="Yangi parol" 
+                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-amber-500/50 rounded-xl text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
+                    placeholder="Yangi parol (kamida 6 ta belgi)" 
+                    autoFocus
                   />
                   <button
                     type="button"
@@ -166,15 +201,11 @@ export default function DriverModal({
                     {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                <button 
-                  type="button"
-                  onClick={handlePasswordUpdate}
-                  disabled={!newPassword || passwordUpdating}
-                  className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all"
-                >
-                  {passwordUpdating ? 'Yangilanmoqda...' : 'Parolni yangilash'}
-                </button>
-              </div>
+              ) : (
+                <div className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-slate-400">
+                  ••••••••
+                </div>
+              )}
             </div>
           )}
 
@@ -223,9 +254,10 @@ export default function DriverModal({
           {/* Submit */}
           <button 
             type="submit" 
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25"
+            disabled={saving}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editingDriver ? 'Saqlash' : "Qo'shish"}
+            {saving ? 'Saqlanmoqda...' : (editingDriver ? 'Saqlash' : "Qo'shish")}
           </button>
         </form>
       </div>
