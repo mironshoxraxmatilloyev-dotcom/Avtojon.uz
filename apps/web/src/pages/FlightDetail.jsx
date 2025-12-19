@@ -791,53 +791,69 @@ export default function FlightDetail() {
         </div>
 
         <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Fuel className="text-amber-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Yoqilg'i</h3>
-              <p className="text-[9px] sm:text-[10px] text-gray-400">
-                {flight.fuelType === 'gas' || flight.fuelType === 'metan' ? 'Gaz (kub)' : 
-                 flight.fuelType === 'propan' ? 'Propan (litr)' :
-                 flight.fuelType === 'diesel' ? 'Dizel (litr)' : 'Benzin (litr)'}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
-              <p className="text-xs sm:text-sm font-bold text-gray-900">
-                {flight.startFuel || 0} {flight.fuelUnit === 'kub' ? 'kub' : 'L'}
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
-              <p className="text-xs sm:text-sm font-bold text-gray-900">
-                {flight.endFuel || '-'} {flight.fuelUnit === 'kub' ? 'kub' : 'L'}
-              </p>
-            </div>
-            <div className="bg-amber-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-amber-500">Jami sarflangan</p>
-              <p className="text-xs sm:text-sm font-bold text-amber-600">
-                {(() => {
-                  // Xarajatlardan yoqilg'i miqdorini hisoblash (har bir tur alohida)
-                  const fuelByType = {}
-                  flight.expenses?.forEach(exp => {
-                    if (exp.type?.startsWith('fuel_') && exp.quantity) {
-                      const unit = exp.quantityUnit || (exp.type === 'fuel_gas' || exp.type === 'fuel_metan' ? 'kub' : 'litr')
-                      if (!fuelByType[unit]) fuelByType[unit] = 0
-                      fuelByType[unit] += Number(exp.quantity)
-                    }
-                  })
-                  const parts = []
-                  if (fuelByType['litr']) parts.push(`${fuelByType['litr']} L`)
-                  if (fuelByType['kub']) parts.push(`${fuelByType['kub']} kub`)
-                  return parts.length > 0 ? parts.join(' + ') : '-'
-                })()}
-              </p>
-            </div>
-          </div>
+          {(() => {
+            // Xarajatlardan yoqilg'i turlarini aniqlash
+            const fuelData = { litr: 0, kub: 0, types: [] }
+            flight.expenses?.forEach(exp => {
+              if (exp.type?.startsWith('fuel_') && exp.quantity) {
+                const isGas = exp.type === 'fuel_gas' || exp.type === 'fuel_metan'
+                const unit = exp.quantityUnit || (isGas ? 'kub' : 'litr')
+                if (unit === 'kub') fuelData.kub += Number(exp.quantity)
+                else fuelData.litr += Number(exp.quantity)
+                // Yoqilg'i turini saqlash
+                if (!fuelData.types.includes(exp.type)) fuelData.types.push(exp.type)
+              }
+            })
+            // Asosiy yoqilg'i turini aniqlash
+            const mainType = fuelData.types[0] || flight.fuelType || 'benzin'
+            const isGasType = mainType === 'fuel_gas' || mainType === 'fuel_metan' || mainType === 'gas' || mainType === 'metan'
+            const fuelLabel = mainType === 'fuel_gas' || mainType === 'gas' ? 'Gaz' :
+                             mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
+                             mainType === 'fuel_propan' || mainType === 'propan' ? 'Propan' :
+                             mainType === 'fuel_diesel' || mainType === 'diesel' ? 'Dizel' : 'Benzin'
+            const mainUnit = isGasType ? 'kub' : 'litr'
+            
+            return (
+              <>
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Fuel className="text-amber-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Yoqilg'i</h3>
+                    <p className="text-[9px] sm:text-[10px] text-gray-400">
+                      {fuelLabel} ({mainUnit})
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+                    <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-900">
+                      {flight.startFuel || 0} {mainUnit === 'kub' ? 'kub' : 'L'}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
+                    <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-900">
+                      {flight.endFuel || '-'} {mainUnit === 'kub' ? 'kub' : 'L'}
+                    </p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-1.5 sm:p-2">
+                    <p className="text-[9px] sm:text-[10px] text-amber-500">Jami sarflangan</p>
+                    <p className="text-xs sm:text-sm font-bold text-amber-600">
+                      {(() => {
+                        const parts = []
+                        if (fuelData.litr > 0) parts.push(`${fuelData.litr} L`)
+                        if (fuelData.kub > 0) parts.push(`${fuelData.kub} kub`)
+                        return parts.length > 0 ? parts.join(' + ') : '-'
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )
+          })()}
         </div>
       </div>
 
