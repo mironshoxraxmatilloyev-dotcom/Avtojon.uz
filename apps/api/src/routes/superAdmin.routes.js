@@ -59,37 +59,55 @@ router.get('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
 
 // Yangi biznesmen qo'shish
 router.post('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
-  const { fullName, businessType, phone } = req.body;
+  const { fullName, businessType, phone, username, password } = req.body;
   
   if (!fullName || !businessType || !phone) {
     throw new ApiError(400, 'Barcha maydonlar majburiy: fullName, businessType, phone');
   }
   
-  // Login/parol generatsiya
-  const credentials = generateCredentials(fullName, businessType);
+  let finalUsername, finalPassword;
   
-  // Username unique bo'lishini tekshirish
-  const checkExists = async (username) => {
-    const exists = await Businessman.findOne({ username });
-    return !!exists;
-  };
-  
-  const uniqueUsername = await makeUsernameUnique(credentials.username, checkExists);
+  // Agar username va parol berilgan bo'lsa - qo'lda kiritilgan
+  if (username && password) {
+    if (password.length < 6) {
+      throw new ApiError(400, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
+    }
+    
+    // Username band emasligini tekshirish
+    const existingUser = await Businessman.findOne({ username: username.toLowerCase() });
+    if (existingUser) {
+      throw new ApiError(400, 'Bu username allaqachon band');
+    }
+    
+    finalUsername = username.toLowerCase();
+    finalPassword = password;
+  } else {
+    // Avtomatik generatsiya
+    const credentials = generateCredentials(fullName, businessType);
+    
+    const checkExists = async (uname) => {
+      const exists = await Businessman.findOne({ username: uname });
+      return !!exists;
+    };
+    
+    finalUsername = await makeUsernameUnique(credentials.username, checkExists);
+    finalPassword = credentials.password;
+  }
   
   // Biznesmen yaratish
   const businessman = await Businessman.create({
     fullName,
     businessType,
     phone,
-    username: uniqueUsername,
-    password: credentials.password
+    username: finalUsername,
+    password: finalPassword
   });
   
   res.status(201).json({
     success: true,
     data: {
       businessman: {
-        id: businessman._id,
+        _id: businessman._id,
         fullName: businessman.fullName,
         businessType: businessman.businessType,
         phone: businessman.phone,
@@ -98,8 +116,8 @@ router.post('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
         createdAt: businessman.createdAt
       },
       credentials: {
-        username: uniqueUsername,
-        password: credentials.password // Faqat yaratilganda ko'rsatiladi
+        username: finalUsername,
+        password: finalPassword
       }
     }
   });
@@ -134,7 +152,7 @@ router.put('/businessmen/:id', superAdminAuth, asyncHandler(async (req, res) => 
   });
 }));
 
-// Biznesmen parolini yangilash
+// Biznesmen parolini yangilash (avtomatik generatsiya)
 router.post('/businessmen/:id/reset-password', superAdminAuth, asyncHandler(async (req, res) => {
   const businessman = await Businessman.findById(req.params.id);
   if (!businessman) {
@@ -152,6 +170,31 @@ router.post('/businessmen/:id/reset-password', superAdminAuth, asyncHandler(asyn
     data: {
       username: businessman.username,
       newPassword: credentials.password
+    }
+  });
+}));
+
+// Biznesmen parolini qo'lda o'rnatish
+router.post('/businessmen/:id/set-password', superAdminAuth, asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  
+  if (!password || password.length < 6) {
+    throw new ApiError(400, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
+  }
+  
+  const businessman = await Businessman.findById(req.params.id);
+  if (!businessman) {
+    throw new ApiError(404, 'Biznesmen topilmadi');
+  }
+  
+  businessman.password = password;
+  await businessman.save();
+  
+  res.json({
+    success: true,
+    data: {
+      username: businessman.username,
+      newPassword: password
     }
   });
 }));
