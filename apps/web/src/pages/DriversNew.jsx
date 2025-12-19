@@ -145,9 +145,9 @@ export default function DriversNew() {
 
         const driverData = {
             username: form.username.trim(), password: form.password, fullName: form.fullName.trim(),
-            phone: form.phone, paymentType: form.paymentType,
-            baseSalary: form.paymentType === 'monthly' ? Number(form.baseSalary) || 0 : 0,
-            perTripRate: form.paymentType === 'per_trip' ? Number(form.perTripRate) || 0 : 0
+            phone: form.phone, paymentType: 'monthly',
+            baseSalary: Number(form.baseSalary) || 0,
+            perTripRate: 0
         }
         const isEditing = !!editingDriver
         const editId = editingDriver?._id
@@ -267,6 +267,14 @@ export default function DriversNew() {
         setShowModal(true)
     }
 
+    // Parol yangilash
+    const handlePasswordUpdate = async (driverId, newPassword) => {
+        if (isDemoMode) {
+            throw new Error('Demo versiyada ishlamaydi')
+        }
+        await api.put(`/drivers/${driverId}/password`, { password: newPassword })
+    }
+
     const handleLocationSelect = (data) => {
         setFlightForm(prev => ({
             ...prev,
@@ -341,6 +349,7 @@ export default function DriversNew() {
                 form={form}
                 setForm={setForm}
                 editingDriver={editingDriver}
+                onPasswordUpdate={handlePasswordUpdate}
             />
 
             <FlightModal

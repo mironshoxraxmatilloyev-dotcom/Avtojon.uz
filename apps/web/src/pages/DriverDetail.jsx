@@ -833,13 +833,17 @@ export default function DriverDetail() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Yo'l xarajati (so'm)</label>
+                      <label className="block text-sm text-slate-400 mb-1">Berilgan pul (so'm)</label>
                       <input
-                        type="number"
-                        value={flightForm.givenBudget}
-                        onChange={(e) => setFlightForm({ ...flightForm, givenBudget: e.target.value })}
+                        type="text"
+                        inputMode="numeric"
+                        value={flightForm.givenBudget ? new Intl.NumberFormat('uz-UZ').format(flightForm.givenBudget) : ''}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/\D/g, '')
+                          setFlightForm({ ...flightForm, givenBudget: rawValue })
+                        }}
                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-sm"
-                        placeholder="200000"
+                        placeholder="200,000"
                       />
                     </div>
                   </div>

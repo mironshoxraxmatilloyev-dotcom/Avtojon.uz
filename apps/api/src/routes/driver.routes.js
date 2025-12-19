@@ -115,6 +115,29 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
   }
 });
 
+// Shofyor parolini yangilash
+router.put('/:id/password', protect, businessOnly, async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password || password.length < 4) {
+      return res.status(400).json({ success: false, message: 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak' });
+    }
+
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    driver.password = password;
+    await driver.save();
+
+    res.json({ success: true, message: 'Parol muvaffaqiyatli yangilandi' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Shofyorni o'chirish (soft delete - isActive: false)
 router.delete('/:id', protect, businessOnly, async (req, res) => {
   try {

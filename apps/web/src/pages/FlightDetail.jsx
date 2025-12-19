@@ -62,11 +62,10 @@ const EXPENSE_CATEGORIES = [
 
 // Yoqilg'i turlari
 const FUEL_TYPES = [
-  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-  { value: 'fuel_diesel', label: 'Dizel (Salarka)', icon: '🛢️', unit: 'litr' },
-  { value: 'fuel_gas', label: 'Gaz', icon: '🔵', unit: 'kub' },
   { value: 'fuel_metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'litr' }
+  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'kub' },
+  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
+  { value: 'fuel_diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
 ]
 
 // Display uchun barcha turlar
@@ -111,7 +110,7 @@ export default function FlightDetail() {
   })
   const [expenseForm, setExpenseForm] = useState({ 
     category: 'fuel', 
-    type: 'fuel_benzin', 
+    type: 'fuel_metan', 
     amount: '', 
     description: '', 
     quantity: '',
@@ -390,7 +389,7 @@ export default function FlightDetail() {
     setShowExpenseModal(false)
     setSelectedLegForExpense(null)
     setExpenseForm({ 
-      category: 'fuel', type: 'fuel_benzin', amount: '', description: '', 
+      category: 'fuel', type: 'fuel_metan', amount: '', description: '', 
       quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null,
       date: new Date().toISOString().split('T')[0]
     })
@@ -782,9 +781,15 @@ export default function FlightDetail() {
             <div className="bg-blue-50 rounded-lg p-1.5 sm:p-2">
               <p className="text-[9px] sm:text-[10px] text-blue-500">Jami yurgan</p>
               <p className="text-xs sm:text-sm font-bold text-blue-600 truncate">
-                {flight.endOdometer && flight.startOdometer 
-                  ? formatMoney(flight.endOdometer - flight.startOdometer) 
-                  : formatMoney(flight.totalDistance || 0)} km
+                {(() => {
+                  // Agar reys yopilgan bo'lsa - odometr farqi
+                  if (flight.endOdometer && flight.startOdometer) {
+                    return formatMoney(flight.endOdometer - flight.startOdometer)
+                  }
+                  // Aks holda - buyurtmalar masofasi yig'indisi
+                  const legsDistance = flight.legs?.reduce((sum, leg) => sum + (leg.distance || 0), 0) || 0
+                  return formatMoney(legsDistance || flight.totalDistance || 0)
+                })()} km
               </p>
             </div>
           </div>
@@ -796,8 +801,9 @@ export default function FlightDetail() {
             const fuelData = { litr: 0, kub: 0, types: [] }
             flight.expenses?.forEach(exp => {
               if (exp.type?.startsWith('fuel_') && exp.quantity) {
-                const isGas = exp.type === 'fuel_gas' || exp.type === 'fuel_metan'
-                const unit = exp.quantityUnit || (isGas ? 'kub' : 'litr')
+                // Metan va Propan = kub, Benzin va Dizel = litr
+                const isKub = exp.type === 'fuel_metan' || exp.type === 'fuel_propan'
+                const unit = exp.quantityUnit || (isKub ? 'kub' : 'litr')
                 if (unit === 'kub') fuelData.kub += Number(exp.quantity)
                 else fuelData.litr += Number(exp.quantity)
                 // Yoqilg'i turini saqlash
@@ -806,12 +812,12 @@ export default function FlightDetail() {
             })
             // Asosiy yoqilg'i turini aniqlash
             const mainType = fuelData.types[0] || flight.fuelType || 'benzin'
-            const isGasType = mainType === 'fuel_gas' || mainType === 'fuel_metan' || mainType === 'gas' || mainType === 'metan'
-            const fuelLabel = mainType === 'fuel_gas' || mainType === 'gas' ? 'Gaz' :
-                             mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
+            // Metan va Propan = kub
+            const isKubType = mainType === 'fuel_metan' || mainType === 'fuel_propan' || mainType === 'metan' || mainType === 'propan'
+            const fuelLabel = mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
                              mainType === 'fuel_propan' || mainType === 'propan' ? 'Propan' :
                              mainType === 'fuel_diesel' || mainType === 'diesel' ? 'Dizel' : 'Benzin'
-            const mainUnit = isGasType ? 'kub' : 'litr'
+            const mainUnit = isKubType ? 'kub' : 'litr'
             
             return (
               <>
@@ -830,13 +836,13 @@ export default function FlightDetail() {
                   <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
                     <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
                     <p className="text-xs sm:text-sm font-bold text-gray-900">
-                      {flight.startFuel || 0} {mainUnit === 'kub' ? 'kub' : 'L'}
+                      {flight.startFuel || 0} {mainUnit}
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
                     <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
                     <p className="text-xs sm:text-sm font-bold text-gray-900">
-                      {flight.endFuel || '-'} {mainUnit === 'kub' ? 'kub' : 'L'}
+                      {flight.endFuel || '-'} {mainUnit}
                     </p>
                   </div>
                   <div className="bg-amber-50 rounded-lg p-1.5 sm:p-2">
@@ -844,7 +850,7 @@ export default function FlightDetail() {
                     <p className="text-xs sm:text-sm font-bold text-amber-600">
                       {(() => {
                         const parts = []
-                        if (fuelData.litr > 0) parts.push(`${fuelData.litr} L`)
+                        if (fuelData.litr > 0) parts.push(`${fuelData.litr} litr`)
                         if (fuelData.kub > 0) parts.push(`${fuelData.kub} kub`)
                         return parts.length > 0 ? parts.join(' + ') : '-'
                       })()}
@@ -1260,13 +1266,17 @@ export default function FlightDetail() {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Yo'l xarajati uchun</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Berilgan pul (so'm)</label>
                   <input
-                    type="number"
-                    value={legForm.givenBudget}
-                    onChange={(e) => setLegForm({ ...legForm, givenBudget: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    value={legForm.givenBudget ? new Intl.NumberFormat('uz-UZ').format(legForm.givenBudget) : ''}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '')
+                      setLegForm({ ...legForm, givenBudget: rawValue })
+                    }}
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
-                    placeholder="200000"
+                    placeholder="200,000"
                   />
                 </div>
 
@@ -1318,7 +1328,7 @@ export default function FlightDetail() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h2 className="text-base sm:text-lg font-bold text-white">
-                        {selectedLegForExpense ? `${selectedLegForExpense.leg.fromCity} → ${selectedLegForExpense.leg.toCity}` : flight.name}
+                        {selectedLegForExpense ? `${selectedLegForExpense.leg.fromCity?.split(',')[0]} → ${selectedLegForExpense.leg.toCity?.split(',')[0]}` : flight.name}
                       </h2>
                       <p className="text-slate-400 text-xs sm:text-sm">
                         {selectedLegForExpense?.leg?.distance || 0} km • Buyurtma #{selectedLegForExpense?.index + 1 || 1}
@@ -1359,13 +1369,19 @@ export default function FlightDetail() {
                       <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
                         {selectedLegForExpense.expenses.map((exp) => {
                           const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
+                          const isFuel = exp.type?.startsWith('fuel_')
+                          // Yoqilg'i birligi: Metan va Propan = kub, Benzin va Dizel = litr
+                          const fuelUnit = (exp.type === 'fuel_metan' || exp.type === 'fuel_propan') ? 'kub' : 'litr'
                           return (
                             <div key={exp._id} className="bg-white/5 p-2 rounded-lg flex items-center gap-2">
                               <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-xs flex-shrink-0`}>
                                 {expType?.icon || '📦'}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-white text-xs truncate">{expType?.label || exp.type}</p>
+                                <p className="text-white text-xs truncate">
+                                  {expType?.label || exp.type}
+                                  {isFuel && exp.quantity && ` (${exp.quantity} ${fuelUnit})`}
+                                </p>
                               </div>
                               <p className="text-red-400 text-xs font-bold flex-shrink-0">-{formatMoney(exp.amount)}</p>
                               {isActive && (
@@ -1386,6 +1402,7 @@ export default function FlightDetail() {
                 </div>
               )}
 
+              {isActive ? (
               <form onSubmit={handleAddExpense} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Asosiy kategoriyalar */}
                 <div>
@@ -1398,7 +1415,7 @@ export default function FlightDetail() {
                         onClick={() => setExpenseForm({ 
                           ...expenseForm, 
                           category: value,
-                          type: value === 'fuel' ? 'fuel_benzin' : value,
+                          type: value === 'fuel' ? 'fuel_metan' : value,
                           quantity: value === 'fuel' ? expenseForm.quantity : ''
                         })}
                         className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border text-center transition ${
@@ -1546,6 +1563,11 @@ export default function FlightDetail() {
                   ) : 'Qo\'shish'}
                 </button>
               </form>
+              ) : (
+                <div className="p-4 sm:p-6 text-center text-slate-400">
+                  <p className="text-sm">Reys yopilgan - xarajat qo'shib bo'lmaydi</p>
+                </div>
+              )}
             </div>
           </div>
         </div>,
@@ -1566,7 +1588,9 @@ export default function FlightDetail() {
                     </div>
                     <div className="min-w-0">
                       <h2 className="text-base sm:text-lg font-bold text-white">Reysni yopish</h2>
-                      <p className="text-blue-300 text-xs sm:text-sm truncate">{flight.name}</p>
+                      <p className="text-blue-300 text-xs sm:text-sm truncate max-w-[200px]">
+                        {flight.legs?.[0]?.fromCity?.split(',')[0]} - {flight.legs?.[flight.legs.length - 1]?.toCity?.split(',')[0]}
+                      </p>
                     </div>
                   </div>
                   <button onClick={() => setShowCompleteModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
@@ -1640,7 +1664,16 @@ export default function FlightDetail() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qoldiq yoqilg'i</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
+                      Qoldiq yoqilg'i ({(() => {
+                        const fuelLabel = flight.fuelType === 'metan' ? 'Metan' :
+                                         flight.fuelType === 'propan' ? 'Propan' :
+                                         flight.fuelType === 'diesel' ? 'Dizel' : 
+                                         flight.fuelType === 'gas' ? 'Metan' : 'Benzin'
+                        const fuelUnit = (flight.fuelType === 'metan' || flight.fuelType === 'propan' || flight.fuelType === 'gas') ? 'kub' : 'litr'
+                        return `${fuelLabel}, ${fuelUnit}`
+                      })()})
+                    </label>
                     <input
                       type="number"
                       value={completeForm.endFuel}
@@ -1925,8 +1958,8 @@ export default function FlightDetail() {
                     </div>
                     <div className="min-w-0">
                       <h2 className="text-base sm:text-lg font-bold text-white">Mijozdan to'lov</h2>
-                      <p className="text-emerald-300 text-xs sm:text-sm truncate">
-                        {selectedLegForPayment.fromCity} → {selectedLegForPayment.toCity}
+                      <p className="text-emerald-300 text-xs sm:text-sm truncate max-w-[200px]">
+                        {selectedLegForPayment.fromCity?.split(',')[0]} → {selectedLegForPayment.toCity?.split(',')[0]}
                       </p>
                     </div>
                   </div>
@@ -1940,11 +1973,15 @@ export default function FlightDetail() {
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Mijozdan olingan to'lov (so'm)</label>
                   <input
-                    type="number"
-                    value={paymentForm.payment}
-                    onChange={(e) => setPaymentForm({ payment: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    value={paymentForm.payment ? new Intl.NumberFormat('uz-UZ').format(paymentForm.payment) : ''}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '')
+                      setPaymentForm({ payment: rawValue })
+                    }}
                     className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-lg sm:text-xl font-bold placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-center"
-                    placeholder="500 000"
+                    placeholder="500,000"
                     autoFocus
                   />
                 </div>

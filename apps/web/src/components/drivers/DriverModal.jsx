@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
-import { X, User } from 'lucide-react'
+import { X, User, Eye, EyeOff } from 'lucide-react'
 import { PhoneInputDark } from '../PhoneInput'
+import { useState } from 'react'
 
 export default function DriverModal({ 
   show, 
@@ -8,8 +9,32 @@ export default function DriverModal({
   onSubmit, 
   form, 
   setForm, 
-  editingDriver 
+  editingDriver,
+  onPasswordUpdate
 }) {
+  const [showPassword, setShowPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [passwordUpdating, setPasswordUpdating] = useState(false)
+
+  const handlePasswordUpdate = async () => {
+    if (!newPassword || newPassword.length < 4) {
+      alert('Parol kamida 4 ta belgidan iborat bo\'lishi kerak')
+      return
+    }
+    setPasswordUpdating(true)
+    try {
+      await onPasswordUpdate(editingDriver._id, newPassword)
+      setNewPassword('')
+      setShowNewPassword(false)
+      alert('Parol muvaffaqiyatli yangilandi')
+    } catch (error) {
+      alert('Xatolik: ' + (error.message || 'Parolni yangilab bo\'lmadi'))
+    } finally {
+      setPasswordUpdating(false)
+    }
+  }
+
   if (!show) return null
 
   return createPortal(
@@ -63,14 +88,23 @@ export default function DriverModal({
             {!editingDriver && (
               <div>
                 <label className="block text-sm font-semibold text-blue-200 mb-2">Parol *</label>
-                <input 
-                  type="password" 
-                  value={form.password} 
-                  onChange={(e) => setForm({ ...form, password: e.target.value })} 
-                  className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                  placeholder="********" 
-                  required 
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={form.password} 
+                    onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    placeholder="********" 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -96,59 +130,51 @@ export default function DriverModal({
             />
           </div>
 
-          {/* Payment type */}
+          {/* Oylik maosh */}
           <div>
-            <label className="block text-sm font-semibold text-blue-200 mb-2">To'lov turi *</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                type="button" 
-                onClick={() => setForm({ ...form, paymentType: 'monthly' })} 
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  form.paymentType === 'monthly' 
-                    ? 'border-blue-500 bg-blue-500/20 text-white' 
-                    : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                }`}
-              >
-                <div className="text-2xl mb-1">💰</div>
-                <div className="font-semibold text-sm">Oylik</div>
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setForm({ ...form, paymentType: 'per_trip' })} 
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  form.paymentType === 'per_trip' 
-                    ? 'border-blue-500 bg-blue-500/20 text-white' 
-                    : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                }`}
-              >
-                <div className="text-2xl mb-1">🚛</div>
-                <div className="font-semibold text-sm">Reys uchun</div>
-              </button>
-            </div>
+            <label className="block text-sm font-semibold text-blue-200 mb-2">Oylik maosh</label>
+            <input 
+              type="text" 
+              value={form.baseSalary ? Number(form.baseSalary).toLocaleString('uz-UZ') : ''} 
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '')
+                setForm({ ...form, baseSalary: value })
+              }} 
+              className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+              placeholder="5,000,000" 
+            />
           </div>
 
-          {/* Salary input */}
-          {form.paymentType === 'monthly' ? (
-            <div>
-              <label className="block text-sm font-semibold text-blue-200 mb-2">Oylik maosh</label>
-              <input 
-                type="number" 
-                value={form.baseSalary} 
-                onChange={(e) => setForm({ ...form, baseSalary: e.target.value })} 
-                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                placeholder="5000000" 
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-semibold text-blue-200 mb-2">Reys uchun to'lov</label>
-              <input 
-                type="number" 
-                value={form.perTripRate} 
-                onChange={(e) => setForm({ ...form, perTripRate: e.target.value })} 
-                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                placeholder="500000" 
-              />
+          {/* Parol yangilash (faqat tahrirlash rejimida) */}
+          {editingDriver && (
+            <div className="pt-4 border-t border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4">🔐 Parolni yangilash</h3>
+              <div className="space-y-3">
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? 'text' : 'password'} 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)} 
+                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    placeholder="Yangi parol" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handlePasswordUpdate}
+                  disabled={!newPassword || passwordUpdating}
+                  className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all"
+                >
+                  {passwordUpdating ? 'Yangilanmoqda...' : 'Parolni yangilash'}
+                </button>
+              </div>
             </div>
           )}
 
