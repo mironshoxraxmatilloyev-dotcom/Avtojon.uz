@@ -376,7 +376,7 @@ export default function Dashboard() {
                     <span className="font-medium truncate">{flight.name || 'Yangi reys'}</span>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-500">
-                    <span>{flight.legs?.length || 0} bosqich</span>
+                    <span>{flight.legs?.length || 0} buyurtma</span>
                     <span>•</span>
                     <span>{flight.totalDistance || 0} km</span>
                   </div>

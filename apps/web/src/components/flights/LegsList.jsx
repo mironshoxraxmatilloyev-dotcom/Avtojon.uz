@@ -8,7 +8,7 @@ export default function LegsList({ legs, isActive, onAddLeg, formatMoney }) {
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
             <MapPin className="text-emerald-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
-          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Bosqichlar</h3>
+          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">buyurtmalar</h3>
         </div>
         {isActive && (
           <button 
@@ -29,7 +29,7 @@ export default function LegsList({ legs, isActive, onAddLeg, formatMoney }) {
       ) : (
         <div className="text-center py-6 sm:py-8 text-gray-400">
           <MapPin size={32} className="mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Bosqichlar yo'q</p>
+          <p className="text-sm">buyurtmalar yo'q</p>
         </div>
       )}
     </div>

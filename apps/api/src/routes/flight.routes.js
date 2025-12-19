@@ -80,7 +80,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
       legs: []
     };
 
-    // Birinchi bosqich (ixtiyoriy)
+    // Birinchi buyurtma (ixtiyoriy)
     if (firstLeg && firstLeg.fromCity && firstLeg.toCity) {
       flightData.legs.push({
         fromCity: firstLeg.fromCity,
@@ -122,7 +122,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
   }
 });
 
-// Yangi bosqich (leg) qo'shish
+// Yangi buyurtma (leg) qo'shish
 router.post('/:id/legs', protect, businessOnly, async (req, res) => {
   try {
     const { fromCity, toCity, fromCoords, toCoords, payment, givenBudget, distance, note } = req.body;
@@ -136,14 +136,14 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Reys faol emas' });
     }
 
-    // Oldingi bosqichni tugatish
+    // Oldingi buyurtmani tugatish
     const lastLeg = flight.legs[flight.legs.length - 1];
     if (lastLeg && lastLeg.status === 'in_progress') {
       lastLeg.status = 'completed';
       lastLeg.completedAt = new Date();
     }
 
-    // Yangi bosqich qo'shish
+    // Yangi buyurtma qo'shish
     flight.legs.push({
       fromCity: fromCity || (lastLeg ? lastLeg.toCity : ''),
       toCity,
@@ -163,7 +163,42 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
 
-    // Socket xabar - yangi bosqich qo'shildi
+    // Socket xabar - yangi buyurtma qo'shildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { flight: populatedFlight });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
+    res.json({ success: true, data: populatedFlight });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Buyurtma uchun to'lov qo'shish/yangilash
+router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) => {
+  try {
+    const { payment } = req.body;
+
+    const flight = await Flight.findById(req.params.id);
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const leg = flight.legs.id(req.params.legId);
+    if (!leg) {
+      return res.status(404).json({ success: false, message: 'Buyurtma topilmadi' });
+    }
+
+    leg.payment = Number(payment) || 0;
+    await flight.save();
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar
     const io = req.app.get('io');
     if (io) {
       io.to(`driver-${flight.driver}`).emit('flight-updated', { flight: populatedFlight });
@@ -191,7 +226,7 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Reys topilmadi' });
     }
 
-    // Agar legIndex berilmagan bo'lsa, oxirgi bosqichga biriktirish
+    // Agar legIndex berilmagan bo'lsa, oxirgi buyurtmaga biriktirish
     const actualLegIndex = legIndex !== undefined ? legIndex : (flight.legs.length - 1);
     const actualLegId = legId || (flight.legs[actualLegIndex] ? flight.legs[actualLegIndex]._id : null);
 
@@ -327,7 +362,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Reys allaqachon yopilgan' });
     }
 
-    // Oxirgi bosqichni tugatish
+    // Oxirgi buyurtmani tugatish
     const lastLeg = flight.legs[flight.legs.length - 1];
     if (lastLeg && lastLeg.status === 'in_progress') {
       lastLeg.status = 'completed';

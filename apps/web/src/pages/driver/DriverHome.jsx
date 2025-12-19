@@ -166,7 +166,7 @@ export default function DriverHome() {
     // Faol reys uchun marshrut olish (Trip va Flight)
     useEffect(() => {
         async function fetchRoute() {
-            // Flight tizimi (yangi) - birinchi va oxirgi bosqich koordinatalari
+            // Flight tizimi (yangi) - birinchi va oxirgi buyurtma koordinatalari
             if (activeFlight && activeFlight.legs && activeFlight.legs.length > 0) {
                 const firstLeg = activeFlight.legs[0]
                 const lastLeg = activeFlight.legs[activeFlight.legs.length - 1]
@@ -513,13 +513,13 @@ export default function DriverHome() {
             })
     }
 
-    // 🚀 Flight bosqichini tugatish - optimistic
+    // 🚀 Flight buyurtmaini tugatish - optimistic
     const handleCompleteLeg = async () => {
         if (!activeFlight || actionLoading) return
 
         const currentLeg = activeFlight.legs?.find(leg => leg.status === 'in_progress')
         if (!currentLeg) {
-            showToast.error('Faol bosqich topilmadi')
+            showToast.error('Faol buyurtma topilmadi')
             return
         }
 
@@ -533,7 +533,7 @@ export default function DriverHome() {
                 leg._id === legId ? { ...leg, status: 'completed' } : leg
             )
         }))
-        showToast.success('Bosqich tugatildi!')
+        showToast.success('buyurtma tugatildi!')
 
         // Fonda API so'rov
         api.put(`/driver/me/flights/${flightId}/legs/${legId}/complete`)
@@ -732,10 +732,10 @@ export default function DriverHome() {
                                             </div>
                                         </div>
 
-                                        {/* Bosqichlar - Premium */}
+                                        {/* buyurtmalar - Premium */}
                                         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-5 mb-4 sm:mb-5 border border-white/20">
                                             <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                                <p className="text-white/80 text-xs sm:text-sm font-semibold uppercase tracking-wider">Bosqichlar</p>
+                                                <p className="text-white/80 text-xs sm:text-sm font-semibold uppercase tracking-wider">buyurtmalar</p>
                                                 <span className="px-2.5 py-1 bg-white/20 rounded-full text-white text-xs font-bold">{activeFlight.legs?.length || 0}</span>
                                             </div>
                                             <div className="space-y-2.5">
@@ -1213,7 +1213,7 @@ export default function DriverHome() {
                                     {/* Flight statistikasi */}
                                     <div className="grid grid-cols-3 gap-2 mb-3">
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
-                                            <p className="text-violet-300 text-[10px]">Bosqichlar</p>
+                                            <p className="text-violet-300 text-[10px]">buyurtmalar</p>
                                             <p className="text-white font-bold text-sm">{flight.legs?.length || 0}</p>
                                         </div>
                                         <div className="bg-white/5 rounded-lg p-2 text-center">
@@ -1409,10 +1409,10 @@ export default function DriverHome() {
                                 </div>
                             )}
 
-                            {/* Bosqichlar */}
+                            {/* buyurtmalar */}
                             {selectedFlight.legs && selectedFlight.legs.length > 0 && (
                                 <div>
-                                    <h3 className="text-white font-semibold mb-2 text-sm">Bosqichlar ({selectedFlight.legs.length})</h3>
+                                    <h3 className="text-white font-semibold mb-2 text-sm">buyurtmalar ({selectedFlight.legs.length})</h3>
                                     <div className="space-y-2 max-h-[150px] overflow-y-auto">
                                         {selectedFlight.legs.map((leg, idx) => (
                                             <div key={leg._id || idx} className="bg-white/5 rounded-lg p-2 text-sm">

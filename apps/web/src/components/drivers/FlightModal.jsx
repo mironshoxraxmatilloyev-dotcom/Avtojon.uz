@@ -134,7 +134,7 @@ export default function FlightModal({
           {/* Route */}
           <div className="pt-4 border-t border-white/10">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">📍 Birinchi bosqich</h3>
+              <h3 className="text-lg font-semibold text-white">📍 Birinchi buyurtma</h3>
               <button 
                 type="button" 
                 onClick={onOpenLocationPicker}

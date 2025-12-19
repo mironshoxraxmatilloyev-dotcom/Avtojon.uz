@@ -44,7 +44,7 @@ export default function FlightHeader({ flight, onBack, formatMoney }) {
           <StatCard 
             icon={Route} 
             value={flight.legs?.length || 0} 
-            label="Bosqichlar" 
+            label="buyurtmalar" 
             color="from-blue-400 to-blue-600" 
           />
           <StatCard 

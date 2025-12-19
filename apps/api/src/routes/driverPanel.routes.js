@@ -407,7 +407,7 @@ router.get('/me/flights/active', protect, driverOnly, async (req, res) => {
   }
 });
 
-// Bosqichni tugatish
+// buyurtmani tugatish
 router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (req, res) => {
   try {
     const flight = await Flight.findOne({ 
@@ -422,7 +422,7 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
 
     const leg = flight.legs.id(req.params.legId);
     if (!leg) {
-      return res.status(404).json({ success: false, message: 'Bosqich topilmadi' });
+      return res.status(404).json({ success: false, message: 'buyurtma topilmadi' });
     }
 
     leg.status = 'completed';
@@ -439,7 +439,7 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
     if (io) {
       io.to(`business-${flight.user}`).emit('flight-updated', {
         flight: populatedFlight,
-        message: `${req.driver.fullName} bosqichni tugatdi: ${leg.fromCity} → ${leg.toCity}`
+        message: `${req.driver.fullName} buyurtmani tugatdi: ${leg.fromCity} → ${leg.toCity}`
       });
     }
 

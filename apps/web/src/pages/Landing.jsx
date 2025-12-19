@@ -209,7 +209,7 @@ export default function Landing() {
               <Star className="w-4 h-4" /> Imkoniyatlar
             </span>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Kuchli funksiyalar</h3>
-            <p className="text-violet-300 max-w-2xl mx-auto text-sm sm:text-base px-2">Biznesingizni keyingi bosqichga olib chiqadigan barcha vositalar</p>
+            <p className="text-violet-300 max-w-2xl mx-auto text-sm sm:text-base px-2">Biznesingizni keyingi buyurtmaga olib chiqadigan barcha vositalar</p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">

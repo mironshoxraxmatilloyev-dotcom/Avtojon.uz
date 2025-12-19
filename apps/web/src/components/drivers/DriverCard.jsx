@@ -83,7 +83,7 @@ export default function DriverCard({
               </span>
             </div>
             <span className="text-[10px] sm:text-xs text-orange-500 flex-shrink-0">
-              {flight.legs?.length || 0} bosqich →
+              {flight.legs?.length || 0} buyurtma →
             </span>
           </div>
         </div>

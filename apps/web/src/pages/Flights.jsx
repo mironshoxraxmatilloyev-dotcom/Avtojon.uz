@@ -114,7 +114,7 @@ export default function Flights() {
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
   const formatDate = (date) => date ? new Date(date).toLocaleDateString('uz-UZ') : '-'
 
-  // Yangi bosqich qo'shish
+  // Yangi buyurtma qo'shish
   const handleAddLeg = (e) => {
     e.preventDefault()
     if (!legForm.toCity) {
@@ -142,7 +142,7 @@ export default function Flights() {
 
     setShowLegModal(false)
     setLegForm({ toCity: '', payment: '', distance: '' })
-    showToast.success('Bosqich qo\'shildi!')
+    showToast.success('Buyurtma qo\'shildi!')
 
     // Fonda API
     api.post(`/flights/${flightId}/legs`, legData)
@@ -541,7 +541,7 @@ export default function Flights() {
               {/* Quick Stats */}
               <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-3 sm:mt-4">
                 <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-400">Bosqichlar</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Buyurtmalar</p>
                   <p className="font-bold text-gray-900 text-sm sm:text-base">{flight.legs?.length || 0}</p>
                 </div>
                 <div className="text-center">
@@ -591,7 +591,7 @@ export default function Flights() {
                 {/* Legs */}
                 <div>
                   <p className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Route size={16} /> Bosqichlar
+                    <Route size={16} /> Buyurtmalar
                   </p>
                   <div className="space-y-2">
                     {flight.legs?.map((leg, idx) => (
@@ -800,8 +800,8 @@ export default function Flights() {
                       >
                         <Plus size={16} className="sm:hidden" />
                         <Plus size={18} className="hidden sm:block" />
-                        <span className="sm:hidden">Bosqich</span>
-                        <span className="hidden sm:inline">Bosqich qo'shish</span>
+                        <span className="sm:hidden">buyurtma</span>
+                        <span className="hidden sm:inline">buyurtma qo'shish</span>
                       </button>
                       <button
                         onClick={() => { setSelectedFlight(flight); setShowExpenseModal(true) }}
@@ -882,11 +882,11 @@ export default function Flights() {
                       <Route className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-white">Yangi bosqich</h2>
+                      <h2 className="text-lg font-bold text-white">Yangi buyurtma</h2>
                       <p className="text-green-300 text-sm">
                         {selectedFlight.legs?.length > 0 
                           ? `${selectedFlight.legs[selectedFlight.legs.length - 1].toCity} dan` 
-                          : 'Birinchi bosqich'}
+                          : 'Birinchi buyurtma'}
                       </p>
                     </div>
                   </div>

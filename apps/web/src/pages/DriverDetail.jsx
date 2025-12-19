@@ -347,7 +347,7 @@ export default function DriverDetail() {
                             <p className="font-bold text-white text-base sm:text-lg truncate">{activeFlight.name || 'Joriy reys'}</p>
                             <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1">
                               <span className="text-white/80 text-xs sm:text-sm flex items-center gap-1">
-                                <MapPin size={10} className="sm:w-3 sm:h-3" /> {activeFlight.legs?.length || 0} bosqich
+                                <MapPin size={10} className="sm:w-3 sm:h-3" /> {activeFlight.legs?.length || 0} buyurtma
                               </span>
                               <span className="text-white/80 text-xs sm:text-sm">{activeFlight.totalDistance || 0} km</span>
                             </div>
@@ -508,7 +508,7 @@ export default function DriverDetail() {
                       <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-0.5 sm:mt-1">
                         <span className="text-[10px] sm:text-sm text-gray-500">{formatDate(flight.createdAt)}</span>
                         <span className="text-[10px] sm:text-sm text-gray-400">• {flight.totalDistance || 0} km</span>
-                        <span className="text-[10px] sm:text-sm text-gray-400 hidden sm:inline">• {flight.legs?.length || 0} bosqich</span>
+                        <span className="text-[10px] sm:text-sm text-gray-400 hidden sm:inline">• {flight.legs?.length || 0} buyurtma</span>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -793,9 +793,9 @@ export default function DriverDetail() {
                   />
                 </div>
 
-                {/* Birinchi bosqich */}
+                {/* Birinchi buyurtma */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-sm font-semibold text-emerald-300 mb-3">Birinchi bosqich</p>
+                  <p className="text-sm font-semibold text-emerald-300 mb-3">Birinchi buyurtma</p>
                   
                   <div className="space-y-3">
                     <div>

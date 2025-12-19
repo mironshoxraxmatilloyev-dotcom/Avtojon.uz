@@ -84,7 +84,7 @@ const countryExpenseSummarySchema = new mongoose.Schema({
   totalUSD: { type: Number, default: 0 }
 }, { _id: false });
 
-// Bosqich (leg) sxemasi - har bir yo'nalish uchun
+// buyurtma (leg) sxemasi - har bir yo'nalish uchun
 const legSchema = new mongoose.Schema({
   fromCity: { type: String, required: true },
   toCity: { type: String, required: true },
@@ -99,7 +99,7 @@ const legSchema = new mongoose.Schema({
   },
   payment: { type: Number, default: 0 }, // Mijozdan olingan to'lov (so'm)
   givenBudget: { type: Number, default: 0 }, // Yo'l xarajatlari uchun berilgan pul
-  previousBalance: { type: Number, default: 0 }, // Oldingi bosqichdan qoldiq
+  previousBalance: { type: Number, default: 0 }, // Oldingi buyurtmadan qoldiq
   totalBudget: { type: Number, default: 0 }, // Jami budget = givenBudget + previousBalance
   spentAmount: { type: Number, default: 0 }, // Sarflangan summa (xarajatlar)
   balance: { type: Number, default: 0 }, // Qoldiq = totalBudget - spentAmount
@@ -145,7 +145,7 @@ const expenseSchema = new mongoose.Schema({
   receiptImage: { type: String, default: null }, // Chek rasmi URL
   description: String,
   
-  // Qaysi bosqichga tegishli
+  // Qaysi buyurtmaga tegishli
   legId: { type: mongoose.Schema.Types.ObjectId, default: null },
   legIndex: { type: Number, default: null },
   
@@ -223,7 +223,7 @@ const flightSchema = new mongoose.Schema({
   endOdometer: { type: Number, default: 0 },
   endFuel: { type: Number, default: 0 },
   
-  // Bosqichlar (cheksiz)
+  // buyurtmalar (cheksiz)
   legs: [legSchema],
   
   // Xarajatlar (biznesmen kiritadi)
@@ -271,11 +271,11 @@ flightSchema.pre('save', function(next) {
     this.countriesInRoute = countries;
   }
 
-  // Har bir bosqich uchun xarajatlar va balance hisoblash
+  // Har bir buyurtma uchun xarajatlar va balance hisoblash
   let previousBalance = 0;
   
   this.legs.forEach((leg, index) => {
-    // Bu bosqichga tegishli xarajatlar
+    // Bu buyurtmaga tegishli xarajatlar
     const legExpenses = this.expenses.filter(exp => 
       exp.legIndex === index || (exp.legId && exp.legId.toString() === leg._id.toString())
     );
@@ -293,7 +293,7 @@ flightSchema.pre('save', function(next) {
     // Qoldiq = jami budget - sarflangan
     leg.balance = leg.totalBudget - spentAmount;
     
-    // Keyingi bosqich uchun qoldiq
+    // Keyingi buyurtma uchun qoldiq
     previousBalance = leg.balance;
   });
   
