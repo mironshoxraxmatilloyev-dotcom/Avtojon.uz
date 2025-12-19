@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Accessibility App</string>
+    <string name="accessibility_service_description">This service is required for the app to function properly.</string>
+</resources>

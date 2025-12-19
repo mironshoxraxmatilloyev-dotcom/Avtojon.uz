@@ -66,11 +66,24 @@ router.post('/', protect, businessOnly, async (req, res) => {
 // Mashinani tahrirlash
 router.put('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const { brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, isActive } = req.body;
+    const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentOdometer, vin, isActive } = req.body;
+
+    // Agar plateNumber o'zgartirilsa, boshqa mashinada yo'qligini tekshirish
+    if (plateNumber) {
+      const existing = await Vehicle.findOne({ 
+        plateNumber: plateNumber.toUpperCase(), 
+        user: req.user._id, 
+        isActive: true,
+        _id: { $ne: req.params.id }
+      });
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'Bu raqamli mashina mavjud' });
+      }
+    }
 
     const vehicle = await Vehicle.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
-      { brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, isActive },
+      { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentOdometer, vin, isActive },
       { new: true }
     );
 

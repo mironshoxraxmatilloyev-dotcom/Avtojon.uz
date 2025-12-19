@@ -29,7 +29,20 @@ const vehicleSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  // Texnik ma'lumotlar
+  vin: String,
+  currentOdometer: { type: Number, default: 0 },
+  lastGpsSignal: Date,
+  gpsOnline: { type: Boolean, default: false },
+  // Moy ma'lumotlari
+  lastOilChangeDate: Date,
+  lastOilChangeOdometer: Number,
+  // Xizmat ma'lumotlari
+  lastServiceDate: Date,
+  lastFuelDate: Date,
+  // Holat
+  status: { type: String, enum: ['excellent', 'normal', 'attention', 'critical'], default: 'normal' }
 }, { timestamps: true });
 
 // Faqat aktiv mashinalar uchun plateNumber unique bo'lsin

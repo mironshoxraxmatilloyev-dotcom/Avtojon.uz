@@ -52,6 +52,15 @@ html[style*="overflow:hidden"] {
   will-change: transform;
 }
 
+/* Scrollbar hide - mobil uchun */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .will-change-opacity {
   will-change: opacity;
 }

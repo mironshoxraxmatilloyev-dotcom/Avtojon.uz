@@ -19,6 +19,7 @@ const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
 const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
 const BusinessDashboard = lazy(() => import('./pages/business/BusinessDashboard'))
 const FleetDashboard = lazy(() => import('./pages/fleet/FleetDashboard'))
+const VehicleDetailPanel = lazy(() => import('./pages/fleet/VehicleDetailPanel'))
 
 import DashboardLayout from './components/layout/DashboardLayout'
 
@@ -155,6 +156,7 @@ function App() {
 
           {/* Fleet - Register qilganlar uchun */}
           <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
+          <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
 
 
 

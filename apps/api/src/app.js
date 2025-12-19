@@ -17,6 +17,7 @@ const salaryRoutes = require('./routes/salary.routes');
 const driverPanelRoutes = require('./routes/driverPanel.routes');
 const flightRoutes = require('./routes/flight.routes');
 const superAdminRoutes = require('./routes/superAdmin.routes');
+const vehicleMaintenanceRoutes = require('./routes/vehicleMaintenance.routes');
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/salaries', salaryRoutes);
 app.use('/api/driver', driverPanelRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/maintenance', vehicleMaintenanceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
