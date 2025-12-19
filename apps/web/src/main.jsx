@@ -4,15 +4,12 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// 🚀 Lazy load - kerak bo'lganda yuklanadi
-const SocketProvider = lazy(() => 
-  import('./contexts/SocketContext').then(mod => ({ default: mod.SocketProvider }))
-)
+// 🚀 Lazy load
 const Toaster = lazy(() => 
   import('react-hot-toast').then(mod => ({ default: mod.Toaster }))
 )
 
-// 🎯 Production da StrictMode o'chiriladi (2x render yo'q)
+// 🎯 Production da StrictMode o'chiriladi
 const isDev = import.meta.env.DEV
 const Wrapper = isDev ? StrictMode : ({ children }) => children
 
@@ -20,25 +17,16 @@ const Wrapper = isDev ? StrictMode : ({ children }) => children
 createRoot(document.getElementById('root')).render(
   <Wrapper>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <App />
       <Suspense fallback={null}>
-        <SocketProvider>
-          <App />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 3000, // Qisqaroq
-              style: {
-                background: 'transparent',
-                boxShadow: 'none',
-                padding: 0,
-              },
-            }}
-            containerStyle={{
-              top: 16,
-              right: 16,
-            }}
-          />
-        </SocketProvider>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: { background: 'transparent', boxShadow: 'none', padding: 0 },
+          }}
+          containerStyle={{ top: 16, right: 16 }}
+        />
       </Suspense>
     </BrowserRouter>
   </Wrapper>

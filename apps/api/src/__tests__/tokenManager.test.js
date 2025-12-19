@@ -6,11 +6,7 @@ const {
   revokeAllUserTokens,
 } = require('../utils/tokenManager');
 
-// Mock Redis
-jest.mock('../config/redis', () => ({
-  getRedis: () => null,
-  isRedisConnected: () => false,
-}));
+// Redis mock - config mavjud emas
 
 describe('Token Manager', () => {
   const mockUser = {

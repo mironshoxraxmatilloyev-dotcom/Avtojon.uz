@@ -1,11 +1,27 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, Car, Fuel, Droplets, Circle, Wrench, Plus, X, Trash2, RefreshCw, 
-  BarChart3, AlertTriangle, Check, Edit2, TrendingUp, Zap
+  BarChart3, AlertTriangle, Check, Edit2, TrendingUp, Zap, Crown, Clock, Home
 } from 'lucide-react'
 import api from '../../services/api'
 import { useAlert } from '../../components/ui'
+
+// 🚀 LOCAL CACHE
+const getVehicleCache = (id) => {
+  try {
+    const data = localStorage.getItem(`vehicle_${id}`)
+    if (!data) return null
+    const { value, timestamp } = JSON.parse(data)
+    if (Date.now() - timestamp > 5 * 60 * 1000) return null
+    return value
+  } catch { return null }
+}
+const setVehicleCache = (id, value) => {
+  try {
+    localStorage.setItem(`vehicle_${id}`, JSON.stringify({ value, timestamp: Date.now() }))
+  } catch {}
+}
 
 const STATUS = {
   excellent: { label: 'A\'lo', color: 'text-emerald-400', bg: 'bg-emerald-500/20', gradient: 'from-emerald-500 to-emerald-600' },
@@ -30,7 +46,7 @@ const FUEL_TYPES = [{ value: 'diesel', label: 'Dizel' }, { value: 'petrol', labe
 const fmt = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0)
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
 const today = () => new Date().toISOString().split('T')[0]
-const initFuelForm = (odo = '', ft = 'diesel') => ({ date: today(), liters: '', cost: '', odometer: odo, fuelType: ft })
+const initFuelForm = (odo = '', ft = 'diesel') => ({ date: today(), liters: '', cost: '', odometer: odo, fuelType: ft, station: '' })
 const initOilForm = (odo = '') => ({ date: today(), odometer: odo, oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '' })
 const initTireForm = (odo = '') => ({ position: TIRE_POSITIONS[0], brand: '', model: '', size: '', installDate: today(), installOdometer: odo, expectedLifeKm: 50000, cost: '' })
 const initServiceForm = (odo = '') => ({ type: SERVICE_TYPES[0], date: today(), odometer: odo, cost: '', description: '', serviceName: '' })
@@ -39,15 +55,18 @@ export default function VehicleDetailPanel() {
   const { id } = useParams()
   const navigate = useNavigate()
   const alert = useAlert()
+  const isMounted = useRef(true)
 
-  const [vehicle, setVehicle] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // 🚀 INSTANT: Cache dan darhol yuklash - loading yo'q
+  const cachedData = useMemo(() => getVehicleCache(id), [id])
+  const [vehicle, setVehicle] = useState(() => cachedData?.vehicle || null)
+  const [loading, setLoading] = useState(false) // Loading yo'q
   const [tab, setTab] = useState('summary')
-  const [fuelData, setFuelData] = useState({ refills: [], stats: {} })
-  const [oilData, setOilData] = useState({ changes: [], status: 'ok', remainingKm: 10000 })
-  const [tires, setTires] = useState([])
-  const [services, setServices] = useState({ services: [], stats: {} })
-  const [dataLoaded, setDataLoaded] = useState(false)
+  const [fuelData, setFuelData] = useState(() => cachedData?.fuelData || { refills: [], stats: {} })
+  const [oilData, setOilData] = useState(() => cachedData?.oilData || { changes: [], status: 'ok', remainingKm: 10000 })
+  const [tires, setTires] = useState(() => cachedData?.tires || [])
+  const [services, setServices] = useState(() => cachedData?.services || { services: [], stats: {} })
+  const [dataLoaded, setDataLoaded] = useState(() => !!cachedData)
   const [modal, setModal] = useState(null)
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -56,34 +75,133 @@ export default function VehicleDetailPanel() {
   const [oilForm, setOilForm] = useState(() => initOilForm())
   const [tireForm, setTireForm] = useState(() => initTireForm())
   const [serviceForm, setServiceForm] = useState(() => initServiceForm())
-
+  const [bulkTireForm, setBulkTireForm] = useState({ brand: '', size: '', cost: '', count: '4' })
+  
+  // 🚀 Cleanup
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
+    isMounted.current = true
+    return () => { isMounted.current = false }
+  }, [])
+  
+  // Obuna state
+  const [subscription, setSubscription] = useState(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+  const [timeLeft, setTimeLeft] = useState('')
+
+  // Obuna yuklash
+  useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        const { data } = await api.get('/vehicles/subscription')
+        setSubscription(data.data)
+      } catch (e) {
+        console.log('Obuna yuklanmadi')
+      }
+    }
+    loadSubscription()
+  }, [])
+
+  // Qolgan vaqtni hisoblash
+  useEffect(() => {
+    if (!subscription?.endDate) return
+    
+    const updateTimeLeft = () => {
+      const now = new Date()
+      const end = new Date(subscription.endDate)
+      const diff = end - now
+      
+      if (diff <= 0) {
+        setTimeLeft('Muddat tugadi')
+        setSubscription(prev => prev ? { ...prev, isExpired: true, canUse: false } : null)
+        setShowUpgradeModal(true) // Avtomatik modal ochish
+        return
+      }
+      
+      const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+      const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+      const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
+      const seconds = Math.floor((diff % (60 * 1000)) / 1000)
+      
+      if (days > 0) {
+        setTimeLeft(`${days} kun ${hours} soat`)
+      } else if (hours > 0) {
+        setTimeLeft(`${hours} soat ${minutes} daqiqa`)
+      } else {
+        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`)
+      }
+    }
+    
+    updateTimeLeft()
+    const interval = setInterval(updateTimeLeft, 1000)
+    return () => clearInterval(interval)
+  }, [subscription?.endDate])
+
+  // Obuna tugagan bo'lsa avtomatik modal ochish
+  useEffect(() => {
+    if (subscription?.isExpired) {
+      setShowUpgradeModal(true)
+    }
+  }, [subscription?.isExpired])
+
+  // Pro ga o'tish
+  const handleUpgrade = async () => {
+    setUpgrading(true)
+    try {
+      const { data } = await api.post('/vehicles/subscription/upgrade')
+      setSubscription(data.data)
+      setShowUpgradeModal(false)
+      alert.success('Tabriklaymiz!', 'Pro tarifga muvaffaqiyatli o\'tdingiz!')
+    } catch (err) {
+      alert.error('Xatolik', err.userMessage || 'Xatolik yuz berdi')
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
+  // 🚀 INSTANT: Vehicle yuklash - cache bor bo'lsa loading yo'q
+  useEffect(() => {
+    const hasCache = getVehicleCache(id)?.vehicle
+    if (!hasCache) setLoading(true)
+    
     api.get(`/vehicles/${id}`)
-      .then(res => { if (mounted) setVehicle(res.data.data) })
-      .catch(() => alert.error('Xatolik', 'Mashina topilmadi'))
-      .finally(() => { if (mounted) setLoading(false) })
-    return () => { mounted = false }
+      .then(res => { 
+        if (isMounted.current) {
+          setVehicle(res.data.data)
+          // Cache yangilash
+          const cached = getVehicleCache(id) || {}
+          setVehicleCache(id, { ...cached, vehicle: res.data.data })
+        }
+      })
+      .catch(() => { if (!hasCache) alert.error('Xatolik', 'Mashina topilmadi') })
+      .finally(() => { if (isMounted.current) setLoading(false) })
   }, [id])
 
+  // 🚀 INSTANT: Maintenance data - parallel yuklash
   useEffect(() => {
     if (!vehicle || dataLoaded) return
-    let mounted = true
+    
     Promise.all([
       api.get(`/maintenance/vehicles/${id}/fuel`).catch(() => ({ data: { data: { refills: [], stats: {} } } })),
       api.get(`/maintenance/vehicles/${id}/oil`).catch(() => ({ data: { data: { changes: [], status: 'ok', remainingKm: 10000 } } })),
       api.get(`/maintenance/vehicles/${id}/tires`).catch(() => ({ data: { data: [] } })),
       api.get(`/maintenance/vehicles/${id}/services`).catch(() => ({ data: { data: { services: [], stats: {} } } }))
     ]).then(([f, o, t, s]) => {
-      if (!mounted) return
-      setFuelData(f.data.data || { refills: [], stats: {} })
-      setOilData(o.data.data || { changes: [], status: 'ok', remainingKm: 10000 })
-      setTires(t.data.data || [])
-      setServices(s.data.data || { services: [], stats: {} })
+      if (!isMounted.current) return
+      const fData = f.data.data || { refills: [], stats: {} }
+      const oData = o.data.data || { changes: [], status: 'ok', remainingKm: 10000 }
+      const tData = t.data.data || []
+      const sData = s.data.data || { services: [], stats: {} }
+      
+      setFuelData(fData)
+      setOilData(oData)
+      setTires(tData)
+      setServices(sData)
       setDataLoaded(true)
+      
+      // 🚀 Cache yangilash
+      setVehicleCache(id, { vehicle, fuelData: fData, oilData: oData, tires: tData, services: sData })
     })
-    return () => { mounted = false }
   }, [vehicle, id, dataLoaded])
 
   const refresh = useCallback(() => setDataLoaded(false), [])
@@ -108,7 +226,7 @@ export default function VehicleDetailPanel() {
     setEditId(item?._id || null)
     setErrors({})
     if (type === 'fuel') {
-      if (item) setFuelForm({ date: item.date?.split('T')[0] || today(), liters: item.liters?.toString() || '', cost: item.cost?.toString() || '', odometer: item.odometer?.toString() || '', fuelType: item.fuelType || 'diesel' })
+      if (item) setFuelForm({ date: item.date?.split('T')[0] || today(), liters: item.liters?.toString() || '', cost: item.cost?.toString() || '', odometer: item.odometer?.toString() || '', fuelType: item.fuelType || 'diesel', station: item.station || '' })
       else setFuelForm(initFuelForm(odo, vehicle?.fuelType || 'diesel'))
     }
     if (type === 'oil') {
@@ -122,6 +240,9 @@ export default function VehicleDetailPanel() {
     if (type === 'service') {
       if (item) setServiceForm({ type: item.type || SERVICE_TYPES[0], date: item.date?.split('T')[0] || today(), odometer: item.odometer?.toString() || '', cost: item.cost?.toString() || '', description: item.description || '', serviceName: item.serviceName || '' })
       else setServiceForm(initServiceForm(odo))
+    }
+    if (type === 'tire-bulk') {
+      setBulkTireForm({ brand: '', size: '', cost: '', count: '4', installOdometer: odo })
     }
   }, [vehicle?.currentOdometer, vehicle?.fuelType])
 
@@ -172,35 +293,281 @@ export default function VehicleDetailPanel() {
   const handleAddOil = useCallback((e) => { e.preventDefault(); handleSubmit('oil', oilForm, `/maintenance/vehicles/${id}/oil`, editId) }, [oilForm, id, handleSubmit, editId])
   const handleAddTire = useCallback((e) => { e.preventDefault(); handleSubmit('tires', tireForm, `/maintenance/vehicles/${id}/tires`, editId) }, [tireForm, id, handleSubmit, editId])
   const handleAddService = useCallback((e) => { e.preventDefault(); handleSubmit('services', serviceForm, `/maintenance/vehicles/${id}/services`, editId) }, [serviceForm, id, handleSubmit, editId])
+  
+  // To'liq shina almashtirish (4 yoki 6 ta)
+  const handleAddBulkTires = useCallback(async (e) => {
+    e.preventDefault()
+    if (!bulkTireForm.brand) {
+      setErrors({ brand: 'Majburiy' })
+      return
+    }
+    setSaving(true)
+    try {
+      const count = parseInt(bulkTireForm.count) || 4
+      const positions = count === 6 
+        ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)']
+        : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng']
+      
+      // Har bir pozitsiya uchun shina qo'shish
+      for (const position of positions) {
+        await api.post(`/maintenance/vehicles/${id}/tires`, {
+          position,
+          brand: bulkTireForm.brand,
+          size: bulkTireForm.size || '',
+          installDate: today(),
+          installOdometer: bulkTireForm.installOdometer ? +bulkTireForm.installOdometer : 0,
+          expectedLifeKm: 50000,
+          cost: bulkTireForm.cost ? Math.round(+bulkTireForm.cost / count) : 0
+        })
+      }
+      alert.success(`${count} ta shina qo'shildi`)
+      setModal(null)
+      refresh()
+    } catch (err) { alert.error(err.userMessage || 'Xatolik') }
+    finally { setSaving(false) }
+  }, [bulkTireForm, id, refresh])
 
-  if (loading) return <Skeleton />
+  // 🚀 Faqat vehicle yo'q bo'lsa va cache ham yo'q bo'lsa
+  if (!vehicle && !cachedData) return <Skeleton />
   if (!vehicle) return <NotFound onBack={() => navigate('/fleet')} />
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pb-24">
       <Header vehicle={vehicle} status={overallStatus} onBack={() => navigate('/fleet')} onRefresh={refresh} />
-      <QuickStats vehicle={vehicle} fuelData={fuelData} oilData={oilData} tires={tires} />
-      <Tabs tab={tab} setTab={setTab} />
       
-      <main className="max-w-4xl mx-auto px-4 py-5 space-y-5">
-        {tab === 'summary' && <SummaryTab vehicle={vehicle} stats={stats} fuelData={fuelData} oilData={oilData} tires={tires} services={services} />}
-        {tab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} />}
-        {tab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} />}
-        {tab === 'tires' && <TiresTab tires={tires} onAdd={() => openModal('tire')} onEdit={(item) => openModal('tire', item)} onDelete={(i) => handleDelete('tires', i)} />}
-        {tab === 'services' && <ServicesTab data={services} onAdd={() => openModal('service')} onEdit={(item) => openModal('service', item)} onDelete={(i) => handleDelete('services', i)} />}
-      </main>
+      {/* Obuna Banner */}
+      {subscription && (
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
+          <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+            subscription.isExpired 
+              ? 'bg-red-500/10 border border-red-500/30' 
+              : subscription.plan === 'trial' 
+                ? 'bg-amber-500/10 border border-amber-500/30' 
+                : 'bg-emerald-500/10 border border-emerald-500/30'
+          }`}>
+            <div className="flex items-center gap-3">
+              {subscription.isExpired ? (
+                <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+              ) : subscription.plan === 'trial' ? (
+                <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-400" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-emerald-400" />
+                </div>
+              )}
+              <div>
+                <p className={`font-semibold ${
+                  subscription.isExpired ? 'text-red-400' : subscription.plan === 'trial' ? 'text-amber-400' : 'text-emerald-400'
+                }`}>
+                  {subscription.isExpired 
+                    ? 'Obuna muddati tugadi!' 
+                    : subscription.plan === 'trial' 
+                      ? `Free Trial - ${timeLeft} qoldi` 
+                      : 'Pro Tarif ✓'}
+                </p>
+                <p className="text-sm text-slate-400">
+                  {subscription.isExpired 
+                    ? 'Davom etish uchun Pro tarifga o\'ting' 
+                    : subscription.plan === 'trial' 
+                      ? 'Barcha funksiyalar mavjud' 
+                      : 'Cheksiz imkoniyatlar'}
+                </p>
+              </div>
+            </div>
+            {(subscription.isExpired || subscription.plan === 'trial') && (
+              <button 
+                onClick={() => setShowUpgradeModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2 text-sm"
+              >
+                <Crown size={16} /> Pro
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-      {modal && (
-        <Modal title={`${modal === 'fuel' ? 'Yoqilg\'i' : modal === 'oil' ? 'Moy' : modal === 'tire' ? 'Shina' : 'Xizmat'} ${editId ? 'tahrirlash' : 'qo\'shish'}`} onClose={() => { setModal(null); setEditId(null) }}>
+      {/* Bloklangan holat */}
+      {subscription?.isExpired ? (
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-slate-800/50 rounded-2xl p-8 text-center border border-white/5">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Obuna muddati tugadi</h3>
+            <p className="text-slate-400 mb-6">Mashina ma'lumotlarini ko'rish va tahrirlash uchun Pro tarifga o'ting</p>
+            <button 
+              onClick={() => setShowUpgradeModal(true)}
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all inline-flex items-center gap-2"
+            >
+              <Crown size={20} /> Pro tarifga o'tish - 50,000 so'm/oy
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <QuickStats vehicle={vehicle} fuelData={fuelData} oilData={oilData} tires={tires} />
+          <Tabs tab={tab} setTab={setTab} />
+          
+          <main className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
+            {tab === 'summary' && <SummaryTab vehicle={vehicle} stats={stats} fuelData={fuelData} oilData={oilData} tires={tires} services={services} />}
+            {tab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} />}
+            {tab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} />}
+            {tab === 'tires' && <TiresTab tires={tires} onAdd={() => openModal('tire')} onAddBulk={() => openModal('tire-bulk')} onEdit={(item) => openModal('tire', item)} onDelete={(i) => handleDelete('tires', i)} />}
+            {tab === 'services' && <ServicesTab data={services} onAdd={() => openModal('service')} onEdit={(item) => openModal('service', item)} onDelete={(i) => handleDelete('services', i)} />}
+          </main>
+        </>
+      )}
+
+      {modal && !subscription?.isExpired && (
+        <Modal title={modal === 'tire-bulk' ? 'To\'liq shina almashtirish' : `${modal === 'fuel' ? 'Yoqilg\'i' : modal === 'oil' ? 'Moy' : modal === 'tire' ? 'Shina' : 'Xizmat'} ${editId ? 'tahrirlash' : 'qo\'shish'}`} onClose={() => { setModal(null); setEditId(null) }}>
           {modal === 'fuel' && <FuelForm form={fuelForm} setForm={setFuelForm} errors={errors} saving={saving} onSubmit={handleAddFuel} isEdit={!!editId} />}
           {modal === 'oil' && <OilForm form={oilForm} setForm={setOilForm} errors={errors} saving={saving} onSubmit={handleAddOil} isEdit={!!editId} />}
           {modal === 'tire' && <TireForm form={tireForm} setForm={setTireForm} errors={errors} saving={saving} onSubmit={handleAddTire} isEdit={!!editId} />}
+          {modal === 'tire-bulk' && <BulkTireForm form={bulkTireForm} setForm={setBulkTireForm} errors={errors} saving={saving} onSubmit={handleAddBulkTires} />}
           {modal === 'service' && <ServiceForm form={serviceForm} setForm={setServiceForm} errors={errors} saving={saving} onSubmit={handleAddService} isEdit={!!editId} />}
         </Modal>
       )}
+
+      {/* Upgrade Modal - obuna tugaganda yopib bo'lmaydi */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl">
+            <div className="p-6 border-b border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Pro Tarif</h2>
+                    <p className="text-sm text-slate-400">Avtopark nazorati</p>
+                  </div>
+                </div>
+                {/* Faqat obuna tugamagan bo'lsa yopish tugmasi ko'rinadi */}
+                {!subscription?.isExpired && (
+                  <button onClick={() => setShowUpgradeModal(false)} className="p-2 hover:bg-white/10 rounded-lg">
+                    <X size={20} className="text-slate-400" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl p-4 mb-6 border border-purple-500/20">
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl font-bold text-white">50,000</span>
+                  <span className="text-slate-400">so'm/oy</span>
+                </div>
+                <p className="text-sm text-slate-400">Barcha funksiyalar, cheksiz mashinalar</p>
+              </div>
+              
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                    <Zap size={14} className="text-emerald-400" />
+                  </div>
+                  <span className="text-slate-300">Cheksiz mashinalar</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                    <Zap size={14} className="text-emerald-400" />
+                  </div>
+                  <span className="text-slate-300">Yoqilg'i va moy nazorati</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                    <Zap size={14} className="text-emerald-400" />
+                  </div>
+                  <span className="text-slate-300">Shina va xizmat tarixi</span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {upgrading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Yuklanmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Crown size={20} /> Pro ga o'tish
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <BottomNav 
+        activeTab={tab} 
+        onTabChange={setTab} 
+        onBack={() => navigate('/fleet')}
+      />
     </div>
   )
 }
+
+// ========== BOTTOM NAVIGATION ==========
+
+const BottomNav = memo(({ activeTab, onTabChange, onBack }) => (
+  <div 
+    className="lg:hidden"
+    style={{ 
+      position: 'fixed', 
+      bottom: 0, 
+      left: 0, 
+      right: 0, 
+      zIndex: 99999,
+      background: '#0f172a',
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      paddingBottom: 'env(safe-area-inset-bottom)'
+    }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 4px' }}>
+      <NavItem icon={ArrowLeft} label="Orqaga" onClick={onBack} />
+      <NavItem icon={BarChart3} label="Umumiy" active={activeTab === 'summary'} onClick={() => onTabChange('summary')} />
+      <NavItem icon={Fuel} label="Yoqilg'i" active={activeTab === 'fuel'} onClick={() => onTabChange('fuel')} />
+      <NavItem icon={Droplets} label="Moy" active={activeTab === 'oil'} onClick={() => onTabChange('oil')} />
+      <NavItem icon={Wrench} label="Xizmat" active={activeTab === 'services'} onClick={() => onTabChange('services')} />
+    </div>
+  </div>
+))
+
+const NavItem = memo(({ icon: Icon, label, active, onClick }) => (
+  <button 
+    onClick={onClick}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '2px',
+      padding: '8px',
+      background: 'transparent',
+      border: 'none',
+      color: active ? '#60a5fa' : '#64748b',
+      cursor: 'pointer'
+    }}
+  >
+    <div style={{ 
+      padding: '6px', 
+      borderRadius: '8px', 
+      background: active ? 'rgba(59, 130, 246, 0.2)' : 'transparent' 
+    }}>
+      <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+    </div>
+    <span style={{ fontSize: '9px', fontWeight: 500 }}>{label}</span>
+  </button>
+))
 
 // ========== COMPONENTS ==========
 
@@ -229,67 +596,71 @@ const NotFound = memo(({ onBack }) => (
 
 const Header = memo(({ vehicle, status, onBack, onRefresh }) => (
   <header className="bg-slate-900/60 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-40">
-    <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <button onClick={onBack} className="p-3 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all">
-          <ArrowLeft size={22} />
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 py-2.5 sm:py-4 flex items-center justify-between">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <button onClick={onBack} className="p-2 sm:p-3 hover:bg-white/5 rounded-lg sm:rounded-xl text-slate-400 hover:text-white transition-all flex-shrink-0">
+          <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
         </button>
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white">{vehicle.plateNumber}</h1>
-            <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${STATUS[status]?.bg} ${STATUS[status]?.color}`}>{STATUS[status]?.label}</span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h1 className="text-base sm:text-xl font-bold text-white truncate">{vehicle.plateNumber}</h1>
+            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-semibold flex-shrink-0 ${STATUS[status]?.bg} ${STATUS[status]?.color}`}>{STATUS[status]?.label}</span>
           </div>
-          <p className="text-slate-400">{vehicle.brand} {vehicle.model}</p>
+          <p className="text-xs sm:text-base text-slate-400 truncate">{vehicle.brand} {vehicle.model}</p>
         </div>
       </div>
-      <button onClick={onRefresh} className="p-3 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all">
-        <RefreshCw size={20} />
+      <button onClick={onRefresh} className="p-2 sm:p-3 hover:bg-white/5 rounded-lg sm:rounded-xl text-slate-400 hover:text-white transition-all flex-shrink-0">
+        <RefreshCw size={18} className="sm:w-5 sm:h-5" />
       </button>
     </div>
   </header>
 ))
 
 const QuickStats = memo(({ vehicle, fuelData, oilData, tires }) => (
-  <div className="max-w-4xl mx-auto px-4 py-4">
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <QuickStat icon={TrendingUp} gradient="from-blue-500 to-indigo-500" label="Probeg" value={`${fmt(vehicle.currentOdometer)} km`} />
+  <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+      <QuickStat icon={TrendingUp} gradient="from-blue-500 to-indigo-500" label="Probeg" value={`${fmt(vehicle.currentOdometer)}`} unit="km" />
       <QuickStat icon={Fuel} gradient="from-emerald-500 to-emerald-600" label="L/oy" value={fmt(fuelData.stats?.monthlyConsumption || 0)} />
-      <QuickStat icon={Droplets} gradient={OIL_STATUS[oilData.status]?.gradient || 'from-emerald-500 to-emerald-600'} label="Moy" value={`${fmt(Math.max(0, oilData.remainingKm))} km`} warning={oilData.status !== 'ok'} />
-      <QuickStat icon={Circle} gradient="from-purple-500 to-pink-500" label="Shinalar" value={tires.length} />
+      <QuickStat icon={Droplets} gradient={OIL_STATUS[oilData.status]?.gradient || 'from-emerald-500 to-emerald-600'} label="Moy" value={`${fmt(Math.max(0, oilData.remainingKm))}`} unit="km" warning={oilData.status !== 'ok'} />
+      <QuickStat icon={Circle} gradient="from-purple-500 to-pink-500" label="Shinalar" value={tires.length} unit="ta" />
     </div>
   </div>
 ))
 
-const QuickStat = memo(({ icon: Icon, gradient, label, value, warning }) => (
-  <div className="relative bg-slate-800/40 backdrop-blur rounded-2xl p-4 border border-white/5 overflow-hidden">
-    <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br ${gradient} opacity-10 rounded-bl-full`} />
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center shadow-lg`}>
-        <Icon size={18} className="text-white" />
+const QuickStat = memo(({ icon: Icon, gradient, label, value, unit, warning }) => (
+  <div className="relative bg-slate-800/40 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 overflow-hidden">
+    <div className={`absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-br ${gradient} opacity-10 rounded-bl-full`} />
+    <div className="flex items-center gap-2 sm:gap-3">
+      <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br ${gradient} rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+        <Icon size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
       </div>
-      <div>
-        <p className={`text-lg font-bold ${warning ? 'text-amber-400' : 'text-white'}`}>{value}</p>
-        <p className="text-xs text-slate-500">{label}</p>
+      <div className="min-w-0">
+        <p className={`text-base sm:text-lg font-bold truncate ${warning ? 'text-amber-400' : 'text-white'}`}>
+          {value}{unit && <span className="text-xs sm:text-sm text-slate-400 ml-1">{unit}</span>}
+        </p>
+        <p className="text-[10px] sm:text-xs text-slate-500">{label}</p>
       </div>
     </div>
-    {warning && <span className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />}
+    {warning && <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />}
   </div>
 ))
 
 const Tabs = memo(({ tab, setTab }) => {
   const tabs = [
-    { id: 'summary', label: 'Umumiy', icon: BarChart3 },
-    { id: 'fuel', label: 'Yoqilg\'i', icon: Fuel },
-    { id: 'oil', label: 'Moy', icon: Droplets },
-    { id: 'tires', label: 'Shinalar', icon: Circle },
-    { id: 'services', label: 'Xizmatlar', icon: Wrench }
+    { id: 'summary', label: 'Umumiy', shortLabel: 'Umumiy', icon: BarChart3 },
+    { id: 'fuel', label: 'Yoqilg\'i', shortLabel: 'Yoqilg\'i', icon: Fuel },
+    { id: 'oil', label: 'Moy', shortLabel: 'Moy', icon: Droplets },
+    { id: 'tires', label: 'Shinalar', shortLabel: 'Shina', icon: Circle },
+    { id: 'services', label: 'Xizmatlar', shortLabel: 'Xizmat', icon: Wrench }
   ]
   return (
-    <div className="max-w-4xl mx-auto px-4">
-      <div className="flex gap-1.5 bg-slate-800/30 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 hidden lg:block">
+      <div className="flex gap-1 sm:gap-1.5 bg-slate-800/30 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl overflow-x-auto scrollbar-hide">
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === t.id ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-            <t.icon size={16} /><span>{t.label}</span>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex-shrink-0 flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${tab === t.id ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+            <t.icon size={14} className="sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline sm:hidden">{t.shortLabel}</span>
+            <span className="xs:hidden sm:inline">{t.label}</span>
           </button>
         ))}
       </div>
@@ -299,41 +670,147 @@ const Tabs = memo(({ tab, setTab }) => {
 
 // ========== TAB CONTENTS ==========
 
-const SummaryTab = memo(({ vehicle, stats, fuelData, oilData, tires, services }) => (
-  <>
-    <div className="relative overflow-hidden bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-3xl p-6 border border-blue-500/20">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" />
-      <div className="relative">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-5 h-5 text-blue-400" />
-          <p className="text-slate-400 text-sm">Jami xarajatlar</p>
+const SummaryTab = memo(({ vehicle, stats, fuelData, oilData, tires, services }) => {
+  const wornTires = tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length
+  const oilChanges = oilData.changes?.length || 0
+  const serviceCount = services.services?.length || 0
+  
+  return (
+    <>
+      {/* Mashina + Jami xarajat */}
+      <div className="bg-slate-800/40 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <Car className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-base sm:text-lg font-bold text-white truncate">{vehicle.plateNumber}</p>
+              <p className="text-xs sm:text-sm text-slate-400 truncate">{vehicle.brand} {vehicle.model}</p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[10px] sm:text-xs text-slate-500">Probeg</p>
+            <p className="text-sm sm:text-lg font-bold text-white">{fmt(vehicle.currentOdometer)} <span className="text-xs sm:text-sm text-slate-400">km</span></p>
+          </div>
         </div>
-        <p className="text-3xl font-bold text-white">{fmt(stats.totalCost)} <span className="text-lg text-slate-400">so'm</span></p>
+        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3 flex items-center justify-between">
+          <span className="text-slate-400 text-xs sm:text-sm">Jami xarajat</span>
+          <span className="text-base sm:text-xl font-bold text-white">{fmt(stats.totalCost)} <span className="text-xs sm:text-sm text-slate-400">so'm</span></span>
+        </div>
       </div>
-    </div>
-    <div className="grid grid-cols-2 gap-3">
-      <ExpenseCard icon={Fuel} gradient="from-emerald-500 to-emerald-600" label="Yoqilg'i" amount={stats.totalFuelCost} count={fuelData.refills?.length || 0} />
-      <ExpenseCard icon={Droplets} gradient="from-amber-500 to-orange-500" label="Moy" amount={stats.totalOilCost} count={oilData.changes?.length || 0} />
-      <ExpenseCard icon={Circle} gradient="from-blue-500 to-indigo-500" label="Shinalar" amount={stats.totalTireCost} count={tires.length} />
-      <ExpenseCard icon={Wrench} gradient="from-purple-500 to-pink-500" label="Xizmatlar" amount={stats.totalServiceCost} count={services.services?.length || 0} />
-    </div>
-    <div className="bg-slate-800/40 backdrop-blur rounded-2xl p-5 border border-white/5">
-      <p className="text-slate-400 text-sm mb-4 flex items-center gap-2"><Car className="w-4 h-4" /> Mashina</p>
-      <div className="space-y-3">
-        <InfoRow label="Raqam" value={vehicle.plateNumber} highlight />
-        <InfoRow label="Model" value={`${vehicle.brand || ''} ${vehicle.model || ''}`} />
-        <InfoRow label="Yoqilg'i" value={FUEL_TYPES.find(f => f.value === vehicle.fuelType)?.label || '-'} />
-        <InfoRow label="Probeg" value={`${fmt(vehicle.currentOdometer)} km`} highlight />
+
+      {/* 4 ta statistika kartochkasi */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <MiniStat icon={Fuel} color="emerald" value={fmt(stats.totalFuelCost)} label="Yoqilg'i" />
+        <MiniStat icon={Droplets} color="amber" value={fmt(stats.totalOilCost)} label="Moy" />
+        <MiniStat icon={Circle} color="blue" value={fmt(stats.totalTireCost)} label="Shina" />
+        <MiniStat icon={Wrench} color="purple" value={fmt(stats.totalServiceCost)} label="Xizmat" />
       </div>
-    </div>
-    <div className="bg-slate-800/40 backdrop-blur rounded-2xl p-5 border border-white/5">
-      <p className="text-slate-400 text-sm mb-4">Holat</p>
-      <div className="space-y-4">
-        <StatusRow icon={Droplets} label="Moy" status={oilData.status} value={oilData.status === 'ok' ? `${fmt(oilData.remainingKm)} km` : oilData.status === 'approaching' ? 'Yaqin' : 'O\'tgan!'} />
-        <StatusRow icon={Circle} label="Shinalar" status={tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length > 0 ? 'overdue' : 'ok'} value={tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length > 0 ? 'Eskirgan' : 'OK'} />
+
+      {/* Holat - Moy va Shinalar */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        {/* Moy holati */}
+        <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 border ${
+          oilData.status === 'overdue' ? 'bg-red-500/10 border-red-500/30' :
+          oilData.status === 'approaching' ? 'bg-amber-500/10 border-amber-500/30' :
+          'bg-emerald-500/10 border-emerald-500/30'
+        }`}>
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <Droplets className={`w-4 h-4 sm:w-5 sm:h-5 ${
+              oilData.status === 'overdue' ? 'text-red-400' :
+              oilData.status === 'approaching' ? 'text-amber-400' : 'text-emerald-400'
+            }`} />
+            <span className="text-slate-400 text-[10px] sm:text-xs">Moy</span>
+          </div>
+          <p className={`text-sm sm:text-lg font-bold ${
+            oilData.status === 'overdue' ? 'text-red-400' :
+            oilData.status === 'approaching' ? 'text-amber-400' : 'text-emerald-400'
+          }`}>
+            {oilData.status === 'overdue' ? 'Almashtiring!' :
+             oilData.status === 'approaching' ? 'Yaqin' :
+             `${fmt(oilData.remainingKm)} km`}
+          </p>
+          <p className="text-[10px] sm:text-xs text-slate-500">{oilChanges} marta</p>
+        </div>
+
+        {/* Shinalar holati */}
+        <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 border ${
+          wornTires > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'
+        }`}>
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <Circle className={`w-4 h-4 sm:w-5 sm:h-5 ${wornTires > 0 ? 'text-red-400' : 'text-emerald-400'}`} />
+            <span className="text-slate-400 text-[10px] sm:text-xs">Shinalar</span>
+          </div>
+          <p className={`text-sm sm:text-lg font-bold ${wornTires > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+            {wornTires > 0 ? `${wornTires} eskirgan` : 'Yaxshi'}
+          </p>
+          <p className="text-[10px] sm:text-xs text-slate-500">{tires.length} ta shina</p>
+        </div>
       </div>
-    </div>
-  </>
+
+      {/* Oxirgi faoliyat */}
+      <div className="bg-slate-800/40 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
+        <p className="text-slate-400 text-[10px] sm:text-xs mb-2 sm:mb-3">Oxirgi faoliyat</p>
+        <div className="space-y-1.5 sm:space-y-2">
+          {fuelData.refills?.[0] && (
+            <div className="flex items-center justify-between py-1.5 sm:py-2 border-b border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500/20 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Fuel className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-xs sm:text-sm truncate">{fuelData.refills[0].liters} L yoqilg'i</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">{fmtDate(fuelData.refills[0].date)}</p>
+                </div>
+              </div>
+              <span className="text-xs sm:text-sm text-slate-400 flex-shrink-0 ml-2">{fmt(fuelData.refills[0].cost)}</span>
+            </div>
+          )}
+          {oilData.lastChange && (
+            <div className="flex items-center justify-between py-1.5 sm:py-2 border-b border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber-500/20 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-xs sm:text-sm truncate">Moy almashtirish</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">{fmtDate(oilData.lastChange.date)}</p>
+                </div>
+              </div>
+              <span className="text-xs sm:text-sm text-slate-400 flex-shrink-0 ml-2">{fmt(oilData.lastChange.cost)}</span>
+            </div>
+          )}
+          {services.services?.[0] && (
+            <div className="flex items-center justify-between py-1.5 sm:py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-500/20 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-xs sm:text-sm truncate">{services.services[0].type}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">{fmtDate(services.services[0].date)}</p>
+                </div>
+              </div>
+              <span className="text-xs sm:text-sm text-slate-400 flex-shrink-0 ml-2">{fmt(services.services[0].cost)}</span>
+            </div>
+          )}
+          {!fuelData.refills?.length && !oilData.lastChange && !services.services?.length && (
+            <p className="text-center text-slate-500 text-xs sm:text-sm py-3 sm:py-4">Hali faoliyat yo'q</p>
+          )}
+        </div>
+      </div>
+    </>
+  )
+})
+
+// Mini statistika kartochkasi
+const MiniStat = memo(({ icon: Icon, color, value, label }) => (
+  <div className="bg-slate-800/40 rounded-lg sm:rounded-xl p-2 sm:p-3 text-center border border-white/5">
+    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-${color}-400`} />
+    <p className="text-xs sm:text-sm font-bold text-white truncate">{value}</p>
+    <p className="text-[9px] sm:text-[10px] text-slate-500 truncate">{label}</p>
+  </div>
 ))
 
 const FuelTab = memo(({ data, onAdd, onEdit, onDelete }) => (
@@ -392,11 +869,16 @@ const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => (
   </>
 ))
 
-const TiresTab = memo(({ tires, onAdd, onEdit, onDelete }) => (
+const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete }) => (
   <>
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between flex-wrap gap-2">
       <p className="text-lg font-semibold text-white">Shinalar ({tires.length})</p>
-      <AddButton onClick={onAdd} />
+      <div className="flex gap-2">
+        <button onClick={onAddBulk} className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-xl text-purple-400 text-sm font-medium flex items-center gap-2 transition-all">
+          <Circle size={16} /> To'liq almashtirish
+        </button>
+        <AddButton onClick={onAdd} />
+      </div>
     </div>
     {!tires.length ? <EmptyState icon={Circle} /> : (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -512,13 +994,34 @@ const Modal = memo(({ title, onClose, children }) => (
   </div>
 ))
 
-const Input = memo(({ label, type = 'text', value, onChange, error, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)} className={`w-full px-4 py-3 bg-slate-800/50 border ${error ? 'border-red-500/50' : 'border-white/5'} rounded-xl text-white focus:outline-none focus:border-blue-500/50`} {...props} />
-    {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
-  </div>
-))
+const Input = memo(({ label, type = 'text', value, onChange, error, formatNumber, ...props }) => {
+  // Raqamni formatlash (200000 -> 200 000)
+  const displayValue = formatNumber && value ? fmt(value) : value
+  
+  const handleChange = (e) => {
+    if (formatNumber) {
+      const rawValue = e.target.value.replace(/\D/g, '')
+      onChange(rawValue)
+    } else {
+      onChange(e.target.value)
+    }
+  }
+  
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+      <input 
+        type={formatNumber ? 'text' : type} 
+        inputMode={formatNumber ? 'numeric' : undefined}
+        value={displayValue} 
+        onChange={handleChange} 
+        className={`w-full px-4 py-3 bg-slate-800/50 border ${error ? 'border-red-500/50' : 'border-white/5'} rounded-xl text-white focus:outline-none focus:border-blue-500/50`} 
+        {...props} 
+      />
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+    </div>
+  )
+})
 
 const Select = memo(({ label, value, onChange, options }) => (
   <div>
@@ -539,13 +1042,12 @@ const FuelForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="p-5 space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} max={today()} />
-      <Input label="Odometr (km)" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} />
+      <Input label="Odometr (km)" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} formatNumber />
     </div>
     <div className="grid grid-cols-2 gap-4">
       <Input label="Litr" type="number" step="0.1" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} error={errors.liters} />
-      <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} />
+      <Input label="Narx (so'm)" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} formatNumber />
     </div>
-    {form.liters && form.cost && <p className="text-sm text-blue-400">1 L = {fmt(Math.round(+form.cost / +form.liters))} so'm</p>}
     <Select label="Yoqilg'i turi" value={form.fuelType} onChange={v => setForm(f => ({ ...f, fuelType: v }))} options={FUEL_TYPES} />
     <SubmitButton loading={saving} isEdit={isEdit} />
   </form>
@@ -555,13 +1057,13 @@ const OilForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="p-5 space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} max={today()} />
-      <Input label="Odometr (km)" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} />
+      <Input label="Odometr (km)" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} formatNumber />
     </div>
     <div className="grid grid-cols-2 gap-4">
       <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} placeholder="10W-40" error={errors.oilType} />
-      <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} />
+      <Input label="Narx (so'm)" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} formatNumber />
     </div>
-    <Input label="Keyingi (km)" type="number" value={form.nextChangeOdometer} onChange={v => setForm(f => ({ ...f, nextChangeOdometer: v }))} placeholder={form.odometer ? String(+form.odometer + 10000) : ''} />
+    <Input label="Keyingi almashtirish (km)" value={form.nextChangeOdometer} onChange={v => setForm(f => ({ ...f, nextChangeOdometer: v }))} placeholder={form.odometer ? fmt(+form.odometer.toString().replace(/\s/g, '') + 10000) : '10000 km qo\'shiladi'} formatNumber />
     <SubmitButton loading={saving} isEdit={isEdit} />
   </form>
 ))
@@ -569,26 +1071,53 @@ const OilForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
 const TireForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="p-5 space-y-4">
     <Select label="Joylashuv" value={form.position} onChange={v => setForm(f => ({ ...f, position: v }))} options={TIRE_POSITIONS.map(p => ({ value: p, label: p }))} />
+    <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
     <div className="grid grid-cols-2 gap-4">
-      <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} />
-      <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
+      <Input label="O'rnatish sanasi" type="date" value={form.installDate} onChange={v => setForm(f => ({ ...f, installDate: v }))} max={today()} />
+      <Input label="O'rnatish km" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} formatNumber />
     </div>
     <div className="grid grid-cols-2 gap-4">
-      <Input label="O'rnatish km" type="number" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} />
-      <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} />
+      <Input label="Kutilgan umr (km)" value={form.expectedLifeKm} onChange={v => setForm(f => ({ ...f, expectedLifeKm: v }))} placeholder="50000" formatNumber />
+      <Input label="Narx (so'm)" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} formatNumber />
     </div>
     <SubmitButton loading={saving} isEdit={isEdit} />
   </form>
 ))
 
+const BulkTireForm = memo(({ form, setForm, errors, saving, onSubmit }) => (
+  <form onSubmit={onSubmit} className="p-5 space-y-4">
+    <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 mb-2">
+      <p className="text-purple-400 text-sm">Barcha shinalarni bir vaqtda almashtirish. Narx avtomatik bo'linadi.</p>
+    </div>
+    <Select 
+      label="Shinalar soni" 
+      value={form.count} 
+      onChange={v => setForm(f => ({ ...f, count: v }))} 
+      options={[
+        { value: '4', label: '4 ta (oddiy)' },
+        { value: '6', label: '6 ta (yuk mashinasi)' }
+      ]} 
+    />
+    <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
+    <div className="grid grid-cols-2 gap-4">
+      <Input label="Odometr (km)" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} formatNumber />
+      <Input label="Jami narx (so'm)" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} formatNumber />
+    </div>
+    {form.cost && form.count && (
+      <p className="text-sm text-slate-400">Har bir shina: {fmt(Math.round(+form.cost / +form.count))} so'm</p>
+    )}
+    <SubmitButton loading={saving} />
+  </form>
+))
+
 const ServiceForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="p-5 space-y-4">
-    <Select label="Turi" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))} options={SERVICE_TYPES.map(t => ({ value: t, label: t }))} />
+    <Select label="Xizmat turi" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))} options={SERVICE_TYPES.map(t => ({ value: t, label: t }))} />
     <div className="grid grid-cols-2 gap-4">
       <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} max={today()} />
-      <Input label="Odometr (km)" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} />
+      <Input label="Odometr (km)" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} formatNumber />
     </div>
-    <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} />
+    <Input label="Narx (so'm)" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} formatNumber />
     <Input label="Tavsif" value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} placeholder="Bajarilgan ishlar..." />
     <SubmitButton loading={saving} isEdit={isEdit} />
   </form>

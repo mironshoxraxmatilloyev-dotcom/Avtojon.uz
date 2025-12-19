@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense, useState, memo, useCallback } from 'react'
+import { useEffect, useRef, useState, memo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
@@ -6,10 +6,6 @@ import {
   Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles, Zap,
   CheckCircle, Star, Users, Route, Clock, TrendingUp, Play
 } from 'lucide-react'
-// import { useScrollAnimation, useStaggerAnimation } from '../hooks/useScrollAnimation'
-
-// 🚀 Lazy load 3D scene - faqat kerak bo'lganda
-const Scene3D = lazy(() => import('../components/3d/Scene3D'))
 
 const features = [
   { icon: MapPin, title: 'Real-time GPS', desc: 'Mashinalaringizni jonli xaritada kuzating', color: 'from-emerald-500 to-teal-600' },
@@ -68,16 +64,12 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] text-white overflow-hidden">
-      {/* 🚀 3D Background - lazy loaded */}
+      {/* Background Effects */}
       <div className="fixed inset-0 z-0">
-        <Suspense fallback={
-          <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-        }>
-          <Scene3D variant="hero" />
-        </Suspense>
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
       </div>
 
       {/* Gradient Overlays */}

@@ -36,15 +36,15 @@ export const connectSocket = () => {
   socket = io(url, {
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
-    timeout: 20000
+    reconnectionAttempts: 5,
+    reconnectionDelay: 2000,
+    reconnectionDelayMax: 10000,
+    timeout: 10000,
+    autoConnect: true
   })
 
   // Qayta ulanganda xonalarga avtomatik qo'shilish
   socket.on('connect', () => {
-    if (isDev) console.log('✅ Socket ulandi:', socket.id)
-    
     // Oldingi xonalarga qayta qo'shilish
     if (pendingRooms.driver) {
       socket.emit('join-driver', pendingRooms.driver)
@@ -54,15 +54,11 @@ export const connectSocket = () => {
     }
   })
 
-  if (isDev) {
-    socket.on('disconnect', (reason) => {
-      console.log('❌ Socket uzildi:', reason)
-    })
-
-    socket.on('connect_error', (error) => {
-      console.error('❌ Socket xatosi:', error.message)
-    })
-  }
+  // Xatoliklarni yashirish - console ga chiqarmaslik
+  socket.on('disconnect', () => {})
+  socket.on('connect_error', () => {})
+  socket.on('reconnect_error', () => {})
+  socket.on('reconnect_failed', () => {})
 
   return socket
 }

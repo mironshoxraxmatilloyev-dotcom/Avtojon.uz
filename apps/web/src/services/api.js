@@ -220,8 +220,10 @@ api.interceptors.response.use(
     }
 
     // 🎯 401 - Unauthorized - Token refresh urinish
-    // Login/register so'rovlari uchun refresh qilmaslik
-    const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register')
+    // Login/register/me so'rovlari uchun refresh qilmaslik
+    const isAuthEndpoint = config.url?.includes('/auth/login') || 
+                           config.url?.includes('/auth/register') ||
+                           config.url?.includes('/auth/me')
     if (error.response?.status === 401 && !config._retry && !isAuthEndpoint) {
       const refreshToken = localStorage.getItem('refreshToken')
       

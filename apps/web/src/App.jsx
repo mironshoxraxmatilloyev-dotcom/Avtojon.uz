@@ -46,30 +46,36 @@ function ScrollToTop() {
   return null
 }
 
-// 🔐 Umumiy Auth Hook - takrorlanishni oldini olish
+// 🔐 INSTANT Auth Hook - loading yo'q
 function useAuthValidation() {
-  const { token, logout } = useAuthStore()
-  const [isValidating, setIsValidating] = useState(true)
-  const [isValid, setIsValid] = useState(false)
+  const { token, user, logout } = useAuthStore()
+  
+  // 🚀 INSTANT: User va token bor bo'lsa - darhol valid
+  const [isValidating, setIsValidating] = useState(() => !user && !!token)
+  const [isValid, setIsValid] = useState(() => !!user && !!token)
   
   useEffect(() => {
-    const validateToken = async () => {
-      if (!token) {
-        setIsValidating(false)
-        return
-      }
-      try {
-        await api.get('/auth/me')
-        setIsValid(true)
-      } catch (error) {
-        if (error.statusCode === 401) logout()
-        setIsValid(false)
-      } finally {
-        setIsValidating(false)
-      }
+    // Token yo'q - validatsiya kerak emas
+    if (!token) {
+      setIsValidating(false)
+      setIsValid(false)
+      return
     }
-    validateToken()
-  }, [token, logout])
+    
+    // 🚀 INSTANT: User bor - darhol valid, loading yo'q
+    if (user) {
+      setIsValid(true)
+      setIsValidating(false)
+      return
+    }
+    
+    // Faqat user yo'q bo'lganda serverdan tekshirish (fonda)
+    setIsValidating(true)
+    api.get('/auth/me')
+      .then(() => setIsValid(true))
+      .catch(() => { logout(); setIsValid(false) })
+      .finally(() => setIsValidating(false))
+  }, [token, user, logout])
   
   return { isValidating, isValid, token }
 }
