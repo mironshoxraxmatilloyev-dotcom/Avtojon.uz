@@ -510,11 +510,9 @@ export default function Dashboard() {
 
 
 
-      {/* Xarita va Songgi reyslar */}
+      {/* Jonli xarita - to'liq kenglikda */}
       {!fullScreenMap && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-          {/* Jonli xarita */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-3 sm:mb-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center">
@@ -614,76 +612,6 @@ export default function Dashboard() {
               </MapContainer>
             </div>
           </div>
-
-          {/* Songgi reyslar */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center mb-3 sm:mb-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                  <Route className="text-purple-600" size={16} />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-gray-900">Songgi reyslar</h2>
-                  <p className="text-xs sm:text-sm text-gray-500">Oxirgi faoliyat</p>
-                </div>
-              </div>
-              <button onClick={() => navigate('/dashboard/flights')} className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1">
-                Barchasi <ArrowUpRight size={12} className="sm:w-3.5 sm:h-3.5" />
-              </button>
-            </div>
-            <div className="space-y-2 sm:space-y-3">
-              {/* So'ngi reyslar - faqat yangi Flight tizimidan */}
-              {recentFlights.map((flight) => (
-                <div key={`recent-flight-${flight._id}`}
-                  onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                  className={`group flex items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl cursor-pointer transition-all ${flight.status === 'active'
-                    ? 'hover:bg-emerald-50 border border-emerald-100'
-                    : 'hover:bg-gray-50'
-                    }`}>
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-lg flex-shrink-0 ${flight.status === 'active'
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                    : flight.status === 'completed'
-                      ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                      : 'bg-gradient-to-br from-gray-500 to-slate-600'
-                    }`}>
-                    {flight.driver?.fullName?.charAt(0) || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.driver?.fullName || 'Noma\'lum'}</p>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-400 truncate">
-                      {flight.legs?.length || 0} bosqich • {flight.totalDistance || 0} km
-                      {flight.status === 'completed' && (
-                        <span className={flight.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}>
-                          {` • ${flight.profit >= 0 ? '+' : '-'}${new Intl.NumberFormat('uz-UZ').format(Math.abs(flight.profit || 0))}`}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0 hidden sm:block">
-                    <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${flight.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : flight.status === 'completed'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-700'
-                      }`}>
-                      {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {recentFlights.length === 0 && (
-                <div className="text-center py-8 sm:py-16">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <Route size={24} className="sm:w-8 sm:h-8 text-gray-400" />
-                  </div>
-                  <p className="text-gray-500 text-sm sm:text-base">Reyslar yo'q</p>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1">Shofyorlar sahifasidan yangi reys oching</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Full Screen Map Modal - Pro Design */}
@@ -697,85 +625,6 @@ export default function Dashboard() {
             <X size={20} />
             Yopish
           </button>
-
-          {/* Compact Right Sidebar */}
-          <div className="hidden lg:flex flex-col absolute top-20 right-4 bottom-4 w-72 bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden shadow-xl" style={{ zIndex: 100000 }}>
-            {/* Sidebar Header */}
-            <div className="p-3 border-b border-white/10 flex items-center justify-between">
-              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-                <Truck size={14} className="text-blue-400" />
-                Shofyorlar
-                <span className="px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-bold">{driverLocations.length}</span>
-              </h3>
-              {selectedDriver && (
-                <button onClick={() => setSelectedDriver(null)} className="text-blue-400 text-xs hover:underline">
-                  Hammasi
-                </button>
-              )}
-            </div>
-
-            {/* Drivers List - Compact */}
-            <div className="flex-1 p-2 space-y-1.5 overflow-y-auto">
-              {driverLocations.map((driver) => (
-                <div
-                  key={driver._id}
-                  onClick={() => driver.lastLocation && setSelectedDriver(driver)}
-                  className={`p-2.5 rounded-lg transition-all cursor-pointer ${selectedDriver?._id === driver._id
-                    ? 'bg-blue-500/20 ring-1 ring-blue-500/50'
-                    : driver.lastLocation
-                      ? 'bg-white/5 hover:bg-white/10'
-                      : 'bg-white/5 opacity-40 cursor-not-allowed'
-                    }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs ${driver.status === 'busy' ? 'bg-orange-500' : 'bg-emerald-500'
-                        }`}>
-                        {driver.fullName?.charAt(0)}
-                      </div>
-                      {driver.lastLocation && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-slate-900"></span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-medium truncate">{driver.fullName}</p>
-                      <p className={`text-[10px] ${!driver.lastLocation ? 'text-gray-500' :
-                        driver.status === 'busy' ? 'text-orange-400' : 'text-emerald-400'
-                        }`}>
-                        {!driver.lastLocation ? '📵 Offline' : driver.status === 'busy' ? 'Reysda' : 'Bo\'sh'}
-                        {driver.lastLocation?.speed > 0 && ` • ${Math.round(driver.lastLocation.speed * 3.6)} km/h`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {driverLocations.length === 0 && (
-                <div className="text-center py-6">
-                  <Truck size={24} className="text-slate-600 mx-auto mb-2" />
-                  <p className="text-slate-500 text-xs">Shofyorlar yo'q</p>
-                </div>
-              )}
-            </div>
-
-            {/* Active Flights */}
-            {activeFlights.length > 0 && (
-              <div className="border-t border-white/10 p-3">
-                <h4 className="text-white text-xs font-semibold mb-2 flex items-center gap-1.5">
-                  <Activity size={12} className="text-emerald-400" />
-                  Faol reyslar
-                  <span className="px-1 py-0.5 bg-emerald-500/20 rounded text-emerald-400 text-[10px]">{activeFlights.length}</span>
-                </h4>
-                <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                  {activeFlights.slice(0, 4).map((flight) => (
-                    <div key={flight._id} className="p-2 bg-white/5 rounded-lg">
-                      <p className="text-white text-[11px] font-medium truncate">{flight.driver?.fullName}</p>
-                      <p className="text-slate-400 text-[10px] truncate">{flight.name || 'Yangi reys'}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Full Screen Map */}
           <div className="absolute inset-0" style={{ zIndex: 99998 }}>
