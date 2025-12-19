@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Businessman = require('../models/Businessman');
+const Driver = require('../models/Driver');
+const Flight = require('../models/Flight');
+const Vehicle = require('../models/Vehicle');
 const { generateCredentials, makeUsernameUnique } = require('../utils/credentialGenerator');
 const { generateTokenPair } = require('../utils/tokenManager');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
@@ -44,6 +47,53 @@ const superAdminAuth = (req, res, next) => {
 
 // Super Admin login - endi auth.routes.js da amalga oshiriladi
 // Bu route faqat backward compatibility uchun
+
+// Umumiy statistika
+router.get('/stats', superAdminAuth, asyncHandler(async (req, res) => {
+  const [
+    totalBusinessmen,
+    activeBusinessmen,
+    totalDrivers,
+    activeDrivers,
+    totalFlights,
+    activeFlights,
+    completedFlights,
+    totalVehicles
+  ] = await Promise.all([
+    Businessman.countDocuments(),
+    Businessman.countDocuments({ isActive: true }),
+    Driver.countDocuments({ isActive: true }),
+    Driver.countDocuments({ isActive: true, status: 'busy' }),
+    Flight.countDocuments(),
+    Flight.countDocuments({ status: 'active' }),
+    Flight.countDocuments({ status: 'completed' }),
+    Vehicle.countDocuments({ isActive: true })
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      businessmen: {
+        total: totalBusinessmen,
+        active: activeBusinessmen,
+        inactive: totalBusinessmen - activeBusinessmen
+      },
+      drivers: {
+        total: totalDrivers,
+        busy: activeDrivers,
+        free: totalDrivers - activeDrivers
+      },
+      flights: {
+        total: totalFlights,
+        active: activeFlights,
+        completed: completedFlights
+      },
+      vehicles: {
+        total: totalVehicles
+      }
+    }
+  });
+}));
 
 // Barcha biznesmenlarni olish
 router.get('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
