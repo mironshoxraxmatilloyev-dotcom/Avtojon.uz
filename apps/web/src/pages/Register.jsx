@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
+import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, CheckCircle, AlertCircle } from 'lucide-react'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
-
-const Scene3D = lazy(() => import('../components/3d/Scene3D'))
 
 // CSS-based 3D tilt card
 function Card3D({ children, className }) {
@@ -169,9 +167,12 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-4 relative overflow-hidden">
-      <Suspense fallback={null}>
-        <Scene3D variant="auth" />
-      </Suspense>
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
 
       <div className="absolute inset-0 pointer-events-none z-[1]">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] opacity-60"></div>

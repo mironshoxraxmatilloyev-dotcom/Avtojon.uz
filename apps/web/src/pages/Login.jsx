@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Zap, AlertCircle } from 'lucide-react'
+import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useAlert } from '../components/ui'
-import { validateField, VALIDATION_RULES } from '../utils/validation'
-
-const Scene3D = lazy(() => import('../components/3d/Scene3D'))
+import { validateField } from '../utils/validation'
 
 // CSS-based 3D tilt card
 function Card3D({ children, className }) {
@@ -158,10 +156,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* 3D Background */}
-      <Suspense fallback={null}>
-        <Scene3D variant="auth" />
-      </Suspense>
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
 
       {/* Gradient Overlays */}
       <div className="absolute inset-0 pointer-events-none z-[1]">
