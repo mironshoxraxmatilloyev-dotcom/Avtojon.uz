@@ -17,7 +17,6 @@ const FlightDetail = lazy(() => import('./pages/FlightDetail'))
 const Reports = lazy(() => import('./pages/Reports'))
 const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
 const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
-const BusinessDashboard = lazy(() => import('./pages/business/BusinessDashboard'))
 const FleetDashboard = lazy(() => import('./pages/fleet/FleetDashboard'))
 const VehicleDetailPanel = lazy(() => import('./pages/fleet/VehicleDetailPanel'))
 
@@ -46,7 +45,11 @@ function ScrollToTop() {
   return null
 }
 
-// 🔐 INSTANT Auth Hook - loading yo'q
+// 🔐 Global auth validation cache
+let authValidationCache = { isValid: false, timestamp: 0, promise: null }
+const AUTH_CACHE_TTL = 60000 // 1 daqiqa cache
+
+// 🔐 INSTANT Auth Hook - optimizatsiya qilingan
 function useAuthValidation() {
   const { token, user, logout } = useAuthStore()
   
@@ -66,18 +69,60 @@ function useAuthValidation() {
     if (user) {
       setIsValid(true)
       setIsValidating(false)
+      authValidationCache.isValid = true
+      authValidationCache.timestamp = Date.now()
       return
     }
     
-    // Faqat user yo'q bo'lganda serverdan tekshirish (fonda)
+    // Cache tekshirish
+    const now = Date.now()
+    if (authValidationCache.isValid && (now - authValidationCache.timestamp) < AUTH_CACHE_TTL) {
+      setIsValid(true)
+      setIsValidating(false)
+      return
+    }
+    
+    // Agar allaqachon tekshirilayotgan bo'lsa, kutish
+    if (authValidationCache.promise) {
+      authValidationCache.promise
+        .then(() => setIsValid(authValidationCache.isValid))
+        .catch(() => setIsValid(false))
+        .finally(() => setIsValidating(false))
+      return
+    }
+    
+    // Faqat user yo'q bo'lganda serverdan tekshirish
     setIsValidating(true)
-    api.get('/auth/me')
-      .then(() => setIsValid(true))
-      .catch(() => { logout(); setIsValid(false) })
-      .finally(() => setIsValidating(false))
+    authValidationCache.promise = api.get('/auth/me')
+    
+    authValidationCache.promise
+      .then(() => {
+        authValidationCache.isValid = true
+        authValidationCache.timestamp = Date.now()
+        setIsValid(true)
+      })
+      .catch(() => {
+        authValidationCache.isValid = false
+        logout()
+        setIsValid(false)
+      })
+      .finally(() => {
+        authValidationCache.promise = null
+        setIsValidating(false)
+      })
   }, [token, user, logout])
   
-  return { isValidating, isValid, token }
+  return { isValidating, isValid, token, user }
+}
+
+// Auth cache ni tozalash (logout da ishlatiladi)
+export const clearAuthCache = () => {
+  authValidationCache = { isValid: false, timestamp: 0, promise: null }
+}
+
+// Global function sifatida ham export qilish
+if (typeof window !== 'undefined') {
+  window.__clearAuthCache = clearAuthCache
 }
 
 // Protected Route - Business uchun (Super Admin yaratgan - /dashboard)
@@ -90,7 +135,6 @@ const BusinessRoute = ({ children }) => {
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
   if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
   if (user?.role === 'admin') return <Navigate to="/fleet" replace />
-  // business role - /dashboard ga kirishi mumkin
   return children
 }
 
@@ -104,7 +148,6 @@ const FleetRoute = ({ children }) => {
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
   if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
   if (user?.role === 'business') return <Navigate to="/dashboard" replace />
-  // admin role - /fleet ga kirishi mumkin
   return children
 }
 
@@ -163,8 +206,6 @@ function App() {
           {/* Fleet - Register qilganlar uchun */}
           <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
           <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
-
-
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -71,19 +71,19 @@ const ProgressBar = ({ label, value, max, color }) => {
 }
 
 // 3D Donut Chart komponenti
-const DonutChart3D = ({ data, size = 200 }) => {
+const DonutChart3D = ({ data, size = 200, chartId = 'chart' }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0)
   let currentAngle = 0
   
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-2xl">
+    <div className="relative" style={{ width: size, height: size, padding: 10 }}>
+      <svg viewBox="-10 -10 120 120" className="transform -rotate-90 w-full h-full" style={{ overflow: 'visible' }}>
         <defs>
-          <filter id="shadow3d" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.5"/>
+          <filter id={`shadow3d-${chartId}`} x="-100%" y="-100%" width="300%" height="300%">
+            <feDropShadow dx="3" dy="5" stdDeviation="4" floodColor="#000" floodOpacity="0.4"/>
           </filter>
           {data.map((item, i) => (
-            <linearGradient key={`grad-${i}`} id={`gradient-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient key={`grad-${chartId}-${i}`} id={`gradient-${chartId}-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={item.color} stopOpacity="1"/>
               <stop offset="100%" stopColor={item.colorDark} stopOpacity="1"/>
             </linearGradient>
@@ -107,13 +107,13 @@ const DonutChart3D = ({ data, size = 200 }) => {
               cy="50"
               r={radius}
               fill="none"
-              stroke={`url(#gradient-${i})`}
-              strokeWidth="18"
+              stroke={`url(#gradient-${chartId}-${i})`}
+              strokeWidth="16"
               strokeDasharray={strokeDasharray}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              filter="url(#shadow3d)"
-              className="transition-all duration-1000 hover:opacity-80"
+              filter={`url(#shadow3d-${chartId})`}
+              className="transition-all duration-1000"
               style={{ transformOrigin: 'center' }}
             />
           )
@@ -196,9 +196,9 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
 
 // Glassmorphism Card komponenti
 const GlassCard = ({ children, className = '', glow = '' }) => (
-  <div className={`relative overflow-hidden bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-slate-700/50 ${className}`}>
-    {glow && <div className={`absolute -top-20 -right-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-30`} />}
-    {glow && <div className={`absolute -bottom-20 -left-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-20`} />}
+  <div className={`relative bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-slate-700/50 ${className}`}>
+    {glow && <div className={`absolute -top-20 -right-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-30 pointer-events-none`} />}
+    {glow && <div className={`absolute -bottom-20 -left-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-20 pointer-events-none`} />}
     <div className="relative z-10">{children}</div>
   </div>
 )
@@ -482,7 +482,7 @@ export default function SuperAdminPanel() {
               Foydalanuvchilar
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={userDistribution} size={160} />
+              <DonutChart3D data={userDistribution} size={160} chartId="users" />
               <div className="mt-4 flex gap-6">
                 {userDistribution.map((item, i) => (
                   <div key={i} className="flex items-center gap-2">
@@ -504,7 +504,7 @@ export default function SuperAdminPanel() {
               Biznesmenlar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={businessmenStatus} size={140} />
+              <DonutChart3D data={businessmenStatus} size={140} chartId="businessmen" />
               <div className="mt-4 grid grid-cols-2 gap-4 w-full">
                 <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
                   <div className="text-2xl font-bold text-green-400">{stats.businessmen.active}</div>
@@ -525,7 +525,7 @@ export default function SuperAdminPanel() {
               Shofyorlar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={driverStatus} size={140} />
+              <DonutChart3D data={driverStatus} size={140} chartId="drivers" />
               <div className="mt-4 grid grid-cols-2 gap-4 w-full">
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-center">
                   <div className="text-2xl font-bold text-amber-400">{stats.drivers.busy}</div>
@@ -546,7 +546,7 @@ export default function SuperAdminPanel() {
               Reyslar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={flightStatus} size={140} />
+              <DonutChart3D data={flightStatus} size={140} chartId="flights" />
               <div className="mt-4 grid grid-cols-3 gap-2 w-full">
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 text-center">
                   <div className="text-xl font-bold text-amber-400">{stats.flights.active}</div>

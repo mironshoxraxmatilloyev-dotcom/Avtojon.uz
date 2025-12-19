@@ -145,6 +145,12 @@ export const useAuthStore = create((set, get) => ({
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
+    
+    // Auth cache ni tozalash
+    if (typeof window !== 'undefined' && window.__clearAuthCache) {
+      window.__clearAuthCache()
+    }
+    
     set({ user: null, token: null, refreshToken: null, error: null })
   },
 
