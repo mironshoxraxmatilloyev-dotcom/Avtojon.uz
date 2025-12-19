@@ -6,7 +6,7 @@ import api from '../../services/api'
 import { 
   Shield, Users, Plus, LogOut, User, Copy, Check, 
   Trash2, Search, X, Power, Eye, EyeOff, Edit3, Key,
-  Truck, Route, Car, LayoutDashboard, Menu, ChevronRight, BarChart3
+  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3
 } from 'lucide-react'
 
 const MENU_ITEMS = [
@@ -14,7 +14,6 @@ const MENU_ITEMS = [
   { id: 'stats', label: 'Statistika', icon: BarChart3 },
   { id: 'businessmen', label: 'Biznesmenlar', icon: Users },
   { id: 'drivers', label: 'Shofyorlar', icon: Truck },
-  { id: 'flights', label: 'Reyslar', icon: Route },
   { id: 'vehicles', label: 'Mashinalar', icon: Car },
 ]
 
@@ -213,7 +212,6 @@ export default function SuperAdminPanel() {
   const [stats, setStats] = useState(null)
   const [businessmen, setBusinessmen] = useState([])
   const [drivers, setDrivers] = useState([])
-  const [flights, setFlights] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -233,7 +231,6 @@ export default function SuperAdminPanel() {
   useEffect(() => { fetchStats() }, [])
   useEffect(() => { if (activeTab === 'businessmen') fetchBusinessmen() }, [activeTab])
   useEffect(() => { if (activeTab === 'drivers') fetchDrivers() }, [activeTab])
-  useEffect(() => { if (activeTab === 'flights') fetchFlights() }, [activeTab])
   useEffect(() => { if (activeTab === 'vehicles') fetchVehicles() }, [activeTab])
 
   const fetchStats = async () => {
@@ -251,11 +248,6 @@ export default function SuperAdminPanel() {
 
   const fetchDrivers = async () => {
     try { const { data } = await api.get('/super-admin/drivers'); setDrivers(data.data || []) }
-    catch (err) { console.error(err) }
-  }
-
-  const fetchFlights = async () => {
-    try { const { data } = await api.get('/super-admin/flights'); setFlights(data.data || []) }
     catch (err) { console.error(err) }
   }
 
@@ -687,32 +679,6 @@ export default function SuperAdminPanel() {
     </div>
   )
 
-  // Reyslar ro'yxati
-  const renderFlights = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Reyslar</h2>
-      {loading ? (
-        <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
-      ) : (
-        <div className="grid gap-4">
-          {flights.map(f => (
-            <div key={f._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-white">{f.fromLocation} → {f.toLocation}</h3>
-                  <p className="text-sm text-slate-400">{new Date(f.departureDate).toLocaleDateString('uz-UZ')}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${f.status === 'active' ? 'bg-amber-600/20 text-amber-400' : f.status === 'completed' ? 'bg-green-600/20 text-green-400' : 'bg-slate-600/20 text-slate-400'}`}>
-                  {f.status === 'active' ? 'Faol' : f.status === 'completed' ? 'Yakunlangan' : f.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
   // Mashinalar ro'yxati
   const renderVehicles = () => (
     <div className="space-y-6">
@@ -746,7 +712,6 @@ export default function SuperAdminPanel() {
       case 'stats': return renderStats()
       case 'businessmen': return renderBusinessmen()
       case 'drivers': return renderDrivers()
-      case 'flights': return renderFlights()
       case 'vehicles': return renderVehicles()
       default: return renderDashboard()
     }
