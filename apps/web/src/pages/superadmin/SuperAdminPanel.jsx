@@ -6,7 +6,7 @@ import api from '../../services/api'
 import { 
   Shield, Users, Plus, LogOut, User, Copy, Check, 
   Trash2, Search, X, Power, Eye, EyeOff, Edit3, Key,
-  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3, Route, UserCircle
+  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3, Route, UserCircle, ArrowLeft
 } from 'lucide-react'
 
 const MENU_ITEMS = [
@@ -21,10 +21,10 @@ const MENU_ITEMS = [
 // StatCard komponenti
 const StatCard = ({ icon: Icon, label, value, sub, color, className = '' }) => {
   const colors = {
-    indigo: 'from-indigo-900/40 to-indigo-800/20 border-indigo-500/20 hover:border-indigo-400/40',
-    blue: 'from-blue-900/40 to-blue-800/20 border-blue-500/20 hover:border-blue-400/40',
-    green: 'from-green-900/40 to-green-800/20 border-green-500/20 hover:border-green-400/40',
-    purple: 'from-purple-900/40 to-purple-800/20 border-purple-500/20 hover:border-purple-400/40',
+    indigo: 'from-indigo-900/40 to-indigo-800/20 border-indigo-500/20 hover:border-indigo-400/40 hover:shadow-lg hover:shadow-indigo-500/10',
+    blue: 'from-blue-900/40 to-blue-800/20 border-blue-500/20 hover:border-blue-400/40 hover:shadow-lg hover:shadow-blue-500/10',
+    green: 'from-green-900/40 to-green-800/20 border-green-500/20 hover:border-green-400/40 hover:shadow-lg hover:shadow-green-500/10',
+    purple: 'from-purple-900/40 to-purple-800/20 border-purple-500/20 hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/10',
   }
   const iconColors = {
     indigo: 'bg-indigo-600/30 text-indigo-400',
@@ -33,7 +33,7 @@ const StatCard = ({ icon: Icon, label, value, sub, color, className = '' }) => {
     purple: 'bg-purple-600/30 text-purple-400',
   }
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-3 sm:p-5 border transition-all hover:scale-[1.02] ${className}`}>
+    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-3 sm:p-5 border transition-all duration-300 ${className}`}>
       <div className="flex items-center gap-2 sm:gap-4">
         <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconColors[color]} rounded-xl flex items-center justify-center flex-shrink-0`}>
           <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -308,7 +308,7 @@ export default function SuperAdminPanel() {
   const copyToClipboard = (text, field) => { navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000) }
   const handleLogout = () => { logout(); navigate('/login') }
 
-  // Dashboard - 4 ta stat + 2 ta katta karta
+  // Dashboard - 4 ta katta animatsiyali karta
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -328,98 +328,81 @@ export default function SuperAdminPanel() {
         </div>
       </div>
 
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <StatCard icon={Users} label="Biznesmenlar" value={stats.businessmen?.total || 0} sub={<><span className="text-green-400">{stats.businessmen?.active || 0} faol</span> / <span className="text-red-400">{stats.businessmen?.inactive || 0} faolsiz</span></>} color="indigo" />
-          <StatCard icon={UserCircle} label="Individual" value={stats.users?.total || 0} sub={<><span className="text-green-400">{stats.users?.active || 0} faol</span> / <span className="text-red-400">{stats.users?.inactive || 0} faolsiz</span></>} color="blue" />
-          <StatCard icon={Truck} label="Shofyorlar" value={stats.drivers?.total || 0} sub={<><span className="text-amber-400">{stats.drivers?.busy || 0} band</span> / <span className="text-green-400">{stats.drivers?.free || 0} bosh</span></>} color="green" />
-          <StatCard icon={Route} label="Reyslar" value={stats.flights?.total || 0} sub={<><span className="text-amber-400">{stats.flights?.active || 0} faol</span> / <span className="text-green-400">{stats.flights?.completed || 0} yakunlangan</span></>} color="purple" />
-          <StatCard icon={Car} label="Mashinalar" value={stats.vehicles?.total || 0} color="indigo" className="col-span-2 sm:col-span-1" />
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-2xl p-5 text-left transition-all duration-300 hover:scale-[1.02]">
-          <div className="absolute -top-10 -right-10 w-20 h-20 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-400/30 transition-all" />
+      {/* 4 ta katta animatsiyali karta */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {/* Parollarni yangilang */}
+        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/20">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-indigo-500/30">
-              <Key className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Key className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Parollar</h3>
-            <p className="text-xs text-slate-400">Parollarni boshqaring</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
+            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Biznesmenlar parollarini boshqaring</p>
+            <div className="mt-4 flex items-center gap-2 text-indigo-400 group-hover:text-indigo-300 transition-colors">
+              <span className="text-sm font-medium">Kirish</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </button>
 
-        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl p-5 text-left transition-all duration-300 hover:scale-[1.02]">
-          <div className="absolute -top-10 -right-10 w-20 h-20 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-400/30 transition-all" />
+        {/* Statistika */}
+        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/20">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl group-hover:bg-teal-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/30">
-              <BarChart3 className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Statistika</h3>
-            <p className="text-xs text-slate-400">Grafiklarni ko'ring</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">Statistika</h3>
+            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Umumiy statistika va grafiklarni ko'ring</p>
+            <div className="mt-4 flex items-center gap-2 text-emerald-400 group-hover:text-emerald-300 transition-colors">
+              <span className="text-sm font-medium">Kirish</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </button>
 
-        <button onClick={() => setActiveTab('drivers')} className="group relative overflow-hidden bg-gradient-to-br from-amber-900/50 to-orange-900/50 hover:from-amber-800/60 hover:to-orange-800/60 border border-amber-500/30 hover:border-amber-400/50 rounded-2xl p-5 text-left transition-all duration-300 hover:scale-[1.02]">
-          <div className="absolute -top-10 -right-10 w-20 h-20 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-400/30 transition-all" />
+        {/* Reyslar soni */}
+        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-amber-900/50 to-orange-900/50 hover:from-amber-800/60 hover:to-orange-800/60 border border-amber-500/30 hover:border-amber-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/20">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl group-hover:bg-amber-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl group-hover:bg-orange-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-amber-500/30">
-              <Truck className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/30 group-hover:shadow-amber-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Route className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Shofyorlar</h3>
-            <p className="text-xs text-slate-400">{stats?.drivers?.total || 0} ta shofyor</p>
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-4xl sm:text-5xl font-black text-white">{stats?.flights?.total || 0}</span>
+              <span className="text-lg text-amber-400">reys</span>
+            </div>
+            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">{stats?.flights?.active || 0} faol / {stats?.flights?.completed || 0} yakunlangan</p>
+            <div className="mt-4 flex items-center gap-2 text-amber-400 group-hover:text-amber-300 transition-colors">
+              <span className="text-sm font-medium">Batafsil</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </button>
 
-        <button onClick={() => setActiveTab('vehicles')} className="group relative overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 hover:from-blue-800/60 hover:to-cyan-800/60 border border-blue-500/30 hover:border-blue-400/50 rounded-2xl p-5 text-left transition-all duration-300 hover:scale-[1.02]">
-          <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-400/30 transition-all" />
+        {/* Biznesmenlar */}
+        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 hover:from-blue-800/60 hover:to-cyan-800/60 border border-blue-500/30 hover:border-blue-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/20">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-blue-500/30">
-              <Car className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30 group-hover:shadow-blue-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Mashinalar</h3>
-            <p className="text-xs text-slate-400">{stats?.vehicles?.total || 0} ta mashina</p>
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-4xl sm:text-5xl font-black text-white">{stats?.businessmen?.total || 0}</span>
+              <span className="text-lg text-blue-400">biznesmen</span>
+            </div>
+            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">{stats?.businessmen?.active || 0} faol / {stats?.businessmen?.inactive || 0} faolsiz</p>
+            <div className="mt-4 flex items-center gap-2 text-blue-400 group-hover:text-blue-300 transition-colors">
+              <span className="text-sm font-medium">Boshqarish</span>
+              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </button>
-      </div>
-
-      {/* Recent Activity Placeholder */}
-      <div className="bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-6">
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          So'nggi faoliyat
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-green-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">Yangi biznesmen qo'shildi</p>
-              <p className="text-xs text-slate-400">Bugun</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Truck className="w-5 h-5 text-blue-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">Shofyor holati yangilandi</p>
-              <p className="text-xs text-slate-400">1 soat oldin</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Route className="w-5 h-5 text-purple-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">Yangi reys yaratildi</p>
-              <p className="text-xs text-slate-400">3 soat oldin</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -458,8 +441,11 @@ export default function SuperAdminPanel() {
     
     return (
       <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
-        {/* Header */}
+        {/* Header with Back Button */}
         <div className="flex items-center gap-3 sm:gap-4">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
+            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300" />
+          </button>
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 flex-shrink-0">
             <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
@@ -670,7 +656,12 @@ export default function SuperAdminPanel() {
   const renderBusinessmen = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-white">Biznesmenlar</h2>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5 text-slate-300" />
+          </button>
+          <h2 className="text-2xl font-bold text-white">Biznesmenlar</h2>
+        </div>
         <button onClick={() => { setEditingBusinessman(null); setFormData({ fullName: '', businessType: '', phone: '', username: '', password: '' }); setShowModal(true) }} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors">
           <Plus className="w-5 h-5" /> Yangi qo'shish
         </button>
@@ -733,9 +724,14 @@ export default function SuperAdminPanel() {
   const renderUsers = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Individual foydalanuvchilar</h2>
-          <p className="text-sm text-slate-400">O'zi register qilgan foydalanuvchilar (Fleet panel)</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5 text-slate-300" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-bold text-white">Individual foydalanuvchilar</h2>
+            <p className="text-sm text-slate-400">O'zi register qilgan foydalanuvchilar (Fleet panel)</p>
+          </div>
         </div>
       </div>
 
@@ -805,7 +801,12 @@ export default function SuperAdminPanel() {
   // Shofyorlar ro'yxati
   const renderDrivers = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Shofyorlar</h2>
+      <div className="flex items-center gap-3">
+        <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
+          <ArrowLeft className="w-5 h-5 text-slate-300" />
+        </button>
+        <h2 className="text-2xl font-bold text-white">Shofyorlar</h2>
+      </div>
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
@@ -831,7 +832,12 @@ export default function SuperAdminPanel() {
   // Mashinalar ro'yxati
   const renderVehicles = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Mashinalar</h2>
+      <div className="flex items-center gap-3">
+        <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
+          <ArrowLeft className="w-5 h-5 text-slate-300" />
+        </button>
+        <h2 className="text-2xl font-bold text-white">Mashinalar</h2>
+      </div>
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
