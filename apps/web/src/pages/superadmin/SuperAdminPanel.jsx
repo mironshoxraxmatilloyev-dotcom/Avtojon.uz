@@ -6,13 +6,14 @@ import api from '../../services/api'
 import { 
   Shield, Users, Plus, LogOut, User, Copy, Check, 
   Trash2, Search, X, Power, Eye, EyeOff, Edit3, Key,
-  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3, Route
+  Truck, Car, LayoutDashboard, Menu, ChevronRight, BarChart3, Route, UserCircle
 } from 'lucide-react'
 
 const MENU_ITEMS = [
   { id: 'dashboard', label: 'Bosh sahifa', icon: LayoutDashboard },
   { id: 'stats', label: 'Statistika', icon: BarChart3 },
   { id: 'businessmen', label: 'Biznesmenlar', icon: Users },
+  { id: 'users', label: 'Individual', icon: UserCircle },
   { id: 'drivers', label: 'Shofyorlar', icon: Truck },
   { id: 'vehicles', label: 'Mashinalar', icon: Car },
 ]
@@ -211,6 +212,7 @@ export default function SuperAdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [stats, setStats] = useState(null)
   const [businessmen, setBusinessmen] = useState([])
+  const [users, setUsers] = useState([])
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
@@ -230,6 +232,7 @@ export default function SuperAdminPanel() {
 
   useEffect(() => { fetchStats() }, [])
   useEffect(() => { if (activeTab === 'businessmen') fetchBusinessmen() }, [activeTab])
+  useEffect(() => { if (activeTab === 'users') fetchUsers() }, [activeTab])
   useEffect(() => { if (activeTab === 'drivers') fetchDrivers() }, [activeTab])
   useEffect(() => { if (activeTab === 'vehicles') fetchVehicles() }, [activeTab])
 
@@ -248,6 +251,11 @@ export default function SuperAdminPanel() {
 
   const fetchDrivers = async () => {
     try { const { data } = await api.get('/super-admin/drivers'); setDrivers(data.data || []) }
+    catch (err) { console.error(err) }
+  }
+
+  const fetchUsers = async () => {
+    try { const { data } = await api.get('/super-admin/users'); setUsers(data.data || []) }
     catch (err) { console.error(err) }
   }
 
@@ -304,11 +312,12 @@ export default function SuperAdminPanel() {
   const renderDashboard = () => (
     <div className="space-y-8">
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Users} label="Biznesmenlar" value={stats.businessmen.total} sub={<><span className="text-green-400">{stats.businessmen.active} faol</span> / <span className="text-red-400">{stats.businessmen.inactive} faolsiz</span></>} color="indigo" />
-          <StatCard icon={Truck} label="Shofyorlar" value={stats.drivers.total} sub={<><span className="text-amber-400">{stats.drivers.busy} band</span> / <span className="text-green-400">{stats.drivers.free} bosh</span></>} color="blue" />
-          <StatCard icon={Route} label="Reyslar" value={stats.flights.total} sub={<><span className="text-amber-400">{stats.flights.active} faol</span> / <span className="text-green-400">{stats.flights.completed} yakunlangan</span></>} color="green" />
-          <StatCard icon={Car} label="Mashinalar" value={stats.vehicles.total} color="purple" />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard icon={Users} label="Biznesmenlar" value={stats.businessmen?.total || 0} sub={<><span className="text-green-400">{stats.businessmen?.active || 0} faol</span> / <span className="text-red-400">{stats.businessmen?.inactive || 0} faolsiz</span></>} color="indigo" />
+          <StatCard icon={UserCircle} label="Individual" value={stats.users?.total || 0} sub={<><span className="text-green-400">{stats.users?.active || 0} faol</span> / <span className="text-red-400">{stats.users?.inactive || 0} faolsiz</span></>} color="blue" />
+          <StatCard icon={Truck} label="Shofyorlar" value={stats.drivers?.total || 0} sub={<><span className="text-amber-400">{stats.drivers?.busy || 0} band</span> / <span className="text-green-400">{stats.drivers?.free || 0} bosh</span></>} color="green" />
+          <StatCard icon={Route} label="Reyslar" value={stats.flights?.total || 0} sub={<><span className="text-amber-400">{stats.flights?.active || 0} faol</span> / <span className="text-green-400">{stats.flights?.completed || 0} yakunlangan</span></>} color="purple" />
+          <StatCard icon={Car} label="Mashinalar" value={stats.vehicles?.total || 0} color="indigo" />
         </div>
       )}
 
@@ -653,6 +662,79 @@ export default function SuperAdminPanel() {
     </div>
   )
 
+  // Individual foydalanuvchilar ro'yxati (o'zi register qilganlar)
+  const renderUsers = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Individual foydalanuvchilar</h2>
+          <p className="text-sm text-slate-400">O'zi register qilgan foydalanuvchilar (Fleet panel)</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
+      ) : (
+        <div className="grid gap-4">
+          {users.map(u => (
+            <div key={u._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${u.isActive ? 'bg-cyan-600/20 text-cyan-400' : 'bg-red-600/20 text-red-400'}`}>
+                  <UserCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">{u.fullName}</h3>
+                  <p className="text-sm text-slate-400">@{u.username} {u.companyName && `• ${u.companyName}`}</p>
+                  <p className="text-xs text-slate-500">{u.phone || 'Telefon yo\'q'}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-cyan-600/20 text-cyan-400' : 'bg-red-600/20 text-red-400'}`}>
+                  {u.isActive ? 'Faol' : 'Faolsiz'}
+                </span>
+                <button 
+                  onClick={async () => {
+                    try {
+                      await api.put('/super-admin/users/' + u._id, { isActive: !u.isActive })
+                      setUsers(prev => prev.map(x => x._id === u._id ? { ...x, isActive: !x.isActive } : x))
+                      alert.success('Yangilandi', u.isActive ? 'Faolsizlantirildi' : 'Faollashtirildi')
+                    } catch (err) { alert.error('Xatolik', 'Xatolik') }
+                  }}
+                  className={`p-2 rounded-lg transition-colors ${u.isActive ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'}`}
+                  title={u.isActive ? 'Faolsizlantirish' : 'Faollashtirish'}
+                >
+                  <Power className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={async () => {
+                    const confirmed = await alert.confirm({ title: "O'chirish", message: `${u.fullName} ni o'chirishni xohlaysizmi?`, type: "danger" })
+                    if (!confirmed) return
+                    try {
+                      await api.delete('/super-admin/users/' + u._id)
+                      setUsers(prev => prev.filter(x => x._id !== u._id))
+                      alert.success("O'chirildi", "Foydalanuvchi o'chirildi")
+                      fetchStats()
+                    } catch (err) { alert.error('Xatolik', "O'chirishda xatolik") }
+                  }}
+                  className="p-2 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg transition-colors"
+                  title="O'chirish"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {users.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <UserCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Hozircha individual foydalanuvchilar yo'q</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   // Shofyorlar ro'yxati
   const renderDrivers = () => (
     <div className="space-y-6">
@@ -711,6 +793,7 @@ export default function SuperAdminPanel() {
       case 'dashboard': return renderDashboard()
       case 'stats': return renderStats()
       case 'businessmen': return renderBusinessmen()
+      case 'users': return renderUsers()
       case 'drivers': return renderDrivers()
       case 'vehicles': return renderVehicles()
       default: return renderDashboard()

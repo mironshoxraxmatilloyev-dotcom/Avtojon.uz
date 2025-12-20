@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const User = require('../models/User');
 const Businessman = require('../models/Businessman');
 const Driver = require('../models/Driver');
 const Flight = require('../models/Flight');
@@ -58,7 +59,9 @@ router.get('/stats', superAdminAuth, asyncHandler(async (req, res) => {
     totalFlights,
     activeFlights,
     completedFlights,
-    totalVehicles
+    totalVehicles,
+    totalUsers,
+    activeUsers
   ] = await Promise.all([
     Businessman.countDocuments(),
     Businessman.countDocuments({ isActive: true }),
@@ -67,7 +70,9 @@ router.get('/stats', superAdminAuth, asyncHandler(async (req, res) => {
     Flight.countDocuments(),
     Flight.countDocuments({ status: 'active' }),
     Flight.countDocuments({ status: 'completed' }),
-    Vehicle.countDocuments({ isActive: true })
+    Vehicle.countDocuments({ isActive: true }),
+    User.countDocuments(),
+    User.countDocuments({ isActive: true })
   ]);
 
   res.json({
@@ -77,6 +82,11 @@ router.get('/stats', superAdminAuth, asyncHandler(async (req, res) => {
         total: totalBusinessmen,
         active: activeBusinessmen,
         inactive: totalBusinessmen - activeBusinessmen
+      },
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        inactive: totalUsers - activeUsers
       },
       drivers: {
         total: totalDrivers,
@@ -260,6 +270,88 @@ router.delete('/businessmen/:id', superAdminAuth, asyncHandler(async (req, res) 
   res.json({
     success: true,
     message: 'Biznesmen o\'chirildi'
+  });
+}));
+
+// ============ INDIVIDUAL FOYDALANUVCHILAR (O'zi register qilganlar) ============
+
+// Barcha individual foydalanuvchilarni olish
+router.get('/users', superAdminAuth, asyncHandler(async (req, res) => {
+  const users = await User.find()
+    .select('-password')
+    .sort({ createdAt: -1 });
+  
+  res.json({
+    success: true,
+    data: users
+  });
+}));
+
+// Individual foydalanuvchi ma'lumotlarini yangilash
+router.put('/users/:id', superAdminAuth, asyncHandler(async (req, res) => {
+  const { fullName, companyName, phone, isActive } = req.body;
+  
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    throw new ApiError(404, 'Foydalanuvchi topilmadi');
+  }
+  
+  if (fullName) user.fullName = fullName;
+  if (companyName !== undefined) user.companyName = companyName;
+  if (phone !== undefined) user.phone = phone;
+  if (typeof isActive === 'boolean') user.isActive = isActive;
+  
+  await user.save();
+  
+  res.json({
+    success: true,
+    data: {
+      id: user._id,
+      fullName: user.fullName,
+      companyName: user.companyName,
+      phone: user.phone,
+      username: user.username,
+      isActive: user.isActive
+    }
+  });
+}));
+
+// Individual foydalanuvchi parolini o'rnatish
+router.post('/users/:id/set-password', superAdminAuth, asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  
+  if (!password || password.length < 6) {
+    throw new ApiError(400, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
+  }
+  
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    throw new ApiError(404, 'Foydalanuvchi topilmadi');
+  }
+  
+  user.password = password;
+  await user.save();
+  
+  res.json({
+    success: true,
+    data: {
+      username: user.username,
+      newPassword: password
+    }
+  });
+}));
+
+// Individual foydalanuvchi o'chirish
+router.delete('/users/:id', superAdminAuth, asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+  
+  if (!user) {
+    throw new ApiError(404, 'Foydalanuvchi topilmadi');
+  }
+  
+  res.json({
+    success: true,
+    message: 'Foydalanuvchi o\'chirildi'
   });
 }));
 
