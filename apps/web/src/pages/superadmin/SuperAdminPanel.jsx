@@ -679,44 +679,54 @@ export default function SuperAdminPanel() {
 
   // Biznesmenlar ro'yxati
   const renderBusinessmen = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-300" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-5 sm:p-6">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl flex items-center justify-center transition-colors">
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Biznesmenlar</h2>
+              <p className="text-white/70 text-sm">{businessmen.length} ta biznesmen</p>
+            </div>
+          </div>
+          <button onClick={() => { setEditingBusinessman(null); setFormData({ fullName: '', businessType: '', phone: '', username: '', password: '' }); setShowModal(true) }} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur text-white px-4 py-2 rounded-xl transition-colors">
+            <Plus className="w-5 h-5" /> Yangi qo'shish
           </button>
-          <h2 className="text-2xl font-bold text-white">Biznesmenlar</h2>
         </div>
-        <button onClick={() => { setEditingBusinessman(null); setFormData({ fullName: '', businessType: '', phone: '', username: '', password: '' }); setShowModal(true) }} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors">
-          <Plus className="w-5 h-5" /> Yangi qo'shish
-        </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input type="text" placeholder="Qidirish..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500" />
+          <input type="text" placeholder="Qidirish..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors" />
         </div>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-500">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-colors">
           <option value="all">Barchasi</option>
           <option value="active">Faol</option>
           <option value="inactive">Faolsiz</option>
         </select>
       </div>
 
+      {/* List */}
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {businessmen.filter(b => {
             const matchSearch = b.fullName?.toLowerCase().includes(search.toLowerCase()) || b.username?.toLowerCase().includes(search.toLowerCase())
             const matchStatus = filterStatus === 'all' || (filterStatus === 'active' ? b.isActive : !b.isActive)
             return matchSearch && matchStatus
           }).map(b => (
-            <div key={b._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div key={b._id} className="group bg-slate-800/40 backdrop-blur hover:bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 hover:border-slate-600/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${b.isActive ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}`}>
-                  <User className="w-6 h-6" />
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${b.isActive ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-600'}`}>
+                  <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{b.fullName}</h3>
@@ -725,16 +735,16 @@ export default function SuperAdminPanel() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <button onClick={() => toggleActive(b)} className={`p-2 rounded-lg transition-colors ${b.isActive ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'}`} title={b.isActive ? 'Faolsizlantirish' : 'Faollashtirish'}>
+                <button onClick={() => toggleActive(b)} className={`p-2 rounded-xl transition-all ${b.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`} title={b.isActive ? 'Faolsizlantirish' : 'Faollashtirish'}>
                   <Power className="w-5 h-5" />
                 </button>
-                <button onClick={() => { setEditingBusinessman(b); setFormData({ fullName: b.fullName, businessType: b.businessType, phone: b.phone, username: b.username, password: '' }); setShowModal(true) }} className="p-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg transition-colors" title="Tahrirlash">
+                <button onClick={() => { setEditingBusinessman(b); setFormData({ fullName: b.fullName, businessType: b.businessType, phone: b.phone, username: b.username, password: '' }); setShowModal(true) }} className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-xl transition-all" title="Tahrirlash">
                   <Edit3 className="w-5 h-5" />
                 </button>
-                <button onClick={() => setPasswordModal(b)} className="p-2 bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 rounded-lg transition-colors" title="Parol yangilash">
+                <button onClick={() => setPasswordModal(b)} className="p-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded-xl transition-all" title="Parol yangilash">
                   <Key className="w-5 h-5" />
                 </button>
-                <button onClick={() => handleDelete(b._id)} className="p-2 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg transition-colors" title="O'chirish">
+                <button onClick={() => handleDelete(b._id)} className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl transition-all" title="O'chirish">
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
@@ -747,28 +757,32 @@ export default function SuperAdminPanel() {
 
   // Individual foydalanuvchilar ro'yxati (o'zi register qilganlar)
   const renderUsers = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-300" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl p-5 sm:p-6">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex items-center gap-3">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
           <div>
-            <h2 className="text-2xl font-bold text-white">Individual foydalanuvchilar</h2>
-            <p className="text-sm text-slate-400">O'zi register qilgan foydalanuvchilar (Fleet panel)</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Individual foydalanuvchilar</h2>
+            <p className="text-white/70 text-sm">{users.length} ta foydalanuvchi (Fleet panel)</p>
           </div>
         </div>
       </div>
 
+      {/* List */}
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {users.map(u => (
-            <div key={u._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div key={u._id} className="group bg-slate-800/40 backdrop-blur hover:bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 hover:border-slate-600/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${u.isActive ? 'bg-cyan-600/20 text-cyan-400' : 'bg-red-600/20 text-red-400'}`}>
-                  <UserCircle className="w-6 h-6" />
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${u.isActive ? 'bg-gradient-to-br from-cyan-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-rose-600'}`}>
+                  <UserCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{u.fullName}</h3>
@@ -777,7 +791,7 @@ export default function SuperAdminPanel() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-cyan-600/20 text-cyan-400' : 'bg-red-600/20 text-red-400'}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-cyan-500/20 text-cyan-400' : 'bg-red-500/20 text-red-400'}`}>
                   {u.isActive ? 'Faol' : 'Faolsiz'}
                 </span>
                 <button 
@@ -788,7 +802,7 @@ export default function SuperAdminPanel() {
                       alert.success('Yangilandi', u.isActive ? 'Faolsizlantirildi' : 'Faollashtirildi')
                     } catch (err) { alert.error('Xatolik', 'Xatolik') }
                   }}
-                  className={`p-2 rounded-lg transition-colors ${u.isActive ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'}`}
+                  className={`p-2 rounded-xl transition-all ${u.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
                   title={u.isActive ? 'Faolsizlantirish' : 'Faollashtirish'}
                 >
                   <Power className="w-5 h-5" />
@@ -804,7 +818,7 @@ export default function SuperAdminPanel() {
                       fetchStats()
                     } catch (err) { alert.error('Xatolik', "O'chirishda xatolik") }
                   }}
-                  className="p-2 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg transition-colors"
+                  className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl transition-all"
                   title="O'chirish"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -825,30 +839,49 @@ export default function SuperAdminPanel() {
 
   // Shofyorlar ro'yxati
   const renderDrivers = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-300" />
-        </button>
-        <h2 className="text-2xl font-bold text-white">Shofyorlar</h2>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-5 sm:p-6">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex items-center gap-3">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Shofyorlar</h2>
+            <p className="text-white/70 text-sm">{drivers.length} ta shofyor</p>
+          </div>
+        </div>
       </div>
+
+      {/* List */}
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {drivers.map(d => (
-            <div key={d._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700 flex justify-between items-center">
+            <div key={d._id} className="group bg-slate-800/40 backdrop-blur hover:bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 hover:border-slate-600/50 flex justify-between items-center transition-all">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${d.status === 'busy' ? 'bg-amber-600/20 text-amber-400' : 'bg-green-600/20 text-green-400'}`}>
-                  <Truck className="w-6 h-6" />
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${d.status === 'busy' ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}`}>
+                  <Truck className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{d.fullName}</h3>
-                  <p className="text-sm text-slate-400">{d.phone} • {d.status === 'busy' ? 'Band' : 'Bosh'}</p>
+                  <p className="text-sm text-slate-400">{d.phone}</p>
                 </div>
               </div>
+              <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${d.status === 'busy' ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>
+                {d.status === 'busy' ? 'Band' : 'Bosh'}
+              </span>
             </div>
           ))}
+          {drivers.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Hozircha shofyorlar yo'q</p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -856,30 +889,49 @@ export default function SuperAdminPanel() {
 
   // Mashinalar ro'yxati
   const renderVehicles = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-300" />
-        </button>
-        <h2 className="text-2xl font-bold text-white">Mashinalar</h2>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-5 sm:p-6">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+        <div className="relative z-10 flex items-center gap-3">
+          <button onClick={() => setActiveTab('dashboard')} className="w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Mashinalar</h2>
+            <p className="text-white/70 text-sm">{vehicles.length} ta mashina</p>
+          </div>
+        </div>
       </div>
+
+      {/* List */}
       {loading ? (
         <div className="text-center py-12 text-slate-400">Yuklanmoqda...</div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {vehicles.map(v => (
-            <div key={v._id} className="bg-slate-800/80 backdrop-blur rounded-2xl p-4 border border-slate-700 flex justify-between items-center">
+            <div key={v._id} className="group bg-slate-800/40 backdrop-blur hover:bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 hover:border-slate-600/50 flex justify-between items-center transition-all">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-600/20 text-purple-400 rounded-xl flex items-center justify-center">
-                  <Car className="w-6 h-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Car className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{v.brand} {v.model}</h3>
                   <p className="text-sm text-slate-400">{v.plateNumber}</p>
                 </div>
               </div>
+              <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+                {v.year || 'N/A'}
+              </span>
             </div>
           ))}
+          {vehicles.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <Car className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Hozircha mashinalar yo'q</p>
+            </div>
+          )}
         </div>
       )}
     </div>
