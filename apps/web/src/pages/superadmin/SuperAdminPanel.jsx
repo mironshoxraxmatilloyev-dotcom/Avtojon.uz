@@ -838,8 +838,8 @@ export default function SuperAdminPanel() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <nav className="space-y-2 sticky top-24">
+        <aside className="hidden lg:block w-64 flex-shrink-0 self-start sticky top-20">
+          <nav className="space-y-2 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-3 border border-slate-700/50">
             {MENU_ITEMS.map(item => (
               <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}>
                 <item.icon className="w-5 h-5" />
