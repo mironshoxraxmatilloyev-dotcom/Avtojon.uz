@@ -329,4 +329,10 @@ flightSchema.pre('save', function(next) {
   next();
 });
 
+// 🚀 Indexlar - tez qidiruv uchun
+flightSchema.index({ user: 1, status: 1 }); // Biznesmen reyslari
+flightSchema.index({ driver: 1, status: 1 }); // Shofyor reyslari
+flightSchema.index({ user: 1, createdAt: -1 }); // Oxirgi reyslar
+flightSchema.index({ status: 1, createdAt: -1 }); // Faol reyslar
+
 module.exports = mongoose.model('Flight', flightSchema);

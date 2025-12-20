@@ -192,12 +192,12 @@ export default function Dashboard() {
       }
 
       try {
+        // 🚀 Parallel so'rovlar - tezroq yuklash
         // Faqat kerakli so'rovlar - trips ni olib tashladik (eski tizim)
-        const [driversRes, vehiclesRes, expensesRes, flightsRes] = await Promise.all([
+        const [driversRes, vehiclesRes, flightsRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/vehicles'),
-          api.get('/expenses/stats').catch(() => ({ data: { data: { totalAmount: 0 } } })),
-          api.get('/flights').catch(() => ({ data: { data: [] } }))
+          api.get('/flights?limit=20') // Faqat oxirgi 20 ta reys
         ])
 
         const drivers = driversRes.data.data || []
@@ -211,7 +211,7 @@ export default function Dashboard() {
           activeTrips: activeFlightsList.length,
           completedTrips: completedFlights.length,
           pendingTrips: 0,
-          totalExpenses: expensesRes.data.data?.totalAmount || 0,
+          totalExpenses: 0, // Alohida yuklanadi
           totalBonus: 0,
           totalPenalty: 0,
           busyDrivers: drivers.filter(d => d.status === 'busy').length,
@@ -219,13 +219,22 @@ export default function Dashboard() {
         })
         setActiveFlights(activeFlightsList)
         setRecentFlights(allFlights.slice(0, 6))
+        setLoading(false)
+
+        // 🚀 Expenses alohida yuklash (sekin bo'lishi mumkin)
+        api.get('/expenses/stats').then(expensesRes => {
+          setStats(prev => ({
+            ...prev,
+            totalExpenses: expensesRes.data.data?.totalAmount || 0
+          }))
+        }).catch(() => {})
+
       } catch (err) {
         console.error('Stats error:', err)
         setError({
           type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
           message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
         })
-      } finally {
         setLoading(false)
       }
     }

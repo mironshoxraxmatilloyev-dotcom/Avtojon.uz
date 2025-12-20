@@ -9,16 +9,21 @@ const { validateObjectId } = require('../utils/validators');
 
 // Barcha reyslar
 router.get('/', protect, businessOnly, asyncHandler(async (req, res) => {
-  const { status, driverId } = req.query;
+  const { status, driverId, limit } = req.query;
   const filter = { user: req.user._id };
   
   if (status) filter.status = status;
   if (driverId) filter.driver = driverId;
 
+  // Limit qo'shish - default 50
+  const queryLimit = parseInt(limit) || 50;
+
   const flights = await Flight.find(filter)
     .populate('driver', 'fullName phone')
     .populate('vehicle', 'plateNumber brand')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(queryLimit)
+    .lean(); // 🚀 Tezroq - plain JS object qaytaradi
 
   res.json({ success: true, data: flights });
 }));

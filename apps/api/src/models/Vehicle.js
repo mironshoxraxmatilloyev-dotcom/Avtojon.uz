@@ -54,4 +54,8 @@ vehicleSchema.index(
   }
 );
 
+// 🚀 Qo'shimcha indexlar - tez qidiruv uchun
+vehicleSchema.index({ user: 1, isActive: 1 }); // Biznesmen mashinalari
+vehicleSchema.index({ currentDriver: 1 }); // Shofyorga biriktirilgan mashina
+
 module.exports = mongoose.model('Vehicle', vehicleSchema);
