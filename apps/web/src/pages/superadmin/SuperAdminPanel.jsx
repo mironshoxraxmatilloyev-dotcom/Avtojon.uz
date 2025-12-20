@@ -19,7 +19,7 @@ const MENU_ITEMS = [
 ]
 
 // StatCard komponenti
-const StatCard = ({ icon: Icon, label, value, sub, color }) => {
+const StatCard = ({ icon: Icon, label, value, sub, color, className = '' }) => {
   const colors = {
     indigo: 'from-indigo-900/40 to-indigo-800/20 border-indigo-500/20 hover:border-indigo-400/40',
     blue: 'from-blue-900/40 to-blue-800/20 border-blue-500/20 hover:border-blue-400/40',
@@ -33,17 +33,17 @@ const StatCard = ({ icon: Icon, label, value, sub, color }) => {
     purple: 'bg-purple-600/30 text-purple-400',
   }
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-5 border transition-all hover:scale-[1.02]`}>
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 ${iconColors[color]} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-6 h-6" />
+    <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl p-3 sm:p-5 border transition-all hover:scale-[1.02] ${className}`}>
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconColors[color]} rounded-xl flex items-center justify-center flex-shrink-0`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
-        <div>
-          <p className="text-3xl font-bold text-white">{value}</p>
-          <p className="text-sm text-slate-400">{label}</p>
+        <div className="min-w-0">
+          <p className="text-2xl sm:text-3xl font-bold text-white">{value}</p>
+          <p className="text-xs sm:text-sm text-slate-400 truncate">{label}</p>
         </div>
       </div>
-      {sub && <div className="mt-3 text-xs">{sub}</div>}
+      {sub && <div className="mt-2 sm:mt-3 text-[10px] sm:text-xs">{sub}</div>}
     </div>
   )
 }
@@ -76,7 +76,7 @@ const DonutChart3D = ({ data, size = 200, chartId = 'chart' }) => {
   let currentAngle = 0
   
   return (
-    <div className="relative" style={{ width: size, height: size, padding: 10 }}>
+    <div className="relative mx-auto" style={{ width: Math.min(size, 140), height: Math.min(size, 140), padding: 5 }}>
       <svg viewBox="-10 -10 120 120" className="transform -rotate-90 w-full h-full" style={{ overflow: 'visible' }}>
         <defs>
           <filter id={`shadow3d-${chartId}`} x="-100%" y="-100%" width="300%" height="300%">
@@ -120,8 +120,8 @@ const DonutChart3D = ({ data, size = 200, chartId = 'chart' }) => {
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold text-white">{total}</span>
-        <span className="text-xs text-slate-400">Jami</span>
+        <span className="text-2xl sm:text-3xl font-bold text-white">{total}</span>
+        <span className="text-[10px] sm:text-xs text-slate-400">Jami</span>
       </div>
     </div>
   )
@@ -132,17 +132,17 @@ const BarChart3D = ({ data, height = 200 }) => {
   const maxValue = Math.max(...data.map(d => d.value), 1)
   
   return (
-    <div className="flex items-end justify-around gap-4 px-4" style={{ height }}>
+    <div className="flex items-end justify-around gap-2 sm:gap-4 px-2 sm:px-4" style={{ height }}>
       {data.map((item, i) => {
         const barHeightPx = Math.max((item.value / maxValue) * (height - 40), 30)
         return (
-          <div key={i} className="flex flex-col items-center gap-2 flex-1">
+          <div key={i} className="flex flex-col items-center gap-1 sm:gap-2 flex-1 min-w-0">
             {/* Value label */}
-            <div className="text-lg font-bold text-white mb-1">{item.value}</div>
-            <div className="relative w-full max-w-[70px] group" style={{ height: height - 60 }}>
+            <div className="text-sm sm:text-lg font-bold text-white mb-1">{item.value}</div>
+            <div className="relative w-full max-w-[50px] sm:max-w-[70px] group" style={{ height: height - 60 }}>
               {/* 3D effect - back face */}
               <div 
-                className="absolute -right-2 bottom-0 w-full rounded-t-lg opacity-40"
+                className="absolute -right-1 sm:-right-2 bottom-0 w-full rounded-t-lg opacity-40"
                 style={{ 
                   height: barHeightPx,
                   background: item.colorDark,
@@ -151,7 +151,7 @@ const BarChart3D = ({ data, height = 200 }) => {
               />
               {/* Main bar */}
               <div 
-                className="absolute bottom-0 w-full rounded-t-xl transition-all duration-700 ease-out group-hover:scale-105"
+                className="absolute bottom-0 w-full rounded-t-lg sm:rounded-t-xl transition-all duration-700 ease-out group-hover:scale-105"
                 style={{ 
                   height: barHeightPx,
                   background: `linear-gradient(180deg, ${item.color} 0%, ${item.colorDark} 100%)`,
@@ -159,12 +159,12 @@ const BarChart3D = ({ data, height = 200 }) => {
                 }}
               >
                 {/* Shine effect */}
-                <div className="absolute inset-0 rounded-t-xl overflow-hidden">
+                <div className="absolute inset-0 rounded-t-lg sm:rounded-t-xl overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/20 to-transparent" />
                 </div>
               </div>
             </div>
-            <span className="text-sm text-slate-400 text-center mt-2">{item.label}</span>
+            <span className="text-[10px] sm:text-sm text-slate-400 text-center mt-1 sm:mt-2 truncate w-full">{item.label}</span>
           </div>
         )
       })}
@@ -196,9 +196,9 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
 
 // Glassmorphism Card komponenti
 const GlassCard = ({ children, className = '', glow = '' }) => (
-  <div className={`relative bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-slate-700/50 ${className}`}>
-    {glow && <div className={`absolute -top-20 -right-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-30 pointer-events-none`} />}
-    {glow && <div className={`absolute -bottom-20 -left-20 w-40 h-40 ${glow} rounded-full blur-3xl opacity-20 pointer-events-none`} />}
+  <div className={`relative bg-slate-800/40 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-700/50 overflow-hidden ${className}`}>
+    {glow && <div className={`absolute -top-10 -right-10 w-20 h-20 sm:w-40 sm:h-40 ${glow} rounded-full blur-2xl sm:blur-3xl opacity-30 pointer-events-none`} />}
+    {glow && <div className={`absolute -bottom-10 -left-10 w-20 h-20 sm:w-40 sm:h-40 ${glow} rounded-full blur-2xl sm:blur-3xl opacity-20 pointer-events-none`} />}
     <div className="relative z-10">{children}</div>
   </div>
 )
@@ -310,45 +310,45 @@ export default function SuperAdminPanel() {
 
   // Dashboard - 4 ta stat + 2 ta katta karta
   const renderDashboard = () => (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <StatCard icon={Users} label="Biznesmenlar" value={stats.businessmen?.total || 0} sub={<><span className="text-green-400">{stats.businessmen?.active || 0} faol</span> / <span className="text-red-400">{stats.businessmen?.inactive || 0} faolsiz</span></>} color="indigo" />
           <StatCard icon={UserCircle} label="Individual" value={stats.users?.total || 0} sub={<><span className="text-green-400">{stats.users?.active || 0} faol</span> / <span className="text-red-400">{stats.users?.inactive || 0} faolsiz</span></>} color="blue" />
           <StatCard icon={Truck} label="Shofyorlar" value={stats.drivers?.total || 0} sub={<><span className="text-amber-400">{stats.drivers?.busy || 0} band</span> / <span className="text-green-400">{stats.drivers?.free || 0} bosh</span></>} color="green" />
           <StatCard icon={Route} label="Reyslar" value={stats.flights?.total || 0} sub={<><span className="text-amber-400">{stats.flights?.active || 0} faol</span> / <span className="text-green-400">{stats.flights?.completed || 0} yakunlangan</span></>} color="purple" />
-          <StatCard icon={Car} label="Mashinalar" value={stats.vehicles?.total || 0} color="indigo" />
+          <StatCard icon={Car} label="Mashinalar" value={stats.vehicles?.total || 0} color="indigo" className="col-span-2 sm:col-span-1" />
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-3xl p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-indigo-500/20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-indigo-500/20">
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700" />
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <Key className="w-8 h-8 text-white" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Key className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Biznesmenlar parollarini boshqaring</p>
-            <div className="mt-4 flex items-center gap-2 text-indigo-400 group-hover:text-indigo-300 transition-colors">
-              <span className="text-sm font-medium">Kirish</span>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
+            <p className="text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Biznesmenlar parollarini boshqaring</p>
+            <div className="mt-3 sm:mt-4 flex items-center gap-2 text-indigo-400 group-hover:text-indigo-300 transition-colors">
+              <span className="text-xs sm:text-sm font-medium">Kirish</span>
               <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </button>
 
-        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-3xl p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-emerald-500/20">
+        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-left transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 shadow-xl hover:shadow-emerald-500/20">
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-400/30 transition-all duration-700" />
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl group-hover:bg-teal-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <BarChart3 className="w-8 h-8 text-white" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">Statistikani ko'ring</h3>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Umumiy statistika va grafiklarni ko'ring</p>
-            <div className="mt-4 flex items-center gap-2 text-emerald-400 group-hover:text-emerald-300 transition-colors">
-              <span className="text-sm font-medium">Kirish</span>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2 group-hover:text-emerald-200 transition-colors">Statistikani ko'ring</h3>
+            <p className="text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Umumiy statistika va grafiklarni ko'ring</p>
+            <div className="mt-3 sm:mt-4 flex items-center gap-2 text-emerald-400 group-hover:text-emerald-300 transition-colors">
+              <span className="text-xs sm:text-sm font-medium">Kirish</span>
               <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -390,86 +390,86 @@ export default function SuperAdminPanel() {
     ]
     
     return (
-      <div className="space-y-8">
+      <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <BarChart3 className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 flex-shrink-0">
+            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Statistika</h2>
-            <p className="text-slate-400 text-sm">Tizim haqida umumiy ma'lumotlar</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Statistika</h2>
+            <p className="text-slate-400 text-xs sm:text-sm">Tizim haqida umumiy ma'lumotlar</p>
           </div>
         </div>
 
         {/* Animated Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <GlassCard className="p-6" glow="bg-indigo-500">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/40">
-                <Users className="w-7 h-7 text-white" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <GlassCard className="p-4 sm:p-6" glow="bg-indigo-500">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/40 flex-shrink-0">
+                <Users className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <p className="text-4xl font-bold text-white"><AnimatedCounter value={stats.businessmen.total} /></p>
-                <p className="text-sm text-slate-400">Biznesmenlar</p>
+              <div className="min-w-0">
+                <p className="text-2xl sm:text-4xl font-bold text-white"><AnimatedCounter value={stats.businessmen.total} /></p>
+                <p className="text-xs sm:text-sm text-slate-400 truncate">Biznesmenlar</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 text-xs">
+            <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
               <span className="text-green-400">● {stats.businessmen.active} faol</span>
               <span className="text-red-400">● {stats.businessmen.inactive} faolsiz</span>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-6" glow="bg-blue-500">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40">
-                <Truck className="w-7 h-7 text-white" />
+          <GlassCard className="p-4 sm:p-6" glow="bg-blue-500">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 flex-shrink-0">
+                <Truck className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <p className="text-4xl font-bold text-white"><AnimatedCounter value={stats.drivers.total} /></p>
-                <p className="text-sm text-slate-400">Shofyorlar</p>
+              <div className="min-w-0">
+                <p className="text-2xl sm:text-4xl font-bold text-white"><AnimatedCounter value={stats.drivers.total} /></p>
+                <p className="text-xs sm:text-sm text-slate-400 truncate">Shofyorlar</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 text-xs">
+            <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
               <span className="text-amber-400">● {stats.drivers.busy} band</span>
               <span className="text-green-400">● {stats.drivers.free} bosh</span>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-6" glow="bg-green-500">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40">
-                <Route className="w-7 h-7 text-white" />
+          <GlassCard className="p-4 sm:p-6" glow="bg-green-500">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40 flex-shrink-0">
+                <Route className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <p className="text-4xl font-bold text-white"><AnimatedCounter value={stats.flights.total} /></p>
-                <p className="text-sm text-slate-400">Reyslar</p>
+              <div className="min-w-0">
+                <p className="text-2xl sm:text-4xl font-bold text-white"><AnimatedCounter value={stats.flights.total} /></p>
+                <p className="text-xs sm:text-sm text-slate-400 truncate">Reyslar</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 text-xs">
+            <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
               <span className="text-amber-400">● {stats.flights.active} faol</span>
               <span className="text-green-400">● {stats.flights.completed} tugagan</span>
             </div>
           </GlassCard>
 
-          <GlassCard className="p-6" glow="bg-purple-500">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40">
-                <Car className="w-7 h-7 text-white" />
+          <GlassCard className="p-4 sm:p-6" glow="bg-purple-500">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 flex-shrink-0">
+                <Car className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <p className="text-4xl font-bold text-white"><AnimatedCounter value={stats.vehicles.total} /></p>
-                <p className="text-sm text-slate-400">Mashinalar</p>
+              <div className="min-w-0">
+                <p className="text-2xl sm:text-4xl font-bold text-white"><AnimatedCounter value={stats.vehicles.total} /></p>
+                <p className="text-xs sm:text-sm text-slate-400 truncate">Mashinalar</p>
               </div>
             </div>
           </GlassCard>
         </div>
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Umumiy ko'rinish - Bar Chart */}
-          <GlassCard className="p-6 lg:col-span-2" glow="bg-indigo-500">
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <GlassCard className="p-4 sm:p-6 lg:col-span-2" glow="bg-indigo-500">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6 flex items-center gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full" />
               Umumiy ko'rinish
             </h3>
@@ -477,14 +477,14 @@ export default function SuperAdminPanel() {
           </GlassCard>
 
           {/* Foydalanuvchilar taqsimoti - Donut */}
-          <GlassCard className="p-6" glow="bg-blue-500">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <GlassCard className="p-4 sm:p-6" glow="bg-blue-500">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
               Foydalanuvchilar
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={userDistribution} size={160} chartId="users" />
-              <div className="mt-4 flex gap-6">
+              <DonutChart3D data={userDistribution} size={140} chartId="users" />
+              <div className="mt-4 flex flex-wrap justify-center gap-3 sm:gap-6">
                 {userDistribution.map((item, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />
@@ -497,69 +497,69 @@ export default function SuperAdminPanel() {
         </div>
 
         {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Biznesmenlar holati */}
-          <GlassCard className="p-6" glow="bg-indigo-500">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <GlassCard className="p-4 sm:p-6" glow="bg-indigo-500">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full" />
               Biznesmenlar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={businessmenStatus} size={140} chartId="businessmen" />
-              <div className="mt-4 grid grid-cols-2 gap-4 w-full">
-                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-green-400">{stats.businessmen.active}</div>
-                  <div className="text-xs text-slate-400">Faol</div>
+              <DonutChart3D data={businessmenStatus} size={120} chartId="businessmen" />
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-4 w-full">
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-green-400">{stats.businessmen.active}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Faol</div>
                 </div>
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-red-400">{stats.businessmen.inactive}</div>
-                  <div className="text-xs text-slate-400">Faolsiz</div>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-red-400">{stats.businessmen.inactive}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Faolsiz</div>
                 </div>
               </div>
             </div>
           </GlassCard>
 
           {/* Shofyorlar holati */}
-          <GlassCard className="p-6" glow="bg-blue-500">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <GlassCard className="p-4 sm:p-6" glow="bg-blue-500">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
               Shofyorlar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={driverStatus} size={140} chartId="drivers" />
-              <div className="mt-4 grid grid-cols-2 gap-4 w-full">
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-amber-400">{stats.drivers.busy}</div>
-                  <div className="text-xs text-slate-400">Band</div>
+              <DonutChart3D data={driverStatus} size={120} chartId="drivers" />
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-4 w-full">
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-amber-400">{stats.drivers.busy}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Band</div>
                 </div>
-                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
-                  <div className="text-2xl font-bold text-green-400">{stats.drivers.free}</div>
-                  <div className="text-xs text-slate-400">Bosh</div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-2 sm:p-3 text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-green-400">{stats.drivers.free}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Bosh</div>
                 </div>
               </div>
             </div>
           </GlassCard>
 
           {/* Reyslar holati */}
-          <GlassCard className="p-6" glow="bg-green-500">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <GlassCard className="p-4 sm:p-6 col-span-1 sm:col-span-2 md:col-span-1" glow="bg-green-500">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               Reyslar holati
             </h3>
             <div className="flex flex-col items-center">
-              <DonutChart3D data={flightStatus} size={140} chartId="flights" />
+              <DonutChart3D data={flightStatus} size={120} chartId="flights" />
               <div className="mt-4 grid grid-cols-3 gap-2 w-full">
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 text-center">
-                  <div className="text-xl font-bold text-amber-400">{stats.flights.active}</div>
-                  <div className="text-xs text-slate-400">Faol</div>
+                  <div className="text-lg sm:text-xl font-bold text-amber-400">{stats.flights.active}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Faol</div>
                 </div>
                 <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-2 text-center">
-                  <div className="text-xl font-bold text-green-400">{stats.flights.completed}</div>
-                  <div className="text-xs text-slate-400">Tugagan</div>
+                  <div className="text-lg sm:text-xl font-bold text-green-400">{stats.flights.completed}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Tugagan</div>
                 </div>
                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2 text-center">
-                  <div className="text-xl font-bold text-red-400">{stats.flights.cancelled || 0}</div>
-                  <div className="text-xs text-slate-400">Bekor</div>
+                  <div className="text-lg sm:text-xl font-bold text-red-400">{stats.flights.cancelled || 0}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">Bekor</div>
                 </div>
               </div>
             </div>
@@ -567,31 +567,31 @@ export default function SuperAdminPanel() {
         </div>
 
         {/* Summary Card */}
-        <GlassCard className="p-8" glow="bg-purple-500">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <GlassCard className="p-4 sm:p-8" glow="bg-purple-500">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                 <AnimatedCounter value={stats.businessmen.total + stats.drivers.total} />
               </div>
-              <div className="text-slate-400 mt-2">Jami foydalanuvchilar</div>
+              <div className="text-slate-400 mt-1 sm:mt-2 text-xs sm:text-base">Jami foydalanuvchilar</div>
             </div>
             <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                 <AnimatedCounter value={stats.businessmen.active + stats.drivers.free} />
               </div>
-              <div className="text-slate-400 mt-2">Faol foydalanuvchilar</div>
+              <div className="text-slate-400 mt-1 sm:mt-2 text-xs sm:text-base">Faol foydalanuvchilar</div>
             </div>
             <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
                 <AnimatedCounter value={stats.flights.active} />
               </div>
-              <div className="text-slate-400 mt-2">Joriy reyslar</div>
+              <div className="text-slate-400 mt-1 sm:mt-2 text-xs sm:text-base">Joriy reyslar</div>
             </div>
             <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 <AnimatedCounter value={stats.vehicles.total} />
               </div>
-              <div className="text-slate-400 mt-2">Ro'yxatdagi mashinalar</div>
+              <div className="text-slate-400 mt-1 sm:mt-2 text-xs sm:text-base">Ro'yxatdagi mashinalar</div>
             </div>
           </div>
         </GlassCard>
@@ -836,7 +836,7 @@ export default function SuperAdminPanel() {
       {/* Overlay - Mobile */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
         {/* Sidebar - Desktop */}
         <aside className="hidden lg:block w-64 flex-shrink-0">
           <nav className="space-y-2 sticky top-24">
@@ -850,7 +850,7 @@ export default function SuperAdminPanel() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 overflow-x-hidden">
           {renderContent()}
         </main>
       </div>
