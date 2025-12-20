@@ -1,7 +1,80 @@
 const express = require('express');
 const router = express.Router();
 const Vehicle = require('../models/Vehicle');
+const Businessman = require('../models/Businessman');
 const { protect, businessOnly } = require('../middleware/auth');
+
+// ========== SUBSCRIPTION ENDPOINTS ==========
+
+// Obuna holatini olish
+router.get('/subscription', protect, businessOnly, async (req, res) => {
+  try {
+    const user = await Businessman.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+    }
+
+    // Agar subscription yo'q bo'lsa, default trial yaratish
+    if (!user.fleetSubscription) {
+      user.fleetSubscription = {
+        plan: 'trial',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      };
+      await user.save();
+    }
+
+    const now = new Date();
+    const endDate = new Date(user.fleetSubscription.endDate);
+    const isExpired = now > endDate;
+
+    res.json({
+      success: true,
+      data: {
+        plan: user.fleetSubscription.plan,
+        startDate: user.fleetSubscription.startDate,
+        endDate: user.fleetSubscription.endDate,
+        isExpired,
+        canUse: !isExpired
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Pro ga o'tish
+router.post('/subscription/upgrade', protect, businessOnly, async (req, res) => {
+  try {
+    const user = await Businessman.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+    }
+
+    // Pro ga o'tkazish - 30 kun
+    user.fleetSubscription = {
+      plan: 'pro',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    };
+    await user.save();
+
+    res.json({
+      success: true,
+      data: {
+        plan: user.fleetSubscription.plan,
+        startDate: user.fleetSubscription.startDate,
+        endDate: user.fleetSubscription.endDate,
+        isExpired: false,
+        canUse: true
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ========== VEHICLE ENDPOINTS ==========
 
 // Barcha mashinalar (faqat aktiv)
 router.get('/', protect, businessOnly, async (req, res) => {

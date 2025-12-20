@@ -36,6 +36,22 @@ const businessmanSchema = new mongoose.Schema({
   createdBy: {
     type: String,
     default: 'super_admin'
+  },
+  // Fleet subscription
+  fleetSubscription: {
+    plan: {
+      type: String,
+      enum: ['trial', 'pro'],
+      default: 'trial'
+    },
+    startDate: {
+      type: Date,
+      default: Date.now
+    },
+    endDate: {
+      type: Date,
+      default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 kun trial
+    }
   }
 }, { timestamps: true });
 

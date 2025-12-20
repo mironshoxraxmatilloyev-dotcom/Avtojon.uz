@@ -1,27 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
-import { 
-  ArrowLeft, Car, Fuel, Droplets, Circle, Wrench, Plus, X, Trash2, RefreshCw, 
+import {
+  ArrowLeft, Car, Fuel, Droplets, Circle, Wrench, Plus, X, Trash2, RefreshCw,
   BarChart3, AlertTriangle, Check, Edit2, TrendingUp, Zap, Crown, Clock, Home
 } from 'lucide-react'
 import api from '../../services/api'
 import { useAlert } from '../../components/ui'
-
-// 🚀 LOCAL CACHE
-const getVehicleCache = (id) => {
-  try {
-    const data = localStorage.getItem(`vehicle_${id}`)
-    if (!data) return null
-    const { value, timestamp } = JSON.parse(data)
-    if (Date.now() - timestamp > 5 * 60 * 1000) return null
-    return value
-  } catch { return null }
-}
-const setVehicleCache = (id, value) => {
-  try {
-    localStorage.setItem(`vehicle_${id}`, JSON.stringify({ value, timestamp: Date.now() }))
-  } catch {}
-}
 
 const STATUS = {
   excellent: { label: 'A\'lo', color: 'text-emerald-400', bg: 'bg-emerald-500/20', gradient: 'from-emerald-500 to-emerald-600' },
@@ -57,16 +42,14 @@ export default function VehicleDetailPanel() {
   const alert = useAlert()
   const isMounted = useRef(true)
 
-  // 🚀 INSTANT: Cache dan darhol yuklash - loading yo'q
-  const cachedData = useMemo(() => getVehicleCache(id), [id])
-  const [vehicle, setVehicle] = useState(() => cachedData?.vehicle || null)
-  const [loading, setLoading] = useState(false) // Loading yo'q
+  // State - cache yo'q, to'g'ridan-to'g'ri MongoDB dan
+  const [vehicle, setVehicle] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('summary')
-  const [fuelData, setFuelData] = useState(() => cachedData?.fuelData || { refills: [], stats: {} })
-  const [oilData, setOilData] = useState(() => cachedData?.oilData || { changes: [], status: 'ok', remainingKm: 10000 })
-  const [tires, setTires] = useState(() => cachedData?.tires || [])
-  const [services, setServices] = useState(() => cachedData?.services || { services: [], stats: {} })
-  const [dataLoaded, setDataLoaded] = useState(() => !!cachedData)
+  const [fuelData, setFuelData] = useState({ refills: [], stats: {} })
+  const [oilData, setOilData] = useState({ changes: [], status: 'ok', remainingKm: 10000 })
+  const [tires, setTires] = useState([])
+  const [services, setServices] = useState({ services: [], stats: {} })
   const [modal, setModal] = useState(null)
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -76,13 +59,13 @@ export default function VehicleDetailPanel() {
   const [tireForm, setTireForm] = useState(() => initTireForm())
   const [serviceForm, setServiceForm] = useState(() => initServiceForm())
   const [bulkTireForm, setBulkTireForm] = useState({ brand: '', size: '', cost: '', count: '4' })
-  
-  // 🚀 Cleanup
+
+  // Cleanup
   useEffect(() => {
     isMounted.current = true
     return () => { isMounted.current = false }
   }, [])
-  
+
   // Obuna state
   const [subscription, setSubscription] = useState(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -91,15 +74,9 @@ export default function VehicleDetailPanel() {
 
   // Obuna yuklash
   useEffect(() => {
-    const loadSubscription = async () => {
-      try {
-        const { data } = await api.get('/vehicles/subscription')
-        setSubscription(data.data)
-      } catch (e) {
-        console.log('Obuna yuklanmadi')
-      }
-    }
-    loadSubscription()
+    api.get('/vehicles/subscription')
+      .then(res => { if (isMounted.current) setSubscription(res.data.data) })
+      .catch(() => {})
   }, [])
 
   // Qolgan vaqtni hisoblash
@@ -114,35 +91,22 @@ export default function VehicleDetailPanel() {
       if (diff <= 0) {
         setTimeLeft('Muddat tugadi')
         setSubscription(prev => prev ? { ...prev, isExpired: true, canUse: false } : null)
-        setShowUpgradeModal(true) // Avtomatik modal ochish
         return
       }
       
       const days = Math.floor(diff / (24 * 60 * 60 * 1000))
       const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
       const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
-      const seconds = Math.floor((diff % (60 * 1000)) / 1000)
       
-      if (days > 0) {
-        setTimeLeft(`${days} kun ${hours} soat`)
-      } else if (hours > 0) {
-        setTimeLeft(`${hours} soat ${minutes} daqiqa`)
-      } else {
-        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`)
-      }
+      if (days > 0) setTimeLeft(`${days} kun ${hours} soat`)
+      else if (hours > 0) setTimeLeft(`${hours} soat ${minutes} daqiqa`)
+      else setTimeLeft(`${minutes} daqiqa`)
     }
     
     updateTimeLeft()
-    const interval = setInterval(updateTimeLeft, 1000)
+    const interval = setInterval(updateTimeLeft, 60000) // Har daqiqada
     return () => clearInterval(interval)
   }, [subscription?.endDate])
-
-  // Obuna tugagan bo'lsa avtomatik modal ochish
-  useEffect(() => {
-    if (subscription?.isExpired) {
-      setShowUpgradeModal(true)
-    }
-  }, [subscription?.isExpired])
 
   // Pro ga o'tish
   const handleUpgrade = async () => {
@@ -166,45 +130,37 @@ export default function VehicleDetailPanel() {
     
     api.get(`/vehicles/${id}`)
       .then(res => { 
-        if (isMounted.current) {
-          setVehicle(res.data.data)
-          // Cache yangilash
-          const cached = getVehicleCache(id) || {}
-          setVehicleCache(id, { ...cached, vehicle: res.data.data })
-        }
+        if (isMounted.current) setVehicle(res.data.data)
       })
-      .catch(() => { if (!hasCache) alert.error('Xatolik', 'Mashina topilmadi') })
+      .catch(() => alert.error('Xatolik', 'Mashina topilmadi'))
       .finally(() => { if (isMounted.current) setLoading(false) })
   }, [id])
 
-  // 🚀 INSTANT: Maintenance data - parallel yuklash
-  useEffect(() => {
-    if (!vehicle || dataLoaded) return
-    
-    Promise.all([
-      api.get(`/maintenance/vehicles/${id}/fuel`).catch(() => ({ data: { data: { refills: [], stats: {} } } })),
-      api.get(`/maintenance/vehicles/${id}/oil`).catch(() => ({ data: { data: { changes: [], status: 'ok', remainingKm: 10000 } } })),
-      api.get(`/maintenance/vehicles/${id}/tires`).catch(() => ({ data: { data: [] } })),
-      api.get(`/maintenance/vehicles/${id}/services`).catch(() => ({ data: { data: { services: [], stats: {} } } }))
-    ]).then(([f, o, t, s]) => {
-      if (!isMounted.current) return
-      const fData = f.data.data || { refills: [], stats: {} }
-      const oData = o.data.data || { changes: [], status: 'ok', remainingKm: 10000 }
-      const tData = t.data.data || []
-      const sData = s.data.data || { services: [], stats: {} }
-      
-      setFuelData(fData)
-      setOilData(oData)
-      setTires(tData)
-      setServices(sData)
-      setDataLoaded(true)
-      
-      // 🚀 Cache yangilash
-      setVehicleCache(id, { vehicle, fuelData: fData, oilData: oData, tires: tData, services: sData })
-    })
-  }, [vehicle, id, dataLoaded])
+  // Ma'lumotlarni yuklash funksiyasi
+  const loadData = useCallback(async () => {
+    if (!vehicle) return
+    try {
+      const [f, o, t, s] = await Promise.all([
+        api.get(`/maintenance/vehicles/${id}/fuel`).catch(() => ({ data: { data: { refills: [], stats: {} } } })),
+        api.get(`/maintenance/vehicles/${id}/oil`).catch(() => ({ data: { data: { changes: [], status: 'ok', remainingKm: 10000 } } })),
+        api.get(`/maintenance/vehicles/${id}/tires`).catch(() => ({ data: { data: [] } })),
+        api.get(`/maintenance/vehicles/${id}/services`).catch(() => ({ data: { data: { services: [], stats: {} } } }))
+      ])
+      if (isMounted.current) {
+        setFuelData(f.data.data || { refills: [], stats: {} })
+        setOilData(o.data.data || { changes: [], status: 'ok', remainingKm: 10000 })
+        setTires(t.data.data || [])
+        setServices(s.data.data || { services: [], stats: {} })
+      }
+    } catch (err) {
+      console.error('Data yuklashda xatolik:', err)
+    }
+  }, [vehicle, id])
 
-  const refresh = useCallback(() => setDataLoaded(false), [])
+  // Vehicle yuklanganda ma'lumotlarni yuklash
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const stats = useMemo(() => ({
     totalFuelCost: fuelData.stats?.totalCost || 0,
@@ -246,14 +202,17 @@ export default function VehicleDetailPanel() {
     }
   }, [vehicle?.currentOdometer, vehicle?.fuelType])
 
+  // O'CHIRISH - to'g'ridan-to'g'ri MongoDB dan
   const handleDelete = useCallback(async (type, itemId) => {
     if (!confirm('O\'chirishni tasdiqlaysizmi?')) return
     try {
       await api.delete(`/maintenance/${type}/${itemId}`)
       alert.success('O\'chirildi')
-      refresh()
-    } catch { alert.error('Xatolik') }
-  }, [refresh])
+      loadData() // Qayta yuklash
+    } catch {
+      alert.error('Xatolik')
+    }
+  }, [loadData])
 
   const validate = useCallback((type, data) => {
     const e = {}
@@ -266,35 +225,44 @@ export default function VehicleDetailPanel() {
     return !Object.keys(e).length
   }, [])
 
+  // QO'SHISH/TAHRIRLASH - to'g'ridan-to'g'ri MongoDB ga
   const handleSubmit = useCallback(async (type, form, endpoint, itemId = null) => {
     if (!validate(type, form)) return
     setSaving(true)
+    
     try {
       const body = { ...form }
       Object.keys(body).forEach(k => { 
         if (body[k] === '') delete body[k]
         else if (!isNaN(body[k]) && !['date','oilType','oilBrand','brand','model','size','position','type','description','serviceName','fuelType'].includes(k)) body[k] = +body[k] 
       })
+      
+      const apiType = type === 'tire' ? 'tires' : type === 'service' ? 'services' : type
+      
       if (itemId) {
-        await api.put(`/maintenance/${type}/${itemId}`, body)
+        await api.put(`/maintenance/${apiType}/${itemId}`, body)
         alert.success('Yangilandi')
       } else {
         await api.post(endpoint, body)
         alert.success('Saqlandi')
       }
+      
       setModal(null)
       setEditId(null)
-      refresh()
-    } catch (err) { alert.error(err.userMessage || 'Xatolik') }
-    finally { setSaving(false) }
-  }, [validate, refresh])
+      loadData() // Qayta yuklash
+    } catch (err) {
+      alert.error(err.userMessage || 'Xatolik')
+    } finally {
+      setSaving(false)
+    }
+  }, [validate, loadData])
 
   const handleAddFuel = useCallback((e) => { e.preventDefault(); handleSubmit('fuel', fuelForm, `/maintenance/vehicles/${id}/fuel`, editId) }, [fuelForm, id, handleSubmit, editId])
   const handleAddOil = useCallback((e) => { e.preventDefault(); handleSubmit('oil', oilForm, `/maintenance/vehicles/${id}/oil`, editId) }, [oilForm, id, handleSubmit, editId])
-  const handleAddTire = useCallback((e) => { e.preventDefault(); handleSubmit('tires', tireForm, `/maintenance/vehicles/${id}/tires`, editId) }, [tireForm, id, handleSubmit, editId])
-  const handleAddService = useCallback((e) => { e.preventDefault(); handleSubmit('services', serviceForm, `/maintenance/vehicles/${id}/services`, editId) }, [serviceForm, id, handleSubmit, editId])
-  
-  // To'liq shina almashtirish (4 yoki 6 ta)
+  const handleAddTire = useCallback((e) => { e.preventDefault(); handleSubmit('tire', tireForm, `/maintenance/vehicles/${id}/tires`, editId) }, [tireForm, id, handleSubmit, editId])
+  const handleAddService = useCallback((e) => { e.preventDefault(); handleSubmit('service', serviceForm, `/maintenance/vehicles/${id}/services`, editId) }, [serviceForm, id, handleSubmit, editId])
+
+  // To'liq shina almashtirish (4 yoki 6 ta) - to'g'ridan-to'g'ri MongoDB ga
   const handleAddBulkTires = useCallback(async (e) => {
     e.preventDefault()
     if (!bulkTireForm.brand) {
@@ -302,15 +270,15 @@ export default function VehicleDetailPanel() {
       return
     }
     setSaving(true)
+
+    const count = parseInt(bulkTireForm.count) || 4
+    const positions = count === 6
+      ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)']
+      : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng']
+
     try {
-      const count = parseInt(bulkTireForm.count) || 4
-      const positions = count === 6 
-        ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)']
-        : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng']
-      
-      // Har bir pozitsiya uchun shina qo'shish
-      for (const position of positions) {
-        await api.post(`/maintenance/vehicles/${id}/tires`, {
+      await Promise.all(positions.map(position =>
+        api.post(`/maintenance/vehicles/${id}/tires`, {
           position,
           brand: bulkTireForm.brand,
           size: bulkTireForm.size || '',
@@ -319,30 +287,33 @@ export default function VehicleDetailPanel() {
           expectedLifeKm: 50000,
           cost: bulkTireForm.cost ? Math.round(+bulkTireForm.cost / count) : 0
         })
-      }
+      ))
       alert.success(`${count} ta shina qo'shildi`)
       setModal(null)
-      refresh()
-    } catch (err) { alert.error(err.userMessage || 'Xatolik') }
-    finally { setSaving(false) }
-  }, [bulkTireForm, id, refresh])
+      loadData() // Qayta yuklash
+    } catch (err) {
+      alert.error(err.userMessage || 'Xatolik')
+    } finally {
+      setSaving(false)
+    }
+  }, [bulkTireForm, id, loadData])
 
-  // 🚀 Faqat vehicle yo'q bo'lsa va cache ham yo'q bo'lsa
-  if (!vehicle && !cachedData) return <Skeleton />
+  // Loading
+  if (loading) return <Skeleton />
   if (!vehicle) return <NotFound onBack={() => navigate('/fleet')} />
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pb-24">
-      <Header vehicle={vehicle} status={overallStatus} onBack={() => navigate('/fleet')} onRefresh={refresh} />
-      
+      <Header vehicle={vehicle} status={overallStatus} onBack={() => navigate('/fleet')} onRefresh={loadData} />
+
       {/* Obuna Banner */}
       {subscription && (
         <div className="max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
           <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-            subscription.isExpired 
-              ? 'bg-red-500/10 border border-red-500/30' 
-              : subscription.plan === 'trial' 
-                ? 'bg-amber-500/10 border border-amber-500/30' 
+            subscription.isExpired
+              ? 'bg-red-500/10 border border-red-500/30'
+              : subscription.plan === 'trial'
+                ? 'bg-amber-500/10 border border-amber-500/30'
                 : 'bg-emerald-500/10 border border-emerald-500/30'
           }`}>
             <div className="flex items-center gap-3">
@@ -519,29 +490,35 @@ export default function VehicleDetailPanel() {
 
 // ========== BOTTOM NAVIGATION ==========
 
-const BottomNav = memo(({ activeTab, onTabChange, onBack }) => (
-  <div 
-    className="lg:hidden"
-    style={{ 
-      position: 'fixed', 
-      bottom: 0, 
-      left: 0, 
-      right: 0, 
-      zIndex: 99999,
-      background: '#0f172a',
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      paddingBottom: 'env(safe-area-inset-bottom)'
-    }}
-  >
-    <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 4px' }}>
-      <NavItem icon={ArrowLeft} label="Orqaga" onClick={onBack} />
-      <NavItem icon={BarChart3} label="Umumiy" active={activeTab === 'summary'} onClick={() => onTabChange('summary')} />
-      <NavItem icon={Fuel} label="Yoqilg'i" active={activeTab === 'fuel'} onClick={() => onTabChange('fuel')} />
-      <NavItem icon={Droplets} label="Moy" active={activeTab === 'oil'} onClick={() => onTabChange('oil')} />
-      <NavItem icon={Wrench} label="Xizmat" active={activeTab === 'services'} onClick={() => onTabChange('services')} />
-    </div>
-  </div>
-))
+const BottomNav = memo(({ activeTab, onTabChange, onBack }) => {
+  // Portal orqali body ga chiqarish - iOS da fixed muammosini hal qiladi
+  return createPortal(
+    <nav 
+      className="lg:hidden"
+      style={{ 
+        position: 'fixed', 
+        bottom: 0, 
+        left: 0, 
+        right: 0, 
+        zIndex: 99999,
+        background: '#0f172a',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        transform: 'translate3d(0,0,0)',
+        WebkitTransform: 'translate3d(0,0,0)'
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 4px' }}>
+        <NavItem icon={ArrowLeft} label="Orqaga" onClick={onBack} />
+        <NavItem icon={BarChart3} label="Umumiy" active={activeTab === 'summary'} onClick={() => onTabChange('summary')} />
+        <NavItem icon={Fuel} label="Yoqilg'i" active={activeTab === 'fuel'} onClick={() => onTabChange('fuel')} />
+        <NavItem icon={Droplets} label="Moy" active={activeTab === 'oil'} onClick={() => onTabChange('oil')} />
+        <NavItem icon={Wrench} label="Xizmat" active={activeTab === 'services'} onClick={() => onTabChange('services')} />
+      </div>
+    </nav>,
+    document.body
+  )
+})
 
 const NavItem = memo(({ icon: Icon, label, active, onClick }) => (
   <button 
@@ -983,9 +960,16 @@ const AddButton = memo(({ onClick }) => (
 // ========== MODAL & FORMS ==========
 
 const Modal = memo(({ title, onClose, children }) => (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-    <div className="bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fadeIn" onClick={e => e.stopPropagation()}>
-      <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+  <div 
+    className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-start justify-center overflow-y-auto pt-10 pb-10 px-4"
+    style={{ zIndex: 100000 }}
+    onClick={onClose}
+  >
+    <div 
+      className="bg-slate-900 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl my-auto" 
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 bg-slate-900 rounded-t-2xl z-10">
         <h2 className="text-xl font-bold text-white">{title}</h2>
         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white"><X size={22} /></button>
       </div>
@@ -1071,6 +1055,7 @@ const OilForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
 const TireForm = memo(({ form, setForm, errors, saving, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="p-5 space-y-4">
     <Select label="Joylashuv" value={form.position} onChange={v => setForm(f => ({ ...f, position: v }))} options={TIRE_POSITIONS.map(p => ({ value: p, label: p }))} />
+    <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} placeholder="Michelin, Bridgestone..." error={errors.brand} />
     <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
     <div className="grid grid-cols-2 gap-4">
       <Input label="O'rnatish sanasi" type="date" value={form.installDate} onChange={v => setForm(f => ({ ...f, installDate: v }))} max={today()} />
@@ -1098,6 +1083,7 @@ const BulkTireForm = memo(({ form, setForm, errors, saving, onSubmit }) => (
         { value: '6', label: '6 ta (yuk mashinasi)' }
       ]} 
     />
+    <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} placeholder="Michelin, Bridgestone..." error={errors.brand} />
     <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
     <div className="grid grid-cols-2 gap-4">
       <Input label="Odometr (km)" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} formatNumber />

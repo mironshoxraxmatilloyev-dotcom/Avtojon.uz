@@ -23,6 +23,14 @@ body {
   overflow-x: hidden;
 }
 
+/* 🚀 Fixed bottom navigation - scroll qilganda qimirlamasin */
+nav[style*="position: fixed"][style*="bottom: 0"] {
+  position: fixed !important;
+  bottom: 0 !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+}
+
 /* Modal ochilganda scroll yo'qotish */
 body[style*="overflow: hidden"],
 body[style*="overflow:hidden"],
