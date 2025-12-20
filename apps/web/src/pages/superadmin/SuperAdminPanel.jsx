@@ -821,21 +821,33 @@ export default function SuperAdminPanel() {
         </div>
       </header>
 
+      {/* Sidebar - Mobile */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-800/95 backdrop-blur border-r border-slate-700 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform lg:hidden`}>
+        <nav className="p-4 space-y-2 mt-20">
+          {MENU_ITEMS.map(item => (
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}>
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Overlay - Mobile */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
-        {/* Sidebar */}
-        <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-800/95 backdrop-blur lg:bg-transparent border-r border-slate-700 lg:border-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform`}>
-          <nav className="p-4 lg:p-0 space-y-2 mt-16 lg:mt-0">
+        {/* Sidebar - Desktop */}
+        <aside className="hidden lg:block w-64 flex-shrink-0">
+          <nav className="space-y-2 sticky top-24">
             {MENU_ITEMS.map(item => (
-              <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}>
+              <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}>
                 <item.icon className="w-5 h-5" />
                 {item.label}
               </button>
             ))}
           </nav>
         </aside>
-
-        {/* Overlay */}
-        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
