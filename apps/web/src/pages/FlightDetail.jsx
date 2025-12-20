@@ -628,217 +628,226 @@ export default function FlightDetail() {
 
   const isActive = flight.status === 'active'
   const lastLeg = flight.legs?.[flight.legs.length - 1]
+  
+  // Reysni o'chirish (faqat haydovchi tasdiqlamasidan oldin)
+  const handleDeleteFlight = async () => {
+    // Agar haydovchi allaqachon tasdiqlagan bo'lsa - o'chirib bo'lmaydi
+    if (flight.driverConfirmed) {
+      showToast.error('Haydovchi tasdiqlagan reysni o\'chirib bo\'lmaydi')
+      return
+    }
+    
+    const confirmed = await alert.confirm({
+      title: "Reysni o'chirish",
+      message: `"${flight.name || 'Bu reys'}" ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.`,
+      confirmText: "Ha, o'chirish",
+      cancelText: "Bekor qilish",
+      type: "danger"
+    })
+    
+    if (!confirmed) return
+    
+    try {
+      await api.delete(`/flights/${id}`)
+      showToast.success('Reys o\'chirildi')
+      navigate('/dashboard/drivers')
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
 
   return (
-    <div className="space-y-6 pb-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl">
-        <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-emerald-500/20 rounded-full blur-3xl -mr-24 sm:-mr-32 md:-mr-48 -mt-24 sm:-mt-32 md:-mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-teal-500/20 rounded-full blur-3xl -ml-16 sm:-ml-24 md:-ml-32 -mb-16 sm:-mb-24 md:-mb-32"></div>
+    <div className="space-y-4 pb-8 max-w-7xl mx-auto">
+      {/* Header with Stats */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-2xl">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
         
         <div className="relative">
-          {/* Back button */}
           <button 
             onClick={() => navigate('/dashboard/drivers')}
-            className="flex items-center gap-1.5 sm:gap-2 text-emerald-300 hover:text-white mb-3 sm:mb-4 transition text-sm sm:text-base"
+            className="flex items-center gap-1.5 text-slate-400 hover:text-white mb-3 transition text-sm"
           >
-            <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+            <ArrowLeft size={16} />
             <span>Orqaga</span>
           </button>
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl md:text-2xl shadow-lg flex-shrink-0 ${
+              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg flex-shrink-0 ${
                 isActive ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
               }`}>
                 {flight.driver?.fullName?.charAt(0) || '?'}
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
-                <p className="text-emerald-200 text-xs sm:text-sm truncate">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
+                  <span className={`px-2 py-0.5 rounded-full font-medium text-xs flex items-center gap-1 ${
+                    isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-blue-500/20 text-blue-300'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`}></span>
+                    {isActive ? 'Faol' : 'Yopilgan'}
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm truncate">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
               </div>
-            </div>
-            
-            <div className="flex items-center">
-              <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm ${
-                isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-              }`}>
-                {isActive ? '🟢 Faol reys' : '✅ Yopilgan'}
-              </span>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
-                  <Route size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
+          {/* Stats inside header */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <Route size={18} className="text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{flight.legs?.length || 0}</p>
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">buyurtmalar</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm sm:text-lg md:text-xl font-bold truncate">{formatMoney(flight.totalPayment)}</p>
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">Mijozdan</p>
+                <div>
+                  <p className="text-2xl font-bold text-white">{flight.legs?.length || 0}</p>
+                  <p className="text-slate-400 text-xs">buyurtmalar</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center flex-shrink-0">
-                  <Wallet size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp size={18} className="text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm sm:text-lg md:text-xl font-bold text-orange-300 truncate">{formatMoney(flight.totalGivenBudget)}</p>
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">Yo'l uchun</p>
+                <div>
+                  <p className="text-lg font-bold text-emerald-400 truncate">{formatMoney(flight.totalPayment)}</p>
+                  <p className="text-slate-400 text-xs">Mijozdan</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  (flight.finalBalance || 0) >= 0 ? 'bg-gradient-to-br from-cyan-400 to-cyan-600' : 'bg-gradient-to-br from-red-400 to-red-600'
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
+                  <Wallet size={18} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-orange-400 truncate">{formatMoney(flight.totalGivenBudget)}</p>
+                  <p className="text-slate-400 text-xs">Yo'l uchun</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  (flight.finalBalance || 0) >= 0 ? 'bg-cyan-500' : 'bg-red-500'
                 }`}>
-                  <DollarSign size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
+                  <DollarSign size={18} className="text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className={`text-sm sm:text-lg md:text-xl font-bold truncate ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-300' : 'text-red-300'}`}>
+                <div>
+                  <p className={`text-lg font-bold truncate ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
                     {formatMoney(Math.abs(flight.finalBalance || 0))}
                   </p>
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
+                  <p className="text-slate-400 text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10 col-span-2 sm:col-span-1">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-gradient-to-br from-red-400 to-red-600 flex-shrink-0">
-                  <TrendingDown size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 col-span-2 sm:col-span-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center flex-shrink-0">
+                  <TrendingDown size={18} className="text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm sm:text-lg md:text-xl font-bold text-red-300 truncate">
-                    -{formatMoney(flight.totalExpenses || 0)}
-                  </p>
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">Sarflangan</p>
+                <div>
+                  <p className="text-lg font-bold text-red-400 truncate">-{formatMoney(flight.totalExpenses || 0)}</p>
+                  <p className="text-slate-400 text-xs">Sarflangan</p>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Yopilgan reys uchun shofyor ulushi */}
-          {!isActive && (flight.driverProfitPercent > 0 || flight.driverProfitAmount > 0) && (
-            <div className="mt-3 sm:mt-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-500/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm sm:text-lg">💰</span>
-                  </div>
-                  <div>
-                    <p className="text-emerald-200 text-[10px] sm:text-xs">Shofyor ulushi ({flight.driverProfitPercent || 0}%)</p>
-                    <p className="text-sm sm:text-lg md:text-xl font-bold text-emerald-300">{formatMoney(flight.driverProfitAmount || 0)} so'm</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-emerald-200 text-[10px] sm:text-xs">Foyda</p>
-                  <p className={`text-xs sm:text-sm font-bold ${(flight.profit || 0) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    {formatMoney(flight.profit || 0)} so'm
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="space-y-3 sm:space-y-4 md:space-y-6">
-          {/* Odometer & Fuel Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Gauge className="text-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      {/* Yopilgan reys uchun shofyor ulushi */}
+      {!isActive && (flight.driverProfitPercent > 0 || flight.driverProfitAmount > 0) && (
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">💰</span>
+              <div>
+                <p className="text-emerald-100 text-xs">Shofyor ulushi ({flight.driverProfitPercent || 0}%)</p>
+                <p className="text-lg font-bold text-white">{formatMoney(flight.driverProfitAmount || 0)} so'm</p>
+              </div>
             </div>
-            <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Odometr</h3>
+            <div className="text-right">
+              <p className="text-emerald-100 text-xs">Foyda</p>
+              <p className="text-lg font-bold text-white">{formatMoney(flight.profit || 0)} so'm</p>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
-              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{formatMoney(flight.startOdometer || 0)} km</p>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="space-y-3">
+        {/* Odometer & Fuel Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Gauge className="text-blue-600 w-3.5 h-3.5" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm">Odometr</h3>
             </div>
-            <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-gray-400">Tugash</p>
-              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-1.5 sm:p-2">
-              <p className="text-[9px] sm:text-[10px] text-blue-500">Jami yurgan</p>
-              <p className="text-xs sm:text-sm font-bold text-blue-600 truncate">
-                {(() => {
-                  // Agar reys yopilgan bo'lsa - odometr farqi
-                  if (flight.endOdometer && flight.startOdometer) {
+            <div className="grid grid-cols-3 gap-1.5">
+              <div className="bg-gray-50 rounded-lg p-1.5">
+                <p className="text-[9px] text-gray-400">Boshlang'ich</p>
+                <p className="text-xs font-bold text-gray-900 truncate">{formatMoney(flight.startOdometer || 0)} km</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-1.5">
+                <p className="text-[9px] text-gray-400">Tugash</p>
+                <p className="text-xs font-bold text-gray-900 truncate">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-1.5">
+                <p className="text-[9px] text-blue-500">Jami yurgan</p>
+                <p className="text-xs font-bold text-blue-600 truncate">
+                  {(() => {
+                    if (flight.endOdometer && flight.startOdometer) {
                     return formatMoney(flight.endOdometer - flight.startOdometer)
                   }
                   // Aks holda - buyurtmalar masofasi yig'indisi
                   const legsDistance = flight.legs?.reduce((sum, leg) => sum + (leg.distance || 0), 0) || 0
-                  return formatMoney(legsDistance || flight.totalDistance || 0)
-                })()} km
-              </p>
+                    return formatMoney(legsDistance || flight.totalDistance || 0)
+                  })()} km
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-          {(() => {
-            // Xarajatlardan yoqilg'i turlarini aniqlash
-            const fuelData = { litr: 0, kub: 0, types: [] }
-            flight.expenses?.forEach(exp => {
-              if (exp.type?.startsWith('fuel_') && exp.quantity) {
-                // Metan va Propan = kub, Benzin va Dizel = litr
-                const isKub = exp.type === 'fuel_metan' || exp.type === 'fuel_propan'
-                const unit = exp.quantityUnit || (isKub ? 'kub' : 'litr')
-                if (unit === 'kub') fuelData.kub += Number(exp.quantity)
-                else fuelData.litr += Number(exp.quantity)
-                // Yoqilg'i turini saqlash
-                if (!fuelData.types.includes(exp.type)) fuelData.types.push(exp.type)
-              }
-            })
-            // Asosiy yoqilg'i turini aniqlash
-            const mainType = fuelData.types[0] || flight.fuelType || 'benzin'
-            // Metan va Propan = kub
-            const isKubType = mainType === 'fuel_metan' || mainType === 'fuel_propan' || mainType === 'metan' || mainType === 'propan'
-            const fuelLabel = mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
-                             mainType === 'fuel_propan' || mainType === 'propan' ? 'Propan' :
-                             mainType === 'fuel_diesel' || mainType === 'diesel' ? 'Dizel' : 'Benzin'
-            const mainUnit = isKubType ? 'kub' : 'litr'
-            
-            return (
-              <>
-                <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Fuel className="text-amber-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+            {(() => {
+              const fuelData = { litr: 0, kub: 0, types: [] }
+              flight.expenses?.forEach(exp => {
+                if (exp.type?.startsWith('fuel_') && exp.quantity) {
+                  const isKub = exp.type === 'fuel_metan' || exp.type === 'fuel_propan'
+                  const unit = exp.quantityUnit || (isKub ? 'kub' : 'litr')
+                  if (unit === 'kub') fuelData.kub += Number(exp.quantity)
+                  else fuelData.litr += Number(exp.quantity)
+                  if (!fuelData.types.includes(exp.type)) fuelData.types.push(exp.type)
+                }
+              })
+              const mainType = fuelData.types[0] || flight.fuelType || 'benzin'
+              const isKubType = mainType === 'fuel_metan' || mainType === 'fuel_propan' || mainType === 'metan' || mainType === 'propan'
+              const fuelLabel = mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
+                               mainType === 'fuel_propan' || mainType === 'propan' ? 'Propan' :
+                               mainType === 'fuel_diesel' || mainType === 'diesel' ? 'Dizel' : 'Benzin'
+              const mainUnit = isKubType ? 'kub' : 'litr'
+              
+              return (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Fuel className="text-amber-600 w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">Yoqilg'i</h3>
+                      <p className="text-[9px] text-gray-400">{fuelLabel} ({mainUnit})</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Yoqilg'i</h3>
-                    <p className="text-[9px] sm:text-[10px] text-gray-400">
-                      {fuelLabel} ({mainUnit})
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                  <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-                    <p className="text-[9px] sm:text-[10px] text-gray-400">Boshlang'ich</p>
-                    <p className="text-xs sm:text-sm font-bold text-gray-900">
-                      {flight.startFuel || 0} {mainUnit}
-                    </p>
-                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <div className="bg-gray-50 rounded-lg p-1.5">
+                      <p className="text-[9px] text-gray-400">Boshlang'ich</p>
+                      <p className="text-xs font-bold text-gray-900">{flight.startFuel || 0} {mainUnit}</p>
+                    </div>
                   <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
                     <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
                     <p className="text-xs sm:text-sm font-bold text-gray-900">
@@ -1194,6 +1203,17 @@ export default function FlightDetail() {
           >
             <CheckCircle size={18} className="sm:w-5 sm:h-5" /> Reysni yopish
           </button>
+          {/* O'chirish tugmasi - faqat haydovchi tasdiqlamasidan oldin, o'ng tomonda */}
+          {!flight.driverConfirmed && (
+            <button
+              onClick={handleDeleteFlight}
+              className="px-4 sm:px-5 py-3 sm:py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base transition flex items-center justify-center gap-1.5 sm:gap-2"
+              title="Reysni o'chirish"
+            >
+              <Trash2 size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">O'chirish</span>
+            </button>
+          )}
         </div>
       )}
 

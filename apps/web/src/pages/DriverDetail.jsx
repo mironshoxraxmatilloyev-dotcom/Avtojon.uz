@@ -2,9 +2,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { 
-  ArrowLeft, User, Phone, Truck, Route, MapPin, 
+  ArrowLeft, User, Phone, Truck, Route, 
   Calendar, Wallet, TrendingUp, TrendingDown, CheckCircle, Clock, 
-  Activity, Star, Award, ChevronRight, Sparkles, X, Play, Gauge, Fuel
+  Activity, ChevronRight, X, Play, Gauge, Fuel
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -26,33 +26,21 @@ export default function DriverDetail() {
   const [vehicle, setVehicle] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // Reys ochish modal
   const [showFlightModal, setShowFlightModal] = useState(false)
   
-  // Modal ochilganda body scroll ni bloklash
   useEffect(() => {
     if (showFlightModal) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [showFlightModal])
+
   const [flightForm, setFlightForm] = useState({
-    startOdometer: '',
-    startFuel: '',
-    fromCity: '',
-    toCity: '',
-    payment: '',
-    givenBudget: '',
-    fromCoords: null,
-    toCoords: null,
-    flightType: 'domestic',
-    fuelType: 'benzin',
-    fuelUnit: 'litr'
+    startOdometer: '', startFuel: '', fromCity: '', toCity: '',
+    payment: '', givenBudget: '', fromCoords: null, toCoords: null,
+    flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr'
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
@@ -84,31 +72,24 @@ export default function DriverDetail() {
     }
   }, [id])
 
-  // Dastlabki yuklash
   useEffect(() => { fetchData() }, [fetchData])
   
-  // Socket orqali realtime yangilanishlar
   useEffect(() => {
     if (!socket) return
-    
     const handleFlightUpdate = (data) => {
-      // Agar bu shofyorga tegishli bo'lsa, ma'lumotlarni yangilash
       if (data.flight?.driver === id || data.flight?.driver?._id === id) {
-        fetchData(false) // Loader ko'rsatmasdan yangilash
+        fetchData(false)
       }
     }
-    
     const handleDriverUpdate = (data) => {
       if (data.driver?._id === id || data.driverId === id) {
         fetchData(false)
       }
     }
-    
     socket.on('flight-started', handleFlightUpdate)
     socket.on('flight-updated', handleFlightUpdate)
     socket.on('flight-completed', handleFlightUpdate)
     socket.on('driver-updated', handleDriverUpdate)
-    
     return () => {
       socket.off('flight-started', handleFlightUpdate)
       socket.off('flight-updated', handleFlightUpdate)
@@ -117,9 +98,7 @@ export default function DriverDetail() {
     }
   }, [socket, id, fetchData])
 
-  if (loading) {
-    return <DriverDetailSkeleton />
-  }
+  if (loading) return <DriverDetailSkeleton />
 
   if (error) {
     if (error.type === 'notfound') {
@@ -138,7 +117,6 @@ export default function DriverDetail() {
     )
   }
 
-  // Masofa hisoblash
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -150,21 +128,17 @@ export default function DriverDetail() {
     return Math.round(R * c)
   }
 
-  // Reys ochish
   const handleStartFlight = async (e) => {
     e.preventDefault()
-    
     if (isDemoMode) {
-      alert.info('Demo rejim', 'Bu demo versiya. To\'liq funksiyadan foydalanish uchun ro\'yxatdan o\'ting.')
+      alert.info('Demo rejim', 'Bu demo versiya.')
       setShowFlightModal(false)
       return
     }
-
     if (!flightForm.fromCity || !flightForm.toCity) {
       showToast.error('Qayerdan va qayerga shaharlarini kiriting!')
       return
     }
-
     const payload = {
       driverId: id,
       startOdometer: Number(flightForm.startOdometer) || 0,
@@ -181,483 +155,315 @@ export default function DriverDetail() {
         givenBudget: Number(flightForm.givenBudget) || 0
       }
     }
-
-    // DARHOL modal yopilsin
     const fromCity = flightForm.fromCity
     const toCity = flightForm.toCity
     setShowFlightModal(false)
     setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr' })
     showToast.success(`Reys ochilmoqda: ${fromCity} → ${toCity}`)
-
-    // Fonda API
     api.post('/flights', payload)
-      .then((res) => {
-        navigate(`/dashboard/flights/${res.data.data._id}`)
-      })
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
-      })
+      .then((res) => navigate(`/dashboard/flights/${res.data.data._id}`))
+      .catch((err) => showToast.error(err.response?.data?.message || 'Xatolik yuz berdi'))
   }
 
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
 
-  const statusConfig = {
-    pending: { label: 'Kutilmoqda', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', gradient: 'from-amber-500 to-orange-600', dot: 'bg-amber-400' },
-    in_progress: { label: "Yo'lda", color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', gradient: 'from-blue-500 to-indigo-600', dot: 'bg-blue-400' },
-    completed: { label: 'Tugatilgan', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', gradient: 'from-emerald-500 to-teal-600', dot: 'bg-emerald-400' },
-    cancelled: { label: 'Bekor', color: 'bg-red-500/20 text-red-400 border-red-500/30', gradient: 'from-red-500 to-rose-600', dot: 'bg-red-400' }
-  }
-
   const driverStatusConfig = {
-    busy: { label: 'Reysda', color: 'from-orange-500 to-amber-600', icon: Activity },
-    offline: { label: 'Offline', color: 'from-slate-500 to-slate-600', icon: Clock },
-    available: { label: "Bo'sh", color: 'from-emerald-500 to-teal-600', icon: CheckCircle }
+    busy: { label: 'Reysda', color: 'from-orange-500 to-amber-600', icon: Activity, bg: 'bg-orange-500' },
+    offline: { label: 'Offline', color: 'from-slate-500 to-slate-600', icon: Clock, bg: 'bg-slate-500' },
+    available: { label: "Bo'sh", color: 'from-emerald-500 to-teal-600', icon: CheckCircle, bg: 'bg-emerald-500' }
   }
 
-  // Statistika - flights dan olinadi
-  const completedFlights = flights.filter(f => f.status === 'completed')
-  const activeFlights = flights.filter(f => f.status === 'active')
-  
-  // Jami to'lovlar (mijozdan olingan)
   const totalPayment = flights.reduce((sum, f) => sum + (f.totalPayment || 0), 0)
-  
-  // Jami berilgan yo'l xarajatlari
-  const totalGivenBudget = flights.reduce((sum, f) => sum + (f.totalGivenBudget || 0), 0)
-  
-  // Jami sarflangan xarajatlar
   const totalExpenses = flights.reduce((sum, f) => sum + (f.totalExpenses || 0), 0)
-  
-  // Jami foyda
   const totalProfit = flights.reduce((sum, f) => sum + (f.profit || 0), 0)
-  
-  // Jami masofa
-  const totalDistance = flights.reduce((sum, f) => sum + (f.totalDistance || 0), 0)
-  
-  // Jami daromad = oylik maosh + foyda
   const totalEarnings = (driver?.baseSalary || 0) + totalProfit
-
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-500">Yuklanmoqda...</p>
-        </div>
-      </div>
-    )
-  }
 
   if (!driver) return null
 
   const currentStatus = driverStatusConfig[driver.status] || driverStatusConfig.available
   const StatusIcon = currentStatus.icon
+  const activeFlight = flights.find(f => f.status === 'active')
+
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
-        <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
+    <div className="space-y-4 pb-8">
+      {/* Header with Action */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -ml-16 -mb-16"></div>
         
         <div className="relative">
-          {/* Back button */}
           <button 
             onClick={() => navigate('/dashboard/drivers')} 
-            className="mb-4 sm:mb-6 flex items-center gap-2 text-blue-300 hover:text-white transition group text-sm sm:text-base"
+            className="mb-3 flex items-center gap-2 text-slate-400 hover:text-white transition text-sm"
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft size={16} />
             <span>Shofyorlarga qaytish</span>
           </button>
 
-          <div className="flex flex-col gap-4 sm:gap-6">
-            {/* Avatar and Info Row */}
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold shadow-2xl shadow-blue-500/30">
-                  {driver.fullName?.charAt(0) || 'S'}
-                </div>
-                <div className={`absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br ${currentStatus.color} rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg`}>
-                  <StatusIcon size={14} className="sm:w-4 sm:h-4" />
-                </div>
+          <div className="flex items-center gap-3">
+            <div className="relative flex-shrink-0">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg">
+                {driver.fullName?.charAt(0) || 'S'}
               </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-xl sm:text-2xl md:text-4xl font-bold truncate">{driver.fullName}</h1>
-                  <div className="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-amber-500/20 rounded-full">
-                    <Star size={12} className="sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400" />
-                    <span className="text-amber-300 text-xs sm:text-sm font-medium">Pro</span>
-                  </div>
-                </div>
-                <p className="text-blue-300 text-sm sm:text-lg">@{driver.username}</p>
-                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-3">
-                  <span className={`px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r ${currentStatus.color} rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-lg flex items-center gap-1.5 sm:gap-2`}>
-                    <StatusIcon size={14} className="sm:w-4 sm:h-4" />
-                    {currentStatus.label}
-                  </span>
-                  <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm text-blue-200 flex items-center gap-1.5">
-                    <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
-                    {formatDate(driver.createdAt)} dan beri
-                  </span>
-                </div>
+              <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${currentStatus.bg} rounded-lg flex items-center justify-center`}>
+                <StatusIcon size={12} className="text-white" />
               </div>
             </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="text-center px-4 py-3 sm:px-6 sm:py-4 bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl border border-white/10">
-                <p className="text-2xl sm:text-3xl font-bold">{flights.length}</p>
-                <p className="text-blue-300 text-xs sm:text-sm">Reyslar</p>
-              </div>
-              <div className="text-center px-4 py-3 sm:px-6 sm:py-4 bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl border border-white/10">
-                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-400">{formatMoney(totalEarnings)}</p>
-                <p className="text-blue-300 text-xs sm:text-sm">Jami daromad</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold truncate">{driver.fullName}</h1>
+              <p className="text-slate-400 text-sm">@{driver.username}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`px-2 py-0.5 bg-gradient-to-r ${currentStatus.color} rounded-lg text-xs font-medium`}>
+                  {currentStatus.label}
+                </span>
+                <span className="text-slate-400 text-xs flex items-center gap-1">
+                  <Calendar size={10} /> {formatDate(driver.createdAt)}
+                </span>
               </div>
             </div>
-
-            {/* Reys Action Card - zamonaviy dizayn */}
-            {(() => {
-              const activeFlight = flights.find(f => f.status === 'active')
-              if (activeFlight) {
-                return (
-                  <div className="mt-3 sm:mt-4">
-                    <div 
-                      onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
-                    >
-                      {/* Background pattern */}
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                        <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-white rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12"></div>
-                      </div>
-                      
-                      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <Route size={22} className="sm:w-7 sm:h-7 text-white" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">Faol reys</p>
-                            <p className="font-bold text-white text-base sm:text-lg truncate">{activeFlight.name || 'Joriy reys'}</p>
-                            <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1">
-                              <span className="text-white/80 text-xs sm:text-sm flex items-center gap-1">
-                                <MapPin size={10} className="sm:w-3 sm:h-3" /> {activeFlight.legs?.length || 0} buyurtma
-                              </span>
-                              <span className="text-white/80 text-xs sm:text-sm">{activeFlight.totalDistance || 0} km</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl group-hover:bg-white/30 transition w-full sm:w-auto">
-                          <Play size={16} className="sm:w-[18px] sm:h-[18px] text-white" />
-                          <span className="text-white font-semibold text-sm sm:text-base">Davom ettirish</span>
-                          <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] text-white group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              } else if (driver.status !== 'busy') {
-                return (
-                  <div className="mt-3 sm:mt-4">
-                    <div 
-                      onClick={() => setShowFlightModal(true)}
-                      className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer shadow-xl shadow-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02]"
-                    >
-                      {/* Background pattern */}
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                        <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-white rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12"></div>
-                      </div>
-                      
-                      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <Truck size={22} className="sm:w-7 sm:h-7 text-white" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">Haydovchi bo'sh</p>
-                            <p className="font-bold text-white text-base sm:text-lg">Yangi reys boshlash</p>
-                            <p className="text-white/80 text-xs sm:text-sm mt-0.5 sm:mt-1">Yo'nalish va xarajatlarni kiriting</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl group-hover:bg-white/30 transition w-full sm:w-auto">
-                          <Play size={16} className="sm:w-[18px] sm:h-[18px] text-white" />
-                          <span className="text-white font-semibold text-sm sm:text-base">Boshlash</span>
-                          <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] text-white group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-              return null
-            })()}
           </div>
-        </div>
-      </div>
 
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Financial Stats */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Moliyaviy statistika</h2>
-                <p className="text-gray-500 text-xs sm:text-sm">Oylik hisobot</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="group p-3 sm:p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl border border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                  <Wallet size={16} className="sm:w-5 sm:h-5 text-white" />
-                </div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatMoney(driver.baseSalary)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Oylik maosh</p>
-              </div>
-
-              <div className="group p-3 sm:p-5 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl sm:rounded-2xl border border-purple-100 hover:shadow-lg hover:shadow-purple-500/10 transition-all">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                  <Route size={16} className="sm:w-5 sm:h-5 text-white" />
-                </div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatMoney(totalPayment)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Mijozdan to'lov</p>
-              </div>
-
-              <div className="group p-3 sm:p-5 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl border border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 transition-all">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                  <TrendingDown size={16} className="sm:w-5 sm:h-5 text-white" />
-                </div>
-                <p className="text-lg sm:text-2xl font-bold text-orange-600">{formatMoney(totalExpenses)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Yo'l xarajatlari</p>
-              </div>
-
-              <div className="group p-3 sm:p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl sm:rounded-2xl border border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10 transition-all">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
-                  <TrendingUp size={16} className="sm:w-5 sm:h-5 text-white" />
-                </div>
-                <p className="text-lg sm:text-2xl font-bold text-emerald-600">+{formatMoney(totalProfit)}</p>
-                <p className="text-xs sm:text-sm text-gray-500">Sof foyda</p>
-              </div>
-            </div>
-
-            {/* Total Earnings Bar */}
-            <div className="mt-4 sm:mt-6 p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl sm:rounded-2xl">
+          {/* Action Card - inside header */}
+          {activeFlight ? (
+            <div 
+              onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
+              className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-3 cursor-pointer hover:from-emerald-600 hover:to-teal-600 transition shadow-lg"
+            >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-                    <Award size={20} className="sm:w-6 sm:h-6 text-white" />
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                    <Route size={18} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs sm:text-sm">Jami daromad</p>
-                    <p className="text-xl sm:text-3xl font-bold text-white">{formatMoney(totalEarnings)} <span className="text-sm sm:text-lg text-slate-400">so'm</span></p>
+                    <p className="text-emerald-100 text-xs">Faol reys</p>
+                    <p className="font-bold text-white text-sm">{activeFlight.name || 'Joriy reys'}</p>
                   </div>
                 </div>
-                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
+                <div className="flex items-center gap-1 px-2 py-1.5 bg-white/20 rounded-lg">
+                  <Play size={12} className="text-white" />
+                  <span className="text-white text-xs font-medium">Davom</span>
+                  <ChevronRight size={12} className="text-white" />
+                </div>
               </div>
+            </div>
+          ) : driver.status !== 'busy' && (
+            <div 
+              onClick={() => setShowFlightModal(true)}
+              className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-3 cursor-pointer hover:from-blue-600 hover:to-indigo-600 transition shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                    <Truck size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-blue-100 text-xs">Haydovchi bo'sh</p>
+                    <p className="font-bold text-white text-sm">Yangi reys boshlash</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-1.5 bg-white/20 rounded-lg">
+                  <Play size={12} className="text-white" />
+                  <span className="text-white text-xs font-medium">Boshlash</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          {/* Moliyaviy */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                <Wallet size={16} className="text-white" />
+              </div>
+              <h2 className="font-bold text-gray-900">Moliyaviy</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <p className="text-lg font-bold text-gray-900">{formatMoney(driver.baseSalary)}</p>
+                <p className="text-xs text-gray-500">Oylik maosh</p>
+              </div>
+              <div className="p-3 bg-emerald-50 rounded-xl">
+                <p className="text-lg font-bold text-emerald-600">{formatMoney(totalEarnings)}</p>
+                <p className="text-xs text-gray-500">Daromad</p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-xl">
+                <p className="text-lg font-bold text-orange-600">{formatMoney(totalExpenses)}</p>
+                <p className="text-xs text-gray-500">Xarajatlar</p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-xl">
+                <p className="text-lg font-bold text-purple-600">+{formatMoney(totalProfit)}</p>
+                <p className="text-xs text-gray-500">Foyda</p>
+              </div>
+            </div>
+            <div className="mt-3 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-between">
+              <div>
+                <p className="text-blue-200 text-xs">Jami daromad</p>
+                <p className="text-xl font-bold text-white">{formatMoney(totalEarnings)} <span className="text-sm text-blue-200">so'm</span></p>
+              </div>
+              <TrendingUp size={24} className="text-emerald-300" />
             </div>
           </div>
 
-          {/* Flights History */}
-          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Route className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          {/* Reyslar */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <Route size={16} className="text-white" />
                 </div>
-                <div>
-                  <h2 className="text-base sm:text-xl font-bold text-gray-900">Reyslar tarixi</h2>
-                  <p className="text-gray-500 text-xs sm:text-sm">{flights.length} ta reys</p>
-                </div>
+                <h2 className="font-bold text-gray-900">Reyslar</h2>
+                <span className="text-xs text-gray-400">({flights.length})</span>
               </div>
               {flights.filter(f => f.status === 'active').length > 0 && (
-                <span className="px-2 sm:px-4 py-1 sm:py-2 bg-orange-100 text-orange-700 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-medium animate-pulse">
-                  {flights.filter(f => f.status === 'active').length} ta faol
+                <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs animate-pulse">
+                  {flights.filter(f => f.status === 'active').length} faol
                 </span>
               )}
             </div>
-
             {flights.length > 0 ? (
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-2 max-h-80 overflow-y-auto">
                 {flights.slice(0, 10).map((flight) => (
                   <div 
                     key={flight._id} 
                     onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                    className="group flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl sm:rounded-2xl cursor-pointer transition-all border border-transparent hover:border-blue-200"
+                    className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition"
                   >
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${
-                      flight.status === 'active' ? 'from-orange-500 to-amber-600' : 
-                      flight.status === 'completed' ? 'from-emerald-500 to-teal-600' : 'from-gray-400 to-gray-500'
-                    } rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}>
-                      <Route size={16} className="sm:w-5 sm:h-5 text-white" />
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      flight.status === 'active' ? 'bg-orange-500' : 
+                      flight.status === 'completed' ? 'bg-emerald-500' : 'bg-gray-400'
+                    }`}>
+                      <Route size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Reys'}</p>
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-0.5 sm:mt-1">
-                        <span className="text-[10px] sm:text-sm text-gray-500">{formatDate(flight.createdAt)}</span>
-                        <span className="text-[10px] sm:text-sm text-gray-400">• {flight.totalDistance || 0} km</span>
-                        <span className="text-[10px] sm:text-sm text-gray-400 hidden sm:inline">• {flight.legs?.length || 0} buyurtma</span>
-                      </div>
+                      <p className="font-medium text-gray-900 text-sm truncate">{flight.name || 'Reys'}</p>
+                      <p className="text-xs text-gray-500">{formatDate(flight.createdAt)} • {flight.totalDistance || 0} km</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium ${
-                        flight.status === 'active' ? 'bg-orange-100 text-orange-700' : 
-                        flight.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'
+                      <span className={`text-xs font-medium ${
+                        flight.status === 'active' ? 'text-orange-600' : 
+                        flight.status === 'completed' ? 'text-emerald-600' : 'text-gray-500'
                       }`}>
                         {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
                       </span>
                       {flight.totalPayment > 0 && (
-                        <p className="text-[10px] sm:text-sm font-bold text-emerald-600 mt-1 sm:mt-2">{formatMoney(flight.totalPayment)}</p>
+                        <p className="text-xs font-bold text-emerald-600">{formatMoney(flight.totalPayment)}</p>
                       )}
                     </div>
-                    <ChevronRight size={16} className="sm:w-5 sm:h-5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all hidden sm:block" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 sm:py-12">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Route size={28} className="sm:w-10 sm:h-10 text-gray-300" />
-                </div>
-                <p className="text-gray-500 text-sm sm:text-base">Hali reyslar yo'q</p>
+              <div className="text-center py-8">
+                <Route size={32} className="text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">Hali reyslar yo'q</p>
               </div>
             )}
           </div>
         </div>
 
-
         {/* Right Column */}
-        <div className="space-y-4 sm:space-y-6">
-          {/* Personal Info */}
-          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
-            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <User size={16} className="text-white" />
+              </div>
+              <h2 className="font-bold text-gray-900">Ma'lumotlar</h2>
+            </div>
+            
+            {/* Telefon */}
+            <div className="p-3 bg-gray-50 rounded-xl flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Phone size={16} className="text-blue-600" />
               </div>
               <div>
-                <h2 className="text-base sm:text-xl font-bold text-gray-900">Shaxsiy ma'lumotlar</h2>
-                <p className="text-gray-500 text-xs sm:text-sm">Hujjatlar</p>
+                <p className="text-xs text-gray-400">Telefon</p>
+                <p className="font-medium text-gray-900 text-sm">{driver.phone || 'Kiritilmagan'}</p>
               </div>
             </div>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div className="group p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-blue-200 transition-all">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors flex-shrink-0">
-                    <Phone size={16} className="sm:w-5 sm:h-5 text-blue-600 group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Telefon</p>
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{driver.phone || 'Kiritilmagan'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Assigned Vehicle */}
-          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
-            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-base sm:text-xl font-bold text-gray-900">Biriktirilgan mashina</h2>
-                <p className="text-gray-500 text-xs sm:text-sm">Transport vositasi</p>
-              </div>
-            </div>
-
+            {/* Mashina */}
             {vehicle ? (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="p-4 sm:p-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl text-white">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Truck size={24} className="sm:w-8 sm:h-8 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xl sm:text-3xl font-bold truncate">{vehicle.plateNumber}</p>
-                      <p className="text-blue-200 text-sm sm:text-base truncate">{vehicle.brand} {vehicle.model}</p>
-                    </div>
+              <div className="space-y-2">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Truck size={14} className="text-blue-200" />
+                    <span className="text-blue-200 text-xs">Mashina</span>
                   </div>
+                  <p className="text-xl font-bold">{vehicle.plateNumber}</p>
+                  <p className="text-blue-200 text-sm">{vehicle.brand} {vehicle.model}</p>
                 </div>
-
-                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-1">Yil</p>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{vehicle.year || '-'}</p>
-                </div>
-
-                {vehicle.capacity && (
-                  <div className="p-3 sm:p-4 bg-amber-50 rounded-lg sm:rounded-xl border border-amber-100">
-                    <p className="text-[10px] sm:text-xs text-amber-600 uppercase tracking-wider mb-0.5 sm:mb-1">Yuk sig'imi</p>
-                    <p className="text-lg sm:text-xl font-bold text-amber-700">{vehicle.capacity} tonna</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 bg-gray-50 rounded-lg text-center">
+                    <p className="text-xs text-gray-400">Yil</p>
+                    <p className="font-bold text-gray-900">{vehicle.year || '-'}</p>
                   </div>
-                )}
+                  {vehicle.capacity && (
+                    <div className="p-2 bg-amber-50 rounded-lg text-center">
+                      <p className="text-xs text-amber-600">Sig'im</p>
+                      <p className="font-bold text-amber-700">{vehicle.capacity}t</p>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              <div className="text-center py-6 sm:py-10">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Truck size={28} className="sm:w-10 sm:h-10 text-gray-300" />
+              <div className="p-3 bg-gray-50 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <Truck size={16} className="text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Mashina</p>
+                    <p className="font-medium text-gray-500 text-sm">Biriktirilmagan</p>
+                  </div>
                 </div>
-                <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">Mashina biriktirilmagan</p>
                 <button 
                   onClick={() => navigate('/dashboard/vehicles')}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg sm:rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                  className="px-2 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition"
                 >
-                  Mashina biriktirish
+                  Biriktirish
                 </button>
               </div>
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 text-white">
-            <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-              <Sparkles size={16} className="sm:w-[18px] sm:h-[18px] text-amber-400" />
-              Tezkor amallar
-            </h3>
-            <div className="space-y-2 sm:space-y-3">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 text-white">
+            <h3 className="font-bold mb-3 text-sm">Tezkor amallar</h3>
+            <div className="space-y-2">
               {driver.status !== 'busy' && (
                 <button 
                   onClick={() => setShowFlightModal(true)}
-                  className="w-full p-3 sm:p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3 border border-emerald-500/30"
+                  className="w-full p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-lg text-left transition flex items-center gap-2"
                 >
-                  <Play size={18} className="sm:w-5 sm:h-5 text-emerald-400" />
-                  <span className="font-medium text-sm sm:text-base">Reys ochish</span>
-                  <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-emerald-400" />
+                  <Play size={16} />
+                  <span className="text-sm font-medium">Reys ochish</span>
                 </button>
               )}
               <button 
                 onClick={() => navigate('/dashboard/flights')}
-                className="w-full p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3"
+                className="w-full p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition flex items-center gap-2"
               >
-                <Route size={18} className="sm:w-5 sm:h-5 text-blue-400" />
-                <span className="text-sm sm:text-base">Barcha reyslar</span>
-                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-slate-400" />
+                <Route size={16} className="text-blue-400" />
+                <span className="text-sm">Barcha reyslar</span>
               </button>
               <button 
                 onClick={() => navigate('/dashboard/salaries')}
-                className="w-full p-3 sm:p-4 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-left transition flex items-center gap-2 sm:gap-3"
+                className="w-full p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition flex items-center gap-2"
               >
-                <Wallet size={18} className="sm:w-5 sm:h-5 text-emerald-400" />
-                <span className="text-sm sm:text-base">Maosh hisoblash</span>
-                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px] ml-auto text-slate-400" />
+                <Wallet size={16} className="text-emerald-400" />
+                <span className="text-sm">Maosh hisoblash</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* Reys ochish Modal */}
       {showFlightModal && createPortal(
@@ -667,94 +473,97 @@ export default function DriverDetail() {
         >
           <div className="min-h-full flex items-center justify-center p-4">
             <div 
-              className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl"
+              className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className="p-6 border-b border-white/10">
+              <div className="p-5 border-b border-white/10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <Play className="w-7 h-7 text-white" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                      <Play className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Yangi reys ochish</h2>
+                      <h2 className="text-lg font-bold text-white">Yangi reys</h2>
                       <p className="text-emerald-300 text-sm">{driver.fullName}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowFlightModal(false)} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
-                    <X size={24} />
+                  <button onClick={() => setShowFlightModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
+                    <X size={20} />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleStartFlight} className="p-6 space-y-5">
-                {/* Mashina info */}
+              <form onSubmit={handleStartFlight} className="p-5 space-y-4">
                 {vehicle && (
-                  <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                    <div className="flex items-center gap-3">
-                      <Truck size={20} className="text-blue-400" />
-                      <div>
-                        <p className="font-semibold text-white">{vehicle.plateNumber}</p>
-                        <p className="text-sm text-blue-300">{vehicle.brand}</p>
-                      </div>
+                  <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center gap-3">
+                    <Truck size={18} className="text-blue-400" />
+                    <div>
+                      <p className="font-semibold text-white text-sm">{vehicle.plateNumber}</p>
+                      <p className="text-xs text-blue-300">{vehicle.brand}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Reys turi */}
                 <div>
-                  <label className="block text-sm font-semibold text-emerald-200 mb-2">Reys turi</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm font-medium text-emerald-200 mb-2">Reys turi</label>
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
-                      className={`p-4 rounded-xl border-2 transition-all ${
+                      className={`p-3 rounded-xl border-2 transition ${
                         flightForm.flightType === 'domestic'
                           ? 'border-green-500 bg-green-500/20 text-white'
-                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                          : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <div className="text-2xl mb-1">🇺🇿</div>
-                      <div className="font-semibold text-sm">O'zbekiston ichida</div>
-                      <div className="text-xs opacity-70">Mahalliy reys</div>
+                      <span className="text-xl">🇺🇿</span>
+                      <p className="font-medium text-sm mt-1">Mahalliy</p>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'international' })}
-                      className={`p-4 rounded-xl border-2 transition-all ${
+                      className={`p-3 rounded-xl border-2 transition ${
                         flightForm.flightType === 'international'
                           ? 'border-blue-500 bg-blue-500/20 text-white'
-                          : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                          : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <div className="text-2xl mb-1">🌍</div>
-                      <div className="font-semibold text-sm">Xalqaro</div>
-                      <div className="text-xs opacity-70">Chet elga reys</div>
+                      <span className="text-xl">🌍</span>
+                      <p className="font-medium text-sm mt-1">Xalqaro</p>
                     </button>
                   </div>
                 </div>
 
-                {/* Odometr */}
-                <div>
-                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
-                    <Gauge size={14} className="inline mr-1" /> Odometr (km)
-                  </label>
-                  <input
-                    type="number"
-                    value={flightForm.startOdometer}
-                    onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                    placeholder="123456"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-emerald-200 mb-1">
+                      <Gauge size={12} className="inline mr-1" /> Odometr (km)
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startOdometer}
+                      onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                      placeholder="123456"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-emerald-200 mb-1">
+                      <Fuel size={12} className="inline mr-1" /> Yoqilg'i
+                    </label>
+                    <input
+                      type="number"
+                      value={flightForm.startFuel}
+                      onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                      placeholder="100"
+                    />
+                  </div>
                 </div>
 
-                {/* Yoqilg'i turi */}
                 <div>
-                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
-                    <Fuel size={14} className="inline mr-1" /> Yoqilg'i turi
-                  </label>
-                  <div className="grid grid-cols-5 gap-2">
+                  <label className="block text-sm text-emerald-200 mb-1">Yoqilg'i turi</label>
+                  <div className="grid grid-cols-5 gap-1">
                     {[
                       { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
                       { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' },
@@ -766,40 +575,24 @@ export default function DriverDetail() {
                         key={fuel.value}
                         type="button"
                         onClick={() => setFlightForm({ ...flightForm, fuelType: fuel.value, fuelUnit: fuel.unit })}
-                        className={`p-2 rounded-xl border text-center transition ${
+                        className={`p-2 rounded-lg border text-center transition ${
                           flightForm.fuelType === fuel.value
                             ? 'border-emerald-500 bg-emerald-500/20 text-white'
-                            : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+                            : 'border-white/10 bg-white/5 text-slate-400'
                         }`}
                       >
-                        <span className="text-lg">{fuel.icon}</span>
-                        <p className="text-[10px] mt-0.5">{fuel.label}</p>
+                        <span className="text-base">{fuel.icon}</span>
+                        <p className="text-[9px] mt-0.5">{fuel.label}</p>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Yoqilg'i miqdori */}
-                <div>
-                  <label className="block text-sm font-semibold text-emerald-200 mb-2">
-                    Yoqilg'i miqdori ({flightForm.fuelUnit || 'litr'})
-                  </label>
-                  <input
-                    type="number"
-                    value={flightForm.startFuel}
-                    onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                    placeholder="100"
-                  />
-                </div>
-
-                {/* Birinchi buyurtma */}
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-sm font-semibold text-emerald-300 mb-3">Birinchi buyurtma</p>
-                  
-                  <div className="space-y-3">
+                <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-sm font-medium text-emerald-300 mb-2">Birinchi buyurtma</p>
+                  <div className="space-y-2">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Qayerdan *</label>
+                      <label className="block text-xs text-slate-400 mb-1">Qayerdan *</label>
                       <AddressAutocomplete
                         value={flightForm.fromCity}
                         onChange={(val) => setFlightForm({ ...flightForm, fromCity: val })}
@@ -816,7 +609,7 @@ export default function DriverDetail() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Qayerga *</label>
+                      <label className="block text-xs text-slate-400 mb-1">Qayerga *</label>
                       <AddressAutocomplete
                         value={flightForm.toCity}
                         onChange={(val) => setFlightForm({ ...flightForm, toCity: val })}
@@ -833,7 +626,7 @@ export default function DriverDetail() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Berilgan pul (so'm)</label>
+                      <label className="block text-xs text-slate-400 mb-1">Berilgan pul (so'm)</label>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -851,9 +644,9 @@ export default function DriverDetail() {
 
                 <button 
                   type="submit" 
-                  className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
                 >
-                  <Play size={20} /> Reysni boshlash
+                  <Play size={18} /> Reysni boshlash
                 </button>
               </form>
             </div>

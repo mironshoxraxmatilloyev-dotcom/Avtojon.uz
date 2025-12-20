@@ -247,6 +247,10 @@ const flightSchema = new mongoose.Schema({
     default: 'active'
   },
   
+  // Haydovchi tasdiqlagan yoki yo'qligini belgilash
+  driverConfirmed: { type: Boolean, default: false },
+  driverConfirmedAt: { type: Date, default: null },
+  
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
   notes: String

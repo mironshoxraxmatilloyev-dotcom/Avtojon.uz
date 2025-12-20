@@ -407,6 +407,46 @@ router.get('/me/flights/active', protect, driverOnly, async (req, res) => {
   }
 });
 
+// Reysni tasdiqlash (haydovchi)
+router.put('/me/flights/:id/confirm', protect, driverOnly, async (req, res) => {
+  try {
+    const flight = await Flight.findOne({ 
+      _id: req.params.id, 
+      driver: req.driver._id,
+      status: 'active'
+    });
+    
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
+    }
+
+    if (flight.driverConfirmed) {
+      return res.status(400).json({ success: false, message: 'Reys allaqachon tasdiqlangan' });
+    }
+
+    flight.driverConfirmed = true;
+    flight.driverConfirmedAt = new Date();
+    await flight.save();
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket orqali biznesmenga xabar
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`business-${flight.user}`).emit('flight-confirmed', {
+        flight: populatedFlight,
+        message: `${req.driver.fullName} reysni tasdiqladi!`
+      });
+    }
+
+    res.json({ success: true, data: populatedFlight, message: 'Reys tasdiqlandi!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // buyurtmani tugatish
 router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (req, res) => {
   try {

@@ -69,7 +69,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-violet-50/30">
       {/* Mobile Header with menu button */}
       {!sidebarOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">

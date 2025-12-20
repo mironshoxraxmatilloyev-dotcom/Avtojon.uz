@@ -437,17 +437,37 @@ router.put('/:id/cancel', protect, businessOnly, async (req, res) => {
   }
 });
 
-// Reysni o'chirish
+// Reysni o'chirish (faqat haydovchi tasdiqlamasidan oldin)
 router.delete('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const flight = await Flight.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const flight = await Flight.findOne({ _id: req.params.id, user: req.user._id });
     if (!flight) {
       return res.status(404).json({ success: false, message: 'Reys topilmadi' });
     }
 
+    // Haydovchi tasdiqlagan bo'lsa - o'chirib bo'lmaydi
+    if (flight.driverConfirmed) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Haydovchi tasdiqlagan reysni o\'chirib bo\'lmaydi' 
+      });
+    }
+
+    // Reysni o'chirish
+    await Flight.findByIdAndDelete(flight._id);
+
     // Agar reys faol bo'lsa, shofyorni bo'shatish
     if (flight.status === 'active') {
       await Driver.findByIdAndUpdate(flight.driver, { status: 'free' });
+    }
+
+    // Socket xabar - reys o'chirildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-deleted', {
+        flightId: flight._id,
+        message: 'Reys o\'chirildi'
+      });
     }
 
     res.json({ success: true, message: 'Reys o\'chirildi' });
