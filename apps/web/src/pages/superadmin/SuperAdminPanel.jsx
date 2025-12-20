@@ -308,101 +308,126 @@ export default function SuperAdminPanel() {
   const copyToClipboard = (text, field) => { navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000) }
   const handleLogout = () => { logout(); navigate('/login') }
 
-  // Dashboard - 4 ta katta animatsiyali karta
+  // Dashboard - 4 ta animatsiyali karta
   const renderDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Welcome Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 sm:p-8">
+      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-5 sm:p-6">
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <span className="text-white font-black text-lg">A</span>
+            <div className="w-9 h-9 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+              <span className="text-white font-black text-base">A</span>
             </div>
             <span className="text-white/80 text-sm font-medium">Avtojon.uz</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Xush kelibsiz, Admin! 👋</h1>
-          <p className="text-white/70 text-sm sm:text-base">Bugun tizimda {stats?.businessmen?.total || 0} ta biznesmen va {stats?.drivers?.total || 0} ta shofyor faoliyat yuritmoqda.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Xush kelibsiz, Admin! 👋</h1>
+          <p className="text-white/70 text-sm">Bugun tizimda {stats?.businessmen?.total || 0} ta biznesmen va {stats?.drivers?.total || 0} ta shofyor faoliyat yuritmoqda.</p>
         </div>
       </div>
 
-      {/* 4 ta katta animatsiyali karta */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      {/* 4 ta animatsiyali karta */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {/* Parollarni yangilang */}
-        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/20">
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-400/30 transition-all duration-700" />
+        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-indigo-900/50 to-purple-900/50 hover:from-indigo-800/60 hover:to-purple-800/60 border border-indigo-500/30 hover:border-indigo-400/50 rounded-2xl p-4 sm:p-5 text-left transition-all duration-500 hover:shadow-lg hover:shadow-indigo-500/20">
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <Key className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Key className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Biznesmenlar parollarini boshqaring</p>
-            <div className="mt-4 flex items-center gap-2 text-indigo-400 group-hover:text-indigo-300 transition-colors">
-              <span className="text-sm font-medium">Kirish</span>
-              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            <h3 className="text-base sm:text-lg font-bold text-white mb-1 group-hover:text-indigo-200 transition-colors">Parollarni yangilang</h3>
+            <p className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors hidden sm:block">Biznesmenlar parollarini boshqaring</p>
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 text-indigo-400 group-hover:text-indigo-300 transition-colors">
+              <span className="text-xs font-medium">Kirish</span>
+              <ChevronRight className="w-3 h-3 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </button>
 
         {/* Statistika */}
-        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/20">
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-400/30 transition-all duration-700" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl group-hover:bg-teal-400/30 transition-all duration-700" />
+        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/50 to-teal-900/50 hover:from-emerald-800/60 hover:to-teal-800/60 border border-emerald-500/30 hover:border-emerald-400/50 rounded-2xl p-4 sm:p-5 text-left transition-all duration-500 hover:shadow-lg hover:shadow-emerald-500/20">
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">Statistika</h3>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Umumiy statistika va grafiklarni ko'ring</p>
-            <div className="mt-4 flex items-center gap-2 text-emerald-400 group-hover:text-emerald-300 transition-colors">
-              <span className="text-sm font-medium">Kirish</span>
-              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            <h3 className="text-base sm:text-lg font-bold text-white mb-1 group-hover:text-emerald-200 transition-colors">Statistika</h3>
+            <p className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors hidden sm:block">Umumiy statistika va grafiklar</p>
+            <div className="mt-2 sm:mt-3 flex items-center gap-1 text-emerald-400 group-hover:text-emerald-300 transition-colors">
+              <span className="text-xs font-medium">Kirish</span>
+              <ChevronRight className="w-3 h-3 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </button>
 
         {/* Reyslar soni */}
-        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-amber-900/50 to-orange-900/50 hover:from-amber-800/60 hover:to-orange-800/60 border border-amber-500/30 hover:border-amber-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/20">
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl group-hover:bg-amber-400/30 transition-all duration-700" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl group-hover:bg-orange-400/30 transition-all duration-700" />
+        <button onClick={() => setActiveTab('stats')} className="group relative overflow-hidden bg-gradient-to-br from-amber-900/50 to-orange-900/50 hover:from-amber-800/60 hover:to-orange-800/60 border border-amber-500/30 hover:border-amber-400/50 rounded-2xl p-4 sm:p-5 text-left transition-all duration-500 hover:shadow-lg hover:shadow-amber-500/20">
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/30 group-hover:shadow-amber-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <Route className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-amber-500/30 group-hover:shadow-amber-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Route className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-4xl sm:text-5xl font-black text-white">{stats?.flights?.total || 0}</span>
-              <span className="text-lg text-amber-400">reys</span>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-black text-white">{stats?.flights?.total || 0}</span>
+              <span className="text-sm text-amber-400">reys</span>
             </div>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">{stats?.flights?.active || 0} faol / {stats?.flights?.completed || 0} yakunlangan</p>
-            <div className="mt-4 flex items-center gap-2 text-amber-400 group-hover:text-amber-300 transition-colors">
-              <span className="text-sm font-medium">Batafsil</span>
-              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-            </div>
+            <p className="text-xs text-slate-400">{stats?.flights?.active || 0} faol / {stats?.flights?.completed || 0} yakunlangan</p>
           </div>
         </button>
 
         {/* Biznesmenlar */}
-        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 hover:from-blue-800/60 hover:to-cyan-800/60 border border-blue-500/30 hover:border-blue-400/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/20">
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-700" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-400/30 transition-all duration-700" />
+        <button onClick={() => setActiveTab('businessmen')} className="group relative overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 hover:from-blue-800/60 hover:to-cyan-800/60 border border-blue-500/30 hover:border-blue-400/50 rounded-2xl p-4 sm:p-5 text-left transition-all duration-500 hover:shadow-lg hover:shadow-blue-500/20">
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-400/30 transition-all duration-700" />
           <div className="relative z-10">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30 group-hover:shadow-blue-400/50 transform group-hover:rotate-3 transition-all duration-500">
-              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-blue-500/30 group-hover:shadow-blue-400/50 transform group-hover:rotate-3 transition-all duration-500">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-4xl sm:text-5xl font-black text-white">{stats?.businessmen?.total || 0}</span>
-              <span className="text-lg text-blue-400">biznesmen</span>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-2xl sm:text-3xl font-black text-white">{stats?.businessmen?.total || 0}</span>
+              <span className="text-sm text-blue-400">biznesmen</span>
             </div>
-            <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">{stats?.businessmen?.active || 0} faol / {stats?.businessmen?.inactive || 0} faolsiz</p>
-            <div className="mt-4 flex items-center gap-2 text-blue-400 group-hover:text-blue-300 transition-colors">
-              <span className="text-sm font-medium">Boshqarish</span>
-              <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-            </div>
+            <p className="text-xs text-slate-400">{stats?.businessmen?.active || 0} faol / {stats?.businessmen?.inactive || 0} faolsiz</p>
           </div>
         </button>
+      </div>
+
+      {/* So'nggi faoliyat */}
+      <div className="bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-4 sm:p-5">
+        <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          So'nggi faoliyat
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 p-2.5 bg-slate-700/30 rounded-xl">
+            <div className="w-9 h-9 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white truncate">Yangi biznesmen qo'shildi</p>
+              <p className="text-xs text-slate-400">Bugun</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-2.5 bg-slate-700/30 rounded-xl">
+            <div className="w-9 h-9 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Truck className="w-4 h-4 text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white truncate">Shofyor holati yangilandi</p>
+              <p className="text-xs text-slate-400">1 soat oldin</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-2.5 bg-slate-700/30 rounded-xl">
+            <div className="w-9 h-9 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Route className="w-4 h-4 text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white truncate">Yangi reys yaratildi</p>
+              <p className="text-xs text-slate-400">3 soat oldin</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
