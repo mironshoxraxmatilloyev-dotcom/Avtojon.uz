@@ -36,14 +36,25 @@ router.get('/', protect, businessOnly, async (req, res) => {
   }
 });
 
-// Bitta shofyor
+// Bitta shofyor (mashina bilan birga)
 router.get('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true }).select('-password');
+    // 🚀 Parallel so'rovlar - tezroq
+    const [driver, vehicle] = await Promise.all([
+      Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true })
+        .select('-password')
+        .lean(),
+      Vehicle.findOne({ currentDriver: req.params.id, user: req.user._id, isActive: true })
+        .select('plateNumber brand model fuelType')
+        .lean()
+    ]);
+    
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
     }
-    res.json({ success: true, data: driver });
+    
+    // Mashina ma'lumotini driver ga qo'shish
+    res.json({ success: true, data: { ...driver, vehicle } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

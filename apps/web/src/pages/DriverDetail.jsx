@@ -40,24 +40,22 @@ export default function DriverDetail() {
   const [flightForm, setFlightForm] = useState({
     startOdometer: '', startFuel: '', fromCity: '', toCity: '',
     payment: '', givenBudget: '', fromCoords: null, toCoords: null,
-    flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr'
+    flightType: 'domestic', fuelType: 'metan', fuelUnit: 'kub'
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true)
     setError(null)
     try {
-      const [driverRes, vehiclesRes, flightsRes] = await Promise.all([
+      // 🚀 Parallel so'rovlar - tezroq yuklash
+      const [driverRes, flightsRes] = await Promise.all([
         api.get(`/drivers/${id}`),
-        api.get('/vehicles'),
-        api.get('/flights', { params: { driverId: id } })
+        api.get('/flights', { params: { driverId: id, limit: 20 } }) // Faqat oxirgi 20 ta
       ])
-      setDriver(driverRes.data.data)
+      const driverData = driverRes.data.data
+      setDriver(driverData)
+      setVehicle(driverData?.vehicle || null) // Backend dan keladi
       setFlights(flightsRes.data.data || [])
-      const assignedVehicle = (vehiclesRes.data.data || []).find(v => 
-        v.currentDriver === id || v.currentDriver?._id === id
-      )
-      setVehicle(assignedVehicle)
     } catch (err) {
       if (err.response?.status === 404) {
         setError({ type: 'notfound', message: 'Shofyor topilmadi' })
@@ -143,7 +141,7 @@ export default function DriverDetail() {
       driverId: id,
       startOdometer: Number(flightForm.startOdometer) || 0,
       startFuel: Number(flightForm.startFuel) || 0,
-      fuelType: flightForm.fuelType || 'benzin',
+      fuelType: flightForm.fuelType || 'metan',
       fuelUnit: flightForm.fuelUnit || 'litr',
       flightType: flightForm.flightType,
       firstLeg: {
@@ -158,7 +156,7 @@ export default function DriverDetail() {
     const fromCity = flightForm.fromCity
     const toCity = flightForm.toCity
     setShowFlightModal(false)
-    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr' })
+    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'metan', fuelUnit: 'kub' })
     showToast.success(`Reys ochilmoqda: ${fromCity} → ${toCity}`)
     api.post('/flights', payload)
       .then((res) => navigate(`/dashboard/flights/${res.data.data._id}`))
@@ -563,13 +561,12 @@ export default function DriverDetail() {
 
                 <div>
                   <label className="block text-sm text-emerald-200 mb-1">Yoqilg'i turi</label>
-                  <div className="grid grid-cols-5 gap-1">
+                  <div className="grid grid-cols-4 gap-1">
                     {[
-                      { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-                      { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' },
-                      { value: 'gas', label: 'Gaz', icon: '🔵', unit: 'kub' },
                       { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-                      { value: 'propan', label: 'Propan', icon: '🟡', unit: 'litr' }
+                      { value: 'propan', label: 'Propan', icon: '🟡', unit: 'kub' },
+                      { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
+                      { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
                     ].map(fuel => (
                       <button
                         key={fuel.value}

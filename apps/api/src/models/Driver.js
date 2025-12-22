@@ -86,7 +86,7 @@ driverSchema.methods.comparePassword = async function(candidatePassword) {
 // 🚀 Indexlar - tez qidiruv uchun
 driverSchema.index({ user: 1, status: 1 }); // Biznesmen shofyorlari
 driverSchema.index({ user: 1, isActive: 1 }); // Aktiv shofyorlar
-driverSchema.index({ username: 1 }); // Login uchun
+// username uchun index allaqachon unique: true orqali yaratilgan
 driverSchema.index({ 'lastLocation.updatedAt': -1 }); // GPS yangilanish
 
 module.exports = mongoose.model('Driver', driverSchema);

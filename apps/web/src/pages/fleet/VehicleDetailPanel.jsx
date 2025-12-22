@@ -26,7 +26,7 @@ const TIRE_STATUS = {
 }
 const TIRE_POSITIONS = ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)', 'Zaxira']
 const SERVICE_TYPES = ['TO-1', 'TO-2', 'Moy almashtirish', 'Tormoz', 'Shina', 'Dvigatel', 'Uzatmalar qutisi', 'Elektrika', 'Kuzov', 'Boshqa']
-const FUEL_TYPES = [{ value: 'diesel', label: 'Dizel' }, { value: 'petrol', label: 'Benzin' }, { value: 'gas', label: 'Gaz' }, { value: 'metan', label: 'Metan' }]
+const FUEL_TYPES = [{ value: 'metan', label: 'Metan' }, { value: 'propan', label: 'Propan' }, { value: 'petrol', label: 'Benzin' }, { value: 'diesel', label: 'Dizel' }]
 
 const fmt = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0)
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'

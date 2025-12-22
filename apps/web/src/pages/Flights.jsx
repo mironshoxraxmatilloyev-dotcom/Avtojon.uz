@@ -38,11 +38,10 @@ const EXPENSE_CATEGORIES = [
 
 // Yoqilg'i turlari
 const FUEL_TYPES = [
-  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-  { value: 'fuel_diesel', label: 'Dizel (Salarka)', icon: '🛢️', unit: 'litr' },
-  { value: 'fuel_gas', label: 'Gaz', icon: '🔵', unit: 'kub' },
   { value: 'fuel_metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'litr' }
+  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'kub' },
+  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
+  { value: 'fuel_diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
 ]
 
 // Eski format uchun (display)
