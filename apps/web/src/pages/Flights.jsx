@@ -415,6 +415,42 @@ export default function Flights() {
       })
   }
 
+  // Reysni bekor qilish
+  const handleCancelFlight = async (flightId) => {
+    const flight = flights.find(f => f._id === flightId)
+    if (!flight) return
+
+    const confirmed = await alert.confirm({
+      title: "Reysni bekor qilish",
+      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Shofyor bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
+      confirmText: "Ha, bekor qilish",
+      cancelText: "Yo'q",
+      type: "danger"
+    })
+
+    if (!confirmed) return
+
+    // 🚀 OPTIMISTIC UPDATE
+    setFlights(prev => prev.map(f => f._id === flightId ? {
+      ...f,
+      status: 'cancelled'
+    } : f))
+    setExpandedFlight(null)
+    showToast.success('Reys bekor qilindi')
+
+    // Fonda API
+    api.put(`/flights/${flightId}/cancel`)
+      .then((res) => {
+        if (res.data?.data) {
+          setFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+        }
+      })
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+        fetchData()
+      })
+  }
+
   const statusConfig = {
     active: { label: 'Faol', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
     completed: { label: 'Yopilgan', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' },
@@ -819,6 +855,14 @@ export default function Flights() {
                         Yopish
                       </button>
                     </div>
+                    {/* Bekor qilish tugmasi */}
+                    <button
+                      onClick={() => handleCancelFlight(flight._id)}
+                      className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
+                    >
+                      <X size={16} />
+                      Reysni bekor qilish
+                    </button>
                     {/* Xalqaro reys uchun qo'shimcha tugmalar */}
                     {flight.flightType === 'international' && (
                       <div className="flex flex-col sm:flex-row gap-2">

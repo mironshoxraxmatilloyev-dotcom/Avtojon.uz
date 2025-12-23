@@ -5,12 +5,11 @@ const isDev = import.meta.env.DEV
 
 // Socket.io ulanish
 const getSocketURL = () => {
-  const apiUrl = import.meta.env.VITE_API_URL
+  const socketUrl = import.meta.env.VITE_SOCKET_URL
   const hostname = window.location.hostname
   
-  // Agar VITE_API_URL berilgan bo'lsa - /api ni olib tashlash
-  if (apiUrl) {
-    const socketUrl = apiUrl.replace('/api', '').replace(/\/$/, '')
+  // Agar VITE_SOCKET_URL berilgan bo'lsa
+  if (socketUrl && socketUrl.startsWith('http')) {
     return socketUrl
   }
   

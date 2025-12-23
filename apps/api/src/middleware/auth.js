@@ -62,7 +62,11 @@ exports.protect = async (req, res, next) => {
 
 // Faqat biznesmen (admin) uchun
 exports.businessOnly = (req, res, next) => {
-  if (!req.user || req.driver) {
+  // Biznesmen yoki admin bo'lishi kerak, shofyor bo'lmasligi kerak
+  if (req.driver) {
+    return res.status(403).json({ success: false, message: 'Faqat biznesmen uchun' });
+  }
+  if (!req.user && !req.businessman) {
     return res.status(403).json({ success: false, message: 'Faqat biznesmen uchun' });
   }
   next();

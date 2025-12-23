@@ -3,6 +3,7 @@ import { lazy, Suspense, memo, useEffect, useState } from 'react'
 import { useAuthStore } from './store/authStore'
 import { AlertProvider } from './components/ui'
 import api from './services/api'
+import SubscriptionAlert from './components/subscription/SubscriptionAlert'
 
 // 🚀 LAZY LOADING
 const Landing = lazy(() => import('./pages/Landing'))
@@ -179,6 +180,7 @@ function App() {
   return (
     <AlertProvider>
       <ScrollToTop />
+      <SubscriptionAlert />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public */}

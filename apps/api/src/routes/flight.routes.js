@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Flight = require('../models/Flight');
 const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
@@ -7,13 +8,25 @@ const { protect, businessOnly } = require('../middleware/auth');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { validateObjectId } = require('../utils/validators');
 
+// ObjectId validatsiya funksiyasi
+const isValidObjectId = (id) => {
+  if (!id) return false;
+  if (typeof id !== 'string') return false;
+  if (id.startsWith('temp_')) return false; // Vaqtinchalik ID
+  return mongoose.Types.ObjectId.isValid(id);
+};
+
 // Barcha reyslar
 router.get('/', protect, businessOnly, asyncHandler(async (req, res) => {
   const { status, driverId, limit } = req.query;
   const filter = { user: req.user._id };
   
   if (status) filter.status = status;
-  if (driverId) filter.driver = driverId;
+  
+  // driverId faqat valid ObjectId bo'lsa qo'shish
+  if (driverId && isValidObjectId(driverId)) {
+    filter.driver = driverId;
+  }
 
   // Limit qo'shish - default 50
   const queryLimit = parseInt(limit) || 50;
@@ -181,7 +194,7 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
   }
 });
 
-// Buyurtma uchun to'lov qo'shish/yangilash
+// Buyurtma uchun to'lov qo'shish/yangilash - TO'LOV KIRITILGANDA BUYURTMA TUGALLANADI
 router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) => {
   try {
     const { payment } = req.body;
@@ -197,6 +210,13 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
     }
 
     leg.payment = Number(payment) || 0;
+    
+    // To'lov kiritilganda buyurtma (leg) tugallanadi
+    if (Number(payment) > 0 && leg.status === 'in_progress') {
+      leg.status = 'completed';
+      leg.completedAt = new Date();
+    }
+    
     await flight.save();
 
     const populatedFlight = await Flight.findById(flight._id)
@@ -206,7 +226,10 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
     // Socket xabar
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { flight: populatedFlight });
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Buyurtma tugallandi!'
+      });
       io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
     }
 

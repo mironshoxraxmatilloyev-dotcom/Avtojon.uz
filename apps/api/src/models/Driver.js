@@ -74,7 +74,7 @@ const driverSchema = new mongoose.Schema({
 // Hash password
 driverSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 8); // 8 rounds - tezroq
   next();
 });
 

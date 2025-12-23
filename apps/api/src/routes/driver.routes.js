@@ -1,9 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
 const Flight = require('../models/Flight');
 const { protect, businessOnly } = require('../middleware/auth');
+
+// ObjectId validatsiya funksiyasi
+const isValidObjectId = (id) => {
+  if (!id) return false;
+  if (typeof id !== 'string') return false;
+  if (id.startsWith('temp_')) return false; // Vaqtinchalik ID
+  return mongoose.Types.ObjectId.isValid(id);
+};
 
 // Shofyorlar joylashuvi (xarita uchun) - /:id dan OLDIN bo'lishi kerak!
 router.get('/locations', protect, businessOnly, async (req, res) => {
@@ -39,6 +48,11 @@ router.get('/', protect, businessOnly, async (req, res) => {
 // Bitta shofyor (mashina bilan birga)
 router.get('/:id', protect, businessOnly, async (req, res) => {
   try {
+    // Vaqtinchalik ID tekshirish
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Noto\'g\'ri shofyor ID' });
+    }
+
     // 🚀 Parallel so'rovlar - tezroq
     const [driver, vehicle] = await Promise.all([
       Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true })

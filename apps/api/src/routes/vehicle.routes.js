@@ -9,36 +9,72 @@ const { protect, businessOnly } = require('../middleware/auth');
 // Obuna holatini olish
 router.get('/subscription', protect, businessOnly, async (req, res) => {
   try {
-    const user = await Businessman.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+    // Businessman yoki User ID olish
+    const userId = req.businessman?._id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi topilmadi' });
     }
 
+    // Avval Businessman dan qidirish
+    let user = await Businessman.findById(userId);
+    
+    // Agar Businessman topilmasa, User modelidan qidirish
+    if (!user) {
+      const User = require('../models/User');
+      user = await User.findById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+      }
+      
+      // User uchun subscription tekshirish
+      const now = new Date();
+      const subscription = user.subscription || {};
+      const endDate = subscription.endDate ? new Date(subscription.endDate) : new Date(now.getTime() + 60 * 1000);
+      const isExpired = now > endDate;
+      
+      return res.json({
+        success: true,
+        data: {
+          plan: subscription.plan || 'trial',
+          startDate: subscription.startDate || now,
+          endDate: endDate,
+          isExpired,
+          canUse: !isExpired
+        }
+      });
+    }
+
+    // Businessman uchun - eski fleetSubscription yoki yangi subscription
+    const subscription = user.subscription || user.fleetSubscription;
+    
     // Agar subscription yo'q bo'lsa, default trial yaratish
-    if (!user.fleetSubscription) {
-      user.fleetSubscription = {
+    if (!subscription) {
+      user.subscription = {
         plan: 'trial',
         startDate: new Date(),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        endDate: new Date(Date.now() + 60 * 1000) // 1 daqiqa trial
       };
       await user.save();
     }
 
     const now = new Date();
-    const endDate = new Date(user.fleetSubscription.endDate);
+    const sub = user.subscription || user.fleetSubscription;
+    const endDate = new Date(sub.endDate);
     const isExpired = now > endDate;
 
     res.json({
       success: true,
       data: {
-        plan: user.fleetSubscription.plan,
-        startDate: user.fleetSubscription.startDate,
-        endDate: user.fleetSubscription.endDate,
+        plan: sub.plan,
+        startDate: sub.startDate,
+        endDate: sub.endDate,
         isExpired,
         canUse: !isExpired
       }
     });
   } catch (error) {
+    console.error('Subscription GET error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -46,7 +82,12 @@ router.get('/subscription', protect, businessOnly, async (req, res) => {
 // Pro ga o'tish
 router.post('/subscription/upgrade', protect, businessOnly, async (req, res) => {
   try {
-    const user = await Businessman.findById(req.user._id);
+    const userId = req.businessman?._id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi topilmadi' });
+    }
+
+    let user = await Businessman.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'Foydalanuvchi topilmadi' });
     }
@@ -70,6 +111,7 @@ router.post('/subscription/upgrade', protect, businessOnly, async (req, res) => 
       }
     });
   } catch (error) {
+    console.error('Subscription upgrade error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

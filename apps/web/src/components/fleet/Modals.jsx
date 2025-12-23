@@ -1,0 +1,261 @@
+import { memo } from 'react'
+import { X, Crown, Zap, AlertTriangle, Phone, Clock, Truck, Fuel, Wrench, BarChart3, Headphones, Check } from 'lucide-react'
+
+const SUPPORT_PHONE = '+998 88 019 19 09'
+
+export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) => (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-slate-900 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl">
+      <div className="flex items-center justify-between p-6 border-b border-white/5">
+        <h2 className="text-xl font-bold text-white">
+          {isEdit ? 'Mashinani tahrirlash' : 'Yangi mashina'}
+        </h2>
+        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
+          <X size={20} />
+        </button>
+      </div>
+
+      <form onSubmit={onSubmit} className="p-6 space-y-5">
+        <Input
+          label="Davlat raqami"
+          value={form.plateNumber}
+          onChange={v => setForm(f => ({ ...f, plateNumber: v.toUpperCase() }))}
+          placeholder="01A123BC"
+          required
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Marka"
+            value={form.brand}
+            onChange={v => setForm(f => ({ ...f, brand: v }))}
+            placeholder="MAN"
+            required
+          />
+          <Input
+            label="Model"
+            value={form.model}
+            onChange={v => setForm(f => ({ ...f, model: v }))}
+            placeholder="TGX"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Yil"
+            type="number"
+            value={form.year}
+            onChange={v => setForm(f => ({ ...f, year: v }))}
+          />
+          <Select
+            label="Yoqilg'i"
+            value={form.fuelType}
+            onChange={v => setForm(f => ({ ...f, fuelType: v }))}
+            options={[
+              { value: 'diesel', label: 'Dizel' },
+              { value: 'petrol', label: 'Benzin' },
+              { value: 'gas', label: 'Gaz' },
+              { value: 'metan', label: 'Metan' }
+            ]}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Bak hajmi (L)"
+            type="number"
+            value={form.fuelTankCapacity}
+            onChange={v => setForm(f => ({ ...f, fuelTankCapacity: v }))}
+            placeholder="400"
+          />
+          <Input
+            label="Odometr (km)"
+            type="number"
+            value={form.currentOdometer}
+            onChange={v => setForm(f => ({ ...f, currentOdometer: v }))}
+            placeholder="0"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-semibold transition-all"
+        >
+          {isEdit ? 'Yangilash' : 'Saqlash'}
+        </button>
+      </form>
+    </div>
+  </div>
+))
+
+const handleCall = () => {
+  window.location.href = `tel:${SUPPORT_PHONE.replace(/\s/g, '')}`
+}
+
+export const UpgradeModal = memo(({ onClose, canClose }) => (
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl overflow-hidden">
+      {/* Header with gradient */}
+      <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-6 pb-16">
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl shadow-xl flex items-center justify-center border-4 border-slate-900">
+          <Crown className="w-12 h-12 text-white" />
+        </div>
+        {canClose && (
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors">
+            <X size={20} />
+          </button>
+        )}
+        <div className="relative z-10">
+          <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white font-medium">
+            Premium
+          </span>
+        </div>
+      </div>
+
+      <div className="pt-16 pb-6 px-6">
+        <h2 className="text-2xl font-bold text-white text-center mb-2">Pro tarifga o'ting</h2>
+        <p className="text-slate-400 text-center text-sm mb-6">Barcha imkoniyatlardan foydalaning</p>
+
+        {/* Features */}
+        <div className="space-y-3 mb-6">
+          <ProFeature icon={Truck} text="Cheksiz mashinalar qo'shish" />
+          <ProFeature icon={Fuel} text="Yoqilg'i va moy nazorati" />
+          <ProFeature icon={Wrench} text="Xizmat va ta'mirlash tarixi" />
+          <ProFeature icon={BarChart3} text="Batafsil hisobotlar" />
+          <ProFeature icon={Headphones} text="24/7 texnik yordam" />
+        </div>
+
+        {/* Price */}
+        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-4 mb-6 border border-purple-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-slate-400">Oylik obuna</span>
+            <div className="text-right">
+              <span className="text-3xl font-bold text-white">50,000</span>
+              <span className="text-slate-400 ml-1">so'm/oy</span>
+            </div>
+          </div>
+          <button
+            onClick={handleCall}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg shadow-green-500/25"
+          >
+            <Phone className="w-5 h-5" />
+            <span className="text-lg">{SUPPORT_PHONE}</span>
+          </button>
+        </div>
+
+        <p className="text-xs text-slate-500 text-center">
+          Telegram: <span className="text-purple-400">@avtojon_support</span>
+        </p>
+      </div>
+    </div>
+  </div>
+))
+
+export const ExpiredView = memo(({ showModal, setShowModal }) => (
+  <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+    <div className="text-center max-w-lg w-full">
+      {/* Animated icon */}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-32 h-32 bg-red-500/20 rounded-full animate-ping" />
+        </div>
+        <div className="relative w-28 h-28 bg-gradient-to-br from-red-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-red-500/30 rotate-3">
+          <AlertTriangle className="w-14 h-14 text-white" />
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-white mb-3">Obuna muddati tugadi</h1>
+      <p className="text-slate-400 mb-8 text-lg">
+        Avtopark tizimidan foydalanishni davom ettirish uchun obunani yangilang
+      </p>
+      
+      {/* Card */}
+      <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 mb-6 border border-slate-700/50 shadow-xl">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-700/50">
+          <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+            <Crown className="w-7 h-7 text-white" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-lg font-bold text-white">Pro tarif</h3>
+            <p className="text-slate-400 text-sm">Barcha imkoniyatlar</p>
+          </div>
+          <div className="ml-auto text-right">
+            <span className="text-2xl font-bold text-white">50,000</span>
+            <span className="text-slate-400 text-sm"> so'm/oy</span>
+          </div>
+        </div>
+
+        <p className="text-slate-300 mb-4 text-sm">
+          Obunani yangilash uchun quyidagi raqamga qo'ng'iroq qiling:
+        </p>
+        
+        <button
+          onClick={handleCall}
+          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-green-500/25 mb-4"
+        >
+          <Phone className="w-6 h-6" />
+          <span className="text-xl">{SUPPORT_PHONE}</span>
+        </button>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-slate-700/30 rounded-xl p-3 flex items-center gap-2">
+            <Truck className="w-5 h-5 text-blue-400" />
+            <p className="text-xs text-slate-300">Cheksiz mashinalar</p>
+          </div>
+          <div className="bg-slate-700/30 rounded-xl p-3 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-purple-400" />
+            <p className="text-xs text-slate-300">Hisobotlar</p>
+          </div>
+        </div>
+      </div>
+      
+      <p className="text-sm text-slate-500">
+        Telegram: <span className="text-purple-400 font-medium">@avtojon_support</span>
+      </p>
+    </div>
+    {showModal && (
+      <UpgradeModal
+        onClose={() => setShowModal(false)}
+        canClose={false}
+      />
+    )}
+  </div>
+))
+
+const ProFeature = ({ icon: Icon, text }) => (
+  <div className="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3">
+    <div className="w-9 h-9 bg-purple-500/20 rounded-lg flex items-center justify-center">
+      <Icon size={18} className="text-purple-400" />
+    </div>
+    <span className="text-slate-300 text-sm flex-1">{text}</span>
+    <div className="w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center">
+      <Check size={12} className="text-emerald-400" />
+    </div>
+  </div>
+)
+
+const Input = memo(({ label, type = 'text', value, onChange, placeholder, required }) => (
+  <div>
+    <label className="block text-sm font-medium text-slate-300 mb-2">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-4 py-3.5 bg-slate-800/50 border border-white/5 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-all"
+    />
+  </div>
+))
+
+const Select = memo(({ label, value, onChange, options }) => (
+  <div>
+    <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-3.5 bg-slate-800/50 border border-white/5 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
+    >
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  </div>
+))

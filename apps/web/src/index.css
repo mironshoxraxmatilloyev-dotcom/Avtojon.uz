@@ -14,6 +14,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #0f172a;
+  /* Mobile viewport height fix */
+  --vh: 1vh;
 }
 
 body {
@@ -23,7 +25,9 @@ body {
   transform: translateZ(0);
   overflow-x: hidden;
   background: #0f172a;
+  /* Mobile viewport height */
   min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
 }
 
 /* 🚀 Fixed bottom navigation - scroll qilganda qimirlamasin */
@@ -150,6 +154,20 @@ html[style*="overflow:hidden"] {
 /* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* SuperAdmin Sidebar - scroll yo'q */
+.superadmin-sidebar {
+  overflow: hidden !important;
+  max-height: 100vh !important;
+}
+
+.superadmin-sidebar * {
+  overflow: visible !important;
+}
+
+.superadmin-sidebar nav {
+  overflow: hidden !important;
+}
 
 /* Modal scrollbar yashirish */
 .fixed.inset-0 {
@@ -331,4 +349,133 @@ html[style*="overflow:hidden"] {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 50;
+}
+
+/* Fleet bottom nav - doim ko'rinib tursin */
+.fleet-bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* 🔥 iOS Safari fix - bottom nav doim ko'rinsin */
+@supports (-webkit-touch-callout: none) {
+  .fleet-bottom-nav,
+  [data-bottom-nav="true"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    bottom: env(safe-area-inset-bottom) !important;
+  }
+}
+
+/* Bottom nav uchun global fix */
+#fleet-bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+  background: #0f172a !important;
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* React Phone Input 2 - Dark Theme */
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 48px !important;
+  background: rgb(51 65 85) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  border-radius: 12px !important;
+  color: white !important;
+  font-size: 16px !important;
+  padding-left: 58px !important;
+}
+
+.react-tel-input .form-control:focus {
+  border-color: rgb(99 102 241) !important;
+  box-shadow: none !important;
+}
+
+.react-tel-input .flag-dropdown {
+  background: rgb(51 65 85) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  border-radius: 12px 0 0 12px !important;
+  border-right: none !important;
+}
+
+.react-tel-input .flag-dropdown:hover,
+.react-tel-input .flag-dropdown.open {
+  background: rgb(71 85 105) !important;
+}
+
+.react-tel-input .selected-flag {
+  background: transparent !important;
+  border-radius: 12px 0 0 12px !important;
+}
+
+.react-tel-input .selected-flag:hover,
+.react-tel-input .selected-flag:focus {
+  background: rgb(71 85 105) !important;
+}
+
+.react-tel-input .country-list {
+  background: rgb(30 41 59) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  border-radius: 12px !important;
+  margin-top: 4px !important;
+  max-height: 200px !important;
+}
+
+.react-tel-input .country-list .country {
+  padding: 10px 12px !important;
+  color: white !important;
+}
+
+.react-tel-input .country-list .country:hover {
+  background: rgb(51 65 85) !important;
+}
+
+.react-tel-input .country-list .country.highlight {
+  background: rgb(99 102 241) !important;
+}
+
+.react-tel-input .country-list .search {
+  background: rgb(51 65 85) !important;
+  border-bottom: 1px solid rgb(71 85 105) !important;
+  padding: 10px !important;
+}
+
+.react-tel-input .country-list .search-box {
+  background: rgb(30 41 59) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  border-radius: 8px !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  width: 100% !important;
+}
+
+.react-tel-input .country-list .search-box::placeholder {
+  color: rgb(148 163 184) !important;
+}
+
+.react-tel-input .country-list .country-name {
+  color: white !important;
+}
+
+.react-tel-input .country-list .dial-code {
+  color: rgb(148 163 184) !important;
+}
+
+.react-tel-input .arrow {
+  border-top-color: rgb(148 163 184) !important;
+}
+
+.react-tel-input .arrow.up {
+  border-bottom-color: rgb(148 163 184) !important;
 }

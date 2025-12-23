@@ -142,8 +142,8 @@ router.post('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
     finalUsername = username.toLowerCase();
     finalPassword = password;
   } else {
-    // Avtomatik generatsiya
-    const credentials = generateCredentials(fullName, businessType);
+    // Avtomatik generatsiya - phone ham uzatiladi
+    const credentials = generateCredentials(fullName, businessType, phone);
     
     const checkExists = async (uname) => {
       const exists = await Businessman.findOne({ username: uname });
@@ -396,6 +396,138 @@ router.get('/vehicles', superAdminAuth, asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: vehicles
+  });
+}));
+
+// ============ OBUNA BOSHQARISH ============
+
+// Individual foydalanuvchi obunasini olish
+router.get('/users/:id/subscription', superAdminAuth, asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    throw new ApiError(404, 'Foydalanuvchi topilmadi');
+  }
+
+  const subscription = user.subscription || {};
+  const now = new Date();
+  const endDate = subscription.endDate ? new Date(subscription.endDate) : now;
+  const isExpired = now > endDate;
+
+  res.json({
+    success: true,
+    data: {
+      plan: subscription.plan || 'trial',
+      startDate: subscription.startDate,
+      endDate: subscription.endDate,
+      isExpired,
+      daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+    }
+  });
+}));
+
+// Individual foydalanuvchi obunasini uzaytirish
+router.post('/users/:id/subscription/extend', superAdminAuth, asyncHandler(async (req, res) => {
+  const { days, plan } = req.body;
+  
+  if (!days || days < 1) {
+    throw new ApiError(400, 'Kunlar soni majburiy (kamida 1 kun)');
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    throw new ApiError(404, 'Foydalanuvchi topilmadi');
+  }
+
+  const now = new Date();
+  const currentEndDate = user.subscription?.endDate ? new Date(user.subscription.endDate) : now;
+  
+  // Agar obuna tugagan bo'lsa, hozirdan boshlab hisoblash
+  // Agar hali tugamagan bo'lsa, mavjud muddat ustiga qo'shish
+  const baseDate = currentEndDate > now ? currentEndDate : now;
+  const newEndDate = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+  user.subscription = {
+    plan: plan || 'pro',
+    startDate: user.subscription?.startDate || now,
+    endDate: newEndDate,
+    isExpired: false
+  };
+
+  await user.save();
+
+  res.json({
+    success: true,
+    message: `Obuna ${days} kunga uzaytirildi`,
+    data: {
+      plan: user.subscription.plan,
+      startDate: user.subscription.startDate,
+      endDate: user.subscription.endDate,
+      daysLeft: Math.ceil((newEndDate - now) / (1000 * 60 * 60 * 24))
+    }
+  });
+}));
+
+// Biznesmen obunasini olish
+router.get('/businessmen/:id/subscription', superAdminAuth, asyncHandler(async (req, res) => {
+  const businessman = await Businessman.findById(req.params.id);
+  if (!businessman) {
+    throw new ApiError(404, 'Biznesmen topilmadi');
+  }
+
+  const subscription = businessman.subscription || {};
+  const now = new Date();
+  const endDate = subscription.endDate ? new Date(subscription.endDate) : now;
+  const isExpired = now > endDate;
+
+  res.json({
+    success: true,
+    data: {
+      plan: subscription.plan || 'trial',
+      startDate: subscription.startDate,
+      endDate: subscription.endDate,
+      isExpired,
+      daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+    }
+  });
+}));
+
+// Biznesmen obunasini uzaytirish
+router.post('/businessmen/:id/subscription/extend', superAdminAuth, asyncHandler(async (req, res) => {
+  const { days, plan } = req.body;
+  
+  if (!days || days < 1) {
+    throw new ApiError(400, 'Kunlar soni majburiy (kamida 1 kun)');
+  }
+
+  const businessman = await Businessman.findById(req.params.id);
+  if (!businessman) {
+    throw new ApiError(404, 'Biznesmen topilmadi');
+  }
+
+  const now = new Date();
+  const currentEndDate = businessman.subscription?.endDate ? new Date(businessman.subscription.endDate) : now;
+  
+  const baseDate = currentEndDate > now ? currentEndDate : now;
+  const newEndDate = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+  businessman.subscription = {
+    plan: plan || 'pro',
+    startDate: businessman.subscription?.startDate || now,
+    endDate: newEndDate,
+    isExpired: false
+  };
+
+  await businessman.save();
+
+  res.json({
+    success: true,
+    message: `Obuna ${days} kunga uzaytirildi`,
+    data: {
+      plan: businessman.subscription.plan,
+      startDate: businessman.subscription.startDate,
+      endDate: businessman.subscription.endDate,
+      daysLeft: Math.ceil((newEndDate - now) / (1000 * 60 * 60 * 24))
+    }
   });
 }));
 

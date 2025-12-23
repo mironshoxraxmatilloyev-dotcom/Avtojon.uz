@@ -1,4 +1,4 @@
-import { StrictMode, lazy, Suspense } from 'react'
+import { StrictMode, lazy, Suspense, Fragment } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -11,7 +11,7 @@ const Toaster = lazy(() =>
 
 // 🎯 Production da StrictMode o'chiriladi
 const isDev = import.meta.env.DEV
-const Wrapper = isDev ? StrictMode : ({ children }) => children
+const Wrapper = isDev ? StrictMode : Fragment
 
 // 🚀 Root render
 createRoot(document.getElementById('root')).render(

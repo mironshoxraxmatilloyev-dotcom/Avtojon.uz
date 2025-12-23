@@ -12,250 +12,369 @@ const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 // Admin register
 router.post('/register', registerLimiter, validate(authSchemas.register), asyncHandler(async (req, res) => {
-  const { username, password, fullName, companyName, phone } = req.body;
+    const { username, password, fullName, companyName, phone } = req.body;
 
-  const existingUser = await User.findOne({ username: username.toLowerCase() });
-  if (existingUser) {
-    throw new ApiError(400, 'Bu username allaqachon band');
-  }
-
-  const user = await User.create({ 
-    username: username.toLowerCase(), 
-    password, 
-    fullName, 
-    companyName,
-    phone,
-    role: 'admin' 
-  });
-  
-  // Token juftligi (access + refresh)
-  const tokens = await generateTokenPair(user, 'admin');
-
-  res.status(201).json({
-    success: true,
-    data: {
-      user: { 
-        id: user._id, 
-        username: user.username, 
-        fullName: user.fullName, 
-        companyName: user.companyName,
-        role: 'admin' 
-      },
-      ...tokens
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    if (existingUser) {
+        throw new ApiError(400, 'Bu username allaqachon band');
     }
-  });
+
+    // Trial subscription - 7 kun
+    const now = new Date();
+    const trialEndDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 kun
+
+    const user = await User.create({
+        username: username.toLowerCase(),
+        password,
+        fullName,
+        companyName,
+        phone,
+        role: 'admin',
+        subscription: {
+            plan: 'trial',
+            startDate: now,
+            endDate: trialEndDate,
+            isExpired: false
+        }
+    });
+
+    // Token juftligi (access + refresh)
+    const tokens = await generateTokenPair(user, 'admin');
+
+    res.status(201).json({
+        success: true,
+        data: {
+            user: {
+                id: user._id,
+                username: user.username,
+                fullName: user.fullName,
+                companyName: user.companyName,
+                role: 'admin',
+                subscription: user.checkSubscription()
+            },
+            ...tokens
+        }
+    });
 }));
 
 // Super Admin credentials from .env
 const SUPER_ADMIN = {
-  login: process.env.SUPER_ADMIN_LOGIN || 'super_admin',
-  password: process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin@2024'
+    login: process.env.SUPER_ADMIN_LOGIN || 'super_admin',
+    password: process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin@2024'
 };
 
 // Umumiy login (super_admin, admin, biznesmen va shofyor uchun)
 router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
-  const cleanUsername = username.toLowerCase().trim();
+    const { username, password } = req.body;
+    const cleanUsername = username.toLowerCase().trim();
 
-  // 1. Super Admin tekshir (.env dan)
-  if (cleanUsername === SUPER_ADMIN.login.toLowerCase() && password === SUPER_ADMIN.password) {
-    const tokens = await generateTokenPair({ _id: 'super_admin', username: SUPER_ADMIN.login }, 'super_admin');
-    return res.json({
-      success: true,
-      data: {
-        user: {
-          id: 'super_admin',
-          username: SUPER_ADMIN.login,
-          fullName: 'Super Admin',
-          role: 'super_admin'
-        },
-        ...tokens
-      }
-    });
-  }
-
-  // 2. Avval admin tekshir
-  const user = await User.findOne({ username: cleanUsername });
-  if (user && await user.comparePassword(password)) {
-    const tokens = await generateTokenPair(user, 'admin');
-    return res.json({
-      success: true,
-      data: {
-        user: { 
-          id: user._id, 
-          username: user.username, 
-          fullName: user.fullName, 
-          companyName: user.companyName,
-          role: 'admin' 
-        },
-        ...tokens
-      }
-    });
-  }
-
-  // Keyin biznesmen tekshir
-  const businessman = await Businessman.findOne({ username: cleanUsername, isActive: true });
-  console.log('Biznesmen topildi:', businessman ? businessman.username : 'YOQ', 'Username:', cleanUsername);
-  if (businessman) {
-    const isMatch = await businessman.comparePassword(password);
-    console.log('Parol togri:', isMatch);
-    if (isMatch) {
-      const tokens = await generateTokenPair(businessman, 'business');
-      return res.json({
-        success: true,
-        data: {
-          user: { 
-            id: businessman._id, 
-            username: businessman.username, 
-            fullName: businessman.fullName,
-            businessType: businessman.businessType,
-            role: 'business'
-          },
-          ...tokens
-        }
-      });
+    // 1. Super Admin tekshir (.env dan)
+    if (cleanUsername === SUPER_ADMIN.login.toLowerCase() && password === SUPER_ADMIN.password) {
+        const tokens = await generateTokenPair({ _id: 'super_admin', username: SUPER_ADMIN.login }, 'super_admin');
+        return res.json({
+            success: true,
+            data: {
+                user: {
+                    id: 'super_admin',
+                    username: SUPER_ADMIN.login,
+                    fullName: 'Super Admin',
+                    role: 'super_admin'
+                },
+                ...tokens
+            }
+        });
     }
-  }
 
-  // Keyin shofyor tekshir (faqat aktiv shofyorlar)
-  const driver = await Driver.findOne({ username: cleanUsername, isActive: true });
-  if (driver && await driver.comparePassword(password)) {
-    const tokens = await generateTokenPair(driver, 'driver');
-    return res.json({
-      success: true,
-      data: {
-        user: { 
-          id: driver._id, 
-          username: driver.username, 
-          fullName: driver.fullName, 
-          role: 'driver', 
-          userId: driver.user 
-        },
-        ...tokens
-      }
-    });
-  }
+    // 2. Avval admin tekshir
+    const user = await User.findOne({ username: cleanUsername });
+    if (user && await user.comparePassword(password)) {
+        const tokens = await generateTokenPair(user, 'admin');
+        const subscription = user.checkSubscription ? user.checkSubscription() : null;
+        return res.json({
+            success: true,
+            data: {
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    fullName: user.fullName,
+                    companyName: user.companyName,
+                    role: 'admin',
+                    subscription
+                },
+                ...tokens
+            }
+        });
+    }
 
-  throw new ApiError(401, 'Username yoki parol noto\'g\'ri');
+    // Keyin biznesmen tekshir
+    const businessman = await Businessman.findOne({ username: cleanUsername, isActive: true });
+    if (businessman) {
+        const isMatch = await businessman.comparePassword(password);
+        if (isMatch) {
+            const tokens = await generateTokenPair(businessman, 'business');
+            const subscription = businessman.checkSubscription();
+            return res.json({
+                success: true,
+                data: {
+                    user: {
+                        id: businessman._id,
+                        username: businessman.username,
+                        fullName: businessman.fullName,
+                        businessType: businessman.businessType,
+                        role: 'business',
+                        subscription
+                    },
+                    ...tokens
+                }
+            });
+        }
+    }
+
+    // Keyin shofyor tekshir (faqat aktiv shofyorlar)
+    const driver = await Driver.findOne({ username: cleanUsername, isActive: true });
+    if (driver && await driver.comparePassword(password)) {
+        const tokens = await generateTokenPair(driver, 'driver');
+        return res.json({
+            success: true,
+            data: {
+                user: {
+                    id: driver._id,
+                    username: driver.username,
+                    fullName: driver.fullName,
+                    role: 'driver',
+                    userId: driver.user
+                },
+                ...tokens
+            }
+        });
+    }
+
+    throw new ApiError(401, 'Username yoki parol noto\'g\'ri');
 }));
 
 // Get current user
 router.get('/me', protect, asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    data: req.driver || req.user
-  });
+    res.json({
+        success: true,
+        data: req.driver || req.user
+    });
+}));
+
+// Obuna holatini olish (admin/fleet va business uchun)
+router.get('/subscription', protect, asyncHandler(async (req, res) => {
+    // Admin (fleet) uchun
+    if (req.userRole === 'admin') {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            throw new ApiError(404, 'Foydalanuvchi topilmadi');
+        }
+
+        const subscription = user.checkSubscription();
+        const plans = User.getPlans();
+
+        return res.json({
+            success: true,
+            data: {
+                ...subscription,
+                plans,
+                proPriceFormatted: '50 000 so\'m/oy'
+            }
+        });
+    }
+
+    // Business uchun
+    if (req.userRole === 'business') {
+        // req.businessman ishlatish kerak
+        const businessmanId = req.businessman?._id || req.user?._id;
+        const businessman = await Businessman.findById(businessmanId);
+        if (!businessman) {
+            throw new ApiError(404, 'Biznesmen topilmadi');
+        }
+
+        // checkSubscription metodi mavjudligini tekshirish
+        if (typeof businessman.checkSubscription !== 'function') {
+            // Agar metod yo'q bo'lsa, qo'lda hisoblash
+            const now = new Date();
+            const sub = businessman.subscription || {};
+            const endDate = sub.endDate ? new Date(sub.endDate) : now;
+            const isExpired = now > endDate;
+
+            return res.json({
+                success: true,
+                data: {
+                    plan: sub.plan || 'trial',
+                    startDate: sub.startDate,
+                    endDate: sub.endDate,
+                    isExpired,
+                    daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)),
+                    msLeft: isExpired ? 0 : endDate - now,
+                    proPriceFormatted: '50 000 so\'m/oy'
+                }
+            });
+        }
+
+        const subscription = businessman.checkSubscription();
+
+        return res.json({
+            success: true,
+            data: {
+                ...subscription,
+                proPriceFormatted: '50 000 so\'m/oy'
+            }
+        });
+    }
+
+    throw new ApiError(400, 'Noto\'g\'ri foydalanuvchi turi');
+}));
+
+// Obunani yangilash (to'lov simulyatsiyasi - keyinchalik to'lov tizimi qo'shiladi)
+router.post('/subscription/upgrade', protect, asyncHandler(async (req, res) => {
+    // Admin uchun
+    if (req.userRole === 'admin') {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            throw new ApiError(404, 'Foydalanuvchi topilmadi');
+        }
+
+        await user.upgradeToPro();
+        const subscription = user.checkSubscription();
+
+        return res.json({
+            success: true,
+            message: 'Pro tarifga muvaffaqiyatli o\'tdingiz!',
+            data: subscription
+        });
+    }
+
+    // Business uchun
+    if (req.userRole === 'business') {
+        const businessman = await Businessman.findById(req.user._id);
+        if (!businessman) {
+            throw new ApiError(404, 'Biznesmen topilmadi');
+        }
+
+        await businessman.upgradeToPro();
+        const subscription = businessman.checkSubscription();
+
+        return res.json({
+            success: true,
+            message: 'Pro tarifga muvaffaqiyatli o\'tdingiz!',
+            data: subscription
+        });
+    }
+
+    throw new ApiError(400, 'Noto\'g\'ri foydalanuvchi turi');
 }));
 
 // Refresh token
 router.post('/refresh', asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
-  
-  if (!refreshToken) {
-    throw new ApiError(400, 'Refresh token kerak');
-  }
-  
-  // Foydalanuvchini olish funksiyasi
-  const getUserById = async (id, role) => {
-    if (role === 'admin') {
-      return User.findById(id).select('-password');
-    } else if (role === 'driver') {
-      return Driver.findById(id).select('-password');
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        throw new ApiError(400, 'Refresh token kerak');
     }
-    return null;
-  };
-  
-  const tokens = await refreshTokens(refreshToken, getUserById);
-  
-  res.json({
-    success: true,
-    data: tokens
-  });
+
+    // Foydalanuvchini olish funksiyasi
+    const getUserById = async (id, role) => {
+        if (role === 'admin') {
+            return User.findById(id).select('-password');
+        } else if (role === 'driver') {
+            return Driver.findById(id).select('-password');
+        }
+        return null;
+    };
+
+    const tokens = await refreshTokens(refreshToken, getUserById);
+
+    res.json({
+        success: true,
+        data: tokens
+    });
 }));
 
 // Logout (barcha tokenlarni bekor qilish)
 router.post('/logout', protect, asyncHandler(async (req, res) => {
-  const userId = req.driver?._id || req.user?._id;
-  const count = await revokeAllUserTokens(userId);
-  
-  res.json({
-    success: true,
-    message: `${count} ta token bekor qilindi`
-  });
+    const userId = req.driver?._id || req.user?._id;
+    const count = await revokeAllUserTokens(userId);
+
+    res.json({
+        success: true,
+        message: `${count} ta token bekor qilindi`
+    });
 }));
 
 // Parol o'zgartirish
 router.post('/change-password', protect, passwordLimiter, validate(authSchemas.changePassword), asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  
-  let user;
-  if (req.driver) {
-    user = await Driver.findById(req.driver._id);
-  } else {
-    user = await User.findById(req.user._id);
-  }
-  
-  if (!user) {
-    throw new ApiError(404, 'Foydalanuvchi topilmadi');
-  }
-  
-  const isMatch = await user.comparePassword(currentPassword);
-  if (!isMatch) {
-    throw new ApiError(400, 'Joriy parol noto\'g\'ri');
-  }
-  
-  user.password = newPassword;
-  await user.save();
-  
-  // Barcha eski tokenlarni bekor qilish
-  await revokeAllUserTokens(user._id);
-  
-  // Yangi tokenlar
-  const role = req.driver ? 'driver' : 'admin';
-  const tokens = await generateTokenPair(user, role);
-  
-  res.json({
-    success: true,
-    message: 'Parol muvaffaqiyatli o\'zgartirildi',
-    data: tokens
-  });
+    const { currentPassword, newPassword } = req.body;
+
+    let user;
+    if (req.driver) {
+        user = await Driver.findById(req.driver._id);
+    } else {
+        user = await User.findById(req.user._id);
+    }
+
+    if (!user) {
+        throw new ApiError(404, 'Foydalanuvchi topilmadi');
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+        throw new ApiError(400, 'Joriy parol noto\'g\'ri');
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    // Barcha eski tokenlarni bekor qilish
+    await revokeAllUserTokens(user._id);
+
+    // Yangi tokenlar
+    const role = req.driver ? 'driver' : 'admin';
+    const tokens = await generateTokenPair(user, role);
+
+    res.json({
+        success: true,
+        message: 'Parol muvaffaqiyatli o\'zgartirildi',
+        data: tokens
+    });
 }));
 
 // Demo login - avtomatik demo user yaratadi yoki mavjudini qaytaradi
 router.post('/demo', loginLimiter, asyncHandler(async (req, res) => {
-  const demoUsername = 'demo';
-  const demoPassword = 'demo123456';
-  
-  // Demo user mavjudmi tekshir
-  let demoUser = await User.findOne({ username: demoUsername });
-  
-  // Yo'q bo'lsa yangi yaratamiz
-  if (!demoUser) {
-    demoUser = await User.create({
-      username: demoUsername,
-      password: demoPassword,
-      fullName: 'Demo Foydalanuvchi',
-      companyName: 'Demo Kompaniya',
-      phone: '+998901234567',
-      role: 'admin'
-    });
-  }
-  
-  const tokens = await generateTokenPair(demoUser, 'admin');
-  
-  res.json({
-    success: true,
-    data: {
-      user: {
-        id: demoUser._id,
-        username: demoUser.username,
-        fullName: demoUser.fullName,
-        companyName: demoUser.companyName,
-        role: 'admin'
-      },
-      ...tokens
+    const demoUsername = 'demo';
+    const demoPassword = 'demo123456';
+
+    // Demo user mavjudmi tekshir
+    let demoUser = await User.findOne({ username: demoUsername });
+
+    // Yo'q bo'lsa yangi yaratamiz
+    if (!demoUser) {
+        demoUser = await User.create({
+            username: demoUsername,
+            password: demoPassword,
+            fullName: 'Demo Foydalanuvchi',
+            companyName: 'Demo Kompaniya',
+            phone: '+998901234567',
+            role: 'admin'
+        });
     }
-  });
+
+    const tokens = await generateTokenPair(demoUser, 'admin');
+
+    res.json({
+        success: true,
+        data: {
+            user: {
+                id: demoUser._id,
+                username: demoUser.username,
+                fullName: demoUser.fullName,
+                companyName: demoUser.companyName,
+                role: 'admin'
+            },
+            ...tokens
+        }
+    });
 }));
 
 module.exports = router;

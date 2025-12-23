@@ -1,5 +1,5 @@
 /**
- * Chiroyli va esda qoladigan login/parol generatori
+ * Oddiy va esda qoladigan login/parol generatori
  */
 
 // O'zbek ismlari uchun transliteratsiya
@@ -16,68 +16,31 @@ const transliterate = (text) => {
   return text.toLowerCase().split('').map(char => map[char] || char).join('');
 };
 
-// Ismdan login yaratish
-const generateUsername = (fullName, businessType) => {
+// Ismdan login yaratish - ODDIY
+const generateUsername = (fullName) => {
   const cleanName = transliterate(fullName.trim());
-  const cleanBusiness = transliterate(businessType.trim());
+  const nameParts = cleanName.split(/\s+/).filter(p => p.length > 0);
   
-  // Ismning birinchi qismini olish
-  const nameParts = cleanName.split(/\s+/);
-  const firstName = nameParts[0].replace(/[^a-z]/g, '');
+  // Faqat birinchi ism
+  const firstName = nameParts[0]?.replace(/[^a-z]/g, '') || 'user';
   
-  // Biznes turidan qisqa so'z olish
-  const businessWord = cleanBusiness.split(/\s+/)[0].replace(/[^a-z]/g, '').slice(0, 4);
-  
-  // Yil oxirgi 2 raqami
-  const year = new Date().getFullYear().toString().slice(-2);
-  
-  // Variantlar
-  const variants = [
-    `${firstName}_${businessWord}`,
-    `${firstName}${year}`,
-    `${firstName}_${businessWord}${year}`,
-    `${businessWord}_${firstName}`,
-  ];
-  
-  // Eng qisqa va chiroyli variantni tanlash
-  return variants[0].toLowerCase().slice(0, 15);
+  return firstName.toLowerCase().slice(0, 15);
 };
 
-// Chiroyli parol yaratish (maxsus belgilarsiz)
+// Oddiy parol yaratish - ism123
 const generatePassword = (fullName) => {
   const cleanName = transliterate(fullName.trim());
-  const nameParts = cleanName.split(/\s+/);
-  let firstName = nameParts[0].replace(/[^a-z]/g, '');
+  const nameParts = cleanName.split(/\s+/).filter(p => p.length > 0);
+  const firstName = nameParts[0]?.replace(/[^a-z]/g, '') || 'user';
   
-  // Agar ism bo'sh bo'lsa default qiymat
-  if (!firstName || firstName.length < 2) {
-    firstName = 'user';
-  }
-  
-  // Birinchi harfni katta qilish
-  const capitalName = firstName.charAt(0).toUpperCase() + firstName.slice(1, 5);
-  
-  // Yil
-  const year = new Date().getFullYear();
-  
-  // Lucky raqamlar
-  const lucky = Math.floor(Math.random() * 900) + 100;
-  
-  // Parol formatlari (maxsus belgilarsiz, faqat harf va raqam)
-  const formats = [
-    `${capitalName}${year}`,
-    `${capitalName}${lucky}`,
-    `${year}${capitalName}`,
-    `${capitalName}${lucky}uz`
-  ];
-  
-  return formats[Math.floor(Math.random() * formats.length)];
+  // Parol formati: ism123 (masalan: javohir123)
+  return `${firstName.toLowerCase()}123`;
 };
 
 // Asosiy funksiya
-const generateCredentials = (fullName, businessType) => {
+const generateCredentials = (fullName, businessType, phone = '') => {
   return {
-    username: generateUsername(fullName, businessType),
+    username: generateUsername(fullName),
     password: generatePassword(fullName)
   };
 };

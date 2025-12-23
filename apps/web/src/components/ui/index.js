@@ -35,6 +35,9 @@ export {
   ConfirmModal
 } from './AlertDialog'
 
+// Optimized Modal
+export { default as Modal } from './Modal'
+
 // Skeleton components
 export {
   Skeleton,

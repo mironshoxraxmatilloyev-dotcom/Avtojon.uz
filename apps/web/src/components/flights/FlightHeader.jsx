@@ -1,4 +1,4 @@
-import { ArrowLeft, Route, TrendingUp, Wallet, DollarSign, TrendingDown } from 'lucide-react'
+import { ArrowLeft, Route, TrendingUp, Wallet, DollarSign, TrendingDown, CheckCircle, Clock } from 'lucide-react'
 
 export default function FlightHeader({ flight, onBack, formatMoney }) {
   const isActive = flight.status === 'active'
@@ -30,7 +30,27 @@ export default function FlightHeader({ flight, onBack, formatMoney }) {
             </div>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {/* Haydovchi tasdiqlash holati */}
+            {isActive && (
+              <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm flex items-center gap-1.5 ${
+                flight.driverConfirmed 
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+              }`}>
+                {flight.driverConfirmed ? (
+                  <>
+                    <CheckCircle size={14} />
+                    Tasdiqlangan
+                  </>
+                ) : (
+                  <>
+                    <Clock size={14} />
+                    Kutilmoqda
+                  </>
+                )}
+              </span>
+            )}
             <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm ${
               isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
             }`}>

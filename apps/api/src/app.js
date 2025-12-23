@@ -35,9 +35,11 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:3000',
       'http://127.0.0.1:5173',
-      'http://192.168.1.100:5173',
-      /^http:\/\/192\.168\.\d+\.\d+:\d+$/ // Barcha local IP lar
+      'http://127.0.0.1:3000',
+      /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // Barcha local IP lar
+      /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/   // 10.x.x.x IP lar
     ];
     
     const isAllowed = allowedOrigins.some(allowed => {
@@ -50,9 +52,12 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 app.use(cors(corsOptions));
+
+// Preflight OPTIONS so'rovlari uchun
+app.options('*', cors(corsOptions));
 
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10kb' })); // Body size limit

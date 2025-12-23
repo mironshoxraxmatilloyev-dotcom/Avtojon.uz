@@ -546,6 +546,37 @@ export default function DriverHome() {
             })
     }
 
+    // 🚀 Flight tasdiqlash - optimistic
+    const handleConfirmFlight = async () => {
+        if (!activeFlight || actionLoading) return
+
+        const flightId = activeFlight._id
+        setActionLoading(true)
+
+        // Optimistic: darhol UI yangilash
+        setActiveFlight(prev => ({
+            ...prev,
+            driverConfirmed: true,
+            driverConfirmedAt: new Date()
+        }))
+
+        try {
+            const res = await api.put(`/driver/me/flights/${flightId}/confirm`)
+            if (res.data.data) setActiveFlight(res.data.data)
+            showToast.success('Reys tasdiqlandi!')
+        } catch (err) {
+            // Xatolikda qaytarish
+            setActiveFlight(prev => ({
+                ...prev,
+                driverConfirmed: false,
+                driverConfirmedAt: null
+            }))
+            showToast.error(err.response?.data?.message || 'Xatolik')
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     // 🚀 Pending trip boshlash - optimistic
     const handleStartPendingTrip = async (tripId) => {
         if (actionLoading) return
@@ -841,6 +872,27 @@ export default function DriverHome() {
                                                 </span>
                                             </div>
                                         </div>
+
+                                        {/* Tasdiqlash tugmasi */}
+                                        {!activeFlight.driverConfirmed ? (
+                                            <button
+                                                onClick={handleConfirmFlight}
+                                                disabled={actionLoading}
+                                                className="w-full mt-4 bg-white text-emerald-600 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base hover:bg-emerald-50 transition-colors"
+                                            >
+                                                {actionLoading ? (
+                                                    <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <CheckCircle size={20} />
+                                                )}
+                                                {actionLoading ? 'Kutilmoqda...' : 'Reysni tasdiqlash'}
+                                            </button>
+                                        ) : (
+                                            <div className="mt-4 flex items-center justify-center gap-2 py-3 bg-white/10 rounded-xl border border-white/20">
+                                                <CheckCircle size={18} className="text-emerald-300" />
+                                                <span className="text-emerald-200 text-sm font-medium">Tasdiqlangan</span>
+                                            </div>
+                                        )}
 
                                     </div>
                                 </div>

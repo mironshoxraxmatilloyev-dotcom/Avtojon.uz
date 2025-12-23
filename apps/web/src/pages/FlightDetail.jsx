@@ -129,6 +129,13 @@ export default function FlightDetail() {
   const [submitting, setSubmitting] = useState(false)
 
   const fetchFlight = useCallback(async (showLoader = true) => {
+    // Vaqtinchalik ID tekshirish - temp_ bilan boshlanuvchi ID lar hali saqlanmagan
+    if (id?.startsWith('temp_')) {
+      setError({ type: 'notfound', message: 'Bu reys hali saqlanmagan' })
+      setLoading(false)
+      return
+    }
+    
     // Agar flight allaqachon mavjud bo'lsa, loading ko'rsatmaymiz
     if (showLoader && !flight) setLoading(true)
     setError(null)
@@ -136,7 +143,7 @@ export default function FlightDetail() {
       const res = await api.get(`/flights/${id}`)
       setFlight(res.data.data)
     } catch (err) {
-      if (err.response?.status === 404) {
+      if (err.response?.status === 404 || err.response?.status === 400) {
         setError({ type: 'notfound', message: 'Reys topilmadi' })
       } else {
         setError({
@@ -168,10 +175,12 @@ export default function FlightDetail() {
     
     socket.on('flight-updated', handleFlightUpdate)
     socket.on('flight-completed', handleFlightUpdate)
+    socket.on('flight-confirmed', handleFlightUpdate)
     
     return () => {
       socket.off('flight-updated', handleFlightUpdate)
       socket.off('flight-completed', handleFlightUpdate)
+      socket.off('flight-confirmed', handleFlightUpdate)
     }
   }, [socket, id])
 
@@ -518,7 +527,7 @@ export default function FlightDetail() {
       })
   }
 
-  // Buyurtma uchun to'lov olish
+  // Buyurtma uchun to'lov olish - TO'LOV KIRITILGANDA BUYURTMA TUGALLANADI
   const handleAddPayment = async (e) => {
     e.preventDefault()
     if (!selectedLegForPayment || !paymentForm.payment) {
@@ -529,18 +538,18 @@ export default function FlightDetail() {
     const legId = selectedLegForPayment._id
     const payment = Number(paymentForm.payment)
 
-    // Optimistic update
+    // Optimistic update - buyurtma tugallanadi
     setFlight(prev => ({
       ...prev,
       legs: prev.legs.map(leg => 
-        leg._id === legId ? { ...leg, payment } : leg
+        leg._id === legId ? { ...leg, payment, status: 'completed', completedAt: new Date().toISOString() } : leg
       ),
       totalPayment: (prev.totalPayment || 0) + payment
     }))
     setShowPaymentModal(false)
     setSelectedLegForPayment(null)
     setPaymentForm({ payment: '' })
-    showToast.success(`${formatMoney(payment)} so'm to'lov qo'shildi`)
+    showToast.success(`${formatMoney(payment)} so'm to'lov qo'shildi. Buyurtma tugallandi!`)
 
     // Fonda API
     api.put(`/flights/${id}/legs/${legId}/payment`, { payment })
@@ -654,6 +663,38 @@ export default function FlightDetail() {
     } catch (err) {
       showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
     }
+  }
+
+  // Reysni bekor qilish
+  const handleCancelFlight = async () => {
+    const confirmed = await alert.confirm({
+      title: "Reysni bekor qilish",
+      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Shofyor bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
+      confirmText: "Ha, bekor qilish",
+      cancelText: "Yo'q",
+      type: "danger"
+    })
+
+    if (!confirmed) return
+
+    // 🚀 OPTIMISTIC UPDATE
+    setFlight(prev => ({
+      ...prev,
+      status: 'cancelled'
+    }))
+    showToast.success('Reys bekor qilindi')
+
+    // Fonda API
+    api.put(`/flights/${id}/cancel`)
+      .then((res) => {
+        if (res.data?.data) {
+          setFlight(res.data.data)
+        }
+      })
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+        fetchFlight()
+      })
   }
 
   return (
@@ -906,47 +947,71 @@ export default function FlightDetail() {
         <div className="space-y-2 sm:space-y-3 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-1">
           {flight.legs?.map((leg, idx) => {
             // Bu buyurtmaga tegishli xarajatlar
-            const legExpenses = flight.expenses?.filter(exp => 
-              exp.legIndex === idx || (exp.legId && exp.legId.toString() === leg._id?.toString())
-            ) || []
-            const legTotalExpenses = legExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
-            
+            const legExpenses =
+              flight.expenses?.filter(
+                (exp) =>
+                  exp.legIndex === idx ||
+                  (exp.legId && exp.legId.toString() === leg._id?.toString())
+              ) || []
+            const legTotalExpenses = legExpenses.reduce(
+              (sum, exp) => sum + (exp.amount || 0),
+              0
+            )
+
             return (
-              <div 
-                key={leg._id || idx} 
-                className="bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
-                onClick={() => {
-                  setSelectedLegForExpense({ leg, index: idx, expenses: legExpenses, totalExpenses: legTotalExpenses })
-                  setShowExpenseModal(true)
-                }}
+              <div
+                key={leg._id || idx}
+                className="bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl border border-gray-200"
               >
                 <div className="p-2.5 sm:p-3">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0 ${
-                      leg.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                    }`}>
+                    <div
+                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0 ${
+                        leg.status === 'completed'
+                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                          : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                      }`}
+                    >
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm">
-                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">{leg.fromCity}</span>
-                        <ChevronRight size={12} className="sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
-                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">{leg.toCity}</span>
+                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">
+                          {leg.fromCity}
+                        </span>
+                        <ChevronRight
+                          size={12}
+                          className="sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0"
+                        />
+                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">
+                          {leg.toCity}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2 mt-0.5 text-[10px] sm:text-xs text-gray-500">
                         <span>{leg.distance || 0} km</span>
                         {legExpenses.length > 0 && (
-                          <span className="text-red-500">• {legExpenses.length} xarajat (-{formatMoney(legTotalExpenses)})</span>
+                          <span className="text-red-500">
+                            • {legExpenses.length} xarajat (-
+                            {formatMoney(legTotalExpenses)})
+                          </span>
                         )}
-                        {leg.status === 'completed' && <span className="text-emerald-600">✓</span>}
-                        {leg.status === 'in_progress' && <span className="text-blue-600">🚛</span>}
+                        {leg.status === 'completed' && (
+                          <span className="text-emerald-600">✓</span>
+                        )}
+                        {leg.status === 'in_progress' && (
+                          <span className="text-blue-600">🚛</span>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {leg.payment > 0 ? (
                         <div className="text-right">
-                          <p className="font-bold text-emerald-600 text-xs sm:text-sm">{formatMoney(leg.payment)}</p>
-                          <p className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">mijozdan</p>
+                          <p className="font-bold text-emerald-600 text-xs sm:text-sm">
+                            {formatMoney(leg.payment)}
+                          </p>
+                          <p className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">
+                            mijozdan
+                          </p>
                         </div>
                       ) : isActive ? (
                         <button
@@ -963,10 +1028,6 @@ export default function FlightDetail() {
                         <span className="text-gray-400 text-xs">-</span>
                       )}
                     </div>
-                    {/* Bosish indikatori */}
-                    <div className="text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0">
-                      <ChevronRight size={16} className="sm:w-5 sm:h-5" />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -981,6 +1042,67 @@ export default function FlightDetail() {
           </div>
         )}
       </div>
+
+      {/* ============ XARAJATLAR XULOSASI (KOMPAKT) ============ */}
+      {(flight.expenses?.length > 0 || isActive) && (
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center">
+                <Wallet className="text-white w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Jami xarajatlar</p>
+                <p className="text-xs text-gray-500">{flight.expenses?.length || 0} ta xarajat</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <p className="text-xl font-bold text-red-600">-{formatMoney(flight.totalExpenses || 0)}</p>
+              {isActive && (
+                <button
+                  onClick={() => {
+                    setSelectedLegForExpense(null)
+                    setExpenseForm({ 
+                      category: 'fuel', type: 'fuel_metan', amount: '', description: '', 
+                      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null,
+                      date: new Date().toISOString().split('T')[0]
+                    })
+                    setShowExpenseModal(true)
+                  }}
+                  className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition flex items-center gap-1"
+                >
+                  <Plus size={14} /> Qo'shish
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Xarajat turlari bo'yicha qisqa xulosa */}
+          {flight.expenses && flight.expenses.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(() => {
+                const grouped = {}
+                flight.expenses.forEach(exp => {
+                  const type = exp.type?.startsWith('fuel_') ? 'fuel' : exp.type
+                  if (!grouped[type]) grouped[type] = { count: 0, total: 0 }
+                  grouped[type].count++
+                  grouped[type].total += exp.amount || 0
+                })
+                return Object.entries(grouped).map(([type, data]) => {
+                  const expType = EXPENSE_CATEGORIES.find(c => c.value === type) || { icon: '📦', label: type }
+                  return (
+                    <div key={type} className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-xs">
+                      <span>{expType.icon}</span>
+                      <span className="text-gray-600">{expType.label}</span>
+                      <span className="font-semibold text-red-600">{formatMoney(data.total)}</span>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+          )}
+        </div>
+      )}
       </div>
 
       {/* ============ XALQARO REYS BO'LIMLARI ============ */}
@@ -1196,24 +1318,23 @@ export default function FlightDetail() {
 
       {/* Action Buttons */}
       {isActive && (
-        <div className="flex gap-2 sm:gap-3">
-          <button
-            onClick={() => setShowCompleteModal(true)}
-            className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base hover:shadow-xl transition flex items-center justify-center gap-1.5 sm:gap-2"
-          >
-            <CheckCircle size={18} className="sm:w-5 sm:h-5" /> Reysni yopish
-          </button>
-          {/* O'chirish tugmasi - faqat haydovchi tasdiqlamasidan oldin, o'ng tomonda */}
-          {!flight.driverConfirmed && (
+        <div className="space-y-2">
+          <div className="flex gap-2 sm:gap-3">
             <button
-              onClick={handleDeleteFlight}
-              className="px-4 sm:px-5 py-3 sm:py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base transition flex items-center justify-center gap-1.5 sm:gap-2"
-              title="Reysni o'chirish"
+              onClick={() => setShowCompleteModal(true)}
+              className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base hover:shadow-xl transition flex items-center justify-center gap-1.5 sm:gap-2"
             >
-              <Trash2 size={18} className="sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">O'chirish</span>
+              <CheckCircle size={18} className="sm:w-5 sm:h-5" /> Reysni yopish
             </button>
-          )}
+          </div>
+          {/* Bekor qilish tugmasi */}
+          <button
+            onClick={handleCancelFlight}
+            className="w-full py-2.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
+          >
+            <X size={16} />
+            Reysni bekor qilish
+          </button>
         </div>
       )}
 

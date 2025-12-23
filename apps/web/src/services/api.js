@@ -9,12 +9,13 @@ const getBaseURL = () => {
     return '/api'
   }
   
-  // To'liq URL berilgan bo'lsa
+  // To'liq URL berilgan bo'lsa - /api bilan tugasa shu holda qaytarish
   if (apiUrl.startsWith('http')) {
+    // Agar allaqachon /api bilan tugasa, qayta qo'shmaslik
     return apiUrl.endsWith('/api') ? apiUrl : apiUrl + '/api'
   }
   
-  return '/api'
+  return apiUrl
 }
 
 // 🎯 Error messages - O'zbek tilida
@@ -47,10 +48,11 @@ const getErrorMessage = (error) => {
     if (error.code === 'ECONNABORTED') {
       return ERROR_MESSAGES.TIMEOUT
     }
-    if (error.message === 'Network Error') {
-      return ERROR_MESSAGES.NETWORK_ERROR
+    // ERR_ADDRESS_UNREACHABLE - server mavjud emas
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      return 'Server bilan aloqa yo\'q. Backend ishga tushirilganligini tekshiring.'
     }
-    return ERROR_MESSAGES.NETWORK_ERROR
+    return ERROR_MESSAGES.SERVER_ERROR
   }
 
   const status = error.response.status
@@ -89,7 +91,7 @@ const getErrorMessage = (error) => {
 const api = axios.create({
   baseURL: getBaseURL(),
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000 // 15 sekund timeout
+  timeout: 30000 // 30 sekund timeout - MongoDB Atlas sekin
 })
 
 // 🎯 Advanced request cache (GET uchun)

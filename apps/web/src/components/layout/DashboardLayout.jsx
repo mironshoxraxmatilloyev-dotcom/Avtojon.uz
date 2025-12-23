@@ -12,7 +12,7 @@ export const useSidebar = () => useContext(SidebarContext)
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', description: 'Umumiy statistika' },
-  { path: '/dashboard/drivers', icon: Users, label: 'Shofyorlar', description: 'Haydovchilar ro\'yxati' },
+  { path: '/dashboard/drivers', icon: Users, label: 'Haydovchilar', description: 'Haydovchilar ro\'yxati' },
   // { path: '/dashboard/flights', icon: Route, label: 'Reyslar', description: 'Faol va tugatilgan' },
   // { path: '/dashboard/trips', icon: Route, label: 'Eski reyslar', description: 'Barcha reyslar' },
   // { path: '/dashboard/salaries', icon: Calculator, label: 'Maoshlar', description: 'Moliya boshqaruvi' },
@@ -69,10 +69,10 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/50 to-violet-50/30">
+    <div className="h-screen overflow-hidden bg-slate-50">
       {/* Mobile Header with menu button */}
       {!sidebarOpen && (
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <button 
               onClick={() => setSidebarOpen(true)} 
@@ -172,7 +172,7 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-72 h-screen overflow-y-auto">
+      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50">
         <div className="p-4 sm:p-6 pt-16 lg:pt-6 animate-fadeIn">
           <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
             <Outlet />

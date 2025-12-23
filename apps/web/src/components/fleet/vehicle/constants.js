@@ -1,0 +1,45 @@
+export const STATUS = {
+  excellent: { label: 'A\'lo', color: 'emerald' },
+  normal: { label: 'Yaxshi', color: 'blue' },
+  attention: { label: 'Diqqat', color: 'amber' },
+  critical: { label: 'Kritik', color: 'red' }
+}
+
+export const OIL_STATUS = {
+  ok: { label: 'Yaxshi', color: 'emerald' },
+  approaching: { label: 'Yaqin', color: 'amber' },
+  overdue: { label: 'O\'tgan', color: 'red' }
+}
+
+export const TIRE_STATUS = {
+  new: { label: 'Yangi', color: 'emerald' },
+  used: { label: 'Ishlatilgan', color: 'blue' },
+  worn: { label: 'Eskirgan', color: 'red' }
+}
+
+export const TIRE_POSITIONS = ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)', 'Zaxira']
+export const SERVICE_TYPES = ['TO-1', 'TO-2', 'Moy almashtirish', 'Tormoz', 'Shina', 'Dvigatel', 'Uzatmalar qutisi', 'Elektrika', 'Kuzov', 'Boshqa']
+export const FUEL_TYPES = [
+  { value: 'diesel', label: 'Dizel' },
+  { value: 'petrol', label: 'Benzin' },
+  { value: 'gas', label: 'Gaz' },
+  { value: 'metan', label: 'Metan' }
+]
+
+export const fmt = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0)
+export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
+export const today = () => new Date().toISOString().split('T')[0]
+
+export const initFuelForm = (odo = '', ft = 'diesel') => ({ 
+  date: today(), liters: '', cost: '', odometer: odo, fuelType: ft, station: '' 
+})
+export const initOilForm = (odo = '') => ({ 
+  date: today(), odometer: odo, oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '' 
+})
+export const initTireForm = (odo = '') => ({ 
+  position: TIRE_POSITIONS[0], brand: '', model: '', size: '', installDate: today(), 
+  installOdometer: odo, expectedLifeKm: 50000, cost: '' 
+})
+export const initServiceForm = (odo = '') => ({ 
+  type: SERVICE_TYPES[0], date: today(), odometer: odo, cost: '', description: '', serviceName: '' 
+})

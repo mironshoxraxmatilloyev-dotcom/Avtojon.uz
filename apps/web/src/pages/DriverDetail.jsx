@@ -44,6 +44,13 @@ export default function DriverDetail() {
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
+    // Vaqtinchalik ID tekshirish - temp_ bilan boshlanuvchi ID lar hali saqlanmagan
+    if (id?.startsWith('temp_')) {
+      setError({ type: 'notfound', message: 'Bu shofyor hali saqlanmagan' })
+      setLoading(false)
+      return
+    }
+    
     if (showLoader) setLoading(true)
     setError(null)
     try {
@@ -57,7 +64,7 @@ export default function DriverDetail() {
       setVehicle(driverData?.vehicle || null) // Backend dan keladi
       setFlights(flightsRes.data.data || [])
     } catch (err) {
-      if (err.response?.status === 404) {
+      if (err.response?.status === 404 || err.response?.status === 400) {
         setError({ type: 'notfound', message: 'Shofyor topilmadi' })
       } else {
         setError({
@@ -87,11 +94,13 @@ export default function DriverDetail() {
     socket.on('flight-started', handleFlightUpdate)
     socket.on('flight-updated', handleFlightUpdate)
     socket.on('flight-completed', handleFlightUpdate)
+    socket.on('flight-confirmed', handleFlightUpdate)
     socket.on('driver-updated', handleDriverUpdate)
     return () => {
       socket.off('flight-started', handleFlightUpdate)
       socket.off('flight-updated', handleFlightUpdate)
       socket.off('flight-completed', handleFlightUpdate)
+      socket.off('flight-confirmed', handleFlightUpdate)
       socket.off('driver-updated', handleDriverUpdate)
     }
   }, [socket, id, fetchData])
@@ -187,9 +196,9 @@ export default function DriverDetail() {
   return (
     <div className="space-y-4 pb-8">
       {/* Header with Action */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -ml-16 -mb-16"></div>
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#2d2d44] to-[#1a1a2e] text-white p-4 sm:p-5 rounded-2xl border border-white/10">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl -ml-16 -mb-16"></div>
         
         <div className="relative">
           <button 
@@ -197,7 +206,7 @@ export default function DriverDetail() {
             className="mb-3 flex items-center gap-2 text-slate-400 hover:text-white transition text-sm"
           >
             <ArrowLeft size={16} />
-            <span>Shofyorlarga qaytish</span>
+            <span>Haydovchilarga qaytish</span>
           </button>
 
           <div className="flex items-center gap-3">
@@ -431,13 +440,13 @@ export default function DriverDetail() {
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 text-white">
-            <h3 className="font-bold mb-3 text-sm">Tezkor amallar</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <h3 className="font-bold mb-3 text-sm text-gray-900">Tezkor amallar</h3>
             <div className="space-y-2">
               {driver.status !== 'busy' && (
                 <button 
                   onClick={() => setShowFlightModal(true)}
-                  className="w-full p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-lg text-left transition flex items-center gap-2"
+                  className="w-full p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-lg text-left transition flex items-center gap-2 text-white"
                 >
                   <Play size={16} />
                   <span className="text-sm font-medium">Reys ochish</span>
@@ -445,17 +454,17 @@ export default function DriverDetail() {
               )}
               <button 
                 onClick={() => navigate('/dashboard/flights')}
-                className="w-full p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition flex items-center gap-2"
+                className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition flex items-center gap-2 border border-gray-200"
               >
-                <Route size={16} className="text-blue-400" />
-                <span className="text-sm">Barcha reyslar</span>
+                <Route size={16} className="text-blue-600" />
+                <span className="text-sm text-gray-700">Barcha reyslar</span>
               </button>
               <button 
                 onClick={() => navigate('/dashboard/salaries')}
-                className="w-full p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition flex items-center gap-2"
+                className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition flex items-center gap-2 border border-gray-200"
               >
-                <Wallet size={16} className="text-emerald-400" />
-                <span className="text-sm">Maosh hisoblash</span>
+                <Wallet size={16} className="text-emerald-600" />
+                <span className="text-sm text-gray-700">Maosh hisoblash</span>
               </button>
             </div>
           </div>

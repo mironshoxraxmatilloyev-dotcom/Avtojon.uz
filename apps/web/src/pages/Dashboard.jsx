@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../hooks/useSocket'
+import { showToast } from '../components/Toast'
 import { PageWrapper, AnimatedCard, AnimatedStatCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
 
 
@@ -158,10 +159,22 @@ export default function Dashboard() {
       }
     })
 
+    // Flight tasdiqlanganda - real-time yangilash
+    socket.on('flight-confirmed', (data) => {
+      if (data.flight) {
+        setActiveFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        setRecentFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+      }
+      if (data.message) {
+        showToast.success(data.message)
+      }
+    })
+
     return () => {
       socket.off('driver-location')
       socket.off('flight-started')
       socket.off('flight-completed')
+      socket.off('flight-confirmed')
     }
   }, [socket])
 
@@ -323,7 +336,7 @@ export default function Dashboard() {
       )}
 
       {/* Hero Header */}
-      <AnimatedCard delay={0} hover={false} className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl">
+      <AnimatedCard delay={0} hover={false} className="relative overflow-hidden bg-gradient-to-r from-[#2d2d44] to-[#1a1a2e] text-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/10">
         <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
         <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-purple-500/20 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
 
@@ -349,52 +362,57 @@ export default function Dashboard() {
 
       {/* Faol reyslar (yangi tizim - flights) */}
       {activeFlights.length > 0 && (
-        <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200/60">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                <Route className="text-emerald-600" size={16} />
+              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Route className="text-white" size={18} />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-gray-900">Faol reyslar</h2>
-                <p className="text-xs sm:text-sm text-gray-500">{activeFlights.length} ta reys yo'lda</p>
+                <h2 className="text-base sm:text-lg font-bold text-slate-800">Faol reyslar</h2>
+                <p className="text-xs sm:text-sm text-slate-500">{activeFlights.length} ta reys yo'lda</p>
               </div>
             </div>
-            <button onClick={() => fetchDriverLocations(true)} className="p-1.5 sm:p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg sm:rounded-xl transition">
-              <RefreshCw size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <button onClick={() => fetchDriverLocations(true)} className="p-2 sm:p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition">
+              <RefreshCw size={18} />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {activeFlights.map((flight) => (
               <div key={flight._id}
                 onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer hover:shadow-lg transition-all duration-300 border border-emerald-100 hover:border-emerald-300">
-                <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full -mr-8 -mt-8 sm:-mr-10 sm:-mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                className="group relative overflow-hidden bg-gradient-to-br from-slate-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-5 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 border border-slate-200 hover:border-emerald-400">
+                <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg shadow-emerald-500/30 flex-shrink-0">
+                  <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                    <div className="w-11 h-11 sm:w-13 sm:h-13 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/25 flex-shrink-0">
                       {flight.driver?.fullName?.charAt(0) || '?'}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.driver?.fullName}</p>
-                      <p className="text-xs sm:text-sm text-gray-500 truncate">{flight.vehicle?.plateNumber}</p>
+                      <p className="font-semibold text-slate-800 text-sm sm:text-base truncate">{flight.driver?.fullName}</p>
+                      <p className="text-xs sm:text-sm text-slate-500 truncate">{flight.vehicle?.plateNumber}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-600 mb-2">
-                    <MapPin size={14} className="sm:w-4 sm:h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 text-sm text-slate-700 mb-3">
+                    <MapPin size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span className="font-medium truncate">{flight.name || 'Yangi reys'}</span>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-500">
-                    <span>{flight.legs?.length || 0} buyurtma</span>
-                    <span>•</span>
-                    <span>{flight.totalDistance || 0} km</span>
+                  <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                      {flight.legs?.length || 0} buyurtma
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                      {flight.totalDistance || 0} km
+                    </span>
                   </div>
-                  <div className="mt-3 sm:mt-4 flex items-center justify-between">
-                    <span className="px-2 sm:px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] sm:text-xs font-medium flex items-center gap-1">
-                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                       Faol
                     </span>
-                    <ArrowUpRight size={14} className="sm:w-4 sm:h-4 text-gray-400 group-hover:text-emerald-600 transition" />
+                    <ArrowUpRight size={18} className="text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </div>
                 </div>
               </div>
