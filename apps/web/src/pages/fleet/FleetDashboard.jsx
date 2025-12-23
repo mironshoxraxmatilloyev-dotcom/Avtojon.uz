@@ -181,24 +181,21 @@ export default function FleetDashboard() {
       alert.success('Yangilandi')
       api.put(`/vehicles/${editVehicle._id}`, body).catch(() => fetchVehicles())
     } else {
-      const tempId = 'temp_' + Date.now()
-      setVehicles(prev => {
-        const updated = [{ ...body, _id: tempId, _isTemp: true, createdAt: new Date().toISOString() }, ...prev]
-        setCache(CACHE_KEY, updated)
-        return updated
-      })
-      alert.success('Qo\'shildi')
-      api.post('/vehicles', body)
-        .then(res => {
-          if (res.data?.data?._id) {
-            setVehicles(prev => {
-              const updated = prev.map(v => v._id === tempId ? { ...res.data.data, _isTemp: false } : v)
-              setCache(CACHE_KEY, updated)
-              return updated
-            })
-          }
-        })
-        .catch(() => fetchVehicles())
+      // Yangi mashina qo'shish - avval API ga so'rov, keyin UI yangilash
+      try {
+        const res = await api.post('/vehicles', body)
+        if (res.data?.data?._id) {
+          setVehicles(prev => {
+            const updated = [res.data.data, ...prev]
+            setCache(CACHE_KEY, updated)
+            return updated
+          })
+          alert.success('Qo\'shildi')
+        }
+      } catch (err) {
+        alert.error('Xatolik', err.response?.data?.message || 'Mashina qo\'shishda xatolik')
+        fetchVehicles()
+      }
     }
   }, [form, editVehicle, fetchVehicles, alert])
 

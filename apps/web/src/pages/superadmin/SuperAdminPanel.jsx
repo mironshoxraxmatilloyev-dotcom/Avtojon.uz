@@ -117,12 +117,18 @@ export default function SuperAdminPanel() {
       return 
     }
     try { 
-      await api.post('/super-admin/businessmen/' + passwordModal._id + '/set-password', { password: newPassword })
+      // User yoki Businessman ekanligini aniqlash
+      const isUser = users.some(u => u._id === passwordModal._id)
+      const endpoint = isUser 
+        ? `/super-admin/users/${passwordModal._id}/set-password`
+        : `/super-admin/businessmen/${passwordModal._id}/set-password`
+      
+      await api.post(endpoint, { password: newPassword })
       setShowCredentials({ username: passwordModal.username, password: newPassword })
       setPasswordModal(null)
       setNewPassword('')
       alert.success('Yangilandi', 'Parol yangilandi') 
-    } catch (err) { alert.error('Xatolik', 'Xatolik') }
+    } catch (err) { alert.error('Xatolik', err.response?.data?.message || 'Xatolik') }
   }
 
   const toggleActive = async (b) => {

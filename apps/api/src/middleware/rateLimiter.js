@@ -96,10 +96,10 @@ const loginLimiter = createRateLimiter({
   }
 });
 
-// Register limiter
+// Register limiter - 1 soatda 100 ta
 const registerLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: 100,
   message: 'Juda ko\'p ro\'yxatdan o\'tish urinishi.'
 });
 
