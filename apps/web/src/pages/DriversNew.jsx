@@ -5,6 +5,7 @@ import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { useAlert, DriversListSkeleton, NetworkError, ServerError } from '../components/ui'
 import LocationPicker from '../components/LocationPicker'
+import { useSocket } from '../hooks/useSocket'
 import {
     DriverCard,
     DriversHeader,
@@ -66,6 +67,7 @@ export default function DriversNew() {
     const navigate = useNavigate()
     const alert = useAlert()
     const isDemoMode = isDemo()
+    const { socket, joinBusinessRoom } = useSocket()
 
     // Data state
     const [data, dispatch] = useReducer(dataReducer, { drivers: [], vehicles: [], activeFlights: {} })
@@ -83,6 +85,92 @@ export default function DriversNew() {
     const [filterStatus, setFilterStatus] = useState('all')
     const [form, setForm] = useState(INITIAL_FORM)
     const [flightForm, setFlightForm] = useState(INITIAL_FLIGHT)
+
+    // 🔌 Biznesmen xonasiga qo'shilish - real-time uchun
+    useEffect(() => {
+        if (user?._id && !isDemoMode) {
+            joinBusinessRoom(user._id)
+        }
+    }, [user?._id, isDemoMode, joinBusinessRoom])
+
+    // 🔌 Socket.io - Real-time yangilanishlar
+    useEffect(() => {
+        if (!socket || isDemoMode) return
+
+        // Flight boshlanganda - shofyor statusini yangilash
+        socket.on('flight-started', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                dispatch({ type: 'START_FLIGHT', driverId, flight: data.flight })
+                showToast.success(data.message || 'Yangi reys boshlandi!')
+            }
+        })
+
+        // Flight yangilanganda
+        socket.on('flight-updated', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: data.flight })
+                if (data.message) {
+                    showToast.info(data.message)
+                }
+            }
+        })
+
+        // Flight yopilganda - shofyor statusini yangilash
+        socket.on('flight-completed', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                dispatch({ type: 'REVERT_FLIGHT', driverId })
+                showToast.success(data.message || 'Reys yopildi!')
+            }
+        })
+
+        // Flight tasdiqlanganda
+        socket.on('flight-confirmed', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: data.flight })
+                showToast.success(data.message || 'Reys tasdiqlandi!')
+            }
+        })
+
+        // Flight o'chirilganda
+        socket.on('flight-deleted', (data) => {
+            if (data.flightId) {
+                // Qaysi shofyorga tegishli ekanini topish
+                const driverId = Object.keys(activeFlights).find(id => activeFlights[id]?._id === data.flightId)
+                if (driverId) {
+                    dispatch({ type: 'REVERT_FLIGHT', driverId })
+                }
+                showToast.warning(data.message || 'Reys o\'chirildi')
+            }
+        })
+
+        // Flight bekor qilinganda
+        socket.on('flight-cancelled', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                dispatch({ type: 'REVERT_FLIGHT', driverId })
+                showToast.warning(data.message || 'Reys bekor qilindi')
+            }
+        })
+
+        // Shofyor joylashuvi yangilanganda
+        socket.on('driver-location', (data) => {
+            // Bu yerda shofyor joylashuvini yangilash mumkin (agar kerak bo'lsa)
+        })
+
+        return () => {
+            socket.off('flight-started')
+            socket.off('flight-updated')
+            socket.off('flight-completed')
+            socket.off('flight-confirmed')
+            socket.off('flight-deleted')
+            socket.off('flight-cancelled')
+            socket.off('driver-location')
+        }
+    }, [socket, isDemoMode, activeFlights])
 
     // Helpers
     const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) + ' som' : '-'

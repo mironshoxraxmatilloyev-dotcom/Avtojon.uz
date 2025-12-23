@@ -172,15 +172,33 @@ export default function FlightDetail() {
         }
       }
     }
+
+    const handleFlightCancelled = (data) => {
+      if (data.flight?._id === id) {
+        setFlight(data.flight)
+        showToast.warning(data.message || 'Reys bekor qilindi')
+      }
+    }
+
+    const handleFlightDeleted = (data) => {
+      if (data.flightId === id) {
+        showToast.warning(data.message || 'Reys o\'chirildi')
+        navigate('/dashboard/drivers')
+      }
+    }
     
     socket.on('flight-updated', handleFlightUpdate)
     socket.on('flight-completed', handleFlightUpdate)
     socket.on('flight-confirmed', handleFlightUpdate)
+    socket.on('flight-cancelled', handleFlightCancelled)
+    socket.on('flight-deleted', handleFlightDeleted)
     
     return () => {
       socket.off('flight-updated', handleFlightUpdate)
       socket.off('flight-completed', handleFlightUpdate)
       socket.off('flight-confirmed', handleFlightUpdate)
+      socket.off('flight-cancelled', handleFlightCancelled)
+      socket.off('flight-deleted', handleFlightDeleted)
     }
   }, [socket, id])
 

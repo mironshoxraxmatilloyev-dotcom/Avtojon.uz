@@ -269,8 +269,8 @@ export default function VehicleDetailPanel() {
           </div>
         </header>
 
-        {/* Content - scrollable */}
-        <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        {/* Content - scrollable with bottom padding for nav */}
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto pb-24 lg:pb-8">
           {activeTab === 'summary' && <SummaryTab vehicle={vehicle} stats={stats} fuelData={fuelData} oilData={oilData} tires={tires} services={services} />}
           {activeTab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} />}
           {activeTab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} />}
@@ -278,17 +278,25 @@ export default function VehicleDetailPanel() {
           {activeTab === 'services' && <ServicesTab data={services} onAdd={() => openModal('service')} onEdit={(item) => openModal('service', item)} onDelete={(i) => handleDelete('services', i)} />}
         </div>
 
-        {/* Bottom Navigation - Mobile only - layout ichida */}
-        <nav className="lg:hidden bg-slate-900 border-t border-white/10 shrink-0">
+        {/* Bottom Navigation - Mobile only - Instagram kabi fixed */}
+        <nav 
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-[99999] bg-slate-900/95 backdrop-blur-xl border-t border-white/10"
+          style={{ 
+            transform: 'translate3d(0,0,0)',
+            WebkitTransform: 'translate3d(0,0,0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
+        >
           <div
-            className="flex items-center justify-around py-2"
-            style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+            className="flex items-center justify-around py-1"
+            style={{ paddingBottom: 'max(6px, env(safe-area-inset-bottom))' }}
           >
             {NAV_ITEMS.map(item => (
               <button key={item.id} onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all ${activeTab === item.id ? 'text-blue-400' : 'text-slate-500'}`}>
+                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-all ${activeTab === item.id ? 'text-blue-400' : 'text-slate-500 active:text-slate-400'}`}>
                 <div className={`p-1.5 rounded-lg ${activeTab === item.id ? 'bg-blue-500/20' : ''}`}>
-                  <item.icon size={20} />
+                  <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
                 </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>

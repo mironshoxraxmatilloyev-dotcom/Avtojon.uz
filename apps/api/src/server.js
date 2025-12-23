@@ -32,14 +32,23 @@ app.set('io', io);
 
 // Socket.io ulanishlar
 io.on('connection', (socket) => {
+  console.log(`🔌 Socket ulandi: ${socket.id}`);
+
   // Biznesmen xonasiga qo'shilish
   socket.on('join-business', (businessId) => {
     socket.join(`business-${businessId}`);
+    console.log(`📦 Biznesmen xonasiga qo'shildi: business-${businessId}`);
   });
 
   // Haydovchi xonasiga qo'shilish
   socket.on('join-driver', (driverId) => {
     socket.join(`driver-${driverId}`);
+    console.log(`🚛 Haydovchi xonasiga qo'shildi: driver-${driverId}`);
+  });
+
+  // Ulanish uzilganda
+  socket.on('disconnect', () => {
+    console.log(`❌ Socket uzildi: ${socket.id}`);
   });
 });
 

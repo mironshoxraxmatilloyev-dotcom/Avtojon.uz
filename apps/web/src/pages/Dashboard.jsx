@@ -177,11 +177,57 @@ export default function Dashboard() {
       }
     })
 
+    // Flight yangilanganda (xarajat, buyurtma qo'shilganda) - real-time yangilash
+    socket.on('flight-updated', (data) => {
+      if (data.flight) {
+        setActiveFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        setRecentFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+      }
+      if (data.message) {
+        showToast.info(data.message)
+      }
+    })
+
+    // Flight o'chirilganda - real-time yangilash
+    socket.on('flight-deleted', (data) => {
+      if (data.flightId) {
+        setActiveFlights(prev => prev.filter(f => f._id !== data.flightId))
+        setRecentFlights(prev => prev.filter(f => f._id !== data.flightId))
+        setStats(prev => ({
+          ...prev,
+          activeTrips: Math.max(0, prev.activeTrips - 1)
+        }))
+      }
+      if (data.message) {
+        showToast.warning(data.message)
+      }
+    })
+
+    // Flight bekor qilinganda - real-time yangilash
+    socket.on('flight-cancelled', (data) => {
+      setStats(prev => ({
+        ...prev,
+        activeTrips: Math.max(0, prev.activeTrips - 1),
+        busyDrivers: Math.max(0, prev.busyDrivers - 1),
+        freeDrivers: prev.freeDrivers + 1
+      }))
+      if (data.flight) {
+        setActiveFlights(prev => prev.filter(f => f._id !== data.flight._id))
+        setRecentFlights(prev => [data.flight, ...prev.filter(f => f._id !== data.flight._id).slice(0, 5)])
+      }
+      if (data.message) {
+        showToast.warning(data.message)
+      }
+    })
+
     return () => {
       socket.off('driver-location')
       socket.off('flight-started')
       socket.off('flight-completed')
       socket.off('flight-confirmed')
+      socket.off('flight-updated')
+      socket.off('flight-deleted')
+      socket.off('flight-cancelled')
     }
   }, [socket])
 

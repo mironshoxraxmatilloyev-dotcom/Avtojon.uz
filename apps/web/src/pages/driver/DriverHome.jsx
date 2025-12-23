@@ -430,12 +430,32 @@ export default function DriverHome() {
             fetchData({ silent: true })
         }
 
+        // 🚀 Flight bekor qilinganda
+        const handleFlightCancelled = (data) => {
+            showToast.error('❌ Reys bekor qilindi!', data.message || 'Sizning reysingiz bekor qilindi')
+            setActiveFlight(null)
+            if (data.flight) {
+                setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+            } else {
+                fetchData({ silent: true })
+            }
+        }
+
+        // 🚀 Reys o'chirilganda
+        const handleFlightDeleted = (data) => {
+            showToast.warning('🗑️ Reys o\'chirildi!', data.message || 'Sizning reysingiz o\'chirildi')
+            setActiveFlight(null)
+            setFlights(prev => prev.filter(f => f._id !== data.flightId))
+        }
+
         socket.on('new-trip', handleNewTrip)
         socket.on('new-flight', handleNewFlight)
         socket.on('flight-started', handleNewFlight)
         socket.on('flight-updated', handleFlightUpdated)
         socket.on('flight-completed', handleFlightCompleted)
         socket.on('trip-cancelled', handleTripCancelled)
+        socket.on('flight-cancelled', handleFlightCancelled)
+        socket.on('flight-deleted', handleFlightDeleted)
 
         return () => {
             socket.off('connect', joinRoom)
@@ -445,6 +465,8 @@ export default function DriverHome() {
             socket.off('flight-updated', handleFlightUpdated)
             socket.off('flight-completed', handleFlightCompleted)
             socket.off('trip-cancelled', handleTripCancelled)
+            socket.off('flight-cancelled', handleFlightCancelled)
+            socket.off('flight-deleted', handleFlightDeleted)
         }
     }, [driverId, fetchData])
 

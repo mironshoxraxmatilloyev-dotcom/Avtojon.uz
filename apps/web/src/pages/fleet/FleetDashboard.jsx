@@ -233,27 +233,35 @@ export default function FleetDashboard() {
     return <ExpiredView showModal={showUpgradeModal} setShowModal={setShowUpgradeModal} />
   }
 
-  // Bottom Nav Component - alohida
+  // Bottom Nav Component - Instagram kabi fixed
   const BottomNav = () => (
-    <nav className="lg:hidden bg-slate-900 border-t border-white/10 shrink-0">
+    <nav 
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-[99999] bg-slate-900/95 backdrop-blur-xl border-t border-white/10"
+      style={{ 
+        transform: 'translate3d(0,0,0)',
+        WebkitTransform: 'translate3d(0,0,0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
+      }}
+    >
       <div 
-        className="flex items-center justify-around py-2 px-2"
-        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+        className="flex items-center justify-around py-1 px-1"
+        style={{ paddingBottom: 'max(6px, env(safe-area-inset-bottom))' }}
       >
         {navItems.map(item => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative ${
-              activeTab === item.id ? 'text-blue-400' : 'text-slate-500'
+            className={`flex flex-col items-center gap-0.5 py-2 px-4 rounded-xl transition-all relative ${
+              activeTab === item.id ? 'text-blue-400' : 'text-slate-500 active:text-slate-400'
             }`}
           >
-            <div className={`p-2 rounded-xl ${activeTab === item.id ? 'bg-blue-500/20' : ''}`}>
-              <item.icon size={22} />
+            <div className={`p-1.5 rounded-lg ${activeTab === item.id ? 'bg-blue-500/20' : ''}`}>
+              <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
             </div>
             <span className="text-[10px] font-medium">{item.label}</span>
             {item.id === 'service' && stats.attention > 0 && (
-              <span className="absolute top-0 right-1 w-5 h-5 bg-amber-500 text-white text-[10px] rounded-full flex items-center justify-center">
+              <span className="absolute top-1 right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
                 {stats.attention}
               </span>
             )}
@@ -261,10 +269,10 @@ export default function FleetDashboard() {
         ))}
         <button
           onClick={() => { logout(); navigate('/login') }}
-          className="flex flex-col items-center gap-1 px-3 py-2 text-slate-500"
+          className="flex flex-col items-center gap-0.5 py-2 px-4 text-slate-500 active:text-red-400"
         >
-          <div className="p-2">
-            <LogOut size={22} />
+          <div className="p-1.5">
+            <LogOut size={24} strokeWidth={2} />
           </div>
           <span className="text-[10px] font-medium">Chiqish</span>
         </button>
@@ -363,7 +371,7 @@ export default function FleetDashboard() {
               {activeTab === 'home' && (
                 <button
                   onClick={() => openModal()}
-                  className="flex items-center gap-1.5 px-3 py-2 lg:px-4 lg:py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-medium transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 lg:px-4 lg:py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-medium transition-all active:scale-95"
                 >
                   <Plus size={18} />
                   <span className="text-sm">Mashina</span>
@@ -373,8 +381,8 @@ export default function FleetDashboard() {
           </div>
         </header>
 
-        {/* Content - scrollable area */}
-        <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        {/* Content - scrollable area with bottom padding for nav */}
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto pb-24 lg:pb-8">
           {activeTab === 'home' && (
             <HomeTab
               vehicles={filteredVehicles}
@@ -394,7 +402,7 @@ export default function FleetDashboard() {
           {activeTab === 'service' && <ServiceTab vehicles={vehicles} navigate={navigate} />}
         </div>
 
-        {/* Bottom Navigation - Mobile only - layout ichida */}
+        {/* Bottom Navigation - Mobile only - fixed position */}
         <BottomNav />
       </main>
 

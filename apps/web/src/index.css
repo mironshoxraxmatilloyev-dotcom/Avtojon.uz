@@ -385,6 +385,39 @@ html[style*="overflow:hidden"] {
   border-top: 1px solid rgba(255,255,255,0.1) !important;
 }
 
+/* 🔥 Instagram kabi fixed bottom nav - scroll qilganda qimirlamasin */
+.fixed-bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  will-change: transform;
+}
+
+/* iOS Safari - address bar yashirilganda ham ishlashi uchun */
+@supports (-webkit-touch-callout: none) {
+  .fixed-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  
+  /* Content uchun bottom padding */
+  .content-with-bottom-nav {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Android Chrome uchun */
+@supports not (-webkit-touch-callout: none) {
+  .content-with-bottom-nav {
+    padding-bottom: 80px !important;
+  }
+}
+
 /* React Phone Input 2 - Dark Theme */
 .react-tel-input .form-control {
   width: 100% !important;

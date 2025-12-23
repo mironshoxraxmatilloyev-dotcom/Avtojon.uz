@@ -10,6 +10,7 @@ import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAuthStore } from '../store/authStore'
 import { useAlert } from '../components/ui'
+import { useSocket } from '../hooks/useSocket'
 
 // Davlatlar
 const COUNTRIES = {
@@ -63,6 +64,78 @@ export default function Flights() {
   const [filter, setFilter] = useState('active')
   const [expandedFlight, setExpandedFlight] = useState(null)
   const isDemoMode = isDemo()
+  const { socket, joinBusinessRoom } = useSocket()
+
+  // 🔌 Biznesmen xonasiga qo'shilish - real-time uchun
+  useEffect(() => {
+    if (user?._id && !isDemoMode) {
+      joinBusinessRoom(user._id)
+    }
+  }, [user?._id, isDemoMode, joinBusinessRoom])
+
+  // 🔌 Socket.io - Real-time yangilanishlar
+  useEffect(() => {
+    if (!socket || isDemoMode) return
+
+    // Flight boshlanganda
+    socket.on('flight-started', (data) => {
+      if (data.flight) {
+        setFlights(prev => [data.flight, ...prev])
+        showToast.success(data.message || 'Yangi reys boshlandi!')
+      }
+    })
+
+    // Flight yangilanganda (xarajat, buyurtma qo'shilganda)
+    socket.on('flight-updated', (data) => {
+      if (data.flight) {
+        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        if (data.message) {
+          showToast.info(data.message)
+        }
+      }
+    })
+
+    // Flight yopilganda
+    socket.on('flight-completed', (data) => {
+      if (data.flight) {
+        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        showToast.success(data.message || 'Reys yopildi!')
+      }
+    })
+
+    // Flight tasdiqlanganda
+    socket.on('flight-confirmed', (data) => {
+      if (data.flight) {
+        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        showToast.success(data.message || 'Reys tasdiqlandi!')
+      }
+    })
+
+    // Flight o'chirilganda
+    socket.on('flight-deleted', (data) => {
+      if (data.flightId) {
+        setFlights(prev => prev.filter(f => f._id !== data.flightId))
+        showToast.warning(data.message || 'Reys o\'chirildi')
+      }
+    })
+
+    // Flight bekor qilinganda
+    socket.on('flight-cancelled', (data) => {
+      if (data.flight) {
+        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        showToast.warning(data.message || 'Reys bekor qilindi')
+      }
+    })
+
+    return () => {
+      socket.off('flight-started')
+      socket.off('flight-updated')
+      socket.off('flight-completed')
+      socket.off('flight-confirmed')
+      socket.off('flight-deleted')
+      socket.off('flight-cancelled')
+    }
+  }, [socket, isDemoMode])
 
   // Modals
   const [showLegModal, setShowLegModal] = useState(false)

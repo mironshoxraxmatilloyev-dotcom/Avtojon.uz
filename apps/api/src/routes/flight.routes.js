@@ -342,7 +342,21 @@ router.delete('/:id/expenses/:expenseId', protect, businessOnly, async (req, res
     flight.expenses = flight.expenses.filter(e => e._id.toString() !== req.params.expenseId);
     await flight.save();
 
-    res.json({ success: true, data: flight });
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - xarajat o'chirildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Xarajat o\'chirildi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -369,6 +383,16 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - reys yangilandi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Reys ma\'lumotlari yangilandi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
 
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
@@ -459,7 +483,23 @@ router.put('/:id/cancel', protect, businessOnly, async (req, res) => {
     // Shofyorni bo'shatish
     await Driver.findByIdAndUpdate(flight.driver, { status: 'free' });
 
-    res.json({ success: true, data: flight });
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - reys bekor qilindi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-cancelled', {
+        flight: populatedFlight,
+        message: 'Reys bekor qilindi!'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-cancelled', {
+        flight: populatedFlight
+      });
+    }
+
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -564,6 +604,16 @@ router.post('/:id/border-crossing', protect, businessOnly, async (req, res) => {
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
 
+    // Socket xabar - chegara xarajati qo'shildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: `Chegara xarajati qo'shildi: ${fromCountry} → ${toCountry}`
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -586,6 +636,16 @@ router.delete('/:id/border-crossing/:crossingId', protect, businessOnly, async (
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - chegara xarajati o'chirildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Chegara xarajati o\'chirildi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
 
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
@@ -620,6 +680,16 @@ router.put('/:id/platon', protect, businessOnly, async (req, res) => {
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - platon yangilandi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Platon ma\'lumotlari yangilandi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
 
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
@@ -656,6 +726,16 @@ router.post('/:id/waypoint', protect, businessOnly, async (req, res) => {
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
 
+    // Socket xabar - waypoint qo'shildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: `Yangi nuqta qo'shildi: ${city}`
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -683,6 +763,16 @@ router.delete('/:id/waypoint/:waypointId', protect, businessOnly, async (req, re
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - waypoint o'chirildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+        flight: populatedFlight,
+        message: 'Nuqta o\'chirildi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
 
     res.json({ success: true, data: populatedFlight });
   } catch (error) {

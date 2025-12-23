@@ -91,16 +91,25 @@ export default function DriverDetail() {
         fetchData(false)
       }
     }
+    const handleFlightDeleted = (data) => {
+      if (data.flightId) {
+        setFlights(prev => prev.filter(f => f._id !== data.flightId))
+      }
+    }
     socket.on('flight-started', handleFlightUpdate)
     socket.on('flight-updated', handleFlightUpdate)
     socket.on('flight-completed', handleFlightUpdate)
     socket.on('flight-confirmed', handleFlightUpdate)
+    socket.on('flight-cancelled', handleFlightUpdate)
+    socket.on('flight-deleted', handleFlightDeleted)
     socket.on('driver-updated', handleDriverUpdate)
     return () => {
       socket.off('flight-started', handleFlightUpdate)
       socket.off('flight-updated', handleFlightUpdate)
       socket.off('flight-completed', handleFlightUpdate)
       socket.off('flight-confirmed', handleFlightUpdate)
+      socket.off('flight-cancelled', handleFlightUpdate)
+      socket.off('flight-deleted', handleFlightDeleted)
       socket.off('driver-updated', handleDriverUpdate)
     }
   }, [socket, id, fetchData])
