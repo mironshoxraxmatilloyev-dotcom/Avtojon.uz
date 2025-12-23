@@ -83,12 +83,12 @@ const apiLimiter = createRateLimiter({
   message: 'Juda ko\'p so\'rov. 1 daqiqada 500 ta so\'rovgacha ruxsat.'
 });
 
-// Login limiter - 5 ta urinishdan keyin 1 soat blok
+// Login limiter - 5 ta urinishdan keyin 1 daqiqa blok
 // Username + IP kombinatsiyasi
 const loginLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 soat
+  windowMs: 60 * 1000, // 1 daqiqa
   max: 5,
-  message: 'Juda ko\'p kirish urinishi. 1 soatdan keyin qayta urinib ko\'ring.',
+  message: 'Juda ko\'p kirish urinishi. 1 daqiqadan keyin qayta urinib ko\'ring.',
   keyGenerator: (req) => {
     const username = (req.body?.username || '').toLowerCase().trim();
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
