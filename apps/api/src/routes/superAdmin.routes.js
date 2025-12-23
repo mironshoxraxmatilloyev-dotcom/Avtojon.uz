@@ -133,10 +133,25 @@ router.post('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
     }
     
-    // Username band emasligini tekshirish
-    const existingUser = await Businessman.findOne({ username: username.toLowerCase() });
+  // Username band emasligini tekshirish - faqat aktiv biznesmenlar orasida
+    const existingUser = await Businessman.findOne({ 
+      username: username.toLowerCase(),
+      isActive: true 
+    });
     if (existingUser) {
       throw new ApiError(400, 'Bu username allaqachon band');
+    }
+    
+    // Agar o'chirilgan biznesmen bo'lsa, username ni o'zgartirish
+    const deletedUser = await Businessman.findOne({
+      username: username.toLowerCase(),
+      isActive: false
+    });
+    if (deletedUser) {
+      await Businessman.updateOne(
+        { _id: deletedUser._id },
+        { username: `deleted_${Date.now()}_${username.toLowerCase()}` }
+      );
     }
     
     finalUsername = username.toLowerCase();
@@ -146,12 +161,25 @@ router.post('/businessmen', superAdminAuth, asyncHandler(async (req, res) => {
     const credentials = generateCredentials(fullName, businessType, phone);
     
     const checkExists = async (uname) => {
-      const exists = await Businessman.findOne({ username: uname });
+      // Faqat aktiv biznesmenlarni tekshirish
+      const exists = await Businessman.findOne({ username: uname, isActive: true });
       return !!exists;
     };
     
     finalUsername = await makeUsernameUnique(credentials.username, checkExists);
     finalPassword = credentials.password;
+    
+    // Agar o'chirilgan biznesmen bo'lsa, username ni o'zgartirish
+    const deletedUser = await Businessman.findOne({
+      username: finalUsername,
+      isActive: false
+    });
+    if (deletedUser) {
+      await Businessman.updateOne(
+        { _id: deletedUser._id },
+        { username: `deleted_${Date.now()}_${finalUsername}` }
+      );
+    }
   }
   
   // Biznesmen yaratish

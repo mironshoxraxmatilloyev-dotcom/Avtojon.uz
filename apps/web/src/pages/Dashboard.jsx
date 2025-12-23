@@ -115,8 +115,15 @@ export default function Dashboard() {
   const [fullScreenMap, setFullScreenMap] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [shouldCenterMap, setShouldCenterMap] = useState(false)
-  const { socket } = useSocket()
+  const { socket, joinBusinessRoom } = useSocket()
   const isDemoMode = isDemo()
+
+  // 🔌 Biznesmen xonasiga qo'shilish - real-time GPS uchun
+  useEffect(() => {
+    if (user?._id && !isDemoMode) {
+      joinBusinessRoom(user._id)
+    }
+  }, [user?._id, isDemoMode, joinBusinessRoom])
 
   // 🔌 Socket.io - Real-time GPS yangilanishi va reys eventlari
   useEffect(() => {
