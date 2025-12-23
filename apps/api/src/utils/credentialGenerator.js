@@ -12,7 +12,7 @@ const transliterate = (text) => {
     'ы': 'i', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya', 'ў': 'o', 'қ': 'q',
     'ғ': 'g', 'ҳ': 'h', "'": '', 'ʼ': ''
   };
-  
+
   return text.toLowerCase().split('').map(char => map[char] || char).join('');
 };
 
@@ -20,10 +20,10 @@ const transliterate = (text) => {
 const generateUsername = (fullName) => {
   const cleanName = transliterate(fullName.trim());
   const nameParts = cleanName.split(/\s+/).filter(p => p.length > 0);
-  
+
   // Faqat birinchi ism
   const firstName = nameParts[0]?.replace(/[^a-z]/g, '') || 'user';
-  
+
   return firstName.toLowerCase().slice(0, 15);
 };
 
@@ -32,7 +32,7 @@ const generatePassword = (fullName) => {
   const cleanName = transliterate(fullName.trim());
   const nameParts = cleanName.split(/\s+/).filter(p => p.length > 0);
   const firstName = nameParts[0]?.replace(/[^a-z]/g, '') || 'user';
-  
+
   // Parol formati: ism123 (masalan: javohir123)
   return `${firstName.toLowerCase()}123`;
 };
@@ -49,12 +49,12 @@ const generateCredentials = (fullName, businessType, phone = '') => {
 const makeUsernameUnique = async (baseUsername, checkExists) => {
   let username = baseUsername;
   let counter = 1;
-  
+
   while (await checkExists(username)) {
     username = `${baseUsername}${counter}`;
     counter++;
   }
-  
+
   return username;
 };
 
