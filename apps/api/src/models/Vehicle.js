@@ -16,11 +16,11 @@ const vehicleSchema = new mongoose.Schema({
   year: Number,
   fuelType: {
     type: String,
-    enum: ['diesel', 'petrol', 'gas'],
+    enum: ['diesel', 'petrol', 'gas', 'metan', 'propan'],
     default: 'diesel'
   },
   fuelTankCapacity: Number, // litr
-  fuelConsumptionRate: Number, // litr/100km
+  expectedFuelConsumption: { type: Number, default: 25 }, // kutilgan L/100km
   cargoCapacity: Number, // tonna
   currentDriver: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,19 +30,57 @@ const vehicleSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  // Texnik ma'lumotlar
+  
+  // === TEXNIK MA'LUMOTLAR ===
   vin: String,
   currentOdometer: { type: Number, default: 0 },
+  purchaseDate: Date,
+  purchasePrice: { type: Number, default: 0 }, // sotib olish narxi
+  purchaseOdometer: { type: Number, default: 0 },
+  
+  // === MOY SOZLAMALARI ===
+  oilChangeIntervalKm: { type: Number, default: 15000 }, // har necha km da almashtirish
+  lastOilChangeDate: Date,
+  lastOilChangeOdometer: { type: Number, default: 0 },
+  
+  // === SHINA SOZLAMALARI ===
+  tireCount: { type: Number, default: 6 }, // shina soni (4, 6, 8...)
+  tireLifeExpectedKm: { type: Number, default: 80000 }, // shina umri
+  
+  // === TEXNIK XIZMAT ===
+  serviceIntervalKm: { type: Number, default: 30000 }, // TO oralig'i
+  serviceIntervalMonths: { type: Number, default: 12 }, // yoki oyda
+  lastServiceDate: Date,
+  lastServiceOdometer: { type: Number, default: 0 },
+  
+  // === FILTRLAR ===
+  airFilterIntervalKm: { type: Number, default: 30000 },
+  lastAirFilterOdometer: { type: Number, default: 0 },
+  fuelFilterIntervalKm: { type: Number, default: 30000 },
+  lastFuelFilterOdometer: { type: Number, default: 0 },
+  
+  // === SUG'URTA VA SOLIQ ===
+  insuranceExpiry: Date,
+  insuranceCost: { type: Number, default: 0 },
+  techInspectionExpiry: Date, // texosmotr
+  
+  // === GPS ===
   lastGpsSignal: Date,
   gpsOnline: { type: Boolean, default: false },
-  // Moy ma'lumotlari
-  lastOilChangeDate: Date,
-  lastOilChangeOdometer: Number,
-  // Xizmat ma'lumotlari
-  lastServiceDate: Date,
   lastFuelDate: Date,
-  // Holat
-  status: { type: String, enum: ['excellent', 'normal', 'attention', 'critical'], default: 'normal' }
+  
+  // === HOLAT ===
+  status: { 
+    type: String, 
+    enum: ['excellent', 'normal', 'attention', 'critical'], 
+    default: 'normal' 
+  },
+  
+  // === HISOBLANGAN QIYMATLAR (cached) ===
+  calculatedFuelConsumption: Number, // haqiqiy L/100km
+  totalIncome: { type: Number, default: 0 },
+  totalExpenses: { type: Number, default: 0 },
+  lastCalculatedAt: Date
 }, { timestamps: true });
 
 // Faqat aktiv mashinalar uchun plateNumber unique bo'lsin

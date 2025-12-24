@@ -19,6 +19,15 @@ export const TIRE_STATUS = {
 
 export const TIRE_POSITIONS = ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)', 'Zaxira']
 export const SERVICE_TYPES = ['TO-1', 'TO-2', 'Moy almashtirish', 'Tormoz', 'Shina', 'Dvigatel', 'Uzatmalar qutisi', 'Elektrika', 'Kuzov', 'Boshqa']
+export const EXPENSE_TYPES = [
+  { value: 'insurance', label: 'Sug\'urta' },
+  { value: 'tax', label: 'Soliq' },
+  { value: 'parking', label: 'Parkovka' },
+  { value: 'toll', label: 'Yo\'l to\'lovi' },
+  { value: 'fine', label: 'Jarima' },
+  { value: 'wash', label: 'Yuvish' },
+  { value: 'other', label: 'Boshqa' }
+]
 export const FUEL_TYPES = [
   { value: 'diesel', label: 'Dizel' },
   { value: 'petrol', label: 'Benzin' },
@@ -38,8 +47,15 @@ export const initOilForm = (odo = '') => ({
 })
 export const initTireForm = (odo = '') => ({ 
   position: TIRE_POSITIONS[0], brand: '', model: '', size: '', installDate: today(), 
-  installOdometer: odo, expectedLifeKm: 50000, cost: '' 
+  installOdometer: odo, expectedLifeKm: 80000, cost: '' 
 })
 export const initServiceForm = (odo = '') => ({ 
   type: SERVICE_TYPES[0], date: today(), odometer: odo, cost: '', description: '', serviceName: '' 
+})
+export const initIncomeForm = () => ({
+  type: 'trip', date: today(), amount: '', fromCity: '', toCity: '', 
+  distance: '', cargoWeight: '', clientName: '', description: ''
+})
+export const initExpenseForm = () => ({
+  type: 'other', date: today(), amount: '', description: ''
 })

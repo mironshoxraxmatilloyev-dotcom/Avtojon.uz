@@ -75,29 +75,23 @@ export const useAuthStore = create((set, get) => ({
     set({ user, token, refreshToken, error: null })
   },
 
-  register: async ({ username, password, fullName, companyName, phone }) => {
+  register: async ({ fullName, password, phone }) => {
     set({ loading: true, error: null })
     
     // Client-side validation
-    if (!username?.trim()) {
-      set({ loading: false, error: 'Username majburiy' })
-      return { success: false, message: 'Username majburiy' }
+    if (!fullName?.trim()) {
+      set({ loading: false, error: 'Ismingizni kiriting' })
+      return { success: false, message: 'Ismingizni kiriting' }
     }
     if (!password || password.length < 6) {
       set({ loading: false, error: 'Parol kamida 6 ta belgi' })
       return { success: false, message: 'Parol kamida 6 ta belgi bo\'lishi kerak' }
     }
-    if (!fullName?.trim()) {
-      set({ loading: false, error: 'To\'liq ism majburiy' })
-      return { success: false, message: 'To\'liq ism majburiy' }
-    }
     
     try {
       const { data } = await api.post('/auth/register', { 
-        username: username.trim(), 
-        password, 
         fullName: fullName.trim(), 
-        companyName: companyName?.trim() || '', 
+        password, 
         phone: phone || ''
       })
       

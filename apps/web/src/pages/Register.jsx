@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Sparkles, Eye, EyeOff, Building2, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
+import { Truck, Lock, ArrowRight, Sparkles, Eye, EyeOff, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
 import { PhoneInputDark } from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
 
@@ -59,7 +59,7 @@ function MagneticButton({ children, className, ...props }) {
 }
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', password: '', fullName: '', companyName: '', phone: '' })
+  const [form, setForm] = useState({ fullName: '', password: '', phone: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -67,9 +67,7 @@ export default function Register() {
   const navigate = useNavigate()
   const alert = useAlert()
   const formRef = useRef(null)
-  const usernameRef = useRef(null)
   const passwordRef = useRef(null)
-  const companyRef = useRef(null)
 
   useEffect(() => {
     if (formRef.current) {
@@ -98,13 +96,8 @@ export default function Register() {
     
     switch (name) {
       case 'fullName':
-        if (!value.trim()) error = 'To\'liq ism majburiy'
+        if (!value.trim()) error = 'Ismingizni kiriting'
         else if (value.trim().length < 2) error = 'Kamida 2 ta belgi'
-        break
-      case 'username':
-        if (!value.trim()) error = 'Username majburiy'
-        else if (value.length < 3) error = 'Kamida 3 ta belgi'
-        else if (!/^[a-zA-Z0-9_]+$/.test(value)) error = 'Faqat harflar, raqamlar va _'
         break
       case 'password':
         if (!value) error = 'Parol majburiy'
@@ -126,14 +119,14 @@ export default function Register() {
     
     // Validate all required fields
     const newErrors = {}
-    const requiredFields = ['fullName', 'username', 'password']
+    const requiredFields = ['fullName', 'password']
     
     requiredFields.forEach(field => {
       const error = validateSingleField(field, form[field])
       if (error) newErrors[field] = error
     })
     
-    setTouched({ fullName: true, username: true, password: true })
+    setTouched({ fullName: true, password: true })
     setErrors(newErrors)
     
     if (Object.keys(newErrors).length > 0) {
@@ -205,7 +198,7 @@ export default function Register() {
         <Card3D className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-8 shadow-2xl shadow-violet-500/10">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">To'liq ism *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Ismingiz *</label>
               <div className="relative group">
                 <UserCircle className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
                 <input
@@ -217,7 +210,7 @@ export default function Register() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
-                      usernameRef.current?.focus()
+                      passwordRef.current?.focus()
                     }
                   }}
                   aria-invalid={errors.fullName && touched.fullName}
@@ -225,43 +218,13 @@ export default function Register() {
                   placeholder="Ism Familiya"
                 />
               </div>
-              {errors.fullName && touched.fullName && (
+              {errors.fullName && touched.fullName ? (
                 <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
                   <AlertCircle size={12} />
                   {errors.fullName}
                 </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Username *</label>
-              <div className="relative group">
-                <User className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.username && touched.username ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
-                <input
-                  ref={usernameRef}
-                  type="text"
-                  name="username"
-                  value={form.username}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('username')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      passwordRef.current?.focus()
-                    }
-                  }}
-                  aria-invalid={errors.username && touched.username}
-                  className={getInputClass('username')}
-                  placeholder="username"
-                />
-              </div>
-              {errors.username && touched.username ? (
-                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
-                  <AlertCircle size={12} />
-                  {errors.username}
-                </p>
               ) : (
-                <p className="text-[10px] sm:text-xs text-violet-400/60 mt-1 sm:mt-1.5 ml-1">Login qilish uchun ishlatiladi</p>
+                <p className="text-[10px] sm:text-xs text-violet-400/60 mt-1 sm:mt-1.5 ml-1">Login qilish uchun ham ishlatiladi</p>
               )}
             </div>
 
@@ -277,13 +240,8 @@ export default function Register() {
                   onChange={handleChange}
                   onBlur={() => handleBlur('password')}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (form.fullName.trim() && form.username.trim() && form.password.length >= 6) {
-                        handleSubmit(e)
-                      } else {
-                        companyRef.current?.focus()
-                      }
+                    if (e.key === 'Enter' && form.fullName.trim() && form.password.length >= 6) {
+                      handleSubmit(e)
                     }
                   }}
                   aria-invalid={errors.password && touched.password}
@@ -309,27 +267,6 @@ export default function Register() {
                   {errors.password}
                 </p>
               )}
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Kompaniya</label>
-              <div className="relative group">
-                <Building2 className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-violet-400 group-focus-within:text-violet-300 transition-colors" />
-                <input
-                  ref={companyRef}
-                  type="text"
-                  name="companyName"
-                  value={form.companyName}
-                  onChange={handleChange}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && form.fullName.trim() && form.username.trim() && form.password.length >= 6) {
-                      handleSubmit(e)
-                    }
-                  }}
-                  className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all hover:border-white/20"
-                  placeholder="Kompaniya nomi"
-                />
-              </div>
             </div>
 
             <div className="dark-phone">

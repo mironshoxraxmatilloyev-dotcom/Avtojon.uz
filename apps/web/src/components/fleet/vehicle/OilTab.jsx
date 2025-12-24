@@ -4,39 +4,46 @@ import { fmt, fmtDate, OIL_STATUS } from './constants'
 
 export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
   const { changes = [], status = 'ok', remainingKm = 0, lastChange } = data
+
+  const statusColors = {
+    ok: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', icon: 'text-emerald-500' },
+    approaching: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', icon: 'text-amber-500' },
+    overdue: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', icon: 'text-red-500' }
+  }
+  const colors = statusColors[status] || statusColors.ok
   const statusConfig = OIL_STATUS[status] || OIL_STATUS.ok
 
   return (
     <div className="space-y-8">
-      {/* Status Card */}
-      <div className={`bg-${statusConfig.color}-500/5 rounded-2xl p-6 border border-${statusConfig.color}-500/20`}>
+      {/* Status Card - Light Mode */}
+      <div className={`${colors.bg} rounded-2xl p-6 border ${colors.border}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {status === 'ok' ? (
-              <CheckCircle className={`w-8 h-8 text-${statusConfig.color}-400`} />
+              <CheckCircle className={`w-8 h-8 ${colors.icon}`} />
             ) : (
-              <AlertTriangle className={`w-8 h-8 text-${statusConfig.color}-400`} />
+              <AlertTriangle className={`w-8 h-8 ${colors.icon}`} />
             )}
             <div>
-              <h3 className={`text-xl font-bold text-${statusConfig.color}-400`}>{statusConfig.label}</h3>
-              <p className="text-slate-400">Moy holati</p>
+              <h3 className={`text-xl font-bold ${colors.text}`}>{statusConfig.label}</h3>
+              <p className="text-gray-500">Moy holati</p>
             </div>
           </div>
           <div className="text-right">
-            <p className={`text-3xl font-bold text-${statusConfig.color}-400`}>{fmt(remainingKm)}</p>
-            <p className="text-slate-400">km qoldi</p>
+            <p className={`text-3xl font-bold ${colors.text}`}>{fmt(remainingKm)}</p>
+            <p className="text-gray-500">km qoldi</p>
           </div>
         </div>
 
         {lastChange && (
-          <div className="pt-4 border-t border-white/10 grid grid-cols-2 gap-4">
+          <div className="pt-4 border-t border-gray-200/50 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-slate-400 text-sm">Oxirgi almashtirish</p>
-              <p className="text-white font-medium">{fmtDate(lastChange.date)}</p>
+              <p className="text-gray-500 text-sm">Oxirgi almashtirish</p>
+              <p className="text-gray-900 font-medium">{fmtDate(lastChange.date)}</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Moy turi</p>
-              <p className="text-white font-medium">{lastChange.oilType || '-'}</p>
+              <p className="text-gray-500 text-sm">Moy turi</p>
+              <p className="text-gray-900 font-medium">{lastChange.oilType || '-'}</p>
             </div>
           </div>
         )}
@@ -46,37 +53,37 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
       <div className="flex justify-end">
         <button
           onClick={onAdd}
-          className="px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
+          className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-amber-500/25"
         >
           <Plus size={18} />
           Moy almashtirish
         </button>
       </div>
 
-      {/* History */}
+      {/* History - Light Mode */}
       {changes.length > 0 ? (
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-white">Tarix</h3>
+          <h3 className="text-lg font-bold text-gray-900">Tarix</h3>
           {changes.map(c => (
-            <div key={c._id} className="bg-slate-800/30 rounded-xl p-5 border border-white/5">
+            <div key={c._id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
-                    <Droplets className="w-6 h-6 text-amber-400" />
+                  <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100">
+                    <Droplets className="w-6 h-6 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold">{c.oilType || 'Moy'}</p>
-                    <p className="text-slate-400 text-sm">{fmtDate(c.date)} • {fmt(c.odometer)} km</p>
-                    {c.oilBrand && <p className="text-slate-500 text-sm">{c.oilBrand}</p>}
+                    <p className="text-gray-900 font-semibold">{c.oilType || 'Moy'}</p>
+                    <p className="text-gray-500 text-sm">{fmtDate(c.date)} • {fmt(c.odometer)} km</p>
+                    {c.oilBrand && <p className="text-gray-400 text-sm">{c.oilBrand}</p>}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-amber-400 font-bold">{fmt(c.cost)} so'm</p>
+                  <p className="text-amber-600 font-bold">{fmt(c.cost)} so'm</p>
                   <div className="flex gap-1 mt-2">
-                    <button onClick={() => onEdit(c)} className="p-2 hover:bg-white/10 rounded-lg text-slate-400">
+                    <button onClick={() => onEdit(c)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-500 transition-colors">
                       <Edit2 size={16} />
                     </button>
-                    <button onClick={() => onDelete(c._id)} className="p-2 hover:bg-red-500/10 rounded-lg text-red-400">
+                    <button onClick={() => onDelete(c._id)} className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -86,9 +93,9 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
           ))}
         </div>
       ) : (
-        <div className="bg-slate-800/20 rounded-2xl p-12 text-center border border-white/5">
-          <Droplets className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400">Moy almashtirish tarixi yo'q</p>
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
+          <Droplets className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">Moy almashtirish tarixi yo'q</p>
         </div>
       )}
     </div>

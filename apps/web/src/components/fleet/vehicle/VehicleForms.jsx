@@ -3,11 +3,11 @@ import { X } from 'lucide-react'
 import { FUEL_TYPES, TIRE_POSITIONS, SERVICE_TYPES } from './constants'
 
 export const Modal = memo(({ title, onClose, children }) => (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-slate-900 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-hidden">
-      <div className="flex items-center justify-between p-5 border-b border-white/5">
-        <h2 className="text-lg font-bold text-white">{title}</h2>
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl text-slate-400">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl max-h-[90vh] overflow-hidden">
+      <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 transition-colors">
           <X size={20} />
         </button>
       </div>
@@ -45,6 +45,14 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
       <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
       <Input label="Odometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
     </div>
+    <Input 
+      label="Keyingi almashtirish (km)" 
+      type="number" 
+      value={form.nextChangeKm} 
+      onChange={v => setForm(f => ({ ...f, nextChangeKm: v }))} 
+      placeholder="10000"
+    />
+    <p className="text-xs text-gray-500 -mt-2">Necha km dan keyin moy almashtiriladi (default: 10,000 km)</p>
     <SubmitButton isEdit={isEdit} />
   </form>
 ))
@@ -80,7 +88,7 @@ export const BulkTireForm = memo(({ form, setForm, errors, onSubmit }) => (
       <Input label="Jami narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} />
     </div>
     <Input label="O'rnatish km" type="number" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} />
-    <button type="submit" className="w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-white font-semibold transition-all">
+    <button type="submit" className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl text-white font-semibold transition-all shadow-lg shadow-purple-500/25">
       Barchasini qo'shish
     </button>
   </form>
@@ -131,8 +139,8 @@ const Input = memo(({ label, type = 'text', value, onChange, placeholder, error,
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-2">
-        {label} {required && <span className="text-red-400">*</span>}
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         type={isNumber ? 'text' : type}
@@ -140,21 +148,20 @@ const Input = memo(({ label, type = 'text', value, onChange, placeholder, error,
         value={displayValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-white placeholder-slate-500 focus:outline-none transition-all ${error ? 'border-red-500/50' : 'border-white/5 focus:border-blue-500/50'}`}
+        className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${error ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-blue-400'}`}
       />
-      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   )
 })
 
 const Select = memo(({ label, value, onChange, options }) => (
   <div>
-    <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
-    
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-3 bg-slate-800/50 border border-white/5 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
+      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
@@ -163,18 +170,18 @@ const Select = memo(({ label, value, onChange, options }) => (
 
 const Textarea = memo(({ label, value, onChange }) => (
   <div>
-    <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
       rows={3}
-      className="w-full px-4 py-3 bg-slate-800/50 border border-white/5 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-all resize-none"
+      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
     />
   </div>
 ))
 
 const SubmitButton = memo(({ isEdit }) => (
-  <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-semibold transition-all">
+  <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl text-white font-semibold transition-all shadow-lg shadow-blue-500/25">
     {isEdit ? 'Yangilash' : 'Saqlash'}
   </button>
 ))

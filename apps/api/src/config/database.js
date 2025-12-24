@@ -7,8 +7,8 @@ const connectDB = async () => {
       // Connection pool - bir vaqtda ko'p ulanish
       maxPoolSize: 10,
       minPoolSize: 2,
-      // Serverga ulanish timeout
-      serverSelectionTimeoutMS: 5000,
+      // Serverga ulanish timeout - ko'proq vaqt
+      serverSelectionTimeoutMS: 30000,
       // Socket timeout
       socketTimeoutMS: 45000,
       // Heartbeat

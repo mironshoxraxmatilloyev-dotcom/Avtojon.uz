@@ -3,32 +3,54 @@ const router = express.Router();
 const User = require('../models/User');
 const Driver = require('../models/Driver');
 const Businessman = require('../models/Businessman');
-const { generateToken } = require('../utils/jwt');
 const { generateTokenPair, refreshTokens, revokeAllUserTokens } = require('../utils/tokenManager');
 const { protect } = require('../middleware/auth');
 const { loginLimiter, registerLimiter, passwordLimiter } = require('../middleware/rateLimiter');
 const { validate, authSchemas } = require('../utils/validators');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
-// Admin register
-router.post('/register', registerLimiter, validate(authSchemas.register), asyncHandler(async (req, res) => {
-    const { username, password, fullName, companyName, phone } = req.body;
+// Ismdan username yasash funksiyasi
+const generateUsernameFromName = (fullName) => {
+    return fullName
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+        .substring(0, 20) || 'user';
+};
 
-    const existingUser = await User.findOne({ username: username.toLowerCase() });
-    if (existingUser) {
-        throw new ApiError(400, 'Bu username allaqachon band');
+// Admin register - soddalashtirilgan (faqat ism, parol, telefon)
+router.post('/register', registerLimiter, asyncHandler(async (req, res) => {
+    const { fullName, password, phone } = req.body;
+
+    // Validatsiya
+    if (!fullName || fullName.trim().length < 2) {
+        throw new ApiError(400, 'Ismingizni kiriting (kamida 2 ta belgi)');
+    }
+    if (!password || password.length < 6) {
+        throw new ApiError(400, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
     }
 
-    // Trial subscription - 7 kun
+    // Ismdan username yasash
+    let baseUsername = generateUsernameFromName(fullName);
+    let username = baseUsername;
+    let counter = 1;
+
+    // Unique username topish
+    while (await User.findOne({ username })) {
+        username = `${baseUsername}${counter}`;
+        counter++;
+    }
+
+    // Trial subscription - 30 kun
     const now = new Date();
-    const trialEndDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 kun
+    const trialEndDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const user = await User.create({
-        username: username.toLowerCase(),
+        username,
         password,
-        fullName,
-        companyName,
-        phone,
+        fullName: fullName.trim(),
+        phone: phone || '',
         role: 'admin',
         subscription: {
             plan: 'trial',
@@ -38,7 +60,6 @@ router.post('/register', registerLimiter, validate(authSchemas.register), asyncH
         }
     });
 
-    // Token juftligi (access + refresh)
     const tokens = await generateTokenPair(user, 'admin');
 
     res.status(201).json({
@@ -48,7 +69,6 @@ router.post('/register', registerLimiter, validate(authSchemas.register), asyncH
                 id: user._id,
                 username: user.username,
                 fullName: user.fullName,
-                companyName: user.companyName,
                 role: 'admin',
                 subscription: user.checkSubscription()
             },
