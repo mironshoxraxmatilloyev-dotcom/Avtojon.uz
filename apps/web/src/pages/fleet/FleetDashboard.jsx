@@ -50,7 +50,7 @@ export default function FleetDashboard() {
   const [fleetAnalytics, setFleetAnalytics] = useState(null)
 
   const [form, setForm] = useState({
-    plateNumber: '', brand: '', model: '', year: new Date().getFullYear(),
+    plateNumber: '', brand: '', year: new Date().getFullYear(),
     fuelType: 'diesel', fuelTankCapacity: '', currentOdometer: ''
   })
 
@@ -147,13 +147,12 @@ export default function FleetDashboard() {
     setForm(vehicle ? {
       plateNumber: vehicle.plateNumber || '',
       brand: vehicle.brand || '',
-      model: vehicle.model || '',
       year: vehicle.year || new Date().getFullYear(),
       fuelType: vehicle.fuelType || 'diesel',
       fuelTankCapacity: vehicle.fuelTankCapacity?.toString() || '',
       currentOdometer: vehicle.currentOdometer?.toString() || ''
     } : {
-      plateNumber: '', brand: '', model: '', year: new Date().getFullYear(),
+      plateNumber: '', brand: '', year: new Date().getFullYear(),
       fuelType: 'diesel', fuelTankCapacity: '', currentOdometer: ''
     })
     setShowModal(true)
@@ -167,15 +166,17 @@ export default function FleetDashboard() {
       return
     }
     const body = {
-      ...form,
+      plateNumber: form.plateNumber,
+      brand: form.brand,
       year: parseInt(form.year) || new Date().getFullYear(),
+      fuelType: form.fuelType,
       fuelTankCapacity: form.fuelTankCapacity ? parseFloat(form.fuelTankCapacity) : null,
       currentOdometer: form.currentOdometer ? parseFloat(form.currentOdometer) : 0,
       status: 'normal'
     }
     setShowModal(false)
 
-    if (editVehicle) {
+    if (editVehicle && editVehicle._id) {
       setVehicles(prev => {
         const updated = prev.map(v => v._id === editVehicle._id ? { ...v, ...body } : v)
         setCache(CACHE_KEY, updated)
@@ -192,7 +193,7 @@ export default function FleetDashboard() {
             setCache(CACHE_KEY, updated)
             return updated
           })
-          alert.success('Qo\'shildi')
+          alert.success('Mashina qo\'shildi')
         }
       } catch (err) {
         alert.error('Xatolik', err.response?.data?.message || 'Mashina qo\'shishda xatolik')

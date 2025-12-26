@@ -8,7 +8,8 @@ export default function PhoneInputField({
   className = "",
   inputClass = "",
   containerClass = "",
-  disabled = false
+  disabled = false,
+  error = false
 }) {
   return (
     <PhoneInput
@@ -27,18 +28,19 @@ export default function PhoneInputField({
       dropdownClass="phone-input-dropdown"
       inputStyle={{
         width: '100%',
-        height: '48px',
+        height: '52px',
         fontSize: '16px',
         paddingLeft: '48px',
         borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#fff'
+        border: error ? '2px solid #fca5a5' : '2px solid #e2e8f0',
+        backgroundColor: '#f8fafc',
+        color: '#1e293b'
       }}
       buttonStyle={{
         borderRadius: '12px 0 0 12px',
-        border: '1px solid #e5e7eb',
+        border: error ? '2px solid #fca5a5' : '2px solid #e2e8f0',
         borderRight: 'none',
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#f8fafc'
       }}
       dropdownStyle={{
         borderRadius: '12px',

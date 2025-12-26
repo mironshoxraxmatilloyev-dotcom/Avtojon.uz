@@ -447,15 +447,10 @@ export default function DriversNew() {
                 form={flightForm}
                 setForm={setFlightForm}
                 selectedDriver={selectedDriver}
-                onOpenLocationPicker={() => { setShowFlightModal(false); setShowLocationPicker(true) }}
+                selectedVehicle={selectedDriver ? getDriverVehicle(selectedDriver._id) : null}
             />
 
-            {showLocationPicker && (
-                <LocationPicker
-                    onSelect={handleLocationSelect}
-                    onClose={() => { setShowLocationPicker(false); setShowFlightModal(true) }}
-                />
-            )}
+            {/* LocationPicker olib tashlandi - faqat AddressAutocomplete ishlatiladi */}
         </div>
     )
 }

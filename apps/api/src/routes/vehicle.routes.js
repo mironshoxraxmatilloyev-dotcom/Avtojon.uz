@@ -145,7 +145,7 @@ router.get('/:id', protect, businessOnly, async (req, res) => {
 // Yangi mashina qo'shish
 router.post('/', protect, businessOnly, async (req, res) => {
   try {
-    const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentDriver } = req.body;
+    const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentDriver, currentOdometer } = req.body;
 
     // Faqat aktiv mashinalar orasida tekshirish
     const existingVehicle = await Vehicle.findOne({ 
@@ -167,6 +167,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
       fuelTankCapacity,
       fuelConsumptionRate,
       cargoCapacity,
+      currentOdometer: currentOdometer || 0,
       currentDriver: currentDriver || null
     });
 

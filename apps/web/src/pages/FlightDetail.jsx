@@ -1,89 +1,32 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import {
-  ArrowLeft,
-  Plus,
-  X,
-  Route,
-  Fuel,
-  Gauge,
-  MapPin,
-  Wallet,
-  CheckCircle,
-  Trash2,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Navigation,
-  ChevronRight,
-  Map,
-  Globe,
-  Flag,
-  ArrowRight
+  ArrowLeft, CheckCircle, X, TrendingUp, TrendingDown, DollarSign, Wallet,
+  Truck, User, Calendar, Sparkles, Zap
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
-import { useAuthStore } from '../store/authStore'
-import {
-  useAlert,
-  FlightDetailSkeleton,
-  NetworkError,
-  NotFoundError
-} from '../components/ui'
-import AddressAutocomplete from '../components/AddressAutocomplete'
+import { useAlert, FlightDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import LocationPicker from '../components/LocationPicker'
 import { useSocket } from '../hooks/useSocket'
-
-// Davlatlar
-const COUNTRIES = {
-  UZB: { name: "O'zbekiston", flag: '🇺🇿' },
-  KZ: { name: 'Qozog\'iston', flag: '🇰🇿' },
-  RU: { name: 'Rossiya', flag: '🇷🇺' }
-}
-
-// Valyutalar
-const CURRENCIES = {
-  USD: { symbol: '$', name: 'Dollar' },
-  UZS: { symbol: 'so\'m', name: 'So\'m' },
-  KZT: { symbol: '₸', name: 'Tenge' },
-  RUB: { symbol: '₽', name: 'Rubl' }
-}
-
-// Asosiy xarajat kategoriyalari
-const EXPENSE_CATEGORIES = [
-  { value: 'fuel', label: 'Yoqilg\'i', icon: '⛽', color: 'from-amber-500 to-orange-500' },
-  { value: 'food', label: 'Ovqat', icon: '🍽️', color: 'from-green-500 to-emerald-500' },
-  { value: 'repair', label: 'Ta\'mir', icon: '🔧', color: 'from-red-500 to-rose-500' },
-  { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️', color: 'from-blue-500 to-indigo-500' },
-  { value: 'fine', label: 'Jarima', icon: '📋', color: 'from-purple-500 to-violet-500' },
-  { value: 'other', label: 'Boshqa', icon: '📦', color: 'from-gray-500 to-slate-500' }
-]
-
-// Yoqilg'i turlari
-const FUEL_TYPES = [
-  { value: 'fuel_metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'kub' },
-  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-  { value: 'fuel_diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
-]
-
-// Display uchun barcha turlar
-const EXPENSE_TYPES = [
-  ...FUEL_TYPES.map(f => ({ ...f, color: 'from-amber-500 to-orange-500' })),
-  { value: 'food', label: 'Ovqat', icon: '🍽️', color: 'from-green-500 to-emerald-500' },
-  { value: 'repair', label: 'Ta\'mir', icon: '🔧', color: 'from-red-500 to-rose-500' },
-  { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️', color: 'from-blue-500 to-indigo-500' },
-  { value: 'fine', label: 'Jarima', icon: '📋', color: 'from-purple-500 to-violet-500' },
-  { value: 'other', label: 'Boshqa', icon: '📦', color: 'from-gray-500 to-slate-500' }
-]
+import {
+  OdometerFuelCard,
+  LegsWithExpenses,
+  InternationalSection,
+  formatMoney
+} from '../components/flightDetail'
+import {
+  LegModal,
+  ExpenseModal,
+  CompleteModal,
+  PaymentModal,
+  PlatonModal
+} from '../components/flightDetail/AllModals'
 
 export default function FlightDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isDemo } = useAuthStore()
   const alert = useAlert()
-  const isDemoMode = isDemo()
   const { socket } = useSocket()
 
   const [flight, setFlight] = useState(null)
@@ -95,48 +38,22 @@ export default function FlightDetail() {
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
-  const [showBorderModal, setShowBorderModal] = useState(false)
   const [showPlatonModal, setShowPlatonModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+
+  // Selected items
   const [selectedLegForPayment, setSelectedLegForPayment] = useState(null)
-  const [paymentForm, setPaymentForm] = useState({ payment: '' })
-  const [expandedLegs, setExpandedLegs] = useState({}) // Kengaytirilgan buyurtmalar
-  const [selectedLegForExpense, setSelectedLegForExpense] = useState(null) // Xarajat qo'shish uchun tanlangan buyurtma
+  const [selectedLegForExpense, setSelectedLegForExpense] = useState(null)
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [selectedLegIndex, setSelectedLegIndex] = useState(0)
 
-  // Forms
-  const [legForm, setLegForm] = useState({ 
-    fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '',
-    fromCoords: null, toCoords: null
-  })
-  const [expenseForm, setExpenseForm] = useState({ 
-    category: 'fuel', 
-    type: 'fuel_metan', 
-    amount: '', 
-    description: '', 
-    quantity: '',
-    pricePerUnit: '',
-    odometer: '',
-    stationName: '',
-    location: null,
-    date: new Date().toISOString().split('T')[0]
-  })
-  const [completeForm, setCompleteForm] = useState({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
-  const [borderForm, setBorderForm] = useState({
-    fromCountry: 'UZB', toCountry: 'KZ', borderName: '',
-    customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: ''
-  })
-  const [platonForm, setPlatonForm] = useState({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
-  const [submitting, setSubmitting] = useState(false)
-
+  // Fetch flight
   const fetchFlight = useCallback(async (showLoader = true) => {
-    // Vaqtinchalik ID tekshirish - temp_ bilan boshlanuvchi ID lar hali saqlanmagan
     if (id?.startsWith('temp_')) {
       setError({ type: 'notfound', message: 'Bu reys hali saqlanmagan' })
       setLoading(false)
       return
     }
-    
-    // Agar flight allaqachon mavjud bo'lsa, loading ko'rsatmaymiz
     if (showLoader && !flight) setLoading(true)
     setError(null)
     try {
@@ -146,2013 +63,411 @@ export default function FlightDetail() {
       if (err.response?.status === 404 || err.response?.status === 400) {
         setError({ type: 'notfound', message: 'Reys topilmadi' })
       } else {
-        setError({
-          type: err.isNetworkError ? 'network' : 'generic',
-          message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
-        })
+        setError({ type: err.isNetworkError ? 'network' : 'generic', message: err.userMessage || 'Xatolik' })
       }
     } finally {
       setLoading(false)
     }
   }, [id, flight])
 
-  // Dastlabki yuklash
-  useEffect(() => { fetchFlight() }, [id]) // faqat id o'zgarganda
-  
-  // Socket orqali realtime yangilanishlar
+  useEffect(() => { fetchFlight() }, [id])
+
+  // Socket listeners
   useEffect(() => {
     if (!socket) return
-    
-    const handleFlightUpdate = (data) => {
-      // Agar bu reys yangilangan bo'lsa
+    const handleUpdate = (data) => {
       if (data.flight?._id === id) {
         setFlight(data.flight)
-        if (data.message) {
-          showToast.success(data.message)
-        }
+        if (data.message) showToast.success(data.message)
       }
     }
-
-    const handleFlightCancelled = (data) => {
-      if (data.flight?._id === id) {
-        setFlight(data.flight)
-        showToast.warning(data.message || 'Reys bekor qilindi')
-      }
-    }
-
-    const handleFlightDeleted = (data) => {
-      if (data.flightId === id) {
-        showToast.warning(data.message || 'Reys o\'chirildi')
-        navigate('/dashboard/drivers')
-      }
-    }
-    
-    socket.on('flight-updated', handleFlightUpdate)
-    socket.on('flight-completed', handleFlightUpdate)
-    socket.on('flight-confirmed', handleFlightUpdate)
-    socket.on('flight-cancelled', handleFlightCancelled)
-    socket.on('flight-deleted', handleFlightDeleted)
-    
+    socket.on('flight-updated', handleUpdate)
+    socket.on('flight-completed', handleUpdate)
+    socket.on('flight-confirmed', handleUpdate)
     return () => {
-      socket.off('flight-updated', handleFlightUpdate)
-      socket.off('flight-completed', handleFlightUpdate)
-      socket.off('flight-confirmed', handleFlightUpdate)
-      socket.off('flight-cancelled', handleFlightCancelled)
-      socket.off('flight-deleted', handleFlightDeleted)
+      socket.off('flight-updated', handleUpdate)
+      socket.off('flight-completed', handleUpdate)
+      socket.off('flight-confirmed', handleUpdate)
     }
   }, [socket, id])
 
-  if (loading) {
-    return <FlightDetailSkeleton />
-  }
-
-  if (error) {
-    if (error.type === 'notfound') {
-      return <NotFoundError title="Reys topilmadi" message="Bu reys mavjud emas yoki o'chirilgan" onBack={() => navigate('/dashboard/drivers')} />
-    }
-    if (error.type === 'network') {
-      return <NetworkError onRetry={fetchFlight} message={error.message} />
-    }
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">{error.message}</p>
-          <button onClick={fetchFlight} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Qayta urinish</button>
-        </div>
-      </div>
-    )
-  }
-
-  const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
-
-  // Masofa hisoblash (Haversine formula)
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371 // km
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return Math.round(R * c)
-  }
-
-  // Koordinatalar o'zgarganda masofani hisoblash
-  const updateDistanceFromCoords = (fromCoords, toCoords) => {
-    if (fromCoords && toCoords) {
-      const dist = calculateDistance(fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng)
-      setLegForm(prev => ({ ...prev, distance: dist }))
-    }
-  }
-
-  // Manzil tanlanganda (autocomplete)
-  const handleFromSelect = (suggestion) => {
-    const newFromCoords = { lat: suggestion.lat, lng: suggestion.lng }
-    setLegForm(prev => {
-      // Agar toCoords mavjud bo'lsa, masofani hisoblash
-      const dist = prev.toCoords 
-        ? calculateDistance(newFromCoords.lat, newFromCoords.lng, prev.toCoords.lat, prev.toCoords.lng)
-        : prev.distance
-      return { 
-        ...prev, 
-        fromCity: suggestion.name,
-        fromCoords: newFromCoords,
-        distance: dist
-      }
-    })
-  }
-
-  const handleToSelect = (suggestion) => {
-    const newToCoords = { lat: suggestion.lat, lng: suggestion.lng }
-    setLegForm(prev => {
-      // Oldingi buyurtmadan fromCoords olish
-      const lastLeg = flight?.legs?.[flight.legs.length - 1]
-      const fromCoords = prev.fromCoords || lastLeg?.toCoords
-      
-      // Agar fromCoords mavjud bo'lsa, masofani hisoblash
-      const dist = fromCoords 
-        ? calculateDistance(fromCoords.lat, fromCoords.lng, newToCoords.lat, newToCoords.lng)
-        : prev.distance
-      return { 
-        ...prev, 
-        toCity: suggestion.name,
-        toCoords: newToCoords,
-        distance: dist
-      }
-    })
-  }
-
-  // Xaritadan tanlanganda (faqat tugash nuqtasi)
-  const handleLocationSelect = (data) => {
-    // Oldingi buyurtmadan boshlanish nuqtasini olish
-    const lastLeg = flight?.legs?.[flight.legs.length - 1]
-    const fromCity = lastLeg?.toCity || legForm.fromCity || data.startAddress
-    const fromCoords = lastLeg?.toCoords || legForm.fromCoords || data.startPoint
-    
-    setLegForm(prev => ({
-      ...prev,
-      fromCity: fromCity,
-      toCity: data.endAddress,
-      fromCoords: fromCoords,
-      toCoords: data.endPoint,
-      distance: data.distance || ''
-    }))
-    setShowLocationPicker(false)
-    setShowLegModal(true) // Modal qaytsin
-  }
-
-  // Xaritadan tanlash tugmasini bosganda
-  const openLocationPicker = () => {
-    setShowLegModal(false) // Modal yopilsin
-    setShowLocationPicker(true) // Xarita ochilsin
-  }
-
-  // Yangi buyurtma qo'shish
-  const handleAddLeg = (e) => {
-    e.preventDefault()
-    
-    // Validatsiyalar
-    if (!legForm.toCity?.trim()) {
-      showToast.error('Qayerga shahrini kiriting!')
-      return
-    }
-
-    const fromCity = legForm.fromCity || (flight.legs?.length > 0 ? flight.legs[flight.legs.length - 1].toCity : '')
-    
-    if (fromCity.toLowerCase() === legForm.toCity.trim().toLowerCase()) {
-      showToast.error('Boshlanish va tugash nuqtalari bir xil bo\'lmasligi kerak!')
-      return
-    }
-
-    const legData = {
-      fromCity: fromCity,
-      toCity: legForm.toCity.trim(),
-      fromCoords: legForm.fromCoords,
-      toCoords: legForm.toCoords,
-      payment: Number(legForm.payment) || 0,
-      givenBudget: Number(legForm.givenBudget) || 0,
-      distance: Number(legForm.distance) || 0
-    }
-
-    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
-    const tempLeg = {
-      _id: 'temp_' + Date.now(),
-      ...legData,
-      status: 'active',
-      createdAt: new Date().toISOString()
-    }
-    setFlight(prev => ({
-      ...prev,
-      legs: [...(prev.legs || []), tempLeg],
-      totalPayment: (prev.totalPayment || 0) + (legData.payment || 0),
-      totalGivenBudget: (prev.totalGivenBudget || 0) + (legData.givenBudget || 0),
-      totalDistance: (prev.totalDistance || 0) + (legData.distance || 0),
-      name: prev.legs?.length === 0 ? `${legData.fromCity} → ${legData.toCity}` : prev.name
-    }))
-    setShowLegModal(false)
-    setLegForm({ fromCity: '', toCity: '', payment: '', givenBudget: '', distance: '', fromCoords: null, toCoords: null })
-    showToast.success(`${fromCity} → ${legForm.toCity} qo'shildi`)
-
-    // Fonda API
-    api.post(`/flights/${id}/legs`, legData)
-      .then((res) => {
-        if (res.data?.data) setFlight(res.data.data)
-      })
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik')
-        fetchFlight()
-      })
-  }
-
-  // Xarajat qo'shish
-  const handleAddExpense = async (e) => {
-    e.preventDefault()
-    if (submitting) return
-    
-    // Validatsiyalar
-    if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
-      alert.warning('Maydon to\'ldirilmagan', 'Xarajat summasini kiriting!')
-      return
-    }
-
-    const isFuel = expenseForm.category === 'fuel'
-    const fuelType = FUEL_TYPES.find(f => f.value === expenseForm.type)
-    const expenseLabel = isFuel ? fuelType?.label : EXPENSE_CATEGORIES.find(c => c.value === expenseForm.category)?.label
-
-    // Darhol modal yopilsin
-    const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
-    const payload = {
-      type: isFuel ? expenseForm.type : expenseForm.category,
-      amount: Number(expenseForm.amount),
-      description: expenseForm.description,
-      date: expenseForm.date ? new Date(expenseForm.date) : new Date(),
-      // Qaysi buyurtmaga tegishli
-      legId: selectedLegForExpense?.leg?._id || null,
-      legIndex: selectedLegForExpense?.index ?? null
-    }
-
-    // Yoqilg'i uchun qo'shimcha ma'lumotlar
-    if (isFuel) {
-      payload.quantity = expenseForm.quantity ? Number(expenseForm.quantity) : null
-      payload.quantityUnit = expenseForm.quantity ? fuelType?.unit || 'litr' : null
-      payload.pricePerUnit = expenseForm.pricePerUnit ? Number(expenseForm.pricePerUnit) : null
-      payload.odometer = expenseForm.odometer ? Number(expenseForm.odometer) : null
-      payload.stationName = expenseForm.stationName || null
-      payload.location = expenseForm.location || null
-    }
-
-    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
-    const tempExpense = {
-      _id: 'temp_' + Date.now(),
-      ...payload,
-      createdAt: new Date().toISOString()
-    }
-    setFlight(prev => ({
-      ...prev,
-      expenses: [...(prev.expenses || []), tempExpense],
-      totalExpenses: (prev.totalExpenses || 0) + payload.amount,
-      finalBalance: (prev.totalGivenBudget || 0) - ((prev.totalExpenses || 0) + payload.amount)
-    }))
-    setShowExpenseModal(false)
-    setSelectedLegForExpense(null)
-    setExpenseForm({ 
-      category: 'fuel', type: 'fuel_metan', amount: '', description: '', 
-      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null,
-      date: new Date().toISOString().split('T')[0]
-    })
-    showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
-    
-    // Fonda API so'rovi
-    api.post(`/flights/${id}/expenses`, payload)
-      .then((res) => {
-        if (res.data?.data) setFlight(res.data.data)
-      })
-      .catch((error) => {
-        showToast.error(error.response?.data?.message || 'Xatolik yuz berdi')
-        fetchFlight()
-      })
-  }
-
-  // Xarajat o'chirish
-  const handleDeleteExpense = async (expenseId) => {
-    const confirmed = await alert.confirm({
-      title: "Xarajatni o'chirish",
-      message: "Bu xarajatni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.",
-      confirmText: "Ha, o'chirish",
-      cancelText: "Bekor qilish",
-      type: "danger"
-    })
-
-    if (!confirmed) return
-
-    // 🚀 OPTIMISTIC UPDATE - UI dan darhol o'chirish
-    const deletedExpense = flight.expenses?.find(e => e._id === expenseId)
-    const deletedAmount = deletedExpense?.amount || 0
-    setFlight(prev => {
-      const newTotalExpenses = (prev.totalExpenses || 0) - deletedAmount
-      return {
-        ...prev,
-        expenses: prev.expenses?.filter(e => e._id !== expenseId) || [],
-        totalExpenses: newTotalExpenses,
-        finalBalance: (prev.totalGivenBudget || 0) - newTotalExpenses
-      }
-    })
-    showToast.success('Xarajat o\'chirildi')
-
-    // Fonda API
-    api.delete(`/flights/${id}/expenses/${expenseId}`)
-      .then((res) => {
-        if (res.data?.data) setFlight(res.data.data)
-      })
-      .catch(() => {
-        showToast.error('Xarajatni o\'chirishda xatolik')
-        fetchFlight()
-      })
-  }
-
-  // ============ XALQARO REYS FUNKSIYALARI ============
-  
-  // Chegara xarajati qo'shish
-  const handleAddBorderCrossing = (e) => {
-    e.preventDefault()
-    
-    const borderData = {
-      ...borderForm,
-      customsFee: Number(borderForm.customsFee) || 0,
-      transitFee: Number(borderForm.transitFee) || 0,
-      insuranceFee: Number(borderForm.insuranceFee) || 0,
-      otherFees: Number(borderForm.otherFees) || 0
-    }
-
-    // Darhol yopish
-    setShowBorderModal(false)
-    setBorderForm({ fromCountry: 'UZB', toCountry: 'KZ', borderName: '', customsFee: '', transitFee: '', insuranceFee: '', otherFees: '', currency: 'USD', note: '' })
-    showToast.success('Chegara xarajati qo\'shildi!')
-
-    // Fonda API
-    api.post(`/flights/${id}/border-crossing`, borderData)
-      .then(() => fetchFlight())
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik')
-        fetchFlight()
-      })
-  }
-
-  // Chegara xarajatini o'chirish
-  const handleDeleteBorderCrossing = async (crossingId) => {
-    const confirmed = await alert.confirm({
-      title: "Chegara xarajatini o'chirish",
-      message: "Bu xarajatni o'chirishni xohlaysizmi?",
-      confirmText: "Ha, o'chirish",
-      cancelText: "Bekor qilish",
-      type: "danger"
-    })
-    if (!confirmed) return
-
-    showToast.success('Chegara xarajati o\'chirildi')
-
-    // Fonda API
-    api.delete(`/flights/${id}/border-crossing/${crossingId}`)
-      .then(() => fetchFlight())
-      .catch(() => {
-        showToast.error('Xatolik')
-        fetchFlight()
-      })
-  }
-
-  // Platon saqlash
-  const handleSavePlaton = async (e) => {
-    e.preventDefault()
-    if (submitting) return
-
-    const data = {
-      ...platonForm,
-      amount: Number(platonForm.amount) || 0,
-      distanceKm: Number(platonForm.distanceKm) || 0
-    }
-
-    // Darhol yopish
-    setShowPlatonModal(false)
-    setPlatonForm({ amount: '', currency: 'RUB', distanceKm: '', note: '' })
-    showToast.success('Platon saqlandi!')
-
-    // Fonda API
-    api.put(`/flights/${id}/platon`, data)
-      .then(() => fetchFlight())
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik')
-        fetchFlight()
-      })
-  }
-
-  // Buyurtma uchun to'lov olish - TO'LOV KIRITILGANDA BUYURTMA TUGALLANADI
-  const handleAddPayment = async (e) => {
-    e.preventDefault()
-    if (!selectedLegForPayment || !paymentForm.payment) {
-      showToast.error('To\'lov summasini kiriting!')
-      return
-    }
-
-    const legId = selectedLegForPayment._id
-    const payment = Number(paymentForm.payment)
-
-    // Optimistic update - buyurtma tugallanadi
-    setFlight(prev => ({
-      ...prev,
-      legs: prev.legs.map(leg => 
-        leg._id === legId ? { ...leg, payment, status: 'completed', completedAt: new Date().toISOString() } : leg
-      ),
-      totalPayment: (prev.totalPayment || 0) + payment
-    }))
-    setShowPaymentModal(false)
-    setSelectedLegForPayment(null)
-    setPaymentForm({ payment: '' })
-    showToast.success(`${formatMoney(payment)} so'm to'lov qo'shildi. Buyurtma tugallandi!`)
-
-    // Fonda API
-    api.put(`/flights/${id}/legs/${legId}/payment`, { payment })
-      .then((res) => {
-        if (res.data?.data) setFlight(res.data.data)
-      })
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik')
-        fetchFlight()
-      })
-  }
-
-  // Reysni yopish
-  const handleComplete = async (e) => {
-    e.preventDefault()
-    
-    const driverPercent = Number(completeForm.driverProfitPercent) || 0
-    const profit = (flight.totalPayment || 0) - (flight.totalExpenses || 0)
-    const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
-    
-    // Tasdiqlash
-    const confirmMessage = profit > 0 && driverPercent > 0
-      ? `${flight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nShofyorga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
-      : `${flight.name} reysini yopishni xohlaysizmi? Yopilgandan keyin yangi buyurtma yoki xarajat qo'shib bo'lmaydi.`
-    
-    const confirmed = await alert.confirm({
-      title: "Reysni yopish",
-      message: confirmMessage,
-      confirmText: "Ha, yopish",
-      cancelText: "Bekor qilish",
-      type: "warning"
-    })
-
-    if (!confirmed) return
-
-    const completeData = {
-      endOdometer: Number(completeForm.endOdometer) || 0,
-      endFuel: Number(completeForm.endFuel) || 0,
-      driverProfitPercent: driverPercent
-    }
-
-    // 🚀 OPTIMISTIC UPDATE - UI darhol yangilanadi
-    setFlight(prev => ({
-      ...prev,
-      status: 'completed',
-      endOdometer: completeData.endOdometer,
-      endFuel: completeData.endFuel,
-      driverProfitPercent: driverPercent,
-      driverProfitAmount: driverAmount
-    }))
-    setShowCompleteModal(false)
-    setCompleteForm({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
-    showToast.success('Reys yopildi!')
-
-    // Fonda API
-    api.put(`/flights/${id}/complete`, completeData)
-      .then((res) => {
-        // Haqiqiy data bilan yangilash
-        if (res.data?.data) {
-          setFlight(res.data.data)
-        }
-      })
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik')
-        // Xatolik - qayta yuklash
-        fetchFlight()
-      })
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 border-4 border-green-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-500">Yuklanmoqda...</p>
-        </div>
-      </div>
-    )
-  }
-
+  if (loading) return <FlightDetailSkeleton />
+  if (error?.type === 'notfound') return <NotFoundError title="Reys topilmadi" onBack={() => navigate('/dashboard/drivers')} />
+  if (error?.type === 'network') return <NetworkError onRetry={fetchFlight} message={error.message} />
   if (!flight) return null
 
   const isActive = flight.status === 'active'
   const lastLeg = flight.legs?.[flight.legs.length - 1]
-  
-  // Reysni o'chirish (faqat haydovchi tasdiqlamasidan oldin)
-  const handleDeleteFlight = async () => {
-    // Agar haydovchi allaqachon tasdiqlagan bo'lsa - o'chirib bo'lmaydi
-    if (flight.driverConfirmed) {
-      showToast.error('Haydovchi tasdiqlagan reysni o\'chirib bo\'lmaydi')
-      return
-    }
-    
-    const confirmed = await alert.confirm({
-      title: "Reysni o'chirish",
-      message: `"${flight.name || 'Bu reys'}" ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.`,
-      confirmText: "Ha, o'chirish",
-      cancelText: "Bekor qilish",
-      type: "danger"
-    })
-    
-    if (!confirmed) return
-    
-    try {
-      await api.delete(`/flights/${id}`)
-      showToast.success('Reys o\'chirildi')
-      navigate('/dashboard/drivers')
-    } catch (err) {
-      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
-    }
+
+  // Handlers
+  const handleAddLeg = () => setShowLegModal(true)
+
+  const handleAddExpense = (leg, idx) => {
+    setSelectedLegForExpense({ leg, index: idx })
+    setEditingExpense(null)
+    setShowExpenseModal(true)
   }
 
-  // Reysni bekor qilish
-  const handleCancelFlight = async () => {
-    const confirmed = await alert.confirm({
-      title: "Reysni bekor qilish",
-      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Shofyor bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
-      confirmText: "Ha, bekor qilish",
-      cancelText: "Yo'q",
-      type: "danger"
-    })
+  const handleEditExpense = (expense) => {
+    setEditingExpense(expense)
+    setShowExpenseModal(true)
+  }
 
+  const handleDeleteExpense = async (expenseId) => {
+    const confirmed = await alert.confirm({ title: "O'chirish", message: "Xarajatni o'chirishni xohlaysizmi?", type: "danger" })
     if (!confirmed) return
 
-    // 🚀 OPTIMISTIC UPDATE
+    const deletedExpense = flight.expenses?.find(e => e._id === expenseId)
     setFlight(prev => ({
       ...prev,
-      status: 'cancelled'
+      expenses: prev.expenses?.filter(e => e._id !== expenseId) || [],
+      totalExpenses: (prev.totalExpenses || 0) - (deletedExpense?.amount || 0)
     }))
-    showToast.success('Reys bekor qilindi')
+    showToast.success('Xarajat o\'chirildi')
 
-    // Fonda API
-    api.put(`/flights/${id}/cancel`)
-      .then((res) => {
-        if (res.data?.data) {
-          setFlight(res.data.data)
-        }
-      })
-      .catch((err) => {
-        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
-        fetchFlight()
-      })
+    api.delete(`/flights/${id}/expenses/${expenseId}`)
+      .then(res => res.data?.data && setFlight(res.data.data))
+      .catch(() => fetchFlight())
   }
 
+  const handleAddPayment = (leg) => {
+    setSelectedLegForPayment(leg)
+    setShowPaymentModal(true)
+  }
+
+  const handleEditPlaton = () => setShowPlatonModal(true)
+
+  const handleCancelFlight = async () => {
+    const confirmed = await alert.confirm({ title: "Bekor qilish", message: "Reysni bekor qilishni xohlaysizmi?", type: "danger" })
+    if (!confirmed) return
+    setFlight(prev => ({ ...prev, status: 'cancelled' }))
+    showToast.success('Reys bekor qilindi')
+    api.put(`/flights/${id}/cancel`).then(res => res.data?.data && setFlight(res.data.data)).catch(() => fetchFlight())
+  }
+
+  // Hisob-kitoblar
+  const borderExpenses = flight.borderCrossingsTotalUZS || (flight.borderCrossingsTotalUSD ? Math.round(flight.borderCrossingsTotalUSD * 12800) : 0)
+  const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
+  const allExpenses = (flight.totalExpenses || 0) + borderExpenses + platonExpenses
+  const totalIncome = flight.totalIncome || ((flight.totalPayment || 0) + (flight.totalGivenBudget || 0))
+  const netProfit = flight.netProfit || (totalIncome - allExpenses)
+  const driverOwes = flight.driverOwes || flight.businessProfit || 0
+
   return (
-    <div className="space-y-4 pb-8 max-w-7xl mx-auto">
-      {/* Header with Stats */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-2xl">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-        
-        <div className="relative">
-          <button 
+    <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
+      {/* Header - Rounded Container */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden mb-4">
+        <div className="px-5 sm:px-8 py-6">
+          {/* Back Button */}
+          <button
             onClick={() => navigate('/dashboard/drivers')}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-white mb-3 transition text-sm"
+            className="flex items-center gap-2 text-slate-400 hover:text-white mb-5 transition-colors"
           >
-            <ArrowLeft size={16} />
-            <span>Orqaga</span>
+            <ArrowLeft size={20} />
+            <span className="text-sm font-medium">Orqaga</span>
           </button>
 
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg flex-shrink-0 ${
-                isActive ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-              }`}>
-                {flight.driver?.fullName?.charAt(0) || '?'}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
-                  <span className={`px-2 py-0.5 rounded-full font-medium text-xs flex items-center gap-1 ${
-                    isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-blue-500/20 text-blue-300'
+          {/* Header Content */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            {/* Left - Driver Info */}
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center text-white font-bold text-2xl ${isActive
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                  : 'bg-gradient-to-br from-blue-500 to-indigo-600'
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`}></span>
+                  {flight.driver?.fullName?.charAt(0) || '?'}
+                </div>
+                {isActive && (
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-lg flex items-center justify-center border-2 border-slate-900">
+                    <Zap size={12} className="text-white" />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-3 mb-1.5">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    {flight.name || 'Yangi reys'}
+                  </h1>
+                  <span className={`px-3 py-1 rounded-lg text-sm font-semibold ${isActive
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-blue-500/20 text-blue-400'
+                    }`}>
                     {isActive ? 'Faol' : 'Yopilgan'}
                   </span>
                 </div>
-                <p className="text-slate-400 text-sm truncate">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
+                <div className="flex items-center gap-4 text-slate-400 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <User size={14} />
+                    {flight.driver?.fullName}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Truck size={14} />
+                    {flight.vehicle?.plateNumber}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={14} />
+                    {new Date(flight.createdAt).toLocaleDateString('uz-UZ')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right - Quick Stats */}
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-3 bg-white/10 rounded-xl">
+                <p className="text-slate-500 text-xs uppercase">Buyurtmalar</p>
+                <p className="text-white font-bold text-lg">{flight.legs?.length || 0}</p>
+              </div>
+              <div className="px-4 py-3 bg-white/10 rounded-xl">
+                <p className="text-slate-500 text-xs uppercase">Masofa</p>
+                <p className="text-white font-bold text-lg">{flight.totalDistance || 0} km</p>
               </div>
             </div>
           </div>
 
-          {/* Stats inside header */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
-                  <Route size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{flight.legs?.length || 0}</p>
-                  <p className="text-slate-400 text-xs">buyurtmalar</p>
-                </div>
-              </div>
+          {/* Stats Cards - 4 ta asosiy ko'rsatkich */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+            {/* 1. Yo'l uchun berilgan */}
+            <div className="bg-amber-500/20 rounded-xl p-4 border border-amber-500/30">
+              <p className="text-amber-400 font-bold text-xl sm:text-2xl">{formatMoney(flight.totalGivenBudget || 0)}</p>
+              <p className="text-amber-300/70 text-xs mt-1">🛣️ Yo'l uchun</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-emerald-400 truncate">{formatMoney(flight.totalPayment)}</p>
-                  <p className="text-slate-400 text-xs">Mijozdan</p>
-                </div>
-              </div>
+
+            {/* 2. Mijozdan olingan */}
+            <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-500/30">
+              <p className="text-emerald-400 font-bold text-xl sm:text-2xl">+{formatMoney(flight.totalPayment || 0)}</p>
+              <p className="text-emerald-300/70 text-xs mt-1">💰 Mijozdan</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
-                  <Wallet size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-orange-400 truncate">{formatMoney(flight.totalGivenBudget)}</p>
-                  <p className="text-slate-400 text-xs">Yo'l uchun</p>
-                </div>
-              </div>
+
+            {/* 3. Sarflangan */}
+            <div className="bg-red-500/20 rounded-xl p-4 border border-red-500/30">
+              <p className="text-red-400 font-bold text-xl sm:text-2xl">-{formatMoney(allExpenses)}</p>
+              <p className="text-red-300/70 text-xs mt-1">💸 Sarflangan</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  (flight.finalBalance || 0) >= 0 ? 'bg-cyan-500' : 'bg-red-500'
-                }`}>
-                  <DollarSign size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className={`text-lg font-bold truncate ${(flight.finalBalance || 0) >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
-                    {formatMoney(Math.abs(flight.finalBalance || 0))}
-                  </p>
-                  <p className="text-slate-400 text-xs">{(flight.finalBalance || 0) >= 0 ? 'Qoldiq' : 'Kamomad'}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 col-span-2 sm:col-span-1">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center flex-shrink-0">
-                  <TrendingDown size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-red-400 truncate">-{formatMoney(flight.totalExpenses || 0)}</p>
-                  <p className="text-slate-400 text-xs">Sarflangan</p>
-                </div>
-              </div>
+
+            {/* 4. Jami (Foyda/Zarar) */}
+            <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+              <p className={`font-bold text-xl sm:text-2xl ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                {netProfit >= 0 ? '+' : ''}{formatMoney(netProfit)}
+              </p>
+              <p className={`text-xs mt-1 ${netProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                {netProfit >= 0 ? '📈 Jami foyda' : '📉 Jami zarar'}
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Yopilgan reys uchun shofyor ulushi */}
-      {!isActive && (flight.driverProfitPercent > 0 || flight.driverProfitAmount > 0) && (
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">💰</span>
-              <div>
-                <p className="text-emerald-100 text-xs">Shofyor ulushi ({flight.driverProfitPercent || 0}%)</p>
-                <p className="text-lg font-bold text-white">{formatMoney(flight.driverProfitAmount || 0)} so'm</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-emerald-100 text-xs">Foyda</p>
-              <p className="text-lg font-bold text-white">{formatMoney(flight.profit || 0)} so'm</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
-      <div className="space-y-3">
-        {/* Odometer & Fuel Info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Gauge className="text-blue-600 w-3.5 h-3.5" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Odometr</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="bg-gray-50 rounded-lg p-1.5">
-                <p className="text-[9px] text-gray-400">Boshlang'ich</p>
-                <p className="text-xs font-bold text-gray-900 truncate">{formatMoney(flight.startOdometer || 0)} km</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-1.5">
-                <p className="text-[9px] text-gray-400">Tugash</p>
-                <p className="text-xs font-bold text-gray-900 truncate">{flight.endOdometer ? formatMoney(flight.endOdometer) : '-'} km</p>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-1.5">
-                <p className="text-[9px] text-blue-500">Jami yurgan</p>
-                <p className="text-xs font-bold text-blue-600 truncate">
-                  {(() => {
-                    if (flight.endOdometer && flight.startOdometer) {
-                    return formatMoney(flight.endOdometer - flight.startOdometer)
-                  }
-                  // Aks holda - buyurtmalar masofasi yig'indisi
-                  const legsDistance = flight.legs?.reduce((sum, leg) => sum + (leg.distance || 0), 0) || 0
-                    return formatMoney(legsDistance || flight.totalDistance || 0)
-                  })()} km
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="space-y-4">
+        <OdometerFuelCard flight={flight} />
 
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-            {(() => {
-              const fuelData = { litr: 0, kub: 0, types: [] }
-              flight.expenses?.forEach(exp => {
-                if (exp.type?.startsWith('fuel_') && exp.quantity) {
-                  const isKub = exp.type === 'fuel_metan' || exp.type === 'fuel_propan'
-                  const unit = exp.quantityUnit || (isKub ? 'kub' : 'litr')
-                  if (unit === 'kub') fuelData.kub += Number(exp.quantity)
-                  else fuelData.litr += Number(exp.quantity)
-                  if (!fuelData.types.includes(exp.type)) fuelData.types.push(exp.type)
-                }
-              })
-              const mainType = fuelData.types[0] || flight.fuelType || 'benzin'
-              const isKubType = mainType === 'fuel_metan' || mainType === 'fuel_propan' || mainType === 'metan' || mainType === 'propan'
-              const fuelLabel = mainType === 'fuel_metan' || mainType === 'metan' ? 'Metan' :
-                               mainType === 'fuel_propan' || mainType === 'propan' ? 'Propan' :
-                               mainType === 'fuel_diesel' || mainType === 'diesel' ? 'Dizel' : 'Benzin'
-              const mainUnit = isKubType ? 'kub' : 'litr'
-              
-              return (
-                <>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Fuel className="text-amber-600 w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Yoqilg'i</h3>
-                      <p className="text-[9px] text-gray-400">{fuelLabel} ({mainUnit})</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <div className="bg-gray-50 rounded-lg p-1.5">
-                      <p className="text-[9px] text-gray-400">Boshlang'ich</p>
-                      <p className="text-xs font-bold text-gray-900">{flight.startFuel || 0} {mainUnit}</p>
-                    </div>
-                  <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">
-                    <p className="text-[9px] sm:text-[10px] text-gray-400">Qoldiq</p>
-                    <p className="text-xs sm:text-sm font-bold text-gray-900">
-                      {flight.endFuel || '-'} {mainUnit}
-                    </p>
-                  </div>
-                  <div className="bg-amber-50 rounded-lg p-1.5 sm:p-2">
-                    <p className="text-[9px] sm:text-[10px] text-amber-500">Jami sarflangan</p>
-                    <p className="text-xs sm:text-sm font-bold text-amber-600">
-                      {(() => {
-                        const parts = []
-                        if (fuelData.litr > 0) parts.push(`${fuelData.litr} litr`)
-                        if (fuelData.kub > 0) parts.push(`${fuelData.kub} kub`)
-                        return parts.length > 0 ? parts.join(' + ') : '-'
-                      })()}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )
-          })()}
-        </div>
-      </div>
+        <LegsWithExpenses
+          flight={flight}
+          isActive={isActive}
+          onAddLeg={handleAddLeg}
+          onAddExpense={handleAddExpense}
+          onEditExpense={handleEditExpense}
+          onDeleteExpense={handleDeleteExpense}
+          onAddPayment={handleAddPayment}
+          selectedLegIndex={selectedLegIndex}
+          onSelectedLegChange={setSelectedLegIndex}
+        />
 
-      {/* Legs Section */}
-      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Route className="text-emerald-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">buyurtmalar</h3>
-              <p className="text-[10px] sm:text-xs text-gray-500">{flight.legs?.length || 0} ta buyurtma</p>
-            </div>
-          </div>
-          {isActive && (
+        <InternationalSection
+          flight={flight}
+          isActive={isActive}
+          onEditPlaton={handleEditPlaton}
+        />
+
+        {/* Action Buttons */}
+        {isActive && (
+          <div className="space-y-3 pt-3">
             <button
-              onClick={() => {
-                setLegForm({ 
-                  fromCity: lastLeg?.toCity || '', 
-                  toCity: '', 
-                  payment: '', 
-                  distance: '' 
-                })
-                setShowLegModal(true)
-              }}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition flex items-center gap-1.5 flex-shrink-0"
+              onClick={() => setShowCompleteModal(true)}
+              className="w-full py-5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-[0.99] transition-all"
             >
-              <Plus size={16} className="sm:w-4 sm:h-4" strokeWidth={2.5} /> <span className="hidden sm:inline">Qo'shish</span>
+              <CheckCircle size={22} />
+              Reysni yopish
+              <Sparkles size={18} className="text-amber-300" />
             </button>
-          )}
-        </div>
 
-        {/* Legs Timeline - scrollable */}
-        <div className="space-y-2 sm:space-y-3 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-1">
-          {flight.legs?.map((leg, idx) => {
-            // Bu buyurtmaga tegishli xarajatlar
-            const legExpenses =
-              flight.expenses?.filter(
-                (exp) =>
-                  exp.legIndex === idx ||
-                  (exp.legId && exp.legId.toString() === leg._id?.toString())
-              ) || []
-            const legTotalExpenses = legExpenses.reduce(
-              (sum, exp) => sum + (exp.amount || 0),
-              0
-            )
-
-            return (
-              <div
-                key={leg._id || idx}
-                className="bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl border border-gray-200"
-              >
-                <div className="p-2.5 sm:p-3">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div
-                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0 ${
-                        leg.status === 'completed'
-                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                          : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                      }`}
-                    >
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm">
-                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">
-                          {leg.fromCity}
-                        </span>
-                        <ChevronRight
-                          size={12}
-                          className="sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0"
-                        />
-                        <span className="font-medium text-gray-900 truncate max-w-[60px] sm:max-w-none">
-                          {leg.toCity}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 sm:gap-2 mt-0.5 text-[10px] sm:text-xs text-gray-500">
-                        <span>{leg.distance || 0} km</span>
-                        {legExpenses.length > 0 && (
-                          <span className="text-red-500">
-                            • {legExpenses.length} xarajat (-
-                            {formatMoney(legTotalExpenses)})
-                          </span>
-                        )}
-                        {leg.status === 'completed' && (
-                          <span className="text-emerald-600">✓</span>
-                        )}
-                        {leg.status === 'in_progress' && (
-                          <span className="text-blue-600">🚛</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {leg.payment > 0 ? (
-                        <div className="text-right">
-                          <p className="font-bold text-emerald-600 text-xs sm:text-sm">
-                            {formatMoney(leg.payment)}
-                          </p>
-                          <p className="text-[9px] sm:text-[10px] text-gray-400 hidden sm:block">
-                            mijozdan
-                          </p>
-                        </div>
-                      ) : isActive ? (
-                        <button
-                          onClick={() => {
-                            setSelectedLegForPayment(leg)
-                            setPaymentForm({ payment: '' })
-                            setShowPaymentModal(true)
-                          }}
-                          className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:shadow-md transition"
-                        >
-                          💰 Mijozdan to'lov
-                        </button>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {(!flight.legs || flight.legs.length === 0) && (
-          <div className="text-center py-6 sm:py-8 text-gray-400">
-            <Route size={32} className="sm:w-10 sm:h-10 mx-auto mb-2 opacity-50" />
-            <p className="text-xs sm:text-sm">Hali buyurtmalar yo'q</p>
+            <button
+              onClick={handleCancelFlight}
+              className="w-full py-4 bg-white text-red-500 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 border border-red-100 hover:bg-red-50 transition-colors"
+            >
+              <X size={18} />
+              Reysni bekor qilish
+            </button>
           </div>
         )}
       </div>
 
-      {/* ============ XARAJATLAR XULOSASI (KOMPAKT) ============ */}
-      {(flight.expenses?.length > 0 || isActive) && (
-        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center">
-                <Wallet className="text-white w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Jami xarajatlar</p>
-                <p className="text-xs text-gray-500">{flight.expenses?.length || 0} ta xarajat</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <p className="text-xl font-bold text-red-600">-{formatMoney(flight.totalExpenses || 0)}</p>
-              {isActive && (
-                <button
-                  onClick={() => {
-                    setSelectedLegForExpense(null)
-                    setExpenseForm({ 
-                      category: 'fuel', type: 'fuel_metan', amount: '', description: '', 
-                      quantity: '', pricePerUnit: '', odometer: '', stationName: '', location: null,
-                      date: new Date().toISOString().split('T')[0]
-                    })
-                    setShowExpenseModal(true)
-                  }}
-                  className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition flex items-center gap-1"
-                >
-                  <Plus size={14} /> Qo'shish
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {/* Xarajat turlari bo'yicha qisqa xulosa */}
-          {flight.expenses && flight.expenses.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(() => {
-                const grouped = {}
-                flight.expenses.forEach(exp => {
-                  const type = exp.type?.startsWith('fuel_') ? 'fuel' : exp.type
-                  if (!grouped[type]) grouped[type] = { count: 0, total: 0 }
-                  grouped[type].count++
-                  grouped[type].total += exp.amount || 0
-                })
-                return Object.entries(grouped).map(([type, data]) => {
-                  const expType = EXPENSE_CATEGORIES.find(c => c.value === type) || { icon: '📦', label: type }
-                  return (
-                    <div key={type} className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg text-xs">
-                      <span>{expType.icon}</span>
-                      <span className="text-gray-600">{expType.label}</span>
-                      <span className="font-semibold text-red-600">{formatMoney(data.total)}</span>
-                    </div>
-                  )
-                })
-              })()}
-            </div>
-          )}
-        </div>
-      )}
-      </div>
-
-      {/* ============ XALQARO REYS BO'LIMLARI ============ */}
-      {flight.flightType === 'international' && (
-        <>
-          {/* Chegara xarajatlari */}
-          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Flag className="text-indigo-600 w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Chegara xarajatlari</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">Bojxona, tranzit, sug'urta</p>
-                </div>
-              </div>
-              {isActive && (
-                <button
-                  onClick={() => {
-                    // Reysning countriesInRoute dan davlatlarni olish va birinchi chegarani default qilish
-                    const countries = flight.countriesInRoute || ['UZB', 'KZ']
-                    setBorderForm({
-                      fromCountry: countries[0] || 'UZB',
-                      toCountry: countries[1] || 'KZ',
-                      borderName: '',
-                      customsFee: '',
-                      transitFee: '',
-                      insuranceFee: '',
-                      otherFees: '',
-                      currency: 'USD',
-                      note: ''
-                    })
-                    setShowBorderModal(true)
-                  }}
-                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:shadow-lg transition flex items-center gap-1 sm:gap-2 flex-shrink-0"
-                >
-                  <Plus size={14} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden sm:inline">Qo'shish</span><span className="sm:hidden">+</span>
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-2 sm:space-y-3">
-              {flight.borderCrossings?.map((bc) => (
-                <div key={bc._id} className="bg-gradient-to-r from-gray-50 to-indigo-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl border border-indigo-100">
-                  <div className="flex items-center justify-between mb-2 sm:mb-3">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <span className="text-base sm:text-xl">{COUNTRIES[bc.fromCountry]?.flag}</span>
-                      <ArrowRight size={12} className="sm:w-4 sm:h-4 text-gray-400" />
-                      <span className="text-base sm:text-xl">{COUNTRIES[bc.toCountry]?.flag}</span>
-                      {bc.borderName && <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2 truncate max-w-[80px] sm:max-w-none">({bc.borderName})</span>}
-                    </div>
-                    {isActive && (
-                      <button 
-                        onClick={() => handleDeleteBorderCrossing(bc._id)}
-                        className="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                      >
-                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs sm:text-sm">
-                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
-                      <p className="text-[9px] sm:text-xs text-gray-400">Bojxona</p>
-                      <p className="font-semibold text-xs sm:text-sm">${bc.customsFee || 0}</p>
-                    </div>
-                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
-                      <p className="text-[9px] sm:text-xs text-gray-400">Tranzit</p>
-                      <p className="font-semibold text-xs sm:text-sm">${bc.transitFee || 0}</p>
-                    </div>
-                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
-                      <p className="text-[9px] sm:text-xs text-gray-400">Sug'urta</p>
-                      <p className="font-semibold text-xs sm:text-sm">${bc.insuranceFee || 0}</p>
-                    </div>
-                    <div className="bg-white p-1.5 sm:p-2 rounded-lg text-center">
-                      <p className="text-[9px] sm:text-xs text-gray-400">Jami</p>
-                      <p className="font-bold text-indigo-600 text-xs sm:text-sm">${(bc.totalInUSD || 0).toFixed(2)}</p>
-                    </div>
-                  </div>
-                  {bc.note && <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 sm:mt-2 truncate">{bc.note}</p>}
-                </div>
-              ))}
-              
-              {(!flight.borderCrossings || flight.borderCrossings.length === 0) && (
-                <div className="text-center py-4 sm:py-6 text-gray-400">
-                  <Flag size={28} className="sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs sm:text-sm">Chegara xarajatlari kiritilmagan</p>
-                </div>
-              )}
-
-              {flight.borderCrossingsTotalUSD > 0 && (
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-3 sm:p-4 rounded-lg sm:rounded-xl text-white">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-xs sm:text-sm">Jami chegara:</span>
-                    <div className="text-right">
-                      <p className="text-lg sm:text-2xl font-bold">${flight.borderCrossingsTotalUSD.toFixed(2)}</p>
-                      <p className="text-indigo-200 text-[10px] sm:text-sm">
-                        {formatMoney(flight.borderCrossingsTotalUZS || Math.round(flight.borderCrossingsTotalUSD * 12800))} so'm
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Platon (Rossiya) */}
-          {flight.countriesInRoute?.includes('RU') && (
-            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-rose-100 rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-xl flex-shrink-0">
-                    🚛
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Platon</h3>
-                    <p className="text-xs sm:text-sm text-gray-500">Rossiya yo'l to'lovi</p>
-                  </div>
-                </div>
-                {isActive && (
-                  <button
-                    onClick={() => {
-                      setPlatonForm({
-                        amount: flight.platon?.amount || '',
-                        currency: flight.platon?.currency || 'RUB',
-                        distanceKm: flight.platon?.distanceKm || '',
-                        note: flight.platon?.note || ''
-                      })
-                      setShowPlatonModal(true)
-                    }}
-                    className="px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:shadow-lg transition flex-shrink-0"
-                  >
-                    {flight.platon?.amount ? 'Tahrirlash' : 'Qo\'shish'}
-                  </button>
-                )}
-              </div>
-
-              {flight.platon?.amount > 0 ? (
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Summa</p>
-                    <p className="text-sm sm:text-xl font-bold text-rose-600">
-                      {flight.platon.amount} {CURRENCIES[flight.platon.currency]?.symbol || '₽'}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">USD da</p>
-                    <p className="text-sm sm:text-xl font-bold text-rose-600">${(flight.platon.amountInUSD || 0).toFixed(2)}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-rose-50 to-red-50 p-2 sm:p-4 rounded-lg sm:rounded-xl text-center">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Masofa</p>
-                    <p className="text-sm sm:text-xl font-bold text-rose-600">{flight.platon.distanceKm || 0} km</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4 sm:py-6 text-gray-400">
-                  <p className="text-xs sm:text-sm">Platon kiritilmagan</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Davlatlar bo'yicha xulosa */}
-          {flight.countryExpenses && (
-            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyan-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Globe className="text-cyan-600 w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Davlatlar bo'yicha</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">Har bir davlatdagi xarajatlar</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
-                {['uzb', 'kz', 'ru'].map(code => {
-                  const country = COUNTRIES[code.toUpperCase()]
-                  const data = flight.countryExpenses[code] || {}
-                  
-                  return (
-                    <div key={code} className="bg-gradient-to-br from-gray-50 to-slate-50 p-2.5 sm:p-4 rounded-lg sm:rounded-xl">
-                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                        <span className="text-lg sm:text-2xl">{country?.flag}</span>
-                        <span className="font-bold text-gray-900 text-xs sm:text-sm">{country?.name}</span>
-                      </div>
-                      <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Masofa:</span>
-                          <span className="font-medium">{data.distanceKm || 0} km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Yoqilg'i:</span>
-                          <span className="font-medium">{data.fuelLiters || 0} L</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Yo'l:</span>
-                          <span className="font-medium">${(data.roadExpensesUSD || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between pt-1.5 sm:pt-2 border-t border-gray-200">
-                          <span className="font-semibold text-gray-700">Jami:</span>
-                          <span className="font-bold text-cyan-600">${(data.totalUSD || 0).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Action Buttons */}
-      {isActive && (
-        <div className="space-y-2">
-          <div className="flex gap-2 sm:gap-3">
-            <button
-              onClick={() => setShowCompleteModal(true)}
-              className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base hover:shadow-xl transition flex items-center justify-center gap-1.5 sm:gap-2"
-            >
-              <CheckCircle size={18} className="sm:w-5 sm:h-5" /> Reysni yopish
-            </button>
-          </div>
-          {/* Bekor qilish tugmasi */}
-          <button
-            onClick={handleCancelFlight}
-            className="w-full py-2.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
-          >
-            <X size={16} />
-            Reysni bekor qilish
-          </button>
-        </div>
-      )}
-
-      {/* Completed Summary - olib tashlandi, header da bor */}
-
-      {/* Add Leg Modal */}
-      {showLegModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setShowLegModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Route className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-bold text-white">Yangi buyurtma</h2>
-                      <p className="text-emerald-300 text-xs sm:text-sm truncate">{legForm.fromCity || lastLeg?.toCity || 'Boshlanish'} dan</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowLegModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleAddLeg} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                {/* Xaritadan tanlash */}
-                <button
-                  type="button"
-                  onClick={openLocationPicker}
-                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-medium flex items-center justify-center gap-2 hover:shadow-lg transition"
-                >
-                  <Map size={16} className="sm:w-[18px] sm:h-[18px]" /> Xaritadan tanlash
-                </button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span className="px-3 bg-slate-900 text-slate-500 text-xs sm:text-sm">yoki qo'lda kiriting</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qayerdan</label>
-                  <AddressAutocomplete
-                    value={legForm.fromCity}
-                    onChange={(val) => setLegForm({ ...legForm, fromCity: val })}
-                    onSelect={handleFromSelect}
-                    placeholder={lastLeg?.toCity || 'Toshkent'}
-                    focusColor="green"
-                    domesticOnly={flight?.flightType === 'domestic'}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qayerga *</label>
-                  <AddressAutocomplete
-                    value={legForm.toCity}
-                    onChange={(val) => setLegForm({ ...legForm, toCity: val })}
-                    onSelect={handleToSelect}
-                    placeholder="Samarqand"
-                    focusColor="green"
-                    domesticOnly={flight?.flightType === 'domestic'}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Berilgan pul (so'm)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={legForm.givenBudget ? new Intl.NumberFormat('uz-UZ').format(legForm.givenBudget) : ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/\D/g, '')
-                      setLegForm({ ...legForm, givenBudget: rawValue })
-                    }}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
-                    placeholder="200,000"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Masofa (km)</label>
-                  <input
-                    type="number"
-                    value={legForm.distance}
-                    onChange={(e) => setLegForm({ ...legForm, distance: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                    placeholder="150"
-                  />
-                </div>
-
-                {/* Oldingi qoldiq ko'rsatish */}
-                {flight?.legs?.length > 0 && flight.legs[flight.legs.length - 1].balance > 0 && (
-                  <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-lg sm:rounded-xl border border-emerald-500/20">
-                    <div className="flex items-center justify-between">
-                      <span className="text-emerald-300 text-xs sm:text-sm">Oldingi qoldiq:</span>
-                      <span className="text-emerald-400 font-bold text-xs sm:text-sm">+{formatMoney(flight.legs[flight.legs.length - 1].balance)} so'm</span>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-emerald-300/70 mt-1">Bu summa avtomatik qo'shiladi</p>
-                  </div>
-                )}
-
-                <button type="submit" className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition">
-                  Qo'shish
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Add Expense Modal */}
-      {showExpenseModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => { setShowExpenseModal(false); setSelectedLegForExpense(null) }} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-white text-lg ${
-                      selectedLegForExpense?.leg?.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                    }`}>
-                      {selectedLegForExpense ? selectedLegForExpense.index + 1 : '#'}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-base sm:text-lg font-bold text-white">
-                        {selectedLegForExpense ? `${selectedLegForExpense.leg.fromCity?.split(',')[0]} → ${selectedLegForExpense.leg.toCity?.split(',')[0]}` : flight.name}
-                      </h2>
-                      <p className="text-slate-400 text-xs sm:text-sm">
-                        {selectedLegForExpense?.leg?.distance || 0} km • Buyurtma #{selectedLegForExpense?.index + 1 || 1}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowExpenseModal(false); setSelectedLegForExpense(null) }} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400 flex-shrink-0">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Buyurtma ma'lumotlari va mavjud xarajatlar */}
-              {selectedLegForExpense && (
-                <div className="p-4 sm:p-6 border-b border-white/10 space-y-3">
-                  {/* Buyurtma statistikasi */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-white/5 p-2 sm:p-3 rounded-lg text-center">
-                      <p className="text-[10px] sm:text-xs text-slate-400">Yo'l uchun</p>
-                      <p className="text-sm sm:text-base font-bold text-orange-400">{formatMoney(selectedLegForExpense.leg.givenBudget || 0)}</p>
-                    </div>
-                    <div className="bg-white/5 p-2 sm:p-3 rounded-lg text-center">
-                      <p className="text-[10px] sm:text-xs text-slate-400">Sarflangan</p>
-                      <p className="text-sm sm:text-base font-bold text-red-400">{formatMoney(selectedLegForExpense.totalExpenses || 0)}</p>
-                    </div>
-                    <div className="bg-white/5 p-2 sm:p-3 rounded-lg text-center">
-                      <p className="text-[10px] sm:text-xs text-slate-400">Qoldiq</p>
-                      <p className={`text-sm sm:text-base font-bold ${(selectedLegForExpense.leg.balance || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {formatMoney(selectedLegForExpense.leg.balance || 0)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Mavjud xarajatlar */}
-                  {selectedLegForExpense.expenses?.length > 0 && (
-                    <div>
-                      <p className="text-xs text-slate-400 mb-2">Mavjud xarajatlar:</p>
-                      <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
-                        {selectedLegForExpense.expenses.map((exp) => {
-                          const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
-                          const isFuel = exp.type?.startsWith('fuel_')
-                          // Yoqilg'i birligi: Metan va Propan = kub, Benzin va Dizel = litr
-                          const fuelUnit = (exp.type === 'fuel_metan' || exp.type === 'fuel_propan') ? 'kub' : 'litr'
-                          return (
-                            <div key={exp._id} className="bg-white/5 p-2 rounded-lg flex items-center gap-2">
-                              <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${expType?.color || 'from-gray-500 to-slate-500'} flex items-center justify-center text-xs flex-shrink-0`}>
-                                {expType?.icon || '📦'}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-xs truncate">
-                                  {expType?.label || exp.type}
-                                  {isFuel && exp.quantity && ` (${exp.quantity} ${fuelUnit})`}
-                                </p>
-                              </div>
-                              <p className="text-red-400 text-xs font-bold flex-shrink-0">-{formatMoney(exp.amount)}</p>
-                              {isActive && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteExpense(exp._id)}
-                                  className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {isActive ? (
-              <form onSubmit={handleAddExpense} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                {/* Asosiy kategoriyalar */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Xarajat turi</label>
-                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                    {EXPENSE_CATEGORIES.map(({ value, label, icon }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setExpenseForm({ 
-                          ...expenseForm, 
-                          category: value,
-                          type: value === 'fuel' ? 'fuel_metan' : value,
-                          quantity: value === 'fuel' ? expenseForm.quantity : ''
-                        })}
-                        className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border text-center transition ${
-                          expenseForm.category === value
-                            ? 'border-orange-500 bg-orange-500/20 text-white'
-                            : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                        }`}
-                      >
-                        <span className="text-base sm:text-xl">{icon}</span>
-                        <p className="text-[10px] sm:text-xs mt-0.5 sm:mt-1">{label}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Yoqilg'i turi - select */}
-                {expenseForm.category === 'fuel' && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Yoqilg'i turi</label>
-                    <select
-                      value={expenseForm.type}
-                      onChange={(e) => setExpenseForm({ ...expenseForm, type: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-green-500 focus:outline-none appearance-none cursor-pointer"
-                    >
-                      {FUEL_TYPES.map(({ value, label, icon }) => (
-                        <option key={value} value={value} className="bg-slate-800 text-white">
-                          {icon} {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Yoqilg'i uchun miqdor (ixtiyoriy) */}
-                {expenseForm.category === 'fuel' && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
-                      Miqdori ({FUEL_TYPES.find(f => f.value === expenseForm.type)?.unit || 'litr'}) - ixtiyoriy
-                    </label>
-                    <input
-                      type="number"
-                      value={expenseForm.quantity}
-                      onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-green-500 focus:outline-none"
-                      placeholder="50"
-                    />
-                  </div>
-                )}
-
-                {/* Odometr - faqat yoqilg'i uchun */}
-                {expenseForm.category === 'fuel' && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
-                      <Gauge size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> Odometr (km) - ixtiyoriy
-                    </label>
-                    <input
-                      type="number"
-                      value={expenseForm.odometer}
-                      onChange={(e) => setExpenseForm({ ...expenseForm, odometer: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                      placeholder={flight?.startOdometer ? `Boshlang'ich: ${flight.startOdometer} km` : "123456"}
-                    />
-                    {flight?.startOdometer > 0 && expenseForm.odometer && (
-                      <p className="text-[10px] sm:text-xs text-blue-400 mt-1">
-                        Yurgan masofa: {Number(expenseForm.odometer) - flight.startOdometer} km
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Joylashuv - faqat yoqilg'i uchun */}
-                {expenseForm.category === 'fuel' && (
-                  <div>
-                      <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
-                        <MapPin size={12} className="sm:w-3.5 sm:h-3.5 inline mr-1" /> Yoqilg'i olingan manzil (ixtiyoriy)
-                      </label>
-                      
-                      {/* Qo'lda yozish - AddressAutocomplete */}
-                      <AddressAutocomplete
-                        value={expenseForm.stationName}
-                        onChange={(val) => setExpenseForm({ ...expenseForm, stationName: val })}
-                        onSelect={(selected) => {
-                          setExpenseForm({
-                            ...expenseForm,
-                            stationName: selected.name,
-                            location: { lat: selected.lat, lng: selected.lng, name: selected.name }
-                          })
-                        }}
-                        placeholder="Shahar yoki manzil..."
-                        focusColor="blue"
-                        domesticOnly={true}
-                      />
-                  </div>
-                )}
-
-                {/* Summa */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Summa (so'm) *</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={expenseForm.amount ? new Intl.NumberFormat('uz-UZ').format(expenseForm.amount) : ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/\D/g, '')
-                      setExpenseForm({ ...expenseForm, amount: rawValue })
-                    }}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-base sm:text-lg font-semibold"
-                    placeholder="100,000"
-                    required
-                  />
-                </div>
-
-                {/* Sana */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Sana</label>
-                  <input
-                    type="date"
-                    value={expenseForm.date || new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-
-                {/* Izoh */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
-                  <input
-                    type="text"
-                    value={expenseForm.description}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
-                    placeholder="Qo'shimcha ma'lumot..."
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Saqlanmoqda...
-                    </>
-                  ) : 'Qo\'shish'}
-                </button>
-              </form>
-              ) : (
-                <div className="p-4 sm:p-6 text-center text-slate-400">
-                  <p className="text-sm">Reys yopilgan - xarajat qo'shib bo'lmaydi</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Complete Flight Modal */}
-      {showCompleteModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setShowCompleteModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-bold text-white">Reysni yopish</h2>
-                      <p className="text-blue-300 text-xs sm:text-sm truncate max-w-[200px]">
-                        {flight.legs?.[0]?.fromCity?.split(',')[0]} - {flight.legs?.[flight.legs.length - 1]?.toCity?.split(',')[0]}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowCompleteModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleComplete} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                {/* Summary */}
-                <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-1.5 sm:space-y-2">
-                  <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-slate-400">Jami to'lov:</span>
-                    <span className="text-emerald-400 font-bold">{formatMoney(flight.totalPayment)} so'm</span>
-                  </div>
-                  <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-slate-400">Jami xarajat:</span>
-                    <span className="text-red-400 font-bold">{formatMoney(flight.totalExpenses)} so'm</span>
-                  </div>
-                  <div className="flex justify-between pt-1.5 sm:pt-2 border-t border-white/10 text-xs sm:text-sm">
-                    <span className="text-white font-semibold">{flight.profit >= 0 ? 'Foyda:' : 'Zarar:'}</span>
-                    <span className={`font-bold ${flight.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {flight.profit < 0 ? '-' : ''}{formatMoney(Math.abs(flight.profit))} so'm
-                    </span>
-                  </div>
-                </div>
-
-                {/* Shofyor ulushi - har doim ko'rsatiladi */}
-                <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-emerald-500/20">
-                  <label className="block text-xs sm:text-sm font-medium text-emerald-300 mb-1.5 sm:mb-2">
-                    💰 Shofyorga foydadan necha % berasiz?
-                  </label>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={completeForm.driverProfitPercent}
-                      onChange={(e) => setCompleteForm({ ...completeForm, driverProfitPercent: e.target.value })}
-                      className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-emerald-500/30 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                    <span className="text-emerald-400 font-bold text-lg">%</span>
-                  </div>
-                  {completeForm.driverProfitPercent > 0 && (
-                    <div className={`mt-2 sm:mt-3 p-2 sm:p-3 rounded-lg flex items-center justify-between ${
-                      flight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'
-                    }`}>
-                      <span className={`text-xs sm:text-sm ${flight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                        Shofyorga:
-                      </span>
-                      <span className={`font-bold text-sm sm:text-base ${flight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {flight.profit > 0 
-                          ? `${formatMoney(Math.round(flight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
-                          : "0 so'm (zarar bo'lgani uchun)"
-                        }
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Tugash odometr</label>
-                    <input
-                      type="number"
-                      value={completeForm.endOdometer}
-                      onChange={(e) => setCompleteForm({ ...completeForm, endOdometer: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                      placeholder={String((flight.startOdometer || 0) + (flight.totalDistance || 0))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">
-                      Qoldiq yoqilg'i ({(() => {
-                        const fuelLabel = flight.fuelType === 'metan' ? 'Metan' :
-                                         flight.fuelType === 'propan' ? 'Propan' :
-                                         flight.fuelType === 'diesel' ? 'Dizel' : 
-                                         flight.fuelType === 'gas' ? 'Metan' : 'Benzin'
-                        const fuelUnit = (flight.fuelType === 'metan' || flight.fuelType === 'propan' || flight.fuelType === 'gas') ? 'kub' : 'litr'
-                        return `${fuelLabel}, ${fuelUnit}`
-                      })()})
-                    </label>
-                    <input
-                      type="number"
-                      value={completeForm.endFuel}
-                      onChange={(e) => setCompleteForm({ ...completeForm, endFuel: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                      placeholder="50"
-                    />
-                  </div>
-                </div>
-
-                <button type="submit" className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition">
-                  Reysni yopish
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Location Picker */}
-      {showLocationPicker && (
-        <LocationPicker
-          onSelect={handleLocationSelect}
-          onClose={() => {
-            setShowLocationPicker(false)
-            setShowLegModal(true) // Modal qaytsin
+      {/* Modals */}
+      {showLegModal && (
+        <LegModal
+          flight={flight}
+          onClose={() => setShowLegModal(false)}
+          onSubmit={(data) => {
+            // 🚀 Modal ni darhol yopish
+            setShowLegModal(false)
+            showToast.success('Buyurtma qo\'shildi')
+            
+            // 🚀 Optimistic update
+            const tempId = `temp_${Date.now()}`
+            const newLeg = { ...data, _id: tempId, createdAt: new Date().toISOString() }
+            const newLegsCount = (flight.legs?.length || 0) + 1
+            
+            setFlight(prev => ({
+              ...prev,
+              legs: [...(prev.legs || []), newLeg],
+              totalPayment: (prev.totalPayment || 0) + (Number(data.payment) || 0),
+              totalGivenBudget: (prev.totalGivenBudget || 0) + (Number(data.givenBudget) || 0)
+            }))
+            setSelectedLegIndex(newLegsCount - 1)
+            
+            // Background da serverga yuborish
+            api.post(`/flights/${id}/legs`, data)
+              .then(res => {
+                if (res.data?.data) {
+                  setFlight(res.data.data)
+                  const actualLegsCount = res.data.data?.legs?.length || 0
+                  if (actualLegsCount > 0) setSelectedLegIndex(actualLegsCount - 1)
+                }
+              })
+              .catch(() => fetchFlight(false))
           }}
-          initialStart={legForm.fromCoords || (flight?.legs?.length > 0 ? flight.legs[flight.legs.length - 1].toCoords : null)}
-          initialStartAddress={legForm.fromCity || (flight?.legs?.length > 0 ? flight.legs[flight.legs.length - 1].toCity : '')}
-          endOnly={flight?.legs?.length > 0} // 2+ buyurtmada faqat tugash nuqtasi
+          onOpenLocationPicker={() => { setShowLegModal(false); setShowLocationPicker(true) }}
         />
       )}
 
-      {/* Border Crossing Modal (Xalqaro reyslar uchun) */}
-      {showBorderModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setShowBorderModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-slate-900 z-10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Flag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-bold text-white">Chegara xarajati</h2>
-                      <p className="text-indigo-300 text-xs sm:text-sm truncate">
-                        {COUNTRIES[borderForm.fromCountry]?.flag} → {COUNTRIES[borderForm.toCountry]?.flag} {COUNTRIES[borderForm.toCountry]?.name}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowBorderModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleAddBorderCrossing} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                {/* Chegara yo'nalishi - reysda tanlangan davlatlar asosida */}
-                {flight.countriesInRoute && flight.countriesInRoute.length > 2 && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Qaysi chegara?</label>
-                    <div className="flex gap-1.5 sm:gap-2">
-                      {flight.countriesInRoute.slice(0, -1).map((fromCode, idx) => {
-                        const toCode = flight.countriesInRoute[idx + 1]
-                        const isSelected = borderForm.fromCountry === fromCode && borderForm.toCountry === toCode
-                        return (
-                          <button
-                            key={`${fromCode}-${toCode}`}
-                            type="button"
-                            onClick={() => setBorderForm({ ...borderForm, fromCountry: fromCode, toCountry: toCode })}
-                            className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 transition-all flex items-center justify-center gap-1 sm:gap-2 ${
-                              isSelected
-                                ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                            }`}
-                          >
-                            <span className="text-sm sm:text-lg">{COUNTRIES[fromCode]?.flag}</span>
-                            <ArrowRight size={12} className="sm:w-3.5 sm:h-3.5" />
-                            <span className="text-sm sm:text-lg">{COUNTRIES[toCode]?.flag}</span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Chegara nomi - AddressAutocomplete bilan */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Chegara punkti</label>
-                  <AddressAutocomplete
-                    value={borderForm.borderName}
-                    onChange={(val) => setBorderForm({ ...borderForm, borderName: val })}
-                    onSelect={(selected) => setBorderForm({ ...borderForm, borderName: selected.name })}
-                    placeholder="Yallama, Troitsk, Oybek..."
-                    focusColor="indigo"
-                    domesticOnly={false}
-                  />
-                </div>
-
-                {/* Valyuta */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Valyuta</label>
-                  <select
-                    value={borderForm.currency}
-                    onChange={(e) => setBorderForm({ ...borderForm, currency: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-indigo-500 focus:outline-none"
-                  >
-                    {Object.entries(CURRENCIES).map(([code, c]) => (
-                      <option key={code} value={code} className="bg-slate-900">{c.symbol} - {c.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Xarajatlar */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <div>
-                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🛂 Bojxona</label>
-                    <input
-                      type="number"
-                      value={borderForm.customsFee}
-                      onChange={(e) => setBorderForm({ ...borderForm, customsFee: e.target.value })}
-                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🚛 Tranzit</label>
-                    <input
-                      type="number"
-                      value={borderForm.transitFee}
-                      onChange={(e) => setBorderForm({ ...borderForm, transitFee: e.target.value })}
-                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">🛡️ Sug'urta</label>
-                    <input
-                      type="number"
-                      value={borderForm.insuranceFee}
-                      onChange={(e) => setBorderForm({ ...borderForm, insuranceFee: e.target.value })}
-                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] sm:text-xs font-medium text-slate-500 mb-1">📦 Boshqa</label>
-                    <input
-                      type="number"
-                      value={borderForm.otherFees}
-                      onChange={(e) => setBorderForm({ ...borderForm, otherFees: e.target.value })}
-                      className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                {/* Izoh */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
-                  <input
-                    type="text"
-                    value={borderForm.note}
-                    onChange={(e) => setBorderForm({ ...borderForm, note: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                    placeholder="Qo'shimcha ma'lumot"
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold disabled:opacity-50"
-                >
-                  {submitting ? 'Saqlanmoqda...' : 'Qo\'shish'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {showExpenseModal && (
+        <ExpenseModal
+          flight={flight}
+          selectedLeg={selectedLegForExpense}
+          editingExpense={editingExpense}
+          onClose={() => { setShowExpenseModal(false); setSelectedLegForExpense(null); setEditingExpense(null) }}
+          onSubmit={(data) => {
+            // 🚀 Modal ni darhol yopish
+            setShowExpenseModal(false)
+            showToast.success(editingExpense ? 'Yangilandi' : 'Qo\'shildi')
+            
+            // 🚀 Optimistic update - UI ni darhol yangilash
+            if (editingExpense) {
+              setFlight(prev => ({
+                ...prev,
+                expenses: prev.expenses?.map(e => 
+                  e._id === editingExpense._id ? { ...e, ...data } : e
+                ) || [],
+                totalExpenses: (prev.totalExpenses || 0) - (editingExpense.amount || 0) + (Number(data.amount) || 0)
+              }))
+              // Background da serverga yuborish
+              api.put(`/flights/${id}/expenses/${editingExpense._id}`, data)
+                .then(res => res.data?.data && setFlight(res.data.data))
+                .catch(() => fetchFlight(false))
+            } else {
+              const tempId = `temp_${Date.now()}`
+              const newExpense = { ...data, _id: tempId, createdAt: new Date().toISOString() }
+              setFlight(prev => ({
+                ...prev,
+                expenses: [...(prev.expenses || []), newExpense],
+                totalExpenses: (prev.totalExpenses || 0) + (Number(data.amount) || 0)
+              }))
+              // Background da serverga yuborish
+              api.post(`/flights/${id}/expenses`, data)
+                .then(res => res.data?.data && setFlight(res.data.data))
+                .catch(() => fetchFlight(false))
+            }
+            
+            setSelectedLegForExpense(null)
+            setEditingExpense(null)
+          }}
+        />
       )}
 
-      {/* Platon Modal (Rossiya yo'l to'lovi) */}
-      {showPlatonModal && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setShowPlatonModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-rose-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
-                      🚛
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-bold text-white">Platon to'lovi</h2>
-                      <p className="text-rose-300 text-xs sm:text-sm">Rossiya yo'l to'lovi</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowPlatonModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleSavePlaton} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Summa</label>
-                    <input
-                      type="number"
-                      value={platonForm.amount}
-                      onChange={(e) => setPlatonForm({ ...platonForm, amount: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
-                      placeholder="5000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Valyuta</label>
-                    <select
-                      value={platonForm.currency}
-                      onChange={(e) => setPlatonForm({ ...platonForm, currency: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base focus:border-rose-500 focus:outline-none"
-                    >
-                      <option value="RUB" className="bg-slate-900">₽ Rubl</option>
-                      <option value="USD" className="bg-slate-900">$ Dollar</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Rossiyada yurgan masofa (km)</label>
-                  <input
-                    type="number"
-                    value={platonForm.distanceKm}
-                    onChange={(e) => setPlatonForm({ ...platonForm, distanceKm: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
-                    placeholder="2500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Izoh</label>
-                  <input
-                    type="text"
-                    value={platonForm.note}
-                    onChange={(e) => setPlatonForm({ ...platonForm, note: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:border-rose-500 focus:outline-none"
-                    placeholder="Qo'shimcha ma'lumot"
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold disabled:opacity-50"
-                >
-                  {submitting ? 'Saqlanmoqda...' : 'Saqlash'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {showCompleteModal && (
+        <CompleteModal
+          flight={flight}
+          onClose={() => setShowCompleteModal(false)}
+          onSubmit={(data) => {
+            // 🚀 Modal ni darhol yopish
+            setShowCompleteModal(false)
+            showToast.success('Reys yopildi')
+            
+            // 🚀 Optimistic update
+            setFlight(prev => ({
+              ...prev,
+              status: 'completed',
+              endOdometer: data.endOdometer,
+              endFuel: data.endFuel,
+              driverProfitPercent: data.driverProfitPercent
+            }))
+            
+            // Background da serverga yuborish
+            api.put(`/flights/${id}/complete`, data)
+              .then(res => res.data?.data && setFlight(res.data.data))
+              .catch(() => fetchFlight(false))
+          }}
+        />
       )}
 
-      {/* Payment Modal - Buyurtma uchun to'lov olish */}
-      {showPaymentModal && selectedLegForPayment && createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/90">
-          <div className="min-h-full flex items-center justify-center p-2 sm:p-4">
-            <div className="absolute inset-0" onClick={() => setShowPaymentModal(false)} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl sm:rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 sm:p-6 border-b border-white/10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                      <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-bold text-white">Mijozdan to'lov</h2>
-                      <p className="text-emerald-300 text-xs sm:text-sm truncate max-w-[200px]">
-                        {selectedLegForPayment.fromCity?.split(',')[0]} → {selectedLegForPayment.toCity?.split(',')[0]}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowPaymentModal(false)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400">
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
+      {showPaymentModal && selectedLegForPayment && (
+        <PaymentModal
+          leg={selectedLegForPayment}
+          onClose={() => { setShowPaymentModal(false); setSelectedLegForPayment(null) }}
+          onSubmit={(payment) => {
+            // 🚀 Modal ni darhol yopish
+            setShowPaymentModal(false)
+            showToast.success('To\'lov saqlandi')
+            
+            // 🚀 Optimistic update
+            const legId = selectedLegForPayment._id
+            const oldPayment = selectedLegForPayment.payment || 0
+            const newPayment = Number(payment) || 0
+            
+            setFlight(prev => ({
+              ...prev,
+              legs: prev.legs?.map(l => 
+                l._id === legId ? { ...l, payment: newPayment } : l
+              ) || [],
+              totalPayment: (prev.totalPayment || 0) - oldPayment + newPayment
+            }))
+            
+            setSelectedLegForPayment(null)
+            
+            // Background da serverga yuborish
+            api.put(`/flights/${id}/legs/${legId}/payment`, { payment })
+              .then(res => res.data?.data && setFlight(res.data.data))
+              .catch(() => fetchFlight(false))
+          }}
+        />
+      )}
 
-              <form onSubmit={handleAddPayment} className="p-4 sm:p-6 space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Mijozdan olingan to'lov (so'm)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={paymentForm.payment ? new Intl.NumberFormat('uz-UZ').format(paymentForm.payment) : ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/\D/g, '')
-                      setPaymentForm({ payment: rawValue })
-                    }}
-                    className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white text-lg sm:text-xl font-bold placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-center"
-                    placeholder="500,000"
-                    autoFocus
-                  />
-                </div>
+      {showPlatonModal && (
+        <PlatonModal
+          flight={flight}
+          onClose={() => setShowPlatonModal(false)}
+          onSubmit={(data) => {
+            api.put(`/flights/${id}/platon`, data).then(() => fetchFlight())
+            setShowPlatonModal(false)
+            showToast.success('Platon saqlandi')
+          }}
+        />
+      )}
 
-                <button type="submit" className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-bold hover:shadow-lg transition">
-                  Saqlash
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {showLocationPicker && (
+        <LocationPicker
+          onSelect={() => {
+            setShowLocationPicker(false)
+            setShowLegModal(true)
+          }}
+          onClose={() => { setShowLocationPicker(false); setShowLegModal(true) }}
+          initialStart={lastLeg?.toCoords}
+          initialStartAddress={lastLeg?.toCity}
+          endOnly={flight?.legs?.length > 0}
+        />
       )}
     </div>
   )

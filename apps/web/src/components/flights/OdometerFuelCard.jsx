@@ -17,7 +17,7 @@ export default function OdometerFuelCard({ flight, formatMoney }) {
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
             <Gauge className="text-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
-          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Odometr</h3>
+          <h3 className="font-semibold text-gray-900 text-xs sm:text-sm">Spidometr</h3>
         </div>
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2">

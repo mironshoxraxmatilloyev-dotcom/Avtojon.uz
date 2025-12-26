@@ -268,9 +268,9 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 value={form.distance || ''}
                 onChange={e => setForm({ ...form, distance: e.target.value })}
                 placeholder="300"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              />
-            </div>
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+              </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1.5">Yuk (tonna)</label>
               <input

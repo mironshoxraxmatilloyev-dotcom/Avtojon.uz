@@ -133,17 +133,6 @@ export default function DriverDetail() {
     )
   }
 
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLng = (lng2 - lng1) * Math.PI / 180
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return Math.round(R * c)
-  }
-
   const handleStartFlight = async (e) => {
     e.preventDefault()
     if (isDemoMode) {
@@ -492,94 +481,94 @@ export default function DriverDetail() {
               className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-5 border-b border-white/10">
+              <div className="p-6 border-b border-white/10">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                      <Play className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                      <Play className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-white">Yangi reys</h2>
-                      <p className="text-emerald-300 text-sm">{driver.fullName}</p>
+                      <h2 className="text-xl font-bold text-white">Yangi reys</h2>
+                      <p className="text-emerald-300 text-base">{driver.fullName}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowFlightModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
-                    <X size={20} />
+                  <button onClick={() => setShowFlightModal(false)} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition">
+                    <X size={24} />
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleStartFlight} className="p-5 space-y-4">
+              <form onSubmit={handleStartFlight} className="p-6 space-y-5">
                 {vehicle && (
-                  <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center gap-3">
-                    <Truck size={18} className="text-blue-400" />
+                  <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center gap-4">
+                    <Truck size={22} className="text-blue-400" />
                     <div>
-                      <p className="font-semibold text-white text-sm">{vehicle.plateNumber}</p>
-                      <p className="text-xs text-blue-300">{vehicle.brand}</p>
+                      <p className="font-semibold text-white text-base">{vehicle.plateNumber}</p>
+                      <p className="text-sm text-blue-300">{vehicle.brand}</p>
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-200 mb-2">Reys turi</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-base font-medium text-emerald-200 mb-3">Reys turi</label>
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
-                      className={`p-3 rounded-xl border-2 transition ${
+                      className={`p-4 rounded-xl border-2 transition ${
                         flightForm.flightType === 'domestic'
                           ? 'border-green-500 bg-green-500/20 text-white'
                           : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <span className="text-xl">🇺🇿</span>
-                      <p className="font-medium text-sm mt-1">Mahalliy</p>
+                      <span className="text-2xl">🇺🇿</span>
+                      <p className="font-medium text-base mt-1">Mahalliy</p>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'international' })}
-                      className={`p-3 rounded-xl border-2 transition ${
+                      className={`p-4 rounded-xl border-2 transition ${
                         flightForm.flightType === 'international'
                           ? 'border-blue-500 bg-blue-500/20 text-white'
                           : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <span className="text-xl">🌍</span>
-                      <p className="font-medium text-sm mt-1">Xalqaro</p>
+                      <span className="text-2xl">🌍</span>
+                      <p className="font-medium text-base mt-1">Xalqaro</p>
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-emerald-200 mb-1">
-                      <Gauge size={12} className="inline mr-1" /> Odometr (km)
+                    <label className="block text-base text-emerald-200 mb-2">
+                      <Gauge size={14} className="inline mr-1" /> Spidometr (km)
                     </label>
                     <input
                       type="number"
                       value={flightForm.startOdometer}
                       onChange={(e) => setFlightForm({ ...flightForm, startOdometer: e.target.value })}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                       placeholder="123456"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-emerald-200 mb-1">
-                      <Fuel size={12} className="inline mr-1" /> Yoqilg'i
+                    <label className="block text-base text-emerald-200 mb-2">
+                      <Fuel size={14} className="inline mr-1" /> Yoqilg'i
                     </label>
                     <input
                       type="number"
                       value={flightForm.startFuel}
                       onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-sm"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                       placeholder="100"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-emerald-200 mb-1">Yoqilg'i turi</label>
-                  <div className="grid grid-cols-4 gap-1">
+                  <label className="block text-base text-emerald-200 mb-2">Yoqilg'i turi</label>
+                  <div className="grid grid-cols-4 gap-2">
                     {[
                       { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
                       { value: 'propan', label: 'Propan', icon: '🟡', unit: 'kub' },
@@ -590,33 +579,29 @@ export default function DriverDetail() {
                         key={fuel.value}
                         type="button"
                         onClick={() => setFlightForm({ ...flightForm, fuelType: fuel.value, fuelUnit: fuel.unit })}
-                        className={`p-2 rounded-lg border text-center transition ${
+                        className={`p-3 rounded-xl border text-center transition ${
                           flightForm.fuelType === fuel.value
                             ? 'border-emerald-500 bg-emerald-500/20 text-white'
                             : 'border-white/10 bg-white/5 text-slate-400'
                         }`}
                       >
-                        <span className="text-base">{fuel.icon}</span>
-                        <p className="text-[9px] mt-0.5">{fuel.label}</p>
+                        <span className="text-xl">{fuel.icon}</span>
+                        <p className="text-xs mt-1">{fuel.label}</p>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-sm font-medium text-emerald-300 mb-2">Birinchi buyurtma</p>
-                  <div className="space-y-2">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-base font-medium text-emerald-300 mb-3">Birinchi buyurtma</p>
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Qayerdan *</label>
+                      <label className="block text-sm text-slate-400 mb-2">Qayerdan *</label>
                       <AddressAutocomplete
                         value={flightForm.fromCity}
                         onChange={(val) => setFlightForm({ ...flightForm, fromCity: val })}
                         onSelect={(s) => {
                           setFlightForm(prev => ({ ...prev, fromCity: s.name, fromCoords: { lat: s.lat, lng: s.lng } }))
-                          if (flightForm.toCoords) {
-                            const dist = calculateDistance(s.lat, s.lng, flightForm.toCoords.lat, flightForm.toCoords.lng)
-                            setFlightForm(prev => ({ ...prev, distance: dist }))
-                          }
                         }}
                         placeholder="Toshkent"
                         focusColor="green"
@@ -624,16 +609,12 @@ export default function DriverDetail() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Qayerga *</label>
+                      <label className="block text-sm text-slate-400 mb-2">Qayerga *</label>
                       <AddressAutocomplete
                         value={flightForm.toCity}
                         onChange={(val) => setFlightForm({ ...flightForm, toCity: val })}
                         onSelect={(s) => {
                           setFlightForm(prev => ({ ...prev, toCity: s.name, toCoords: { lat: s.lat, lng: s.lng } }))
-                          if (flightForm.fromCoords) {
-                            const dist = calculateDistance(flightForm.fromCoords.lat, flightForm.fromCoords.lng, s.lat, s.lng)
-                            setFlightForm(prev => ({ ...prev, distance: dist }))
-                          }
                         }}
                         placeholder="Samarqand"
                         focusColor="green"
@@ -641,7 +622,7 @@ export default function DriverDetail() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Berilgan pul (so'm)</label>
+                      <label className="block text-sm text-slate-400 mb-2">Berilgan pul (so'm)</label>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -650,7 +631,7 @@ export default function DriverDetail() {
                           const rawValue = e.target.value.replace(/\D/g, '')
                           setFlightForm({ ...flightForm, givenBudget: rawValue })
                         }}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none text-sm"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-orange-500 focus:outline-none"
                         placeholder="200,000"
                       />
                     </div>
@@ -659,9 +640,9 @@ export default function DriverDetail() {
 
                 <button 
                   type="submit" 
-                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
+                  className="w-full py-4 text-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
                 >
-                  <Play size={18} /> Reysni boshlash
+                  <Play size={20} /> Reysni boshlash
                 </button>
               </form>
             </div>

@@ -2,9 +2,9 @@ import { memo, useState, useEffect } from 'react'
 import { 
   Fuel, Droplets, Circle, Wrench, TrendingUp, TrendingDown, Calendar, Gauge, 
   DollarSign, AlertTriangle, ArrowUpRight, ArrowDownRight,
-  PieChart, Activity, Target
+  PieChart
 } from 'lucide-react'
-import { fmt, fmtDate, OIL_STATUS } from './constants'
+import { fmt, fmtDate } from './constants'
 import api from '../../../services/api'
 
 export const SummaryTab = memo(({ vehicle, stats, fuelData, oilData, tires, services }) => {
@@ -149,29 +149,32 @@ export const SummaryTab = memo(({ vehicle, stats, fuelData, oilData, tires, serv
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat 
-          icon={Gauge} 
-          label="Odometr" 
-          value={`${fmt(vehicle.currentOdometer || 0)} km`}
-          color="blue"
-        />
-        <QuickStat 
-          icon={Fuel} 
-          label="Yoqilg'i sarfi" 
-          value={fuelEfficiency.avgConsumption ? `${fuelEfficiency.avgConsumption} L/100km` : '-'}
-          trend={fuelEfficiency.trend}
-          color="amber"
-        />
-        <QuickStat 
-          icon={Activity} 
-          label="Reyslar" 
-          value={analytics?.recentActivity?.incomes || 0}
+          icon={ArrowUpRight} 
+          label="Oylik daromad" 
+          value={`${fmt(summary.totalIncome || 0)}`}
+          subLabel="so'm"
           color="emerald"
         />
         <QuickStat 
-          icon={Target} 
-          label="ROI" 
-          value={summary.roi ? `${summary.roi}%` : '-'}
-          color="purple"
+          icon={ArrowDownRight} 
+          label="Oylik xarajat" 
+          value={`${fmt(summary.totalExpenses || 0)}`}
+          subLabel="so'm"
+          color="red"
+        />
+        <QuickStat 
+          icon={summary.isProfitable ? TrendingUp : TrendingDown} 
+          label="Sof foyda" 
+          value={`${fmt(Math.abs(summary.netProfit || 0))}`}
+          subLabel={summary.isProfitable ? "so'm" : "so'm (zarar)"}
+          color={summary.isProfitable ? "emerald" : "red"}
+        />
+        <QuickStat 
+          icon={Fuel} 
+          label="1 kub metanda" 
+          value={fuelEfficiency.kmPerCubicMeter ? `${fuelEfficiency.kmPerCubicMeter}` : (fuelEfficiency.avgConsumption ? `${Math.round(100 / fuelEfficiency.avgConsumption)}` : '-')}
+          subLabel="km yuradi"
+          color="blue"
         />
       </div>
 
@@ -308,18 +311,20 @@ export const SummaryTab = memo(({ vehicle, stats, fuelData, oilData, tires, serv
   )
 })
 
-const QuickStat = memo(({ icon: Icon, label, value, trend, color }) => {
+const QuickStat = memo(({ icon: Icon, label, value, subLabel, trend, color }) => {
   const bgColors = {
     blue: 'bg-blue-50 border-blue-100',
     amber: 'bg-amber-50 border-amber-100',
     emerald: 'bg-emerald-50 border-emerald-100',
-    purple: 'bg-purple-50 border-purple-100'
+    purple: 'bg-purple-50 border-purple-100',
+    red: 'bg-red-50 border-red-100'
   }
   const iconColors = {
     blue: 'text-blue-500',
     amber: 'text-amber-500',
     emerald: 'text-emerald-500',
-    purple: 'text-purple-500'
+    purple: 'text-purple-500',
+    red: 'text-red-500'
   }
   
   return (
@@ -338,6 +343,7 @@ const QuickStat = memo(({ icon: Icon, label, value, trend, color }) => {
       </div>
       <p className="text-xs text-gray-500 mb-1">{label}</p>
       <p className="text-lg font-bold text-gray-900">{value}</p>
+      {subLabel && <p className="text-xs text-gray-400">{subLabel}</p>}
     </div>
   )
 })

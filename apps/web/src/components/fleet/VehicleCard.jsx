@@ -95,14 +95,14 @@ export const VehicleCard = memo(({ vehicle, onClick, onEdit, onDelete, showMenu,
                 </span>
               )}
             </div>
-            <p className="text-slate-500 font-medium">{vehicle.brand} {vehicle.model}</p>
+            <p className="text-slate-500 font-medium">{vehicle.brand} {vehicle.year ? `(${vehicle.year})` : ''}</p>
           </div>
 
           {/* Desktop Stats */}
           <div className="hidden lg:flex items-center gap-8">
             <StatItem 
               value={fmt(vehicle.currentOdometer)} 
-              label="km" 
+              label="Spidometr" 
               highlight={vehicle.currentOdometer > 100000}
             />
             <StatItem 
@@ -139,7 +139,7 @@ export const VehicleCard = memo(({ vehicle, onClick, onEdit, onDelete, showMenu,
 
         {/* Mobile Stats */}
         <div className="flex lg:hidden items-center gap-4 mt-4 pt-4 border-t border-slate-100">
-          <MobileStat icon={Gauge} value={`${fmt(vehicle.currentOdometer)} km`} />
+          <MobileStat icon={Gauge} value={`${fmt(vehicle.currentOdometer)} km`} label="Spidometr" />
           <MobileStat icon={Fuel} value={FUEL[vehicle.fuelType] || '-'} />
           {vehicle.year && <MobileStat icon={Calendar} value={vehicle.year} />}
         </div>
@@ -179,11 +179,14 @@ const StatItem = memo(({ value, label, highlight }) => (
   </div>
 ))
 
-const MobileStat = memo(({ icon: Icon, value }) => (
+const MobileStat = memo(({ icon: Icon, value, label }) => (
   <div className="flex items-center gap-2 text-slate-600">
     <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center">
       <Icon size={14} className="text-slate-500" />
     </div>
-    <span className="text-sm font-medium">{value}</span>
+    <div>
+      <span className="text-sm font-medium block">{value}</span>
+      {label && <span className="text-[10px] text-slate-400">{label}</span>}
+    </div>
   </div>
 ))

@@ -118,10 +118,27 @@ const legSchema = new mongoose.Schema({
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'food', 'repair', 'toll', 'fine', 'other'],
+    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'food', 'repair', 'toll', 'fine', 'border', 'customs', 'transit', 'insurance', 'platon', 'other'],
     required: true
   },
-  amount: { type: Number, required: true }, // Jami summa (so'm)
+  amount: { type: Number, required: true }, // Asl valyutadagi summa
+  
+  // Valyuta ma'lumotlari (xalqaro reyslar uchun)
+  currency: { 
+    type: String, 
+    enum: ['UZS', 'USD', 'RUB', 'KZT', 'EUR', 'TRY', 'CNY', 'TJS', 'KGS', 'TMT', 'AZN', 'GEL', 'BYN', 'UAH', 'PLN', 'AFN', 'IRR', 'AED'],
+    default: 'UZS' 
+  },
+  amountInUSD: { type: Number, default: 0 }, // USD da
+  amountInUZS: { type: Number, default: 0 }, // So'm da
+  exchangeRate: { type: Number, default: 1 }, // Valyuta kursi (USD ga nisbatan)
+  
+  // Qaysi davlatda sarflangan
+  country: { 
+    type: String, 
+    enum: ['UZB', 'KZ', 'RU', 'TJ', 'KG', 'TM', 'AF', 'CN', 'TR', 'IR', 'AZ', 'GE', 'BY', 'UA', 'PL', 'DE', 'LT', 'LV', 'EE', 'FI', null],
+    default: null 
+  },
   
   // Yoqilg'i uchun batafsil ma'lumotlar
   quantity: { type: Number, default: null }, // Miqdor (litr yoki kub)
@@ -144,6 +161,13 @@ const expenseSchema = new mongoose.Schema({
   stationName: { type: String, default: null }, // AZS nomi
   receiptImage: { type: String, default: null }, // Chek rasmi URL
   description: String,
+  
+  // Chegara xarajatlari uchun (border, customs, transit, insurance)
+  borderInfo: {
+    fromCountry: { type: String, default: null },
+    toCountry: { type: String, default: null },
+    borderName: { type: String, default: null }
+  },
   
   // Qaysi buyurtmaga tegishli
   legId: { type: mongoose.Schema.Types.ObjectId, default: null },
@@ -232,14 +256,37 @@ const flightSchema = new mongoose.Schema({
   // Hisob-kitob
   totalPayment: { type: Number, default: 0 }, // Jami to'lov (mijozdan)
   totalGivenBudget: { type: Number, default: 0 }, // Jami berilgan yo'l xarajati
-  totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar)
+  totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar) - so'm da
+  totalExpensesUSD: { type: Number, default: 0 }, // Jami xarajatlar USD da
   totalDistance: { type: Number, default: 0 }, // Jami masofa
-  finalBalance: { type: Number, default: 0 }, // Oxirgi qoldiq (qaytarilishi kerak)
-  profit: { type: Number, default: 0 }, // Foyda = totalPayment - totalExpenses
   
-  // Shofyor ulushi (foydadan %)
+  // Yo'l puli (biznesmen shofyorga bergan pul)
+  roadMoney: { type: Number, default: 0 }, // Yo'l uchun berilgan pul (so'm)
+  
+  // YANGI HISOB-KITOB TIZIMI
+  totalIncome: { type: Number, default: 0 }, // Jami kirim = mijozdan + yo'l uchun
+  netProfit: { type: Number, default: 0 }, // Sof foyda = totalIncome - totalExpenses
+  
+  // Shofyor ulushi (sof foydadan %)
   driverProfitPercent: { type: Number, default: 0 }, // Foydadan necha % shofyorga
   driverProfitAmount: { type: Number, default: 0 }, // Shofyorga beriladigan summa (so'm)
+  
+  // Biznesmen foydasi va shofyor beradigan pul
+  businessProfit: { type: Number, default: 0 }, // Biznesmen foydasi = netProfit - driverProfitAmount
+  driverOwes: { type: Number, default: 0 }, // Shofyor beradigan pul = businessProfit (yoki totalIncome - totalExpenses - driverProfitAmount)
+  
+  // ============ XALQARO REYS UCHUN USD MAYDONLARI ============
+  totalPaymentUSD: { type: Number, default: 0 }, // Jami to'lov USD da
+  totalIncomeUSD: { type: Number, default: 0 }, // Jami kirim USD da
+  netProfitUSD: { type: Number, default: 0 }, // Sof foyda USD da
+  driverProfitAmountUSD: { type: Number, default: 0 }, // Shofyor ulushi USD da
+  businessProfitUSD: { type: Number, default: 0 }, // Biznesmen foydasi USD da
+  driverOwesUSD: { type: Number, default: 0 }, // Shofyor beradi USD da
+  exchangeRateAtClose: { type: Number, default: 0 }, // Yopilgandagi kurs (1 USD = ? so'm)
+  
+  // Eski maydonlar (backward compatibility)
+  finalBalance: { type: Number, default: 0 }, // Yo'l puli qoldig'i (eski)
+  profit: { type: Number, default: 0 }, // Eski foyda (mijozdan - xarajat)
   
   status: {
     type: String,
@@ -250,6 +297,14 @@ const flightSchema = new mongoose.Schema({
   // Haydovchi tasdiqlagan yoki yo'qligini belgilash
   driverConfirmed: { type: Boolean, default: false },
   driverConfirmedAt: { type: Date, default: null },
+  
+  // Shofyor to'lov statusi (pul berdi/bermadi)
+  driverPaymentStatus: {
+    type: String,
+    enum: ['pending', 'paid'],
+    default: 'pending'
+  },
+  driverPaymentDate: { type: Date, default: null },
   
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
@@ -283,7 +338,7 @@ flightSchema.pre('save', function(next) {
     const legExpenses = this.expenses.filter(exp => 
       exp.legIndex === index || (exp.legId && exp.legId.toString() === leg._id.toString())
     );
-    const spentAmount = legExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const spentAmount = legExpenses.reduce((sum, exp) => sum + (exp.amountInUZS || exp.amount || 0), 0);
     
     // Oldingi qoldiq
     leg.previousBalance = previousBalance;
@@ -307,17 +362,77 @@ flightSchema.pre('save', function(next) {
   // Jami berilgan budget
   this.totalGivenBudget = this.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
   
+  // Yo'l puli = jami berilgan budget
+  this.roadMoney = this.totalGivenBudget;
+  
   // Jami masofa
   this.totalDistance = this.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
   
-  // Jami xarajatlar
-  this.totalExpenses = this.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  // ============ XARAJATLAR HISOBLASH (USD va UZS) ============
+  let totalExpensesUZS = 0;
+  let totalExpensesUSD = 0;
   
-  // Oxirgi qoldiq (haydovchi qaytarishi kerak)
-  this.finalBalance = this.legs.length > 0 ? this.legs[this.legs.length - 1].balance : 0;
+  this.expenses.forEach(exp => {
+    // Agar amountInUZS va amountInUSD mavjud bo'lsa
+    if (exp.amountInUZS) {
+      totalExpensesUZS += exp.amountInUZS;
+    } else {
+      // Eski format - amount so'm da deb hisoblaymiz
+      totalExpensesUZS += exp.amount || 0;
+    }
+    
+    if (exp.amountInUSD) {
+      totalExpensesUSD += exp.amountInUSD;
+    } else {
+      // Eski format - so'm dan USD ga konvertatsiya (1 USD = 12800 so'm)
+      totalExpensesUSD += (exp.amount || 0) / 12800;
+    }
+  });
   
-  // Foyda = Mijozdan olgan - Sarflangan xarajatlar
+  // Chegara xarajatlarini ham qo'shish
+  if (this.borderCrossings && this.borderCrossings.length > 0) {
+    totalExpensesUSD += this.borderCrossingsTotalUSD || 0;
+    totalExpensesUZS += this.borderCrossingsTotalUZS || 0;
+  }
+  
+  // Platon xarajatini qo'shish
+  if (this.platon && this.platon.amountInUSD) {
+    totalExpensesUSD += this.platon.amountInUSD;
+    totalExpensesUZS += Math.round(this.platon.amountInUSD * 12800);
+  }
+  
+  this.totalExpenses = Math.round(totalExpensesUZS);
+  this.totalExpensesUSD = Math.round(totalExpensesUSD * 100) / 100;
+  
+  // Oxirgi qoldiq (haydovchi qaytarishi kerak) - eski
+  // finalBalance = Jami berilgan pul - Jami xarajatlar
+  this.finalBalance = this.totalGivenBudget - this.totalExpenses;
+  
+  // Eski foyda (backward compatibility)
   this.profit = this.totalPayment - this.totalExpenses;
+  
+  // ============ YANGI HISOB-KITOB TIZIMI ============
+  // 1. Jami kirim = Mijozdan olingan + Yo'l uchun berilgan
+  this.totalIncome = this.totalPayment + this.totalGivenBudget;
+  
+  // 2. Sof foyda = Jami kirim - Jami xarajatlar
+  this.netProfit = this.totalIncome - this.totalExpenses;
+  
+  // 3. Shofyor ulushi (faqat sof foyda musbat bo'lsa)
+  const percent = this.driverProfitPercent || 0;
+  if (this.netProfit > 0 && percent > 0) {
+    this.driverProfitAmount = Math.round(this.netProfit * percent / 100);
+  } else {
+    this.driverProfitAmount = 0;
+  }
+  
+  // 4. Biznesmen foydasi = Sof foyda - Shofyor ulushi
+  this.businessProfit = this.netProfit - this.driverProfitAmount;
+  
+  // 5. Shofyor beradigan pul = Biznesmen foydasi
+  // (Shofyor qo'lida: totalIncome, sarfladi: totalExpenses, o'ziga oldi: driverProfitAmount)
+  // Qolgan pul = totalIncome - totalExpenses - driverProfitAmount = businessProfit
+  this.driverOwes = this.businessProfit;
   
   // Reys nomi
   if (this.legs.length > 0) {

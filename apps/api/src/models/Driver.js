@@ -49,6 +49,33 @@ const driverSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // Reyslardan olingan foiz ulushi (jami)
+  totalEarnings: {
+    type: Number,
+    default: 0
+  },
+  // Joriy oy daromadi (to'lanmagan)
+  currentMonthEarnings: {
+    type: Number,
+    default: 0
+  },
+  // To'lanmagan daromad (kutilmoqda)
+  pendingEarnings: {
+    type: Number,
+    default: 0
+  },
+  // Oxirgi yangilanish oyi
+  earningsLastUpdated: {
+    type: Date,
+    default: null
+  },
+  // To'lov tarixi
+  salaryPayments: [{
+    amount: { type: Number, required: true },
+    paidAt: { type: Date, default: Date.now },
+    period: String, // "2025-01" format
+    note: String
+  }],
   // Status
   isActive: {
     type: Boolean,

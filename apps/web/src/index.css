@@ -310,13 +310,13 @@ html[style*="overflow:hidden"] {
 
 /* 🚀 MODAL ANIMATSIYALARI - JUDA TEZ */
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes modalOut {
   from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.95); }
+  to { opacity: 0; transform: scale(0.97); }
 }
 
 @keyframes backdropIn {
@@ -325,15 +325,15 @@ html[style*="overflow:hidden"] {
 }
 
 .modal-enter {
-  animation: modalIn 0.1s ease-out forwards;
+  animation: modalIn 0.08s ease-out forwards;
 }
 
 .modal-exit {
-  animation: modalOut 0.08s ease-in forwards;
+  animation: modalOut 0.05s ease-in forwards;
 }
 
 .backdrop-enter {
-  animation: backdropIn 0.1s ease-out forwards;
+  animation: backdropIn 0.08s ease-out forwards;
 }
 
 /* 🚀 Instant transitions */
@@ -505,33 +505,34 @@ html[style*="overflow:hidden"] {
   }
 }
 
-/* React Phone Input 2 - Dark Theme */
+/* React Phone Input 2 - Light Theme (default) */
 .react-tel-input .form-control {
   width: 100% !important;
-  height: 48px !important;
-  background: rgb(51 65 85) !important;
-  border: 1px solid rgb(71 85 105) !important;
+  height: 52px !important;
+  background: #f8fafc !important;
+  border: 2px solid #e2e8f0 !important;
   border-radius: 12px !important;
-  color: white !important;
+  color: #1e293b !important;
   font-size: 16px !important;
   padding-left: 58px !important;
 }
 
 .react-tel-input .form-control:focus {
-  border-color: rgb(99 102 241) !important;
-  box-shadow: none !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+  background: #fff !important;
 }
 
 .react-tel-input .flag-dropdown {
-  background: rgb(51 65 85) !important;
-  border: 1px solid rgb(71 85 105) !important;
+  background: #f8fafc !important;
+  border: 2px solid #e2e8f0 !important;
   border-radius: 12px 0 0 12px !important;
   border-right: none !important;
 }
 
 .react-tel-input .flag-dropdown:hover,
 .react-tel-input .flag-dropdown.open {
-  background: rgb(71 85 105) !important;
+  background: #f1f5f9 !important;
 }
 
 .react-tel-input .selected-flag {
@@ -541,61 +542,279 @@ html[style*="overflow:hidden"] {
 
 .react-tel-input .selected-flag:hover,
 .react-tel-input .selected-flag:focus {
-  background: rgb(71 85 105) !important;
+  background: #f1f5f9 !important;
 }
 
 .react-tel-input .country-list {
-  background: rgb(30 41 59) !important;
-  border: 1px solid rgb(71 85 105) !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   margin-top: 4px !important;
   max-height: 200px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
 }
 
 .react-tel-input .country-list .country {
   padding: 10px 12px !important;
-  color: white !important;
+  color: #1e293b !important;
 }
 
 .react-tel-input .country-list .country:hover {
-  background: rgb(51 65 85) !important;
+  background: #f1f5f9 !important;
 }
 
 .react-tel-input .country-list .country.highlight {
-  background: rgb(99 102 241) !important;
+  background: #10b981 !important;
+  color: #fff !important;
 }
 
 .react-tel-input .country-list .search {
-  background: rgb(51 65 85) !important;
-  border-bottom: 1px solid rgb(71 85 105) !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   padding: 10px !important;
 }
 
 .react-tel-input .country-list .search-box {
-  background: rgb(30 41 59) !important;
-  border: 1px solid rgb(71 85 105) !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  color: white !important;
+  color: #1e293b !important;
   padding: 8px 12px !important;
   width: 100% !important;
 }
 
 .react-tel-input .country-list .search-box::placeholder {
-  color: rgb(148 163 184) !important;
+  color: #94a3b8 !important;
 }
 
 .react-tel-input .country-list .country-name {
-  color: white !important;
+  color: #1e293b !important;
 }
 
 .react-tel-input .country-list .dial-code {
-  color: rgb(148 163 184) !important;
+  color: #64748b !important;
 }
 
 .react-tel-input .arrow {
-  border-top-color: rgb(148 163 184) !important;
+  border-top-color: #64748b !important;
 }
 
 .react-tel-input .arrow.up {
+  border-bottom-color: #64748b !important;
+}
+
+/* Phone input error state */
+.react-tel-input.phone-error .form-control {
+  border-color: #fca5a5 !important;
+}
+
+.react-tel-input.phone-error .flag-dropdown {
+  border-color: #fca5a5 !important;
+}
+
+/* React Phone Input 2 - Dark Theme (for dark pages) */
+.dark-phone .react-tel-input .form-control {
+  background: rgb(51 65 85) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  color: white !important;
+}
+
+.dark-phone .react-tel-input .form-control:focus {
+  border-color: rgb(99 102 241) !important;
+}
+
+.dark-phone .react-tel-input .flag-dropdown {
+  background: rgb(51 65 85) !important;
+  border: 1px solid rgb(71 85 105) !important;
+}
+
+.dark-phone .react-tel-input .flag-dropdown:hover,
+.dark-phone .react-tel-input .flag-dropdown.open {
+  background: rgb(71 85 105) !important;
+}
+
+.dark-phone .react-tel-input .selected-flag:hover,
+.dark-phone .react-tel-input .selected-flag:focus {
+  background: rgb(71 85 105) !important;
+}
+
+.dark-phone .react-tel-input .country-list {
+  background: rgb(30 41 59) !important;
+  border: 1px solid rgb(71 85 105) !important;
+}
+
+.dark-phone .react-tel-input .country-list .country {
+  color: white !important;
+}
+
+.dark-phone .react-tel-input .country-list .country:hover {
+  background: rgb(51 65 85) !important;
+}
+
+.dark-phone .react-tel-input .country-list .country.highlight {
+  background: rgb(99 102 241) !important;
+}
+
+.dark-phone .react-tel-input .country-list .search {
+  background: rgb(51 65 85) !important;
+  border-bottom: 1px solid rgb(71 85 105) !important;
+}
+
+.dark-phone .react-tel-input .country-list .search-box {
+  background: rgb(30 41 59) !important;
+  border: 1px solid rgb(71 85 105) !important;
+  color: white !important;
+}
+
+.dark-phone .react-tel-input .country-list .search-box::placeholder {
+  color: rgb(148 163 184) !important;
+}
+
+.dark-phone .react-tel-input .country-list .country-name {
+  color: white !important;
+}
+
+.dark-phone .react-tel-input .country-list .dial-code {
+  color: rgb(148 163 184) !important;
+}
+
+.dark-phone .react-tel-input .arrow {
+  border-top-color: rgb(148 163 184) !important;
+}
+
+.dark-phone .react-tel-input .arrow.up {
   border-bottom-color: rgb(148 163 184) !important;
+}
+
+
+/* Modal animations - fast & smooth */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.zoom-in-95 {
+  animation-name: zoomIn;
+}
+
+.slide-in-from-bottom-4 {
+  --tw-enter-translate-y: 1rem;
+}
+
+.duration-150 {
+  animation-duration: 100ms;
+}
+
+.duration-200 {
+  animation-duration: 120ms;
+}
+
+/* Scrollbar hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* GPU acceleration for modals */
+.modal-content {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* 🚀 ULTRA FAST MODAL ANIMATIONS */
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(100%); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: translateY(100%); 
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.15s ease-in forwards;
+}
+
+/* PRO Modal Scale Animation */
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.92); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* Quick tap feedback */
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+.active\:scale-\[0\.98\]:active {
+  transform: scale(0.98);
+}
+
+/* Smooth number input */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+  
+  .hover\:bg-white\/10:hover {
+    background-color: transparent;
+  }
+  
+  .hover\:bg-white\/15:hover {
+    background-color: transparent;
+  }
 }

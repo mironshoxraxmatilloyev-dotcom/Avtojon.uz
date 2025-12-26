@@ -1,4 +1,4 @@
-import { Plus, Wallet, Trash2 } from 'lucide-react'
+import { Plus, Wallet, Trash2, Pencil } from 'lucide-react'
 
 // Xarajat turlari
 const EXPENSE_TYPES = {
@@ -15,7 +15,7 @@ const EXPENSE_TYPES = {
   other: { label: 'Boshqa', icon: '📦' },
 }
 
-export default function ExpensesList({ expenses, isActive, onAddExpense, onDeleteExpense, formatMoney }) {
+export default function ExpensesList({ expenses, isActive, onAddExpense, onEditExpense, onDeleteExpense, formatMoney }) {
   const totalExpenses = expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0
 
   return (
@@ -46,6 +46,7 @@ export default function ExpensesList({ expenses, isActive, onAddExpense, onDelet
             <ExpenseItem 
               key={expense._id} 
               expense={expense} 
+              onEdit={onEditExpense}
               onDelete={onDeleteExpense}
               isActive={isActive}
               formatMoney={formatMoney} 
@@ -62,7 +63,7 @@ export default function ExpensesList({ expenses, isActive, onAddExpense, onDelet
   )
 }
 
-function ExpenseItem({ expense, onDelete, isActive, formatMoney }) {
+function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
   const type = EXPENSE_TYPES[expense.type] || EXPENSE_TYPES.other
   const isFuel = expense.type?.startsWith('fuel')
 
@@ -100,12 +101,22 @@ function ExpenseItem({ expense, onDelete, isActive, formatMoney }) {
         </div>
         
         {isActive && (
-          <button 
-            onClick={() => onDelete(expense._id)}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition flex-shrink-0"
-          >
-            <Trash2 size={14} />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button 
+              onClick={() => onEdit(expense)}
+              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+              title="Tahrirlash"
+            >
+              <Pencil size={14} />
+            </button>
+            <button 
+              onClick={() => onDelete(expense._id)}
+              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+              title="O'chirish"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
         )}
       </div>
     </div>

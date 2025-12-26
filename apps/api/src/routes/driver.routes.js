@@ -194,4 +194,90 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
   }
 });
 
+// Shofyor oyligini to'lash
+router.post('/:id/pay-salary', protect, businessOnly, async (req, res) => {
+  try {
+    const { amount, note } = req.body;
+
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    const payAmount = amount || driver.pendingEarnings || 0;
+    if (payAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'To\'lanadigan summa yo\'q' });
+    }
+
+    const now = new Date();
+    const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // To'lov tarixiga qo'shish
+    driver.salaryPayments = driver.salaryPayments || [];
+    driver.salaryPayments.push({
+      amount: payAmount,
+      paidAt: now,
+      period,
+      note: note || `Oylik to'lov - ${period}`
+    });
+
+    // Kutilayotgan daromadni nolga tushirish
+    driver.pendingEarnings = Math.max(0, (driver.pendingEarnings || 0) - payAmount);
+    driver.currentMonthEarnings = 0;
+
+    await driver.save();
+
+    res.json({ 
+      success: true, 
+      message: `${payAmount.toLocaleString()} so'm to'landi`,
+      data: driver
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Shofyor to'lov tarixi
+router.get('/:id/salary-history', protect, businessOnly, async (req, res) => {
+  try {
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true })
+      .select('fullName salaryPayments pendingEarnings totalEarnings currentMonthEarnings')
+      .lean();
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    res.json({ success: true, data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Barcha shofyorlar oyliklari (hisobotlar uchun)
+router.get('/salaries/pending', protect, businessOnly, async (req, res) => {
+  try {
+    const drivers = await Driver.find({ 
+      user: req.user._id, 
+      isActive: true,
+      pendingEarnings: { $gt: 0 }
+    })
+      .select('fullName phone pendingEarnings currentMonthEarnings totalEarnings salaryPayments')
+      .lean();
+
+    const totalPending = drivers.reduce((sum, d) => sum + (d.pendingEarnings || 0), 0);
+
+    res.json({ 
+      success: true, 
+      data: drivers,
+      stats: {
+        totalPending,
+        driversCount: drivers.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

@@ -100,6 +100,12 @@ export default function DriverCard({
               ? formatMoney(driver.perTripRate) + '/reys' 
               : formatMoney(driver.baseSalary)}
           </p>
+          {/* To'lanmagan daromad */}
+          {driver.pendingEarnings > 0 && (
+            <p className="text-[10px] text-amber-600 font-medium mt-0.5">
+              💰 {formatMoney(driver.pendingEarnings)} (kutilmoqda)
+            </p>
+          )}
         </div>
         <div className="flex gap-0.5 sm:gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           {driver.status === 'free' && (

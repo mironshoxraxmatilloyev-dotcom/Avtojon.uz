@@ -1272,7 +1272,7 @@ export default function Flights() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">Tugash odometr (km)</label>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Tugash spidometr (km)</label>
                     <input
                       type="number"
                       value={completeForm.endOdometer}

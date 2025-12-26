@@ -1,62 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, Lock, ArrowRight, Sparkles, Eye, EyeOff, UserCircle, Zap, CheckCircle, AlertCircle } from 'lucide-react'
-import { PhoneInputDark } from '../components/PhoneInput'
+import { Truck, Lock, ArrowRight, Eye, EyeOff, UserCircle, AlertCircle, Shield, BarChart3, Users } from 'lucide-react'
+import PhoneInputField from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
-
-// CSS-based 3D tilt card
-function Card3D({ children, className }) {
-  const cardRef = useRef(null)
-  
-  useEffect(() => {
-    const card = cardRef.current
-    if (!card || window.innerWidth < 768) return
-    
-    const handleMouseMove = (e) => {
-      const rect = card.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      const rotateX = (y - centerY) / 150
-      const rotateY = (centerX - x) / 150
-      
-      card.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`
-    }
-    
-    const handleMouseLeave = () => {
-      card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)'
-    }
-    
-    card.addEventListener('mousemove', handleMouseMove)
-    card.addEventListener('mouseleave', handleMouseLeave)
-    
-    return () => {
-      card.removeEventListener('mousemove', handleMouseMove)
-      card.removeEventListener('mouseleave', handleMouseLeave)
-    }
-  }, [])
-  
-  return (
-    <div 
-      ref={cardRef} 
-      className={`transition-transform duration-200 ease-out ${className}`}
-      style={{ transformStyle: 'preserve-3d' }}
-    >
-      {children}
-    </div>
-  )
-}
-
-// Static button wrapper - magnetic effekt o'chirilgan
-function MagneticButton({ children, className, ...props }) {
-  return (
-    <div className={className} {...props}>
-      {children}
-    </div>
-  )
-}
 
 export default function Register() {
   const [form, setForm] = useState({ fullName: '', password: '', phone: '' })
@@ -66,257 +13,264 @@ export default function Register() {
   const { register, loading } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
-  const formRef = useRef(null)
   const passwordRef = useRef(null)
 
-  useEffect(() => {
-    if (formRef.current) {
-      formRef.current.style.opacity = '0'
-      formRef.current.style.transform = 'translateY(20px)'
-      requestAnimationFrame(() => {
-        formRef.current.style.transition = 'all 0.6s ease-out'
-        formRef.current.style.opacity = '1'
-        formRef.current.style.transform = 'translateY(0)'
-      })
+  const validateField = (name, value) => {
+    if (name === 'fullName') {
+      if (!value.trim()) return 'Ismingizni kiriting'
+      if (value.trim().length < 2) return 'Kamida 2 ta belgi'
     }
-  }, [])
+    if (name === 'password') {
+      if (!value) return 'Parol majburiy'
+      if (value.length < 6) return 'Kamida 6 ta belgi'
+    }
+    if (name === 'phone') {
+      if (!value || value.length < 9) return 'Telefon raqam majburiy'
+    }
+    return null
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
-    
-    // Real-time validation for touched fields
     if (touched[name]) {
-      validateSingleField(name, value)
+      setErrors(prev => ({ ...prev, [name]: validateField(name, value) }))
     }
-  }
-
-  const validateSingleField = (name, value) => {
-    let error = null
-    
-    switch (name) {
-      case 'fullName':
-        if (!value.trim()) error = 'Ismingizni kiriting'
-        else if (value.trim().length < 2) error = 'Kamida 2 ta belgi'
-        break
-      case 'password':
-        if (!value) error = 'Parol majburiy'
-        else if (value.length < 6) error = 'Kamida 6 ta belgi'
-        break
-    }
-    
-    setErrors(prev => ({ ...prev, [name]: error }))
-    return error
   }
 
   const handleBlur = (name) => {
     setTouched(prev => ({ ...prev, [name]: true }))
-    validateSingleField(name, form[name])
+    setErrors(prev => ({ ...prev, [name]: validateField(name, form[name]) }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    // Validate all required fields
     const newErrors = {}
-    const requiredFields = ['fullName', 'password']
-    
-    requiredFields.forEach(field => {
-      const error = validateSingleField(field, form[field])
+    ;['fullName', 'password', 'phone'].forEach(field => {
+      const error = validateField(field, form[field])
       if (error) newErrors[field] = error
     })
-    
-    setTouched({ fullName: true, password: true })
+
+    setTouched({ fullName: true, password: true, phone: true })
     setErrors(newErrors)
-    
+
     if (Object.keys(newErrors).length > 0) {
-      const firstError = Object.values(newErrors)[0]
-      alert.warning("Ogohlantirish", firstError)
+      alert.warning("Ogohlantirish", Object.values(newErrors)[0])
       return
     }
-    
+
     try {
       const result = await register(form)
       if (result.success) {
         alert.success("Muvaffaqiyatli!", "Ro'yxatdan o'tdingiz. Xush kelibsiz!")
         navigate('/fleet')
       } else {
-        alert.error("Xatolik", result.message || "Ro'yxatdan o'tishda xatolik yuz berdi")
+        alert.error("Xatolik", result.message || "Ro'yxatdan o'tishda xatolik")
       }
     } catch (error) {
-      alert.error("Xatolik", error.userMessage || "Serverga ulanishda xatolik yuz berdi")
+      alert.error("Xatolik", error.userMessage || "Serverga ulanishda xatolik")
     }
-  }
-  
-  // Helper for input styling
-  const getInputClass = (fieldName) => {
-    const hasError = errors[fieldName] && touched[fieldName]
-    return `w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
-      hasError 
-        ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
-        : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
-    }`
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none z-[1]">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] opacity-60"></div>
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#0a0a1a] to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a1a] to-transparent"></div>
-      </div>
-
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px] z-[2]"></div>
-
-      <div ref={formRef} className="relative z-10 w-full max-w-md my-4 sm:my-8 px-2 sm:px-0">
-        <div className="text-center mb-4 sm:mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/50 flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 border border-white rounded-full" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 border border-white rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white rounded-full" />
+        </div>
+        
+        {/* Logo */}
+        <div className="relative z-10">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+              <Truck className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-              Avtojon <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
-            </h1>
+            <span className="text-2xl font-bold text-white">Avtojon</span>
           </Link>
-          <p className="text-violet-300 text-sm sm:text-base">Yangi hisob yarating</p>
         </div>
 
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10">
-            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
-            <span className="text-xs sm:text-sm text-violet-200">30 kun bepul sinov</span>
+        {/* Content */}
+        <div className="relative z-10 space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-4">
+              Biznesingizni<br />yangi bosqichga olib chiqing
+            </h1>
+            <p className="text-emerald-100 text-lg max-w-md">
+              Minglab kompaniyalar Avtojon bilan ishlaydi. Siz ham qo'shiling!
+            </p>
+          </div>
+
+          {/* Features */}
+          <div className="space-y-4">
+            <Feature icon={BarChart3} text="Moliyaviy hisobotlar" />
+            <Feature icon={Users} text="Shofyorlarni boshqarish" />
+            <Feature icon={Shield} text="Xavfsiz va ishonchli" />
           </div>
         </div>
 
-        <Card3D className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-8 shadow-2xl shadow-violet-500/10">
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Ismingiz *</label>
-              <div className="relative group">
-                <UserCircle className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
-                <input
-                  type="text"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('fullName')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      passwordRef.current?.focus()
-                    }
-                  }}
-                  aria-invalid={errors.fullName && touched.fullName}
-                  className={getInputClass('fullName')}
-                  placeholder="Ism Familiya"
-                />
+        {/* Footer */}
+        <div className="relative z-10">
+          <p className="text-emerald-200 text-sm">© 2024 Avtojon. Barcha huquqlar himoyalangan.</p>
+        </div>
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Truck className="w-6 h-6 text-white" />
               </div>
-              {errors.fullName && touched.fullName ? (
-                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
-                  <AlertCircle size={12} />
-                  {errors.fullName}
-                </p>
-              ) : (
-                <p className="text-[10px] sm:text-xs text-violet-400/60 mt-1 sm:mt-1.5 ml-1">Login qilish uchun ham ishlatiladi</p>
-              )}
-            </div>
+              <span className="text-2xl font-bold text-slate-800">Avtojon</span>
+            </Link>
+          </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Parol *</label>
-              <div className="relative group">
-                <Lock className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${errors.password && touched.password ? 'text-red-400' : 'text-violet-400 group-focus-within:text-violet-300'}`} />
-                <input
-                  ref={passwordRef}
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  onBlur={() => handleBlur('password')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && form.fullName.trim() && form.password.length >= 6) {
-                      handleSubmit(e)
-                    }
-                  }}
-                  aria-invalid={errors.password && touched.password}
-                  className={`w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-white/5 border rounded-xl text-white text-sm sm:text-base placeholder-violet-400/50 focus:ring-2 focus:outline-none transition-all ${
-                    errors.password && touched.password 
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
-                      : 'border-white/10 focus:border-violet-500 focus:ring-violet-500/20 hover:border-white/20'
-                  }`}
-                  placeholder="Kamida 6 ta belgi"
-                  minLength={6}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-violet-400 hover:text-violet-300 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+          {/* Header */}
+          <div className="text-center lg:text-left mb-8">
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Ro'yxatdan o'ting</h2>
+            <p className="text-slate-500">Bir necha daqiqada hisob yarating</p>
+          </div>
+
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Full Name */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Ismingiz</label>
+                <div className="relative">
+                  <UserCircle className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-slate-400'}`} />
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('fullName')}
+                    onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                      errors.fullName && touched.fullName 
+                        ? 'border-red-300 focus:border-red-500' 
+                        : 'border-slate-200 focus:border-emerald-500'
+                    }`}
+                    placeholder="Ism Familiya"
+                  />
+                </div>
+                {errors.fullName && touched.fullName ? (
+                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                    <AlertCircle size={12} /> {errors.fullName}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-1.5">Login qilish uchun ham ishlatiladi</p>
+                )}
               </div>
-              {errors.password && touched.password && (
-                <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5 ml-1">
-                  <AlertCircle size={12} />
-                  {errors.password}
-                </p>
-              )}
-            </div>
 
-            <div className="dark-phone">
-              <label className="block text-xs sm:text-sm font-semibold text-violet-200 mb-1.5 sm:mb-2">Telefon</label>
-              <PhoneInputDark
-                value={form.phone}
-                onChange={(phone) => setForm({...form, phone})}
-                placeholder="Telefon raqam"
-              />
-            </div>
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Parol</label>
+                <div className="relative">
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password && touched.password ? 'text-red-400' : 'text-slate-400'}`} />
+                  <input
+                    ref={passwordRef}
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('password')}
+                    className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                      errors.password && touched.password 
+                        ? 'border-red-300 focus:border-red-500' 
+                        : 'border-slate-200 focus:border-emerald-500'
+                    }`}
+                    placeholder="Kamida 6 ta belgi"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.password && touched.password && (
+                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                    <AlertCircle size={12} /> {errors.password}
+                  </p>
+                )}
+              </div>
 
-            <MagneticButton className="w-full pt-1 sm:pt-2">
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Telefon <span className="text-red-500">*</span>
+                </label>
+                <PhoneInputField
+                  value={form.phone}
+                  onChange={(phone) => {
+                    setForm({ ...form, phone })
+                    if (touched.phone) setErrors(prev => ({ ...prev, phone: validateField('phone', phone) }))
+                  }}
+                  onBlur={() => handleBlur('phone')}
+                  placeholder="Telefon raqam"
+                  error={errors.phone && touched.phone}
+                />
+                {errors.phone && touched.phone && (
+                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                    <AlertCircle size={12} /> {errors.phone}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 disabled:opacity-50 transition-all active:scale-[0.98] group"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-50 transition-all active:scale-[0.98]"
               >
                 {loading ? (
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     Ro'yxatdan o'tish
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={18} />
                   </>
                 )}
               </button>
-            </MagneticButton>
-          </form>
+            </form>
 
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-6 text-violet-400/60 text-[10px] sm:text-xs">
-            <span className="flex items-center gap-1"><CheckCircle size={14} /> Bepul</span>
-            <span className="flex items-center gap-1"><CheckCircle size={14} /> Xavfsiz</span>
-            <span className="flex items-center gap-1"><CheckCircle size={14} /> Tez</span>
+            {/* Divider */}
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <p className="text-slate-500">
+                Hisobingiz bormi?{' '}
+                <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                  Kirish
+                </Link>
+              </p>
+            </div>
           </div>
 
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/10 text-center">
-            <p className="text-violet-300 text-sm sm:text-base">
-              Hisobingiz bormi?{' '}
-              <Link to="/login" className="text-violet-400 hover:text-white font-semibold transition-colors">
-                Kirish
-              </Link>
-            </p>
-          </div>
-        </Card3D>
-
-        <Link to="/" className="flex items-center justify-center gap-2 mt-4 sm:mt-6 text-violet-400 hover:text-white transition-colors text-sm sm:text-base group">
-          <ArrowRight size={14} className="rotate-180 group-hover:-translate-x-1 transition-transform" /> 
-          Bosh sahifaga
-        </Link>
+          {/* Back Link */}
+          <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-slate-500 hover:text-emerald-600 transition-colors group">
+            <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+            Bosh sahifaga
+          </Link>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function Feature({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center">
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+      <span className="text-white font-medium">{text}</span>
     </div>
   )
 }

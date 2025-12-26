@@ -1,16 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { MapPin, Loader2, AlertTriangle } from 'lucide-react'
+import { searchUzbekistanCities } from '../data/uzbekistanCities'
 
-// O'zbekiston shaharlari ro'yxati (asosiy)
-const UZ_CITIES = [
-    'toshkent', 'samarqand', 'buxoro', 'namangan', 'andijon', 'fargona', 
-    'nukus', 'qarshi', 'jizzax', 'navoiy', 'urganch', 'termiz', 'kokand',
-    'margilan', 'chirchiq', 'olmaliq', 'guliston', 'shahrisabz', 'denov',
-    'xiva', 'zarafshon', 'bekobod', 'yangiyol', 'qoqon', 'qorasuv'
-]
-
-// Nominatim API orqali manzil qidirish
-// countryCode: 'uz' - faqat O'zbekiston, null - barcha mamlakatlar
+// Nominatim API orqali manzil qidirish (xalqaro reyslar uchun)
 async function searchAddress(query, countryCode = null) {
     if (!query || query.length < 2) return []
     try {
@@ -27,18 +19,38 @@ async function searchAddress(query, countryCode = null) {
             lng: parseFloat(item.lon),
             country: item.address?.country || '',
             countryCode: (item.address?.country_code || '').toLowerCase(),
-            isUzbekistan: (item.address?.country_code || '').toLowerCase() === 'uz'
+            isUzbekistan: (item.address?.country_code || '').toLowerCase() === 'uz',
+            source: 'api'
         }))
     } catch {
         return []
     }
 }
 
-// Manzil O'zbekistonda ekanligini tekshirish
-function checkIfUzbekistan(text) {
-    const lowerText = text.toLowerCase().trim()
-    // O'zbekiston shaharlari ro'yxatida bormi
-    return UZ_CITIES.some(city => lowerText.includes(city))
+// Offline va API natijalarini birlashtirish (dublikatlarni olib tashlash)
+function mergeResults(offlineResults, apiResults) {
+    const seen = new Set()
+    const merged = []
+    
+    // Avval offline natijalar (ular birinchi ko'rinadi)
+    for (const item of offlineResults) {
+        const key = item.name.toLowerCase()
+        if (!seen.has(key)) {
+            seen.add(key)
+            merged.push({ ...item, source: 'offline' })
+        }
+    }
+    
+    // Keyin API natijalar (dublikatlar qo'shilmaydi)
+    for (const item of apiResults) {
+        const key = item.name.toLowerCase().split(',')[0].trim()
+        if (!seen.has(key)) {
+            seen.add(key)
+            merged.push(item)
+        }
+    }
+    
+    return merged.slice(0, 10) // Maksimum 10 ta
 }
 
 export default function AddressAutocomplete({ 
@@ -63,15 +75,33 @@ export default function AddressAutocomplete({
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current)
         
-        if (value && value.length >= 2 && focused) {
-            setLoading(true)
-            debounceRef.current = setTimeout(async () => {
-                const countryCode = domesticOnly ? 'uz' : null
-                const results = await searchAddress(value, countryCode)
-                setSuggestions(results)
-                setShowSuggestions(results.length > 0)
-                setLoading(false)
-            }, 300)
+        if (value && value.length >= 3 && focused) {
+            if (domesticOnly) {
+                // Mahalliy reyslar: Avval offline, keyin API
+                const localResults = searchUzbekistanCities(value)
+                setSuggestions(localResults)
+                setShowSuggestions(localResults.length > 0)
+                
+                // API dan ham qidirish (fonda)
+                setLoading(true)
+                debounceRef.current = setTimeout(async () => {
+                    const apiResults = await searchAddress(value, 'uz')
+                    // Offline va API natijalarini birlashtirish
+                    const combined = mergeResults(localResults, apiResults)
+                    setSuggestions(combined)
+                    setShowSuggestions(combined.length > 0)
+                    setLoading(false)
+                }, 300)
+            } else {
+                // Xalqaro reyslar: faqat API
+                setLoading(true)
+                debounceRef.current = setTimeout(async () => {
+                    const results = await searchAddress(value, null)
+                    setSuggestions(results)
+                    setShowSuggestions(results.length > 0)
+                    setLoading(false)
+                }, 300)
+            }
         } else {
             setSuggestions([])
             setShowSuggestions(false)
@@ -96,17 +126,8 @@ export default function AddressAutocomplete({
 
     const handleSelect = (suggestion) => {
         onChange(suggestion.name)
-        
-        // Mahalliy rejimda O'zbekistondan tashqaridagi manzil tanlansa ogohlantirish
-        if (domesticOnly && !suggestion.isUzbekistan) {
-            const warningMsg = `"${suggestion.name}" O'zbekistondan tashqarida joylashgan. Mahalliy reys uchun O'zbekiston ichidagi manzilni tanlang.`
-            setWarning(warningMsg)
-            onWarning?.(warningMsg)
-        } else {
-            setWarning(null)
-            onSelect?.(suggestion)
-        }
-        
+        setWarning(null)
+        onSelect?.(suggestion)
         setShowSuggestions(false)
         setFocused(false)
     }
@@ -115,22 +136,21 @@ export default function AddressAutocomplete({
     const handleBlur = async () => {
         // Biroz kutish - click event uchun
         setTimeout(async () => {
-            if (value && value.length >= 2 && suggestions.length > 0) {
+            if (value && value.length >= 3 && suggestions.length > 0) {
                 // Birinchi taklifni avtomatik tanlash
                 handleSelect(suggestions[0])
-            } else if (value && value.length >= 2 && suggestions.length === 0) {
-                // Agar takliflar yo'q bo'lsa, API dan qidirish
-                const countryCode = domesticOnly ? 'uz' : null
-                const results = await searchAddress(value, countryCode)
-                if (results.length > 0) {
-                    handleSelect(results[0])
-                } else if (domesticOnly) {
-                    // Mahalliy rejimda natija topilmasa - global qidirish va ogohlantirish
-                    const globalResults = await searchAddress(value, null)
-                    if (globalResults.length > 0 && !globalResults[0].isUzbekistan) {
-                        const warningMsg = `"${value}" O'zbekistonda topilmadi. Bu manzil chet elda bo'lishi mumkin.`
-                        setWarning(warningMsg)
-                        onWarning?.(warningMsg)
+            } else if (value && value.length >= 3 && suggestions.length === 0) {
+                if (domesticOnly) {
+                    // Mahalliy rejimda - offline qidiruv
+                    const localResults = searchUzbekistanCities(value)
+                    if (localResults.length > 0) {
+                        handleSelect(localResults[0])
+                    }
+                } else {
+                    // Xalqaro rejimda - API qidiruv
+                    const results = await searchAddress(value, null)
+                    if (results.length > 0) {
+                        handleSelect(results[0])
                     }
                 }
             }
@@ -170,28 +190,29 @@ export default function AddressAutocomplete({
                             key={index}
                             type="button"
                             onClick={() => handleSelect(suggestion)}
-                            className={`w-full px-3 py-2.5 text-left hover:bg-white/10 transition flex items-start gap-2 border-b border-white/5 last:border-0 ${
-                                domesticOnly && !suggestion.isUzbekistan ? 'opacity-50' : ''
-                            }`}
+                            className="w-full px-3 py-2.5 text-left hover:bg-white/10 transition flex items-start gap-2 border-b border-white/5 last:border-0"
                         >
-                            <MapPin size={14} className={`mt-0.5 shrink-0 ${
-                                domesticOnly && !suggestion.isUzbekistan ? 'text-amber-400' : 'text-blue-400'
-                            }`} />
+                            <MapPin size={14} className={`mt-0.5 shrink-0 ${suggestion.source === 'offline' ? 'text-emerald-400' : 'text-blue-400'}`} />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <p className="text-white text-sm font-medium truncate">{suggestion.name}</p>
-                                    {domesticOnly && !suggestion.isUzbekistan && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded shrink-0">
-                                            Chet el
+                                    {suggestion.source === 'offline' && (
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded shrink-0">
+                                            🇺🇿 Tezkor
                                         </span>
                                     )}
-                                    {suggestion.isUzbekistan && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded shrink-0">
-                                            🇺🇿
+                                    {suggestion.source === 'api' && suggestion.isUzbekistan && (
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded shrink-0">
+                                            🗺️ Xarita
+                                        </span>
+                                    )}
+                                    {suggestion.source === 'api' && !suggestion.isUzbekistan && (
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded shrink-0">
+                                            🌍 Xalqaro
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-slate-400 text-xs truncate">{suggestion.fullName}</p>
+                                <p className="text-slate-400 text-xs truncate">{suggestion.fullName || suggestion.region}</p>
                             </div>
                         </button>
                     ))}

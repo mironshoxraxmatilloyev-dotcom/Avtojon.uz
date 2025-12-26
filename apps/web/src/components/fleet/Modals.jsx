@@ -14,7 +14,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900">
-              {isEdit ? 'Mashinani tahrirlash' : 'Yangi mashina'}
+              {isEdit ? '✏️ Mashinani tahrirlash' : '🚛 Yangi mashina qo\'shish'}
             </h2>
             <p className="text-sm text-slate-500">Ma'lumotlarni kiriting</p>
           </div>
@@ -25,7 +25,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
       </div>
 
       {/* Form */}
-      <form onSubmit={onSubmit} className="p-6 space-y-5">
+      <form onSubmit={onSubmit} className="p-6 space-y-6">
         <ProInput
           label="Davlat raqami"
           value={form.plateNumber}
@@ -33,7 +33,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
           placeholder="01A123BC"
           required
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <ProInput
             label="Marka"
             value={form.brand}
@@ -42,19 +42,13 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
             required
           />
           <ProInput
-            label="Model"
-            value={form.model}
-            onChange={v => setForm(f => ({ ...f, model: v }))}
-            placeholder="TGX"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <ProInput
             label="Yil"
             type="number"
             value={form.year}
             onChange={v => setForm(f => ({ ...f, year: v }))}
           />
+        </div>
+        <div className="grid grid-cols-2 gap-5">
           <ProSelect
             label="Yoqilg'i"
             value={form.fuelType}
@@ -66,8 +60,6 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
               { value: 'metan', label: 'Metan' }
             ]}
           />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
           <ProInput
             label="Bak hajmi (L)"
             type="number"
@@ -75,21 +67,20 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
             onChange={v => setForm(f => ({ ...f, fuelTankCapacity: v }))}
             placeholder="400"
           />
-          <ProInput
-            label="Odometr (km)"
-            type="number"
-            value={form.currentOdometer}
-            onChange={v => setForm(f => ({ ...f, currentOdometer: v }))}
-            placeholder="0"
-          />
         </div>
+        <ProInput
+          label="Spidometr (km)"
+          type="number"
+          value={form.currentOdometer}
+          onChange={v => setForm(f => ({ ...f, currentOdometer: v }))}
+          placeholder="0"
+        />
 
         <button
           type="submit"
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-xl text-white font-bold text-lg transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
+          className="w-full py-5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-xl text-white font-bold text-lg transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
         >
-          {isEdit ? 'Yangilash' : 'Saqlash'}
-          <Sparkles className="w-5 h-5 text-amber-300" />
+          {isEdit ? '✏️ Yangilash' : '➕ Mashina qo\'shish'}
         </button>
       </form>
     </div>
@@ -245,7 +236,7 @@ const ProFeature = ({ icon: Icon, text }) => (
 
 const ProInput = memo(({ label, type = 'text', value, onChange, placeholder, required }) => (
   <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-2">
+    <label className="block text-base font-semibold text-slate-700 mb-3">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <input
@@ -253,18 +244,18 @@ const ProInput = memo(({ label, type = 'text', value, onChange, placeholder, req
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+      className="w-full px-5 py-4 text-lg bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
     />
   </div>
 ))
 
 const ProSelect = memo(({ label, value, onChange, options }) => (
   <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-2">{label}</label>
+    <label className="block text-base font-semibold text-slate-700 mb-3">{label}</label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+      className="w-full px-5 py-4 text-lg bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>

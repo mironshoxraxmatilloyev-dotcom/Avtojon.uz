@@ -91,15 +91,15 @@ export default function DriverModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-blue-200 mb-2">Username *</label>
+              <label className="block text-base font-semibold text-blue-200 mb-3">Username *</label>
               <input 
                 type="text" 
                 value={form.username} 
                 onChange={(e) => setForm({ ...form, username: e.target.value })} 
-                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition disabled:opacity-50" 
+                className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition disabled:opacity-50" 
                 placeholder="username" 
                 required 
                 disabled={!!editingDriver} 
@@ -107,22 +107,22 @@ export default function DriverModal({
             </div>
             {!editingDriver && (
               <div>
-                <label className="block text-sm font-semibold text-blue-200 mb-2">Parol *</label>
+                <label className="block text-base font-semibold text-blue-200 mb-3">Parol *</label>
                 <div className="relative">
                   <input 
                     type={showPassword ? 'text' : 'password'} 
                     value={form.password} 
                     onChange={(e) => setForm({ ...form, password: e.target.value })} 
-                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    className="w-full px-5 py-4 pr-14 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                     placeholder="********" 
                     required 
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                   </button>
                 </div>
               </div>
@@ -130,19 +130,19 @@ export default function DriverModal({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-blue-200 mb-2">To'liq ism *</label>
+            <label className="block text-base font-semibold text-blue-200 mb-3">To'liq ism *</label>
             <input 
               type="text" 
               value={form.fullName} 
               onChange={(e) => setForm({ ...form, fullName: e.target.value })} 
-              className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+              className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
               placeholder="Ism Familiya" 
               required 
             />
           </div>
 
           <div className="dark-phone">
-            <label className="block text-sm font-semibold text-blue-200 mb-2">Telefon</label>
+            <label className="block text-base font-semibold text-blue-200 mb-3">Telefon</label>
             <PhoneInputDark 
               value={form.phone} 
               onChange={(phone) => setForm({ ...form, phone })} 
@@ -150,26 +150,11 @@ export default function DriverModal({
             />
           </div>
 
-          {/* Oylik maosh */}
-          <div>
-            <label className="block text-sm font-semibold text-blue-200 mb-2">Oylik maosh</label>
-            <input 
-              type="text" 
-              value={form.baseSalary ? Number(form.baseSalary).toLocaleString('uz-UZ') : ''} 
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '')
-                setForm({ ...form, baseSalary: value })
-              }} 
-              className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-              placeholder="5,000,000" 
-            />
-          </div>
-
           {/* Parol (faqat tahrirlash rejimida) */}
           {editingDriver && (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-blue-200">Parol</label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-base font-semibold text-blue-200">Parol</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -177,9 +162,9 @@ export default function DriverModal({
                     setNewPassword('')
                     setShowNewPassword(false)
                   }}
-                  className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition"
+                  className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition"
                 >
-                  <RefreshCw size={14} />
+                  <RefreshCw size={16} />
                   {editingPassword ? 'Bekor qilish' : 'Yangilash'}
                 </button>
               </div>
@@ -189,20 +174,20 @@ export default function DriverModal({
                     type={showNewPassword ? 'text' : 'password'} 
                     value={newPassword} 
                     onChange={(e) => setNewPassword(e.target.value)} 
-                    className="w-full px-4 py-4 pr-12 bg-white/5 border border-amber-500/50 rounded-xl text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
+                    className="w-full px-5 py-4 pr-14 text-lg bg-white/5 border border-amber-500/50 rounded-xl text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
                     placeholder="Yangi parol (kamida 6 ta belgi)" 
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
                   >
-                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showNewPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                   </button>
                 </div>
               ) : (
-                <div className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-slate-400">
+                <div className="px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-slate-400">
                   ••••••••
                 </div>
               )}
@@ -211,38 +196,38 @@ export default function DriverModal({
 
           {/* Vehicle (only for new driver) */}
           {!editingDriver && (
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-lg font-semibold text-white mb-4">🚛 Mashina ma'lumotlari</h3>
-              <div className="space-y-4">
+            <div className="pt-5 border-t border-white/10">
+              <h3 className="text-xl font-semibold text-white mb-5">🚛 Mashina ma'lumotlari</h3>
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-blue-200 mb-2">Davlat raqami *</label>
+                  <label className="block text-base font-semibold text-blue-200 mb-3">Davlat raqami *</label>
                   <input 
                     type="text" 
                     value={form.plateNumber} 
                     onChange={(e) => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} 
-                    className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
+                    className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
                     placeholder="01 A 123 AB" 
                     required 
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-blue-200 mb-2">Marka</label>
+                    <label className="block text-base font-semibold text-blue-200 mb-3">Marka</label>
                     <input 
                       type="text" 
                       value={form.brand} 
                       onChange={(e) => setForm({ ...form, brand: e.target.value })} 
-                      className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                      className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                       placeholder="MAN, Volvo..." 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-blue-200 mb-2">Yil</label>
+                    <label className="block text-base font-semibold text-blue-200 mb-3">Yil</label>
                     <input 
                       type="number" 
                       value={form.year} 
                       onChange={(e) => setForm({ ...form, year: e.target.value })} 
-                      className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                      className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                       placeholder="2020" 
                     />
                   </div>
@@ -255,7 +240,7 @@ export default function DriverModal({
           <button 
             type="submit" 
             disabled={saving}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-5 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saqlanmoqda...' : (editingDriver ? 'Saqlash' : "Qo'shish")}
           </button>

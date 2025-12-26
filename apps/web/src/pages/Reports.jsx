@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
+import DriverDebts from '../components/reports/DriverDebts'
+import DriverSalaries from '../components/reports/DriverSalaries'
 
 // Excel export funksiyasi
 const exportToExcel = (data, filename) => {
@@ -514,11 +516,12 @@ export default function Reports() {
   const [period, setPeriod] = useState('monthly')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [modal, setModal] = useState({ open: false, type: null })
-  const [rawData, setRawData] = useState({ drivers: [], flights: [], expenses: [] })
+  const [rawData, setRawData] = useState({ drivers: [], flights: [], expenses: [], fuelStats: null })
   const [stats, setStats] = useState({
     drivers: { total: 0, busy: 0, free: 0 },
     flights: { total: 0, active: 0, completed: 0 },
     expenses: { total: 0, fuel: 0, other: 0 },
+    fuel: { totalKub: 0, totalLitr: 0, efficiency: 0 },
     chartData: []
   })
 
@@ -624,20 +627,36 @@ export default function Reports() {
         const demoDrivers = Array.from({ length: 8 }, (_, i) => ({
           _id: `d${i}`, fullName: `Shofyor ${i + 1}`, status: i < 3 ? 'busy' : 'free'
         }))
-        setRawData({ drivers: demoDrivers, flights: demoFlights, expenses: { totalAmount: 45000000 } })
+        setRawData({ 
+          drivers: demoDrivers, 
+          flights: demoFlights, 
+          expenses: { totalAmount: 45000000 },
+          fuelStats: {
+            totalDistance: 15000,
+            totalExpenses: 45000000,
+            fuel: {
+              totalCost: 32000000,
+              totalKub: 850,
+              totalLitr: 200,
+              efficiency: { metan: 17.6, overall: 14.3 }
+            },
+            expensesByType: { fuel: 32000000, food: 5000000, repair: 3000000, toll: 2000000, fine: 1000000, other: 2000000 }
+          }
+        })
         setLoading(false)
         return
       }
       try {
-        const [driversRes, flightsRes, expensesRes] = await Promise.all([
+        const [driversRes, flightsRes, fuelStatsRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/flights'),
-          api.get('/expenses/stats').catch(() => ({ data: { data: { totalAmount: 0 } } }))
+          api.get('/flights/stats/fuel').catch(() => ({ data: { data: null } }))
         ])
         setRawData({
           drivers: driversRes.data.data || [],
           flights: flightsRes.data.data || [],
-          expenses: expensesRes.data.data || {}
+          expenses: {},
+          fuelStats: fuelStatsRes.data.data || null
         })
       } catch (err) {
         console.error('Reports error:', err)
@@ -649,8 +668,12 @@ export default function Reports() {
   }, [isDemo])
 
   useEffect(() => {
-    const { drivers, flights } = rawData
+    const { drivers, flights, fuelStats } = rawData
     const filteredFlights = filterByPeriod(flights)
+    
+    // Yoqilg'i va xarajatlar - API dan kelgan ma'lumotlar
+    const fuelData = fuelStats || { fuel: {}, expensesByType: {} }
+    
     setStats({
       drivers: {
         total: drivers.length,
@@ -664,10 +687,21 @@ export default function Reports() {
         list: filteredFlights
       },
       expenses: {
-        total: rawData.expenses?.totalAmount || 0,
-        fuel: Math.round((rawData.expenses?.totalAmount || 0) * 0.7),
-        other: Math.round((rawData.expenses?.totalAmount || 0) * 0.3)
+        total: fuelData.totalExpenses || 0,
+        fuel: fuelData.fuel?.totalCost || 0,
+        food: fuelData.expensesByType?.food || 0,
+        repair: fuelData.expensesByType?.repair || 0,
+        toll: fuelData.expensesByType?.toll || 0,
+        fine: fuelData.expensesByType?.fine || 0,
+        other: fuelData.expensesByType?.other || 0
       },
+      fuel: {
+        totalKub: fuelData.fuel?.totalKub || 0,
+        totalLitr: fuelData.fuel?.totalLitr || 0,
+        efficiency: fuelData.fuel?.efficiency?.metan || fuelData.fuel?.efficiency?.overall || 0,
+        byType: fuelData.fuel?.byType || {}
+      },
+      totalDistance: fuelData.totalDistance || 0,
       chartData: generateChartData(filteredFlights)
     })
   }, [rawData, period, currentDate])
@@ -842,7 +876,10 @@ export default function Reports() {
           <ProBarChart 
             data={[
               { label: 'Yoqilg\'i', value: stats.expenses.fuel },
-              { label: 'Boshqa xarajatlar', value: stats.expenses.other },
+              { label: 'Ovqat', value: stats.expenses.food || 0 },
+              { label: 'Ta\'mir', value: stats.expenses.repair || 0 },
+              { label: 'Yo\'l to\'lovi', value: stats.expenses.toll || 0 },
+              { label: 'Boshqa', value: (stats.expenses.fine || 0) + (stats.expenses.other || 0) },
             ]}
             color="orange"
           />
@@ -879,7 +916,7 @@ export default function Reports() {
       </div>
 
       {/* Summary Cards - Pro Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl p-6 text-white group hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
@@ -914,7 +951,8 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 rounded-3xl p-6 text-white group hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300">
+        {/* Yoqilg'i samaradorligi - YANGI */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 rounded-3xl p-6 text-white group hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
           <div className="relative">
@@ -922,12 +960,33 @@ export default function Reports() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <Fuel size={24} />
               </div>
-              <span className="font-medium">O'rtacha xarajat/reys</span>
+              <span className="font-medium">Yoqilg'i samaradorligi</span>
+            </div>
+            <p className="text-4xl sm:text-5xl font-bold">
+              {stats.fuel?.efficiency || 0}
+            </p>
+            <p className="text-cyan-200 mt-2">km / 1 kub</p>
+            <div className="mt-3 flex gap-3 text-xs">
+              <span className="bg-white/20 px-2 py-1 rounded-lg">🟢 {stats.fuel?.totalKub || 0} kub</span>
+              <span className="bg-white/20 px-2 py-1 rounded-lg">⛽ {stats.fuel?.totalLitr || 0} litr</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 rounded-3xl p-6 text-white group hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+                <Route size={24} />
+              </div>
+              <span className="font-medium">Jami masofa</span>
             </div>
             <p className="text-3xl sm:text-4xl font-bold">
-              {stats.flights.total > 0 ? formatMoney(Math.round(stats.expenses.total / stats.flights.total)) : 0}
+              {formatMoney(stats.totalDistance || 0)}
             </p>
-            <p className="text-orange-200 mt-2">so'm</p>
+            <p className="text-orange-200 mt-2">km yurgan</p>
           </div>
         </div>
       </div>
@@ -1045,30 +1104,78 @@ export default function Reports() {
             </p>
             <p className="text-sm text-red-700 mt-2">Jami xarajat (so'm)</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 border border-orange-100">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Fuel size={16} className="text-orange-600" />
-                </div>
+          
+          {/* Yoqilg'i statistikasi */}
+          <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-5 border border-cyan-100">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
+                <Fuel size={20} className="text-cyan-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900">Yoqilg'i statistikasi</h4>
+                <p className="text-xs text-gray-500">Samaradorlik va sarflanish</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-cyan-600">{stats.fuel?.totalKub || 0}</p>
+                <p className="text-xs text-gray-500">kub (metan)</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-amber-600">{stats.fuel?.totalLitr || 0}</p>
+                <p className="text-xs text-gray-500">litr</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-emerald-600">{stats.fuel?.efficiency || 0}</p>
+                <p className="text-xs text-gray-500">km/kub</p>
+              </div>
+            </div>
+            <div className="mt-3 p-3 bg-emerald-50 rounded-xl">
+              <p className="text-sm text-emerald-700 text-center">
+                🚛 1 kub metan bilan <span className="font-bold">{stats.fuel?.efficiency || 0} km</span> yurish mumkin
+              </p>
+            </div>
+          </div>
+
+          {/* Xarajat turlari */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">⛽</span>
                 <span className="text-sm font-medium text-orange-700">Yoqilg'i</span>
               </div>
-              <p className="text-2xl font-bold text-orange-600">{formatMoney(stats.expenses.fuel)}</p>
-              <p className="text-xs text-orange-500 mt-1">~70% ulush</p>
+              <p className="text-xl font-bold text-orange-600">{formatMoney(stats.expenses.fuel)}</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 border border-purple-100">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <DollarSign size={16} className="text-purple-600" />
-                </div>
-                <span className="text-sm font-medium text-purple-700">Boshqa</span>
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🍽️</span>
+                <span className="text-sm font-medium text-green-700">Ovqat</span>
               </div>
-              <p className="text-2xl font-bold text-purple-600">{formatMoney(stats.expenses.other)}</p>
-              <p className="text-xs text-purple-500 mt-1">~30% ulush</p>
+              <p className="text-xl font-bold text-green-600">{formatMoney(stats.expenses.food || 0)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-4 border border-red-100">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🔧</span>
+                <span className="text-sm font-medium text-red-700">Ta'mir</span>
+              </div>
+              <p className="text-xl font-bold text-red-600">{formatMoney(stats.expenses.repair || 0)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🛣️</span>
+                <span className="text-sm font-medium text-blue-700">Yo'l to'lovi</span>
+              </div>
+              <p className="text-xl font-bold text-blue-600">{formatMoney(stats.expenses.toll || 0)}</p>
             </div>
           </div>
         </div>
       </DetailModal>
+
+      {/* Shofyor qarzdorliklari */}
+      <DriverDebts />
+
+      {/* Shofyor oyliklari */}
+      <DriverSalaries />
     </div>
   )
 }
