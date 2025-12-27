@@ -10,70 +10,94 @@ const driverSchema = new mongoose.Schema({
   // Login ma'lumotlari
   username: {
     type: String,
-    required: true,
+    required: [true, 'Username kiritilishi shart'],
     unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    minlength: [3, 'Username kamida 3 ta belgidan iborat bo\'lishi kerak'],
+    maxlength: [30, 'Username 30 ta belgidan oshmasligi kerak']
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    required: [true, 'Parol kiritilishi shart'],
+    minlength: [6, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak']
   },
   // Shaxsiy ma'lumotlar
   fullName: {
     type: String,
-    required: true
+    required: [true, 'To\'liq ism kiritilishi shart'],
+    trim: true,
+    minlength: [2, 'Ism kamida 2 ta belgidan iborat bo\'lishi kerak'],
+    maxlength: [100, 'Ism 100 ta belgidan oshmasligi kerak']
   },
-  phone: String,
-  passport: String, // AA1234567
-  licenseNumber: String,
+  phone: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Telefon raqam 20 ta belgidan oshmasligi kerak']
+  },
+  passport: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Passport 20 ta belgidan oshmasligi kerak']
+  },
+  licenseNumber: {
+    type: String,
+    trim: true,
+    maxlength: [30, 'Guvohnoma raqami 30 ta belgidan oshmasligi kerak']
+  },
   // Ish ma'lumotlari
   hireDate: {
     type: Date,
     default: Date.now
   },
-  // To'lov turi: 'monthly' - oylik maosh, 'per_trip' - har reys uchun
+  // To'lov turi
   paymentType: {
     type: String,
     enum: ['monthly', 'per_trip'],
     default: 'monthly'
   },
-  // Oylik maosh (paymentType: 'monthly' bo'lganda)
+  // Oylik maosh
   baseSalary: {
     type: Number,
-    default: 0
+    default: 0,
+    min: [0, 'Maosh salbiy bo\'lishi mumkin emas']
   },
-  // Har reys uchun to'lov (paymentType: 'per_trip' bo'lganda)
+  // Har reys uchun foiz
   perTripRate: {
     type: Number,
-    default: 0
+    default: 0,
+    min: [0, 'Foiz salbiy bo\'lishi mumkin emas'],
+    max: [100, 'Foiz 100 dan oshishi mumkin emas']
   },
-  // Reyslardan olingan foiz ulushi (jami)
+  // Daromadlar
   totalEarnings: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
   },
-  // Joriy oy daromadi (to'lanmagan)
   currentMonthEarnings: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
   },
-  // To'lanmagan daromad (kutilmoqda)
   pendingEarnings: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
   },
-  // Oxirgi yangilanish oyi
   earningsLastUpdated: {
     type: Date,
     default: null
   },
   // To'lov tarixi
   salaryPayments: [{
-    amount: { type: Number, required: true },
+    amount: { 
+      type: Number, 
+      required: true,
+      min: [0, 'To\'lov salbiy bo\'lishi mumkin emas']
+    },
     paidAt: { type: Date, default: Date.now },
-    period: String, // "2025-01" format
+    period: String,
     note: String
   }],
   // Status
@@ -86,15 +110,15 @@ const driverSchema = new mongoose.Schema({
     enum: ['free', 'busy', 'offline'],
     default: 'free'
   },
-  // GPS joylashuv - maksimal aniqlik
+  // GPS joylashuv
   lastLocation: {
-    lat: Number,
-    lng: Number,
-    accuracy: Number,      // Aniqlik (metrda)
-    speed: Number,         // Tezlik (m/s)
-    heading: Number,       // Yo'nalish (gradusda)
+    lat: { type: Number, min: -90, max: 90 },
+    lng: { type: Number, min: -180, max: 180 },
+    accuracy: { type: Number, min: 0 },
+    speed: { type: Number, min: 0 },
+    heading: { type: Number, min: 0, max: 360 },
     updatedAt: Date,
-    deviceTimestamp: Date  // Qurilma vaqti
+    deviceTimestamp: Date
   }
 }, { timestamps: true });
 

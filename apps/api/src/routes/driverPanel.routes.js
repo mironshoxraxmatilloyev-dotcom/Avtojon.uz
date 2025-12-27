@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const Trip = require('../models/Trip');
 const Flight = require('../models/Flight');
 const Vehicle = require('../models/Vehicle');
 const Expense = require('../models/Expense');

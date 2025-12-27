@@ -12,26 +12,111 @@ const getBusinessmanId = (req) => {
   return null
 }
 
+// Helper: Mashina ownership tekshirish
+const checkVehicleOwnership = async (vehicleId, userId) => {
+  const vehicle = await Vehicle.findOne({ _id: vehicleId, user: userId, isActive: true }).select('_id currentOdometer').lean()
+  return vehicle
+}
+
+// Helper: Validatsiya
+const validateMaintenanceData = (type, data, currentOdometer = 0) => {
+  const errors = []
+  
+  // Umumiy validatsiyalar
+  if (data.odometer !== undefined) {
+    const odo = Number(data.odometer)
+    if (isNaN(odo) || odo < 0) errors.push('Odometer noto\'g\'ri')
+    // Odometer juda katta farq bo'lmasligi kerak (100,000 km dan ko'p farq - xato)
+    if (currentOdometer > 0 && Math.abs(odo - currentOdometer) > 100000) {
+      errors.push('Odometer qiymati juda katta farq qiladi')
+    }
+  }
+  
+  if (data.date) {
+    const date = new Date(data.date)
+    const now = new Date()
+    now.setHours(23, 59, 59, 999) // Bugungi kun oxiri
+    if (date > now) errors.push('Kelajakdagi sana kiritish mumkin emas')
+    // 10 yildan oldingi sana ham xato
+    const tenYearsAgo = new Date()
+    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+    if (date < tenYearsAgo) errors.push('Sana juda eski')
+  }
+  
+  // Tur bo'yicha validatsiya
+  if (type === 'fuel') {
+    if (!data.liters || Number(data.liters) <= 0) errors.push('Litr miqdori majburiy va musbat bo\'lishi kerak')
+    if (!data.cost || Number(data.cost) <= 0) errors.push('Narx majburiy va musbat bo\'lishi kerak')
+    if (data.liters && Number(data.liters) > 2000) errors.push('Litr miqdori juda katta (max 2000)')
+    if (data.cost && Number(data.cost) > 100000000) errors.push('Narx juda katta')
+  }
+  
+  if (type === 'oil') {
+    if (!data.oilType) errors.push('Moy turi majburiy')
+    if (!data.cost || Number(data.cost) <= 0) errors.push('Narx majburiy va musbat bo\'lishi kerak')
+    if (data.cost && Number(data.cost) > 50000000) errors.push('Narx juda katta')
+  }
+  
+  if (type === 'tire') {
+    if (!data.brand) errors.push('Shina brendi majburiy')
+    if (!data.position) errors.push('Shina pozitsiyasi majburiy')
+    if (data.cost && Number(data.cost) < 0) errors.push('Narx salbiy bo\'lishi mumkin emas')
+    if (data.expectedLifeKm && Number(data.expectedLifeKm) > 500000) errors.push('Kutilgan umr juda katta')
+  }
+  
+  if (type === 'service') {
+    if (!data.type) errors.push('Xizmat turi majburiy')
+    if (!data.cost || Number(data.cost) <= 0) errors.push('Narx majburiy va musbat bo\'lishi kerak')
+    if (data.cost && Number(data.cost) > 500000000) errors.push('Narx juda katta')
+  }
+  
+  if (type === 'income') {
+    if (!data.amount || Number(data.amount) <= 0) errors.push('Summa majburiy va musbat bo\'lishi kerak')
+    if (data.amount && Number(data.amount) > 1000000000) errors.push('Summa juda katta')
+    if (data.distance && Number(data.distance) < 0) errors.push('Masofa salbiy bo\'lishi mumkin emas')
+    if (data.distance && Number(data.distance) > 50000) errors.push('Masofa juda katta (max 50,000 km)')
+  }
+  
+  return errors
+}
+
 // ============ FUEL REFILLS ============
 // Yoqilg'i to'ldirishlarni olish
 router.get('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
     
-    // Bo'sh array qaytarish agar hech narsa topilmasa
-    const refills = await FuelRefill.find({ vehicle: vehicleId }).sort({ date: -1 }).lean()
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    const refills = await FuelRefill.find({ vehicle: vehicleId })
+      .select('date liters cost odometer fuelType station pricePerLiter fuelConsumption')
+      .sort({ date: -1 })
+      .limit(100)
+      .lean()
     
     // Statistika hisoblash
     const stats = {
       totalLiters: refills.reduce((sum, r) => sum + (r.liters || 0), 0),
       totalCost: refills.reduce((sum, r) => sum + (r.cost || 0), 0),
       avgPer100km: 0,
+      avgPricePerLiter: 0,
       monthlyConsumption: 0
+    }
+    
+    // O'rtacha narx
+    if (stats.totalLiters > 0) {
+      stats.avgPricePerLiter = Math.round(stats.totalCost / stats.totalLiters)
     }
     
     // Oylik sarf
     const thisMonth = new Date()
     thisMonth.setDate(1)
+    thisMonth.setHours(0, 0, 0, 0)
     const monthlyRefills = refills.filter(r => r.date && new Date(r.date) >= thisMonth)
     stats.monthlyConsumption = monthlyRefills.reduce((sum, r) => sum + (r.liters || 0), 0)
     
@@ -47,7 +132,7 @@ router.get('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
     
     res.json({ success: true, data: { refills, stats } })
   } catch (err) {
-    console.error('❌ Fuel GET error:', err.message, err.stack)
+    console.error('❌ Fuel GET error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -55,26 +140,43 @@ router.get('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
 // Yoqilg'i qo'shish
 router.post('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
   try {
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
     const { _id, ...body } = req.body
     
-    // Oldingi to'ldirishni topish (yoqilg'i sarfini hisoblash uchun)
-    const lastRefill = await FuelRefill.findOne({ 
-      vehicle: req.params.vehicleId 
-    }).sort({ odometer: -1 })
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('fuel', body, vehicle.currentOdometer)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
+    
+    // Oldingi to'ldirishni topish
+    const lastRefill = await FuelRefill.findOne({ vehicle: vehicleId })
+      .select('odometer')
+      .sort({ odometer: -1 })
+      .lean()
     
     const refill = await FuelRefill.create({
       ...body,
-      vehicle: req.params.vehicleId,
-      businessman: getBusinessmanId(req),
-      pricePerLiter: body.liters ? body.cost / body.liters : 0,
+      vehicle: vehicleId,
+      businessman: businessmanId,
+      pricePerLiter: body.liters ? Math.round(body.cost / body.liters) : 0,
       previousOdometer: lastRefill?.odometer || 0
     })
 
-    // Mashina odometrini yangilash
-    await Vehicle.findByIdAndUpdate(req.params.vehicleId, { 
-      currentOdometer: body.odometer,
-      lastFuelDate: body.date || new Date()
-    })
+    // Mashina odometrini yangilash (faqat kattaroq bo'lsa)
+    if (body.odometer && body.odometer > (vehicle.currentOdometer || 0)) {
+      await Vehicle.findByIdAndUpdate(vehicleId, { 
+        currentOdometer: body.odometer,
+        lastFuelDate: body.date || new Date()
+      })
+    }
     
     res.status(201).json({ success: true, data: refill })
   } catch (err) {
@@ -112,9 +214,20 @@ router.delete('/fuel/:id', protect, async (req, res) => {
 router.get('/vehicles/:vehicleId/oil', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
     
-    const changes = await OilChange.find({ vehicle: vehicleId }).sort({ date: -1 }).lean()
-    const vehicle = await Vehicle.findById(vehicleId).lean()
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    const changes = await OilChange.find({ vehicle: vehicleId })
+      .select('date odometer oilType oilBrand liters cost nextChangeOdometer filterChanged')
+      .sort({ date: -1 })
+      .limit(50)
+      .lean()
+    
     const lastChange = changes[0] || null
     
     // Holat hisoblash
@@ -122,14 +235,14 @@ router.get('/vehicles/:vehicleId/oil', protect, async (req, res) => {
     let remainingKm = 10000
     if (lastChange) {
       const nextOdo = lastChange.nextChangeOdometer || (lastChange.odometer || 0) + 10000
-      remainingKm = nextOdo - (vehicle?.currentOdometer || 0)
+      remainingKm = nextOdo - (vehicle.currentOdometer || 0)
       if (remainingKm <= 0) status = 'overdue'
       else if (remainingKm <= 2000) status = 'approaching'
     }
     
     res.json({ success: true, data: { changes, lastChange, status, remainingKm } })
   } catch (err) {
-    console.error('❌ Oil GET error:', err.message, err.stack)
+    console.error('❌ Oil GET error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -137,20 +250,37 @@ router.get('/vehicles/:vehicleId/oil', protect, async (req, res) => {
 // Moy almashtirish qo'shish
 router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
   try {
-    const { _id, ...body } = req.body // _id ni olib tashlash
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
+    const { _id, ...body } = req.body
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('oil', body, vehicle.currentOdometer)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
     
     const change = await OilChange.create({
       ...body,
-      vehicle: req.params.vehicleId,
-      businessman: getBusinessmanId(req),
+      vehicle: vehicleId,
+      businessman: businessmanId,
       nextChangeOdometer: body.nextChangeOdometer || (Number(body.odometer) + 10000)
     })
     
-    await Vehicle.findByIdAndUpdate(req.params.vehicleId, { 
-      currentOdometer: body.odometer,
-      lastOilChangeDate: body.date || new Date(),
-      lastOilChangeOdometer: body.odometer
-    })
+    // Mashina odometrini yangilash (faqat kattaroq bo'lsa)
+    if (body.odometer && body.odometer > (vehicle.currentOdometer || 0)) {
+      await Vehicle.findByIdAndUpdate(vehicleId, { 
+        currentOdometer: body.odometer,
+        lastOilChangeDate: body.date || new Date(),
+        lastOilChangeOdometer: body.odometer
+      })
+    }
     
     res.status(201).json({ success: true, data: change })
   } catch (err) {
@@ -184,28 +314,46 @@ router.delete('/oil/:id', protect, async (req, res) => {
 // Shinalarni olish
 router.get('/vehicles/:vehicleId/tires', protect, async (req, res) => {
   try {
-    const tires = await Tire.find({ 
-      vehicle: req.params.vehicleId
-    }).sort({ position: 1 })
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
     
-    const vehicle = await Vehicle.findById(req.params.vehicleId)
-    const currentOdo = vehicle?.currentOdometer || 0
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    const tires = await Tire.find({ vehicle: vehicleId })
+      .select('position brand model size cost installDate installOdometer expectedLifeKm status')
+      .sort({ position: 1 })
+      .lean()
+    
+    const currentOdo = vehicle.currentOdometer || 0
     
     // Har bir shina uchun qolgan km va holatni hisoblash
     const tiresWithStatus = tires.map(tire => {
-      const usedKm = currentOdo - tire.installOdometer
-      const remainingKm = Math.max(0, tire.expectedLifeKm - usedKm)
+      const usedKm = Math.max(0, currentOdo - (tire.installOdometer || 0))
+      const expectedLife = tire.expectedLifeKm || 80000
+      const remainingKm = Math.max(0, expectedLife - usedKm)
+      
+      // Vaqt bo'yicha eskirish
+      const installDate = new Date(tire.installDate)
+      const ageYears = (Date.now() - installDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      const ageWearPercent = Math.min(100, Math.round((ageYears / 5) * 100))
+      const kmWearPercent = Math.min(100, Math.round((usedKm / expectedLife) * 100))
+      
       let status = tire.status
-      
       // Avtomatik holat aniqlash
-      if (remainingKm <= 0) status = 'worn'
-      else if (remainingKm <= 10000) status = 'used'
+      const maxWear = Math.max(ageWearPercent, kmWearPercent)
+      if (maxWear >= 90 || remainingKm <= 0) status = 'worn'
+      else if (maxWear >= 70 || remainingKm <= 10000) status = 'used'
       
-      return { ...tire.toObject(), usedKm, remainingKm, calculatedStatus: status }
+      return { ...tire, usedKm, remainingKm, calculatedStatus: status }
     })
     
     res.json({ success: true, data: tiresWithStatus })
   } catch (err) {
+    console.error('❌ Tires GET error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -213,13 +361,28 @@ router.get('/vehicles/:vehicleId/tires', protect, async (req, res) => {
 // Shina qo'shish
 router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
   try {
-    const { _id, ...body } = req.body // _id ni olib tashlash
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
+    const { _id, ...body } = req.body
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('tire', body, vehicle.currentOdometer)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
     
     const tire = await Tire.create({
       ...body,
-      vehicle: req.params.vehicleId,
-      businessman: getBusinessmanId(req)
+      vehicle: vehicleId,
+      businessman: businessmanId
     })
+    
     res.status(201).json({ success: true, data: tire })
   } catch (err) {
     console.error('❌ Tire POST error:', err.message)
@@ -251,18 +414,30 @@ router.delete('/tires/:id', protect, async (req, res) => {
 // Xizmatlarni olish
 router.get('/vehicles/:vehicleId/services', protect, async (req, res) => {
   try {
-    const services = await ServiceLog.find({ 
-      vehicle: req.params.vehicleId
-    }).sort({ date: -1 })
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    const services = await ServiceLog.find({ vehicle: vehicleId })
+      .select('type date odometer cost description serviceName')
+      .sort({ date: -1 })
+      .limit(100)
+      .lean()
     
     const stats = {
       totalServices: services.length,
-      totalCost: services.reduce((sum, s) => sum + s.cost, 0),
+      totalCost: services.reduce((sum, s) => sum + (s.cost || 0), 0),
       lastService: services[0] || null
     }
     
     res.json({ success: true, data: { services, stats } })
   } catch (err) {
+    console.error('❌ Services GET error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -270,18 +445,35 @@ router.get('/vehicles/:vehicleId/services', protect, async (req, res) => {
 // Xizmat qo'shish
 router.post('/vehicles/:vehicleId/services', protect, async (req, res) => {
   try {
-    const { _id, ...body } = req.body // _id ni olib tashlash
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
+    const { _id, ...body } = req.body
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('service', body, vehicle.currentOdometer)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
     
     const service = await ServiceLog.create({
       ...body,
-      vehicle: req.params.vehicleId,
-      businessman: getBusinessmanId(req)
+      vehicle: vehicleId,
+      businessman: businessmanId
     })
     
-    await Vehicle.findByIdAndUpdate(req.params.vehicleId, { 
-      currentOdometer: body.odometer,
-      lastServiceDate: body.date || new Date()
-    })
+    // Mashina odometrini yangilash (faqat kattaroq bo'lsa)
+    if (body.odometer && body.odometer > (vehicle.currentOdometer || 0)) {
+      await Vehicle.findByIdAndUpdate(vehicleId, { 
+        currentOdometer: body.odometer,
+        lastServiceDate: body.date || new Date()
+      })
+    }
     
     res.status(201).json({ success: true, data: service })
   } catch (err) {
@@ -338,6 +530,13 @@ router.get('/vehicles/:vehicleId/income', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params
     const { startDate, endDate } = req.query
+    const businessmanId = getBusinessmanId(req)
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
     
     const query = { vehicle: vehicleId }
     if (startDate || endDate) {
@@ -346,7 +545,11 @@ router.get('/vehicles/:vehicleId/income', protect, async (req, res) => {
       if (endDate) query.date.$lte = new Date(endDate)
     }
     
-    const incomes = await VehicleIncome.find(query).sort({ date: -1 }).lean()
+    const incomes = await VehicleIncome.find(query)
+      .select('type date amount fromCity toCity distance cargoWeight clientName description')
+      .sort({ date: -1 })
+      .limit(200)
+      .lean()
     
     const stats = {
       totalIncome: incomes.reduce((sum, i) => sum + (i.amount || 0), 0),
@@ -361,26 +564,43 @@ router.get('/vehicles/:vehicleId/income', protect, async (req, res) => {
     
     res.json({ success: true, data: { incomes, stats } })
   } catch (err) {
+    console.error('❌ Income GET error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
 
 router.post('/vehicles/:vehicleId/income', protect, async (req, res) => {
   try {
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
     const { _id, ...body } = req.body
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('income', body)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
+    
     const income = await VehicleIncome.create({
       ...body,
-      vehicle: req.params.vehicleId,
-      businessman: getBusinessmanId(req)
+      vehicle: vehicleId,
+      businessman: businessmanId
     })
     
     // Mashina totalIncome ni yangilash
-    await Vehicle.findByIdAndUpdate(req.params.vehicleId, {
+    await Vehicle.findByIdAndUpdate(vehicleId, {
       $inc: { totalIncome: body.amount || 0 }
     })
     
     res.status(201).json({ success: true, data: income })
   } catch (err) {
+    console.error('❌ Income POST error:', err.message)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -494,35 +714,75 @@ router.delete('/expenses/:id', protect, async (req, res) => {
   }
 })
 
-// ============ ANALYTICS (TAHLIL) ============
+// ============ ANALYTICS (TAHLIL) - OPTIMIZED ============
 router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params
-    const { period = '30' } = req.query // kunlar soni
+    const { period = '30' } = req.query
+    const businessmanId = getBusinessmanId(req)
     
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - parseInt(period))
     
-    const vehicle = await Vehicle.findById(vehicleId).lean()
+    // Mashina va ownership tekshiruvi
+    const vehicle = await Vehicle.findOne({ 
+      _id: vehicleId, 
+      user: businessmanId 
+    }).select('_id plateNumber brand model currentOdometer purchasePrice oilChangeIntervalKm expectedFuelConsumption fuelType').lean()
+    
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
     }
     
-    // Parallel so'rovlar
+    // Optimallashtirilgan parallel so'rovlar - faqat kerakli fieldlar
     const [fuelRefills, oilChanges, tires, services, incomes, otherExpenses, alerts] = await Promise.all([
-      FuelRefill.find({ vehicle: vehicleId, date: { $gte: startDate } }).sort({ date: -1 }).lean(),
-      OilChange.find({ vehicle: vehicleId }).sort({ date: -1 }).limit(5).lean(),
-      Tire.find({ vehicle: vehicleId, status: { $ne: 'replaced' } }).lean(),
-      ServiceLog.find({ vehicle: vehicleId, date: { $gte: startDate } }).lean(),
-      VehicleIncome.find({ vehicle: vehicleId, date: { $gte: startDate } }).lean(),
-      OtherExpense.find({ vehicle: vehicleId, date: { $gte: startDate } }).lean(),
-      VehicleAlert.find({ vehicle: vehicleId, isResolved: false }).lean()
+      // Yoqilg'i - period ichida
+      FuelRefill.find({ vehicle: vehicleId, date: { $gte: startDate } })
+        .select('date liters cost odometer fuelConsumption')
+        .sort({ date: -1 }).lean(),
+      // Moy - period ichida + oxirgi 1 ta (holat uchun)
+      OilChange.find({ vehicle: vehicleId, date: { $gte: startDate } })
+        .select('date cost odometer nextChangeOdometer oilType')
+        .sort({ date: -1 }).lean(),
+      // Shinalar - period ichida o'rnatilganlar
+      Tire.find({ vehicle: vehicleId, installDate: { $gte: startDate }, status: { $ne: 'replaced' } })
+        .select('position cost installDate installOdometer expectedLifeKm')
+        .lean(),
+      // Xizmatlar - period ichida
+      ServiceLog.find({ vehicle: vehicleId, date: { $gte: startDate } })
+        .select('date cost type')
+        .lean(),
+      // Daromadlar - period ichida
+      VehicleIncome.find({ vehicle: vehicleId, date: { $gte: startDate } })
+        .select('date amount type')
+        .lean(),
+      // Boshqa xarajatlar - period ichida
+      OtherExpense.find({ vehicle: vehicleId, date: { $gte: startDate } })
+        .select('date amount type')
+        .lean(),
+      // Alertlar - faqat hal qilinmaganlar
+      VehicleAlert.find({ vehicle: vehicleId, isResolved: false })
+        .select('type severity message')
+        .limit(10).lean()
     ])
     
-    // === XARAJATLAR ===
+    // Moy holati uchun oxirgi almashtirishni olish (agar period ichida yo'q bo'lsa)
+    let lastOilChange = oilChanges[0]
+    if (!lastOilChange) {
+      lastOilChange = await OilChange.findOne({ vehicle: vehicleId })
+        .select('date odometer nextChangeOdometer oilType')
+        .sort({ date: -1 }).lean()
+    }
+    
+    // Shina holati uchun barcha aktiv shinalarni olish
+    const allActiveTires = await Tire.find({ vehicle: vehicleId, status: { $ne: 'replaced' } })
+      .select('position installOdometer expectedLifeKm installDate')
+      .lean()
+    
+    // === XARAJATLAR - TO'G'RI HISOBLASH ===
     const fuelCost = fuelRefills.reduce((sum, r) => sum + (r.cost || 0), 0)
-    const oilCost = oilChanges.filter(o => new Date(o.date) >= startDate).reduce((sum, o) => sum + (o.cost || 0), 0)
-    const tireCost = tires.filter(t => new Date(t.installDate) >= startDate).reduce((sum, t) => sum + (t.cost || 0), 0)
+    const oilCost = oilChanges.reduce((sum, o) => sum + (o.cost || 0), 0)
+    const tireCost = tires.reduce((sum, t) => sum + (t.cost || 0), 0)
     const serviceCost = services.reduce((sum, s) => sum + (s.cost || 0), 0)
     const otherCost = otherExpenses.reduce((sum, e) => sum + (e.amount || 0), 0)
     const totalExpenses = fuelCost + oilCost + tireCost + serviceCost + otherCost
@@ -535,7 +795,7 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
     const profitMargin = totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0
     
     // === YOQILG'I SAMARADORLIGI ===
-    let fuelEfficiency = { avgConsumption: 0, trend: 'stable', totalLiters: 0, totalKm: 0 }
+    let fuelEfficiency = { avgConsumption: 0, trend: 'stable', totalLiters: 0, totalKm: 0, kmPerCubicMeter: 0 }
     if (fuelRefills.length >= 2) {
       const totalLiters = fuelRefills.reduce((sum, r) => sum + (r.liters || 0), 0)
       const firstOdo = fuelRefills[fuelRefills.length - 1]?.odometer || 0
@@ -545,26 +805,32 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
       fuelEfficiency.totalLiters = totalLiters
       fuelEfficiency.totalKm = totalKm
       
-      if (totalKm > 0) {
+      if (totalKm > 0 && totalLiters > 0) {
         fuelEfficiency.avgConsumption = Math.round((totalLiters / totalKm) * 100 * 10) / 10
+        // Metan uchun 1 kub metrda necha km
+        if (vehicle.fuelType === 'metan' || vehicle.fuelType === 'gas') {
+          fuelEfficiency.kmPerCubicMeter = Math.round(totalKm / totalLiters * 10) / 10
+        }
         
-        // Trend - oxirgi 3 ta to'ldirish vs oldingi 3 ta
+        // Trend
         if (fuelRefills.length >= 6) {
           const recent = fuelRefills.slice(0, 3)
           const older = fuelRefills.slice(3, 6)
           const recentAvg = recent.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
           const olderAvg = older.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
-          if (recentAvg > olderAvg * 1.1) fuelEfficiency.trend = 'increasing'
-          else if (recentAvg < olderAvg * 0.9) fuelEfficiency.trend = 'decreasing'
+          if (olderAvg > 0) {
+            if (recentAvg > olderAvg * 1.1) fuelEfficiency.trend = 'increasing'
+            else if (recentAvg < olderAvg * 0.9) fuelEfficiency.trend = 'decreasing'
+          }
         }
       }
     }
     
     // === MOY HOLATI ===
-    const lastOilChange = oilChanges[0]
-    let oilStatus = { status: 'ok', remainingKm: vehicle.oilChangeIntervalKm || 15000, nextChangeOdometer: 0 }
+    const oilInterval = vehicle.oilChangeIntervalKm || 15000
+    let oilStatus = { status: 'ok', remainingKm: oilInterval, nextChangeOdometer: 0 }
     if (lastOilChange) {
-      const nextOdo = lastOilChange.nextChangeOdometer || (lastOilChange.odometer + (vehicle.oilChangeIntervalKm || 15000))
+      const nextOdo = lastOilChange.nextChangeOdometer || (lastOilChange.odometer + oilInterval)
       oilStatus.nextChangeOdometer = nextOdo
       oilStatus.remainingKm = nextOdo - (vehicle.currentOdometer || 0)
       if (oilStatus.remainingKm <= 0) oilStatus.status = 'overdue'
@@ -574,14 +840,25 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
     
     // === SHINA HOLATI ===
     const currentOdo = vehicle.currentOdometer || 0
-    const tiresStatus = tires.map(t => {
-      const usedKm = currentOdo - (t.installOdometer || 0)
-      const remainingKm = Math.max(0, (t.expectedLifeKm || 80000) - usedKm)
-      const wearPercent = Math.min(100, Math.round((usedKm / (t.expectedLifeKm || 80000)) * 100))
+    const tiresStatus = allActiveTires.map(t => {
+      const usedKm = Math.max(0, currentOdo - (t.installOdometer || 0))
+      const expectedLife = t.expectedLifeKm || 80000
+      const remainingKm = Math.max(0, expectedLife - usedKm)
+      const wearPercent = Math.min(100, Math.round((usedKm / expectedLife) * 100))
+      
+      // Vaqt bo'yicha eskirish (5 yil = 100%)
+      const installDate = new Date(t.installDate)
+      const ageYears = (Date.now() - installDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      const ageWearPercent = Math.min(100, Math.round((ageYears / 5) * 100))
+      
+      // Eng katta eskirishni olish
+      const finalWearPercent = Math.max(wearPercent, ageWearPercent)
+      
       let status = 'good'
-      if (wearPercent >= 90) status = 'critical'
-      else if (wearPercent >= 75) status = 'warning'
-      return { ...t, usedKm, remainingKm, wearPercent, calculatedStatus: status }
+      if (finalWearPercent >= 90) status = 'critical'
+      else if (finalWearPercent >= 75) status = 'warning'
+      
+      return { position: t.position, usedKm, remainingKm, wearPercent: finalWearPercent, calculatedStatus: status }
     })
     const worstTire = tiresStatus.reduce((worst, t) => 
       (!worst || t.wearPercent > worst.wearPercent) ? t : worst, null)
@@ -589,25 +866,21 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
     // === OGOHLANTIRISHLAR ===
     const newAlerts = []
     
-    // Moy ogohlantirishi
     if (oilStatus.status === 'overdue') {
       newAlerts.push({ type: 'oil', severity: 'danger', message: 'Moy almashtirish muddati o\'tdi!' })
     } else if (oilStatus.status === 'critical') {
       newAlerts.push({ type: 'oil', severity: 'warning', message: `Moy almashtirishga ${oilStatus.remainingKm} km qoldi` })
     }
     
-    // Shina ogohlantirishi
     if (worstTire && worstTire.wearPercent >= 90) {
       newAlerts.push({ type: 'tire', severity: 'danger', message: `${worstTire.position} shina ${worstTire.wearPercent}% eskirgan` })
     }
     
-    // Yoqilg'i sarfi ogohlantirishi
     const expectedConsumption = vehicle.expectedFuelConsumption || 25
-    if (fuelEfficiency.avgConsumption > expectedConsumption * 1.2) {
+    if (fuelEfficiency.avgConsumption > 0 && fuelEfficiency.avgConsumption > expectedConsumption * 1.2) {
       newAlerts.push({ type: 'fuel', severity: 'warning', message: `Yoqilg'i sarfi normaldan ${Math.round((fuelEfficiency.avgConsumption / expectedConsumption - 1) * 100)}% yuqori` })
     }
     
-    // Zarar ogohlantirishi
     if (netProfit < 0) {
       newAlerts.push({ type: 'profit_warning', severity: 'danger', message: `Mashina ${Math.abs(netProfit).toLocaleString()} so'm zarar ko'rsatyapti` })
     }
@@ -624,6 +897,83 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
     // === ROI (Return on Investment) ===
     const purchasePrice = vehicle.purchasePrice || 0
     const roi = purchasePrice > 0 ? Math.round((netProfit / purchasePrice) * 100 * 10) / 10 : 0
+    
+    // === YANGI: MOLIYAVIY INSIGHTS ===
+    const periodDays = parseInt(period)
+    const insights = {}
+    
+    // 1 km narxi (yoqilg'i + moy + shina + xizmat)
+    if (fuelEfficiency.totalKm > 0) {
+      insights.costPerKm = totalExpenses / fuelEfficiency.totalKm
+    }
+    
+    // 1 litr/kubda necha km
+    if (fuelEfficiency.totalLiters > 0 && fuelEfficiency.totalKm > 0) {
+      if (vehicle.fuelType === 'metan' || vehicle.fuelType === 'gas') {
+        fuelEfficiency.kmPerCubicMeter = Math.round(fuelEfficiency.totalKm / fuelEfficiency.totalLiters * 10) / 10
+      } else {
+        fuelEfficiency.kmPerLiter = Math.round(fuelEfficiency.totalKm / fuelEfficiency.totalLiters * 10) / 10
+      }
+    }
+    
+    // Kunlik o'rtacha xarajat
+    if (periodDays > 0) {
+      insights.dailyExpense = totalExpenses / periodDays
+    }
+    
+    // O'rtacha yoqilg'i narxi
+    if (fuelRefills.length > 0 && fuelEfficiency.totalLiters > 0) {
+      insights.avgFuelPrice = fuelCost / fuelEfficiency.totalLiters
+    }
+    
+    // Break-even (o'zini qoplash) - qancha oy qoldi
+    if (purchasePrice > 0 && netProfit > 0) {
+      // Jami qaytgan pul (barcha vaqt uchun)
+      const allTimeIncome = await VehicleIncome.aggregate([
+        { $match: { vehicle: vehicle._id } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ])
+      const allTimeExpenses = await Promise.all([
+        FuelRefill.aggregate([{ $match: { vehicle: vehicle._id } }, { $group: { _id: null, total: { $sum: '$cost' } } }]),
+        OilChange.aggregate([{ $match: { vehicle: vehicle._id } }, { $group: { _id: null, total: { $sum: '$cost' } } }]),
+        ServiceLog.aggregate([{ $match: { vehicle: vehicle._id } }, { $group: { _id: null, total: { $sum: '$cost' } } }]),
+        OtherExpense.aggregate([{ $match: { vehicle: vehicle._id } }, { $group: { _id: null, total: { $sum: '$amount' } } }])
+      ])
+      
+      const totalEarned = (allTimeIncome[0]?.total || 0) - 
+        (allTimeExpenses[0][0]?.total || 0) - 
+        (allTimeExpenses[1][0]?.total || 0) - 
+        (allTimeExpenses[2][0]?.total || 0) - 
+        (allTimeExpenses[3][0]?.total || 0)
+      
+      insights.totalEarned = Math.max(0, totalEarned)
+      insights.roiPercent = Math.round((totalEarned / purchasePrice) * 100)
+      
+      // Qolgan oylar
+      const remaining = purchasePrice - totalEarned
+      if (remaining > 0 && netProfit > 0) {
+        const monthlyProfit = (netProfit / periodDays) * 30
+        insights.breakEvenMonths = Math.ceil(remaining / monthlyProfit)
+      } else if (remaining <= 0) {
+        insights.breakEvenMonths = 0 // Allaqachon qoplangan
+      }
+    }
+    
+    // Moy almashtirish taxminiy vaqti (kunlarda)
+    if (oilStatus.remainingKm > 0 && fuelEfficiency.totalKm > 0) {
+      const dailyKm = fuelEfficiency.totalKm / periodDays
+      if (dailyKm > 0) {
+        insights.oilChangeInDays = Math.ceil(oilStatus.remainingKm / dailyKm)
+      }
+    }
+    
+    // Shina almashtirish taxminiy vaqti
+    if (worstTire && worstTire.remainingKm > 0 && fuelEfficiency.totalKm > 0) {
+      const dailyKm = fuelEfficiency.totalKm / periodDays
+      if (dailyKm > 0) {
+        insights.tireChangeInDays = Math.ceil(worstTire.remainingKm / dailyKm)
+      }
+    }
     
     res.json({
       success: true,
@@ -653,6 +1003,7 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
           needAttention: tiresStatus.filter(t => t.calculatedStatus !== 'good').length
         },
         expenseBreakdown,
+        insights,
         alerts: [...newAlerts, ...alerts],
         recentActivity: {
           fuelRefills: fuelRefills.length,

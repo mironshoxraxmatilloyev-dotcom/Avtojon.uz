@@ -186,6 +186,11 @@ html[style*="overflow:hidden"] {
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+  
+  /* Instagram kabi fixed bottom nav uchun */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Hide scrollbar */

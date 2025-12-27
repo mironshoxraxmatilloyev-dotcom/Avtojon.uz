@@ -5,6 +5,7 @@ const app = require('./app');
 const connectDB = require('./config/database');
 
 const PORT = process.env.PORT || 3000;
+const isDev = process.env.NODE_ENV !== 'production';
 
 // Connect to MongoDB
 connectDB();
@@ -12,82 +13,61 @@ connectDB();
 // HTTP server yaratish
 const server = http.createServer(app);
 
-// Socket.io sozlash - development uchun barcha originlarni qabul qilish
+// Socket.io sozlash
 const io = new Server(server, {
   cors: {
-    origin: true, // Barcha originlarni qabul qilish (development uchun)
+    origin: isDev ? true : process.env.CORS_ORIGINS?.split(','),
     methods: ['GET', 'POST'],
     credentials: true
   },
-  // Transport sozlamalari
   transports: ['polling', 'websocket'],
   allowUpgrades: true,
-  // Ping/Pong sozlamalari - ulanishni saqlab turish
   pingTimeout: 60000,
   pingInterval: 25000
 });
 
-// Socket.io ni app ga biriktirish (routelarda ishlatish uchun)
+// Socket.io ni app ga biriktirish
 app.set('io', io);
 
 // Socket.io ulanishlar
 io.on('connection', (socket) => {
-  console.log(`🔌 Socket ulandi: ${socket.id}`);
+  if (isDev) console.log(`🔌 Socket ulandi: ${socket.id}`);
 
-  // Biznesmen xonasiga qo'shilish
   socket.on('join-business', (businessId) => {
     socket.join(`business-${businessId}`);
-    console.log(`📦 Biznesmen xonasiga qo'shildi: business-${businessId}`);
   });
 
-  // Haydovchi xonasiga qo'shilish
   socket.on('join-driver', (driverId) => {
     socket.join(`driver-${driverId}`);
-    console.log(`🚛 Haydovchi xonasiga qo'shildi: driver-${driverId}`);
   });
 
-  // Ulanish uzilganda
   socket.on('disconnect', () => {
-    console.log(`❌ Socket uzildi: ${socket.id}`);
+    if (isDev) console.log(`❌ Socket uzildi: ${socket.id}`);
   });
 });
 
-// Test endpoint - socket xonalarini ko'rish
-app.get('/api/socket-test', (req, res) => {
-  const rooms = {};
-  io.sockets.adapter.rooms.forEach((sockets, roomName) => {
-    if (!roomName.startsWith('business-') && !roomName.startsWith('driver-')) return;
-    rooms[roomName] = {
-      size: sockets.size,
-      sockets: Array.from(sockets)
-    };
+// Test endpoints (faqat development uchun)
+if (isDev) {
+  app.get('/api/socket-test', (req, res) => {
+    const rooms = {};
+    io.sockets.adapter.rooms.forEach((sockets, roomName) => {
+      if (!roomName.startsWith('business-') && !roomName.startsWith('driver-')) return;
+      rooms[roomName] = { size: sockets.size, sockets: Array.from(sockets) };
+    });
+    res.json({ connectedClients: io.sockets.sockets.size, rooms });
   });
-  res.json({ 
-    connectedClients: io.sockets.sockets.size,
-    rooms 
-  });
-});
 
-// Test endpoint - barcha biznesmenlaraga xabar yuborish
-app.get('/api/socket-broadcast/:businessId', (req, res) => {
-  const roomName = `business-${req.params.businessId}`;
-  const room = io.sockets.adapter.rooms.get(roomName);
-  const clientsCount = room ? room.size : 0;
-  
-  io.to(roomName).emit('trip-completed', {
-    trip: { _id: 'test', status: 'completed' },
-    message: 'Test xabar!'
+  app.get('/api/socket-broadcast/:businessId', (req, res) => {
+    const roomName = `business-${req.params.businessId}`;
+    const room = io.sockets.adapter.rooms.get(roomName);
+    io.to(roomName).emit('trip-completed', { trip: { _id: 'test', status: 'completed' }, message: 'Test xabar!' });
+    res.json({ roomName, clientsCount: room?.size || 0, message: 'Xabar yuborildi' });
   });
-  
-  res.json({ 
-    roomName,
-    clientsCount,
-    message: 'Xabar yuborildi'
-  });
-});
+}
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Avtojon API running on port ${PORT}`);
-  console.log(`🔌 Socket.io ready`);
-  console.log(`📱 Telefonda ochish: http://192.168.1.100:${PORT}`);
+  if (isDev) {
+    console.log(`🚀 Avtojon API running on port ${PORT}`);
+    console.log(`📱 Local: http://localhost:${PORT}`);
+  }
 });

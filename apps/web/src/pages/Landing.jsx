@@ -1,29 +1,31 @@
-import { useEffect, useRef, useState, memo, useCallback } from 'react'
+import { useState, memo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
 import {
-  Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles, Zap,
-  CheckCircle, Star, Users, Route, Clock, TrendingUp, Play
+  Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles,
+  CheckCircle, Star, Users, Route, TrendingUp, Play,
+  Fuel, Calculator, Globe
 } from 'lucide-react'
 
 const features = [
-  { icon: MapPin, title: 'Real-time GPS', desc: 'Mashinalaringizni jonli xaritada kuzating', color: 'from-emerald-500 to-teal-600' },
-  { icon: BarChart3, title: 'Tahlil va hisobotlar', desc: 'Xarajatlar va samaradorlikni tahlil qiling', color: 'from-blue-500 to-indigo-600' },
-  { icon: Shield, title: 'AI bilan nazorat', desc: 'Avtomatik alertlar va tavsiyalar', color: 'from-purple-500 to-violet-600' },
-  { icon: Truck, title: 'Oson boshqaruv', desc: 'Shofyorlar va mashinalarni bir joydan boshqaring', color: 'from-amber-500 to-orange-600' },
+  { icon: MapPin, title: 'Real-time GPS', desc: 'Mashinalaringizni jonli xaritada kuzating', gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30' },
+  { icon: BarChart3, title: 'Tahlil va hisobotlar', desc: 'Xarajatlar va samaradorlikni tahlil qiling', gradient: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-500/30' },
+  { icon: Shield, title: 'Xavfsiz tizim', desc: 'Ma\'lumotlaringiz to\'liq himoyalangan', gradient: 'from-violet-500 to-purple-600', shadow: 'shadow-violet-500/30' },
+  { icon: Truck, title: 'Oson boshqaruv', desc: 'Shofyorlar va mashinalarni boshqaring', gradient: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-500/30' },
+  { icon: Fuel, title: 'Yoqilg\'i hisobi', desc: 'Har bir litr yoqilg\'ini nazorat qiling', gradient: 'from-rose-500 to-pink-600', shadow: 'shadow-rose-500/30' },
+  { icon: Calculator, title: 'Avtomatik hisob', desc: 'Foyda va xarajatlar avtomatik', gradient: 'from-cyan-500 to-blue-600', shadow: 'shadow-cyan-500/30' },
 ]
 
 const stats = [
-  { value: '500+', label: 'Faol foydalanuvchilar' },
-  { value: '10K+', label: 'Tugatilgan reyslar' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '24/7', label: 'Qollab-quvvatlash' },
+  { value: '500+', label: 'Foydalanuvchilar', color: 'text-indigo-600' },
+  { value: '10K+', label: 'Reyslar', color: 'text-purple-600' },
+  { value: '99.9%', label: 'Uptime', color: 'text-emerald-600' },
+  { value: '24/7', label: 'Qo\'llab-quvvatlash', color: 'text-amber-600' },
 ]
 
-// 🚀 Optimized AnimatedText - CSS only, no JS
 const AnimatedText = memo(({ children, delay = 0 }) => (
-  <div 
+  <div
     className="opacity-0 translate-y-4 animate-fadeIn"
     style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
   >
@@ -31,22 +33,11 @@ const AnimatedText = memo(({ children, delay = 0 }) => (
   </div>
 ))
 
-// 🚀 Simple Button wrapper - magnetic effect o'chirildi (performance uchun)
-const MagneticButton = memo(({ children, className }) => (
-  <div className={className}>{children}</div>
-))
-
-// 🚀 Simple Card - no effects
-const Card3D = memo(({ children, className }) => (
-  <div className={className}>{children}</div>
-))
-
 export default function Landing() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
   const [demoLoading, setDemoLoading] = useState(false)
 
-  // 🚀 Demo login - useCallback bilan optimizatsiya
   const handleDemoLogin = useCallback(async () => {
     setDemoLoading(true)
     try {
@@ -63,322 +54,242 @@ export default function Landing() {
   }, [setAuth, navigate])
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] text-white overflow-hidden">
-      {/* Background Effects */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="min-h-screen overflow-hidden">
+      {/* Hero Section with Gradient Background */}
+      <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute top-40 right-20 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        </div>
+
+        {/* Header */}
+        <header className="relative z-20">
+          <div className="container mx-auto px-4 sm:px-6 py-5">
+            <div className="flex justify-between items-center">
+              <Link to="/" className="flex items-center gap-2.5">
+                <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
+                  <Truck className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-white flex items-center gap-1.5">
+                  Avtojon <Sparkles className="w-4 h-4 text-amber-300" />
+                </h1>
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <Link to="/login" className="text-white/90 hover:text-white transition-colors font-medium text-sm px-4 py-2">
+                  Kirish
+                </Link>
+                <Link to="/register" className="bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-black/10 transition-all">
+                  Boshlash
+                </Link>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Hero Content */}
+        <section className="relative z-10 pt-16 sm:pt-20 pb-32 sm:pb-40">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* Badge */}
+              <AnimatedText delay={0.1}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-8">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="text-sm text-white/90 font-medium">Xalqaro reyslar qo'llab-quvvatlanadi</span>
+                </div>
+              </AnimatedText>
+
+              {/* Title */}
+              <AnimatedText delay={0.2}>
+                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white">
+                  Yuk tashishni{' '}
+                  <span className="text-amber-300">osonlashtiring</span>
+                </h2>
+              </AnimatedText>
+
+              {/* Subtitle */}
+              <AnimatedText delay={0.3}>
+                <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  Mashinalar, shofyorlar va reyslarni bir platformada boshqaring.
+                  Real-time monitoring va avtomatik hisob-kitob.
+                </p>
+              </AnimatedText>
+
+              {/* CTA Buttons */}
+              <AnimatedText delay={0.4}>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link
+                    to="/register"
+                    className="group inline-flex items-center justify-center gap-3 bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-8 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-black/20 transition-all w-full sm:w-auto"
+                  >
+                    Bepul boshlash
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <button
+                    onClick={handleDemoLogin}
+                    disabled={demoLoading}
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 transition-all w-full sm:w-auto disabled:opacity-50 backdrop-blur-sm"
+                  >
+                    {demoLoading ? (
+                      <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Yuklanmoqda...</>
+                    ) : (
+                      <><Play size={20} /> Demo ko'rish</>
+                    )}
+                  </button>
+                </div>
+              </AnimatedText>
+
+              {/* Trust badges */}
+              <AnimatedText delay={0.5}>
+                <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-white/70 text-sm">
+                  <span className="flex items-center gap-2"><CheckCircle size={18} className="text-emerald-300" /> Bepul sinov</span>
+                  <span className="flex items-center gap-2"><CheckCircle size={18} className="text-emerald-300" /> Karta talab qilinmaydi</span>
+                  <span className="flex items-center gap-2"><CheckCircle size={18} className="text-emerald-300" /> Istalgan vaqt bekor qilish</span>
+                </div>
+              </AnimatedText>
+            </div>
+          </div>
+        </section>
+
+        {/* Wave Divider */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#eef2ff" />
+          </svg>
         </div>
       </div>
 
-      {/* Gradient Overlays */}
-      <div className="fixed inset-0 pointer-events-none z-[1]">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-transparent to-[#0a0a1a] opacity-60"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a1a] to-transparent"></div>
-      </div>
-
-      {/* Grid Pattern */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none z-[2]"></div>
-
-      {/* Header */}
-      <header className="relative z-20 border-b border-white/5 backdrop-blur-xl bg-[#0a0a1a]/50">
-        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex justify-between items-center">
-            <AnimatedText>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <h1 className="text-lg sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2">
-                  Avtojon <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
-                </h1>
-              </div>
-            </AnimatedText>
-            <AnimatedText delay={0.2}>
-              <div className="flex items-center gap-2 sm:gap-4">
-                <Link to="/login" className="text-violet-300 hover:text-white transition-colors font-medium text-sm sm:text-base px-2 py-1.5">Kirish</Link>
-                <MagneticButton>
-                  <Link to="/register" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-violet-500/30 transition-all text-sm sm:text-base inline-block">
-                    Boshlash
-                  </Link>
-                </MagneticButton>
+      {/* Stats Section - Light Indigo Background */}
+      <section className="relative z-10 bg-indigo-50 -mt-1">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto -mt-16">
+            <AnimatedText delay={0.6}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {stats.map(({ value, label, color }) => (
+                  <div key={label} className="bg-white rounded-2xl p-6 shadow-xl shadow-indigo-200/50 text-center hover:shadow-2xl hover:-translate-y-1 transition-all">
+                    <p className={`text-3xl sm:text-4xl font-bold ${color}`}>{value}</p>
+                    <p className="text-slate-500 text-sm mt-1">{label}</p>
+                  </div>
+                ))}
               </div>
             </AnimatedText>
           </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative z-10 container mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-20 sm:pb-32">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <AnimatedText delay={0.3}>
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 mb-6 sm:mb-8">
-              <Zap className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-violet-200">Yangi: AI asosida avtomatik tahlil</span>
-              <ArrowRight className="w-4 h-4 text-violet-400 flex-shrink-0" />
-            </div>
-          </AnimatedText>
-
-          {/* Title */}
-          <AnimatedText delay={0.4}>
-            <h2 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-              Yuk tashishni{' '}
-              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent animate-gradient">
-                osonlashtiring
-              </span>
-            </h2>
-          </AnimatedText>
-
-          {/* Subtitle */}
-          <AnimatedText delay={0.5}>
-            <p className="text-base sm:text-xl text-violet-200 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-2">
-              Mashinalar, shofyorlar va reyslarni bir platformada boshqaring.
-              Real-time monitoring, AI tahlil va avtomatik hisob-kitob.
-            </p>
-          </AnimatedText>
-
-          {/* CTA Buttons */}
-          <AnimatedText delay={0.6}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full px-2">
-              <MagneticButton>
-                <Link
-                  to="/register"
-                  className="group inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/40 transition-all w-full sm:w-auto"
-                >
-                  Bepul boshlash
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </MagneticButton>
-              <MagneticButton>
-                <button 
-                  onClick={handleDemoLogin}
-                  disabled={demoLoading}
-                  className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold text-violet-300 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all w-full sm:w-auto backdrop-blur-sm disabled:opacity-50"
-                >
-                  {demoLoading ? (
-                    <><div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div> Yuklanmoqda...</>
-                  ) : (
-                    <><Play size={18} className="text-violet-400" /> Demo ko'rish</>
-                  )}
-                </button>
-              </MagneticButton>
-            </div>
-          </AnimatedText>
-
-          {/* Trust badges */}
-          <AnimatedText delay={0.7}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-10 text-violet-400/60 text-sm">
-              <span className="flex items-center gap-2"><CheckCircle size={16} /> Bepul sinov</span>
-              <span className="flex items-center gap-2"><CheckCircle size={16} /> Karta talab qilinmaydi</span>
-              <span className="flex items-center gap-2"><CheckCircle size={16} /> Istalgan vaqt bekor qilish</span>
-            </div>
-          </AnimatedText>
-        </div>
-
-        {/* Stats */}
-        <div className="max-w-4xl mx-auto mt-16 sm:mt-20 px-2">
-          <Card3D className="bg-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-white/10 p-5 sm:p-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-              {stats.map(({ value, label }) => (
-                <div key={label} className="text-center">
-                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">{value}</p>
-                  <p className="text-violet-300 text-xs sm:text-sm mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-          </Card3D>
         </div>
       </section>
 
-
-      {/* Features Section */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-white/5">
+      {/* Features Section - Gradient Background */}
+      <section className="relative z-10 py-20 sm:py-28 bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-16">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 rounded-full text-violet-300 text-sm font-medium mb-4">
+          <div className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 rounded-full text-indigo-600 text-sm font-semibold mb-4">
               <Star className="w-4 h-4" /> Imkoniyatlar
             </span>
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Kuchli funksiyalar</h3>
-            <p className="text-violet-300 max-w-2xl mx-auto text-sm sm:text-base px-2">Biznesingizni keyingi buyurtmaga olib chiqadigan barcha vositalar</p>
+            <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Kuchli funksiyalar</h3>
+            <p className="text-slate-600 max-w-xl mx-auto">Biznesingizni keyingi bosqichga olib chiqadigan barcha vositalar</p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {features.map(({ icon: Icon, title, desc, color }) => (
-              <Card3D key={title} className="group bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-violet-500/30 transition-all hover:bg-white/10">
-                <div className={`w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br ${color} rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-5 shadow-lg group-hover:scale-110 transition-transform`}>
-                  <Icon className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {features.map(({ icon: Icon, title, desc, gradient, shadow }) => (
+              <div key={title} className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg shadow-indigo-100 hover:shadow-xl hover:-translate-y-1 transition-all border border-white">
+                <div className={`w-14 h-14 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center mb-5 shadow-lg ${shadow} group-hover:scale-110 transition-transform`}>
+                  <Icon className="text-white w-7 h-7" />
                 </div>
-                <h4 className="text-base sm:text-xl font-bold mb-1 sm:mb-2 text-white">{title}</h4>
-                <p className="text-violet-300 text-xs sm:text-base">{desc}</p>
-              </Card3D>
+                <h4 className="text-xl font-bold mb-2 text-slate-900">{title}</h4>
+                <p className="text-slate-600">{desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="relative z-10 py-16 sm:py-24 border-t border-white/5">
+      {/* How it works - Soft Gradient */}
+      <section className="relative z-10 py-20 sm:py-28 bg-gradient-to-b from-pink-50 via-amber-50 to-emerald-50">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-16">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full text-emerald-300 text-sm font-medium mb-4">
+          <div className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full text-emerald-600 text-sm font-semibold mb-4">
               <Route className="w-4 h-4" /> Qanday ishlaydi
             </span>
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">3 oddiy qadam</h3>
+            <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">3 oddiy qadam</h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { step: '01', title: 'Ro\'yxatdan o\'ting', desc: 'Bir daqiqada hisob yarating va platformaga kiring', icon: Users },
-              { step: '02', title: 'Ma\'lumotlarni kiriting', desc: 'Mashinalar va shofyorlarni qo\'shing', icon: Truck },
-              { step: '03', title: 'Boshqarishni boshlang', desc: 'Reyslarni yarating va real-time kuzating', icon: TrendingUp }
-            ].map(({ step, title, desc, icon: Icon }) => (
-              <Card3D key={step} className="relative">
-                <div className="bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-5 sm:p-8 border border-white/10 text-center h-full hover:border-violet-500/30 transition-all">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg shadow-violet-500/30">
-                    <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              { step: '01', title: 'Ro\'yxatdan o\'ting', desc: 'Bir daqiqada hisob yarating', icon: Users, gradient: 'from-indigo-500 to-purple-600', shadow: 'shadow-indigo-500/30', bg: 'bg-indigo-50' },
+              { step: '02', title: 'Ma\'lumot kiriting', desc: 'Mashina va shofyorlarni qo\'shing', icon: Truck, gradient: 'from-purple-500 to-pink-600', shadow: 'shadow-purple-500/30', bg: 'bg-purple-50' },
+              { step: '03', title: 'Boshqaring', desc: 'Reyslarni real-time kuzating', icon: TrendingUp, gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30', bg: 'bg-emerald-50' }
+            ].map(({ step, title, desc, icon: Icon, gradient, shadow, bg }) => (
+              <div key={step} className="relative group">
+                <div className={`${bg} rounded-2xl p-8 text-center h-full hover:shadow-xl transition-all border border-white`}>
+                  <div className={`w-16 h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg ${shadow} group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <span className="text-3xl sm:text-5xl font-bold text-violet-500/20">{step}</span>
-                  <h4 className="text-lg sm:text-xl font-bold mt-2 mb-2 sm:mb-3">{title}</h4>
-                  <p className="text-violet-300 text-sm sm:text-base">{desc}</p>
+                  <span className="text-5xl font-bold text-slate-200">{step}</span>
+                  <h4 className="text-xl font-bold mt-2 mb-2 text-slate-900">{title}</h4>
+                  <p className="text-slate-600">{desc}</p>
                 </div>
-              </Card3D>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-16 sm:py-24">
+      <section className="relative z-10 py-20 bg-gradient-to-b from-emerald-50 to-slate-100">
         <div className="container mx-auto px-4 sm:px-6">
-          <Card3D className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-8 sm:p-12 md:p-16 text-center">
-            <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-white/10 rounded-full blur-3xl -mr-32 sm:-mr-48 -mt-32 sm:-mt-48"></div>
-            <div className="absolute bottom-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-white/10 rounded-full blur-3xl -ml-24 sm:-ml-32 -mb-24 sm:-mb-32"></div>
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-3xl p-10 sm:p-14 text-center">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -mr-40 -mt-40" />
+            <div className="absolute bottom-0 left-0 w-60 h-60 bg-white/10 rounded-full blur-3xl -ml-30 -mb-30" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
 
             <div className="relative">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur rounded-full text-white/80 text-sm font-medium mb-4 sm:mb-6">
-                <Clock className="w-4 h-4" /> Cheklangan taklif
-              </div>
-              <h3 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">Hoziroq boshlang!</h3>
-              <p className="text-violet-100 mb-6 sm:mb-8 text-base sm:text-lg max-w-xl mx-auto px-2">
-                Birinchi 30 kun bepul. Karta talab qilinmaydi. Istalgan vaqt bekor qilish mumkin.
+              <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Hoziroq boshlang!</h3>
+              <p className="text-white/80 mb-8 text-lg max-w-lg mx-auto">
+                Birinchi 30 kun bepul. Karta talab qilinmaydi.
               </p>
-              <MagneticButton className="inline-block">
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 sm:gap-3 bg-white text-violet-600 px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg font-bold shadow-2xl hover:shadow-white/20 transition-all group"
-                >
-                  Bepul ro'yxatdan o'tish
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </MagneticButton>
-            </div>
-          </Card3D>
-        </div>
-      </section>
-
-      {/* Footer - Pro Design */}
-      <footer className="relative z-10">
-        {/* Gradient Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"></div>
-        
-        {/* Main Footer */}
-        <div className="relative overflow-hidden bg-[#0a0a1a]">
-          {/* Background Effects */}
-          <div className="absolute top-0 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-violet-600/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-indigo-600/10 rounded-full blur-3xl"></div>
-          
-          <div className="relative container mx-auto px-4 py-10 sm:py-16">
-            {/* Mobile: Stack layout, Desktop: Grid */}
-            <div className="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              
-              {/* Brand Section */}
-              <div className="lg:col-span-4 text-center lg:text-left">
-                <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                      <Truck className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0a0a1a]"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                      Avtojon <Sparkles className="w-4 h-4 text-amber-400" />
-                    </h3>
-                    <p className="text-violet-400 text-xs">Yuk tashish platformasi</p>
-                  </div>
-                </div>
-                <p className="text-violet-300/70 text-sm mb-6 max-w-xs mx-auto lg:mx-0">
-                  Yuk tashish biznesingizni zamonaviy texnologiyalar bilan boshqaring.
-                </p>
-                
-                {/* Social Links */}
-                <div className="flex items-center justify-center lg:justify-start gap-2">
-                  {[
-                    { icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z', color: 'hover:bg-blue-500/20' },
-                    { icon: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z', color: 'hover:bg-pink-500/20' },
-                    { icon: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z', color: 'hover:bg-red-500/20' },
-                    { icon: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z', color: 'hover:bg-blue-600/20' }
-                  ].map((social, i) => (
-                    <a key={i} href="#" className={`w-9 h-9 bg-white/5 ${social.color} border border-white/10 rounded-lg flex items-center justify-center transition-all`}>
-                      <svg className="w-4 h-4 text-violet-300" viewBox="0 0 24 24" fill="currentColor">
-                        <path d={social.icon}/>
-                      </svg>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Links Grid - 3 columns on mobile, integrated on desktop */}
-              <div className="lg:col-span-8 grid grid-cols-3 gap-4 sm:gap-8">
-                <div>
-                  <h4 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Mahsulot</h4>
-                  <ul className="space-y-2">
-                    {['Imkoniyatlar', 'Narxlar', 'API'].map((name) => (
-                      <li key={name}>
-                        <a href="#" className="text-violet-300/70 hover:text-white transition-colors text-xs sm:text-sm">{name}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Kompaniya</h4>
-                  <ul className="space-y-2">
-                    {['Biz haqimizda', 'Blog', 'Karyera'].map((name) => (
-                      <li key={name}>
-                        <a href="#" className="text-violet-300/70 hover:text-white transition-colors text-xs sm:text-sm">{name}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold mb-3 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider">Yordam</h4>
-                  <ul className="space-y-2">
-                    {['FAQ', 'Aloqa', 'Hujjatlar'].map((name) => (
-                      <li key={name}>
-                        <a href="#" className="text-violet-300/70 hover:text-white transition-colors text-xs sm:text-sm">{name}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-3 bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transition-all group"
+              >
+                Bepul ro'yxatdan o'tish
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Bottom Footer */}
-        <div className="bg-[#080810] border-t border-white/5">
-          <div className="container mx-auto px-4 py-4 sm:py-5">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-              <p className="text-violet-400/60 text-xs sm:text-sm">© 2024 Avtojon. Barcha huquqlar himoyalangan.</p>
-              <div className="flex items-center gap-4 sm:gap-6">
-                {['Maxfiylik', 'Shartlar'].map((item) => (
-                  <a key={item} href="#" className="text-violet-400/60 hover:text-white transition-colors text-xs sm:text-sm">{item}</a>
-                ))}
-                <span className="text-violet-400/60 text-xs sm:text-sm">🇺🇿 O'zbekcha</span>
+      {/* Footer */}
+      <footer className="relative z-10 bg-slate-900 text-white">
+        <div className="container mx-auto px-4 sm:px-6 py-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Truck className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  Avtojon <Sparkles className="w-4 h-4 text-amber-400" />
+                </h3>
+                <p className="text-slate-500 text-xs">Yuk tashish platformasi</p>
               </div>
             </div>
+
+            <div className="flex items-center gap-6 text-sm">
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">Biz haqimizda</a>
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">Aloqa</a>
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">Maxfiylik</a>
+            </div>
+
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <Globe className="w-4 h-4" /> O'zbekcha
+            </div>
+          </div>
+
+          <div className="border-t border-slate-800 mt-8 pt-6 text-center">
+            <p className="text-slate-600 text-sm">© 2024 Avtojon. Barcha huquqlar himoyalangan.</p>
           </div>
         </div>
       </footer>

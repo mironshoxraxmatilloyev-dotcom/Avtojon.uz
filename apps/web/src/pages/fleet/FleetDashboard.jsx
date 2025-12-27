@@ -398,7 +398,7 @@ export default function FleetDashboard() {
           </div>
         </header>
 
-        {/* Content Area */}
+        {/* Content Area - Bottom nav uchun padding */}
         <div className="p-4 lg:p-6 pb-24 lg:pb-6">
           {activeTab === 'home' && (
             <HomeTab
@@ -421,33 +421,33 @@ export default function FleetDashboard() {
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200">
-        <div className="flex items-center justify-around py-2 px-2 pb-safe">
+      {/* Bottom Navigation - Mobile - Instagram Style Fixed */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
           {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className="flex flex-col items-center gap-0.5 py-1 px-3 relative"
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                 activeTab === item.id 
                   ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
-                  : 'bg-slate-100'
+                  : ''
               }`}>
                 <item.icon 
-                  size={20} 
+                  size={22} 
                   className={activeTab === item.id ? 'text-white' : 'text-slate-500'}
-                  strokeWidth={activeTab === item.id ? 2.5 : 2}
+                  strokeWidth={activeTab === item.id ? 2.5 : 1.5}
                 />
               </div>
-              <span className={`text-[9px] font-semibold ${
+              <span className={`text-[10px] font-semibold ${
                 activeTab === item.id ? 'text-indigo-600' : 'text-slate-400'
               }`}>
                 {item.label}
               </span>
               {item.id === 'service' && stats.attention > 0 && (
-                <span className="absolute top-0 right-1 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold">
+                <span className="absolute top-1 right-1/4 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">
                   {stats.attention}
                 </span>
               )}
@@ -455,12 +455,12 @@ export default function FleetDashboard() {
           ))}
           <button
             onClick={() => { logout(); navigate('/login') }}
-            className="flex flex-col items-center gap-0.5 py-1 px-3"
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full"
           >
-            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-              <LogOut size={20} className="text-slate-500" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+              <LogOut size={22} className="text-slate-400" strokeWidth={1.5} />
             </div>
-            <span className="text-[9px] font-semibold text-slate-400">Chiqish</span>
+            <span className="text-[10px] font-semibold text-slate-400">Chiqish</span>
           </button>
         </div>
       </nav>

@@ -12,7 +12,6 @@ const Register = lazy(() => import('./pages/Register'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Drivers = lazy(() => import('./pages/DriversNew'))
 const DriverDetail = lazy(() => import('./pages/DriverDetail'))
-const Salaries = lazy(() => import('./pages/Salaries'))
 const Flights = lazy(() => import('./pages/Flights'))
 const FlightDetail = lazy(() => import('./pages/FlightDetail'))
 const Reports = lazy(() => import('./pages/Reports'))
@@ -195,7 +194,6 @@ function App() {
             <Route path="drivers/:id" element={<Suspense fallback={<PageLoader />}><DriverDetail /></Suspense>} />
             <Route path="flights" element={<Suspense fallback={<PageLoader />}><Flights /></Suspense>} />
             <Route path="flights/:id" element={<Suspense fallback={<PageLoader />}><FlightDetail /></Suspense>} />
-            <Route path="salaries" element={<Suspense fallback={<PageLoader />}><Salaries /></Suspense>} />
             <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
           </Route>
 

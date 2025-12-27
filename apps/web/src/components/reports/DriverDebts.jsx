@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, CheckCircle, Clock, DollarSign, ChevronRight, AlertCircle } from 'lucide-react'
+import { Users, CheckCircle, Clock } from 'lucide-react'
 import api from '../../services/api'
 
 const formatMoney = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0)
@@ -33,10 +33,14 @@ export default function DriverDebts() {
     const oldDebts = [...debts]
     const oldStats = { ...stats }
 
-    // UI ni darhol yangilash
-    setDebts(prev => prev.map(d =>
-      d._id === flightId ? { ...d, driverPaymentStatus: newStatus } : d
-    ))
+    // Agar to'landi bo'lsa - ro'yxatdan olib tashlash
+    if (newStatus === 'paid') {
+      setDebts(prev => prev.filter(d => d._id !== flightId))
+    } else {
+      setDebts(prev => prev.map(d =>
+        d._id === flightId ? { ...d, driverPaymentStatus: newStatus } : d
+      ))
+    }
 
     // Stats ni yangilash
     const flight = debts.find(d => d._id === flightId)
@@ -130,8 +134,8 @@ export default function DriverDebts() {
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f.key
-                  ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
                 }`}
             >
               {f.label}
@@ -151,15 +155,12 @@ export default function DriverDebts() {
             <p className="text-slate-400 text-sm mt-1">Barcha shofyorlar hisob-kitobni tugatgan</p>
           </div>
         ) : (
-          debts.map(flight => {
-            const isPaid = flight.driverPaymentStatus === 'paid'
-            return (
-              <div key={flight._id} className={`p-4 hover:bg-slate-50 transition-colors ${isPaid ? 'opacity-60' : ''}`}>
+          debts.filter(f => f.driverPaymentStatus !== 'paid').map(flight => (
+              <div key={flight._id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center justify-between gap-4">
                   {/* Driver info */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white ${isPaid ? 'bg-emerald-500' : 'bg-purple-500'
-                      }`}>
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white bg-purple-500">
                       {flight.driver?.fullName?.charAt(0) || '?'}
                     </div>
                     <div className="min-w-0">
@@ -174,39 +175,26 @@ export default function DriverDebts() {
                   {/* Amount & Action */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <p className={`font-bold text-lg ${isPaid ? 'text-emerald-600 line-through' : 'text-red-600'}`}>
+                      <p className="font-bold text-lg text-red-600">
                         {formatMoney(flight.driverOwes)} so'm
                       </p>
-                      <p className={`text-xs flex items-center justify-end gap-1 ${isPaid ? 'text-emerald-500' : 'text-amber-500'}`}>
-                        {isPaid ? (
-                          <>
-                            <CheckCircle size={12} />
-                            To'langan
-                          </>
-                        ) : (
-                          <>
-                            <Clock size={12} />
-                            Kutilmoqda
-                          </>
-                        )}
+                      <p className="text-xs flex items-center justify-end gap-1 text-amber-500">
+                        <Clock size={12} />
+                        Kutilmoqda
                       </p>
                     </div>
 
                     {/* Toggle button */}
                     <button
                       onClick={() => handleTogglePayment(flight._id, flight.driverPaymentStatus)}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${isPaid
-                          ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/25'
-                        }`}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/25"
                     >
-                      {isPaid ? 'Bekor qilish' : '✓ To\'landi'}
+                      ✓ To'landi
                     </button>
                   </div>
                 </div>
               </div>
-            )
-          })
+            ))
         )}
       </div>
     </div>

@@ -360,41 +360,4 @@ router.post('/change-password', protect, passwordLimiter, validate(authSchemas.c
     });
 }));
 
-// Demo login - avtomatik demo user yaratadi yoki mavjudini qaytaradi
-router.post('/demo', loginLimiter, asyncHandler(async (req, res) => {
-    const demoUsername = 'demo';
-    const demoPassword = 'demo123456';
-
-    // Demo user mavjudmi tekshir
-    let demoUser = await User.findOne({ username: demoUsername });
-
-    // Yo'q bo'lsa yangi yaratamiz
-    if (!demoUser) {
-        demoUser = await User.create({
-            username: demoUsername,
-            password: demoPassword,
-            fullName: 'Demo Foydalanuvchi',
-            companyName: 'Demo Kompaniya',
-            phone: '+998901234567',
-            role: 'admin'
-        });
-    }
-
-    const tokens = await generateTokenPair(demoUser, 'admin');
-
-    res.json({
-        success: true,
-        data: {
-            user: {
-                id: demoUser._id,
-                username: demoUser.username,
-                fullName: demoUser.fullName,
-                companyName: demoUser.companyName,
-                role: 'admin'
-            },
-            ...tokens
-        }
-    });
-}));
-
 module.exports = router;

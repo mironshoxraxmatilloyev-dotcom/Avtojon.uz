@@ -18,25 +18,42 @@ export const Modal = memo(({ title, onClose, children }) => (
   </div>
 ))
 
-export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
-  <form onSubmit={onSubmit} className="space-y-5">
-    <div className="grid grid-cols-2 gap-5">
-      <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} error={errors.liters} required />
-      <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} required />
-    </div>
-    <div className="grid grid-cols-2 gap-5">
-      <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
-      <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
-    </div>
-    <Select label="Yoqilg'i turi" value={form.fuelType} onChange={v => setForm(f => ({ ...f, fuelType: v }))} options={FUEL_TYPES} />
-    <SubmitButton isEdit={isEdit} />
-  </form>
-))
+export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
+  // Yoqilg'i turiga qarab birlik
+  const unit = form.fuelType === 'metan' ? 'kub' : 'litr'
+  // Jami summa hisoblash
+  const totalCost = (Number(form.liters) || 0) * (Number(form.cost) || 0)
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-5">
+      <div className="grid grid-cols-2 gap-5">
+        <Input label={unit === 'kub' ? 'Kub' : 'Litr'} type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} error={errors.liters} required />
+        <Input label={`Narx (so'm/${unit})`} type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} required />
+      </div>
+      
+      {/* Jami summa */}
+      {totalCost > 0 && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-emerald-700 font-medium">Jami summa:</span>
+            <span className="text-emerald-700 font-bold text-xl">{formatNumber(totalCost)} so'm</span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-5">
+        <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
+        <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
+      </div>
+      <Select label="Yoqilg'i turi" value={form.fuelType} onChange={v => setForm(f => ({ ...f, fuelType: v }))} options={FUEL_TYPES} />
+      <SubmitButton isEdit={isEdit} />
+    </form>
+  )
+})
 
 export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="space-y-5">
-    <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40" required />
-    <Input label="Moy brendi" value={form.oilBrand} onChange={v => setForm(f => ({ ...f, oilBrand: v }))} placeholder="Mobil, Shell..." />
+    <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40, 10W-40..." required />
     <div className="grid grid-cols-2 gap-5">
       <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} />
       <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} required />
@@ -61,9 +78,8 @@ export const TireForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="space-y-5">
     <Select label="Pozitsiya" value={form.position} onChange={v => setForm(f => ({ ...f, position: v }))}
       options={TIRE_POSITIONS.map(p => ({ value: p, label: p }))} />
-    <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} placeholder="Michelin, Bridgestone..." required />
     <div className="grid grid-cols-2 gap-5">
-      <Input label="Model" value={form.model} onChange={v => setForm(f => ({ ...f, model: v }))} />
+      <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} placeholder="Michelin, Bridgestone..." required />
       <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
     </div>
     <div className="grid grid-cols-2 gap-5">

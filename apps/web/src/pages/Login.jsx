@@ -4,6 +4,11 @@ import { useAuthStore } from '../store/authStore'
 import { Truck, User, Lock, ArrowRight, Eye, EyeOff, AlertCircle, Shield, Zap, CheckCircle } from 'lucide-react'
 import { useAlert } from '../components/ui'
 
+// Color Palette:
+// Primary: #2563EB (blue-600)
+// Secondary: #1E293B (slate-800)
+// Accent: #10B981 (emerald-500)
+
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -69,20 +74,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 border border-white rounded-full" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 border border-white rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white rounded-full" />
+    <div className="min-h-screen flex">
+      {/* Left Side - Blue Background */}
+      <div className="hidden lg:flex lg:w-1/2 bg-blue-600 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/50 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-700/50 rounded-full blur-3xl" />
         </div>
         
         {/* Logo */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
               <Truck className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">Avtojon</span>
@@ -93,7 +97,8 @@ export default function Login() {
         <div className="relative z-10 space-y-8">
           <div>
             <h1 className="text-4xl font-bold text-white mb-4">
-              Yuk tashish biznesini<br />boshqaring
+              Yuk tashish biznesini<br />
+              <span className="text-blue-200">osonlashtiring</span>
             </h1>
             <p className="text-blue-100 text-lg max-w-md">
               Reyslar, shofyorlar, mashinalar va moliyaviy hisobotlarni bir joydan nazorat qiling
@@ -115,12 +120,12 @@ export default function Login() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-50">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <Truck className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-slate-800">Avtojon</span>
@@ -129,12 +134,12 @@ export default function Login() {
 
           {/* Header */}
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Xush kelibsiz!</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Xush kelibsiz!</h2>
             <p className="text-slate-500">Hisobingizga kirish uchun ma'lumotlarni kiriting</p>
           </div>
 
           {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Username */}
               <div>
@@ -150,10 +155,10 @@ export default function Login() {
                     }}
                     onBlur={() => handleBlur('username')}
                     onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
                       errors.username && touched.username 
                         ? 'border-red-300 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-indigo-500'
+                        : 'border-slate-200 focus:border-blue-500'
                     }`}
                     placeholder="username"
                   />
@@ -179,17 +184,17 @@ export default function Login() {
                       if (touched.password) setErrors(prev => ({ ...prev, password: validatePassword(e.target.value) }))
                     }}
                     onBlur={() => handleBlur('password')}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                    className={`w-full pl-12 pr-12 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
                       errors.password && touched.password 
                         ? 'border-red-300 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-indigo-500'
+                        : 'border-slate-200 focus:border-blue-500'
                     }`}
                     placeholder="Parol"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -205,7 +210,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 disabled:opacity-50 transition-all active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -222,7 +227,7 @@ export default function Login() {
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
               <p className="text-slate-500">
                 Hisobingiz yo'qmi?{' '}
-                <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+                <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                   Ro'yxatdan o'ting
                 </Link>
               </p>
@@ -230,7 +235,7 @@ export default function Login() {
           </div>
 
           {/* Back Link */}
-          <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-slate-500 hover:text-indigo-600 transition-colors group">
+          <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-slate-500 hover:text-blue-600 transition-colors group">
             <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
             Bosh sahifaga
           </Link>
@@ -243,7 +248,7 @@ export default function Login() {
 function Feature({ icon: Icon, text }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center">
+      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
         <Icon className="w-5 h-5 text-white" />
       </div>
       <span className="text-white font-medium">{text}</span>

@@ -19,7 +19,7 @@ const QUICK_AMOUNTS = {
   food: [30000, 50000, 80000, 100000, 150000],
   toll: [10000, 20000, 50000, 100000, 200000],
   border: [50, 100, 200, 300, 500],
-  repair: [50000, 100000, 200000, 500000, 1000000], 
+  repair: [50000, 100000, 200000, 500000, 1000000],
   fine: [50000, 100000, 200000, 300000, 500000],
   other: [10000, 50000, 100000, 200000, 500000]
 }
@@ -59,6 +59,7 @@ const ModalWrapper = memo(({ children, onClose, size = 'lg' }) => {
 // ============================================
 export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOpenLocationPicker }) {
   const lastLeg = flight.legs?.[flight.legs.length - 1]
+  const isLocal = flight?.flightType !== 'international' // Mahalliy reys
   const [form, setForm] = useState({
     fromCity: lastLeg?.toCity || '',
     toCity: '',
@@ -93,7 +94,9 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Yangi bosqich</h2>
-                <p className="text-emerald-400/80 text-sm mt-0.5">Yo'nalish ma'lumotlarini kiriting</p>
+                <p className="text-emerald-400/80 text-sm mt-0.5">
+                  {isLocal ? '🇺🇿 Mahalliy yo\'nalish' : '🌍 Xalqaro yo\'nalish'}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
@@ -128,6 +131,7 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
                 onSelect={s => setForm(f => ({ ...f, fromCity: s.name, fromCoords: { lat: s.lat, lng: s.lng } }))}
                 placeholder="Boshlang'ich manzil"
                 focusColor="green"
+                domesticOnly={isLocal}
                 className="!py-4 !text-lg !rounded-xl"
               />
             </div>
@@ -146,6 +150,7 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
                 onSelect={s => setForm(f => ({ ...f, toCity: s.name, toCoords: { lat: s.lat, lng: s.lng } }))}
                 placeholder="Boradigan manzil"
                 focusColor="green"
+                domesticOnly={isLocal}
                 className="!py-4 !text-lg !rounded-xl"
               />
             </div>
@@ -227,11 +232,11 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
 
   const handleSubmit = useCallback(() => {
     if (!form.amount) return
-    
+
     // USD ga konvertatsiya
     let amountInUSD = 0
     let amountInUZS = Number(form.amount)
-    
+
     if (isBorder) {
       // Chegara xarajatlari USD da
       amountInUSD = Number(form.amount)
@@ -250,7 +255,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
     } else {
       amountInUZS = convertedToUZS || Number(form.amount)
     }
-    
+
     onSubmit({
       type: isFuel ? form.type : isBorder ? form.type : form.category,
       amount: Number(form.amount),
@@ -306,26 +311,28 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
           {/* Kategoriyalar */}
           <div>
             <label className="block text-sm font-semibold text-slate-600 mb-3">Kategoriya tanlang</label>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-              {EXPENSE_CATEGORIES.map(c => {
-                const IconComp = ICONS[c.iconName]
-                return (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, category: c.value, type: c.value === 'fuel' ? 'fuel_metan' : c.value === 'border' ? 'border_customs' : c.value, amount: '' }))}
-                    className={`flex flex-col items-center p-3 sm:p-4 rounded-2xl border-2 transition-all ${form.category === c.value
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-lg shadow-indigo-500/20'
-                      : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                  >
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${form.category === c.value ? c.bgColor : 'bg-slate-100'}`}>
-                      {IconComp && <IconComp className={`w-5 h-5 sm:w-6 sm:h-6 ${form.category === c.value ? 'text-white' : 'text-slate-500'}`} />}
-                    </div>
-                    <span className="text-[10px] sm:text-xs font-bold mt-1.5">{c.label}</span>
-                  </button>
-                )
-              })}
+            <div className={`grid gap-2 ${isInternational ? 'grid-cols-4 sm:grid-cols-7' : 'grid-cols-3 sm:grid-cols-6'}`}>
+              {EXPENSE_CATEGORIES
+                .filter(c => c.value !== 'border' || isInternational) // Chegara faqat xalqaro reyslar uchun
+                .map(c => {
+                  const IconComp = ICONS[c.iconName]
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, category: c.value, type: c.value === 'fuel' ? 'fuel_metan' : c.value === 'border' ? 'border_customs' : c.value, amount: '' }))}
+                      className={`flex flex-col items-center p-3 sm:p-4 rounded-2xl border-2 transition-all ${form.category === c.value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-lg shadow-indigo-500/20'
+                        : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                    >
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${form.category === c.value ? c.bgColor : 'bg-slate-100'}`}>
+                        {IconComp && <IconComp className={`w-5 h-5 sm:w-6 sm:h-6 ${form.category === c.value ? 'text-white' : 'text-slate-500'}`} />}
+                      </div>
+                      <span className="text-[10px] sm:text-xs font-bold mt-1.5">{c.label}</span>
+                    </button>
+                  )
+                })}
             </div>
           </div>
 
@@ -514,7 +521,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
     endFuel: '',
     driverProfitPercent: '0'
   })
-  
+
   const [rates, setRates] = useState(null)
   const isInternational = flight?.flightType === 'international'
 
@@ -542,22 +549,25 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
   const netProfitUSD = isInternational ? Math.round((totalIncomeUSD - allExpensesUSD) * 100) / 100 : 0
 
   const percent = Number(form.driverProfitPercent) || 0
-  
+
   // So'm da
   const driverShare = Math.round(netProfit * percent / 100)
   const driverOwes = netProfit - driverShare
-  
+
   // USD da
   const driverShareUSD = isInternational ? Math.round(netProfitUSD * percent / 100 * 100) / 100 : 0
   const driverOwesUSD = isInternational ? Math.round((netProfitUSD - driverShareUSD) * 100) / 100 : 0
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
-    onSubmit({
+    const data = {
       endOdometer: Number(form.endOdometer) || 0,
       endFuel: Number(form.endFuel) || 0,
       driverProfitPercent: percent
-    })
+    }
+    // DEBUG
+    console.log('🚀 CompleteModal onSubmit data:', data)
+    onSubmit(data)
   }, [form, percent, onSubmit])
 
   // Formatlash funksiyasi

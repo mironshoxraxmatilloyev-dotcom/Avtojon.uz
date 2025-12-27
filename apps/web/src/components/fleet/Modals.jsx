@@ -61,7 +61,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
             ]}
           />
           <ProInput
-            label="Bak hajmi (L)"
+            label={`Bak hajmi (${form.fuelType === 'metan' ? 'kub' : 'L'})`}
             type="number"
             value={form.fuelTankCapacity}
             onChange={v => setForm(f => ({ ...f, fuelTankCapacity: v }))}

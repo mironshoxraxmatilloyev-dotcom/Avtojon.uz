@@ -11,9 +11,7 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 const authRoutes = require('./routes/auth.routes');
 const driverRoutes = require('./routes/driver.routes');
 const vehicleRoutes = require('./routes/vehicle.routes');
-const tripRoutes = require('./routes/trip.routes');
 const expenseRoutes = require('./routes/expense.routes');
-const salaryRoutes = require('./routes/salary.routes');
 const driverPanelRoutes = require('./routes/driverPanel.routes');
 const flightRoutes = require('./routes/flight.routes');
 const superAdminRoutes = require('./routes/superAdmin.routes');
@@ -71,9 +69,7 @@ app.use('/api', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/trips', tripRoutes);
 app.use('/api/expenses', expenseRoutes);
-app.use('/api/salaries', salaryRoutes);
 app.use('/api/driver', driverPanelRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/super-admin', superAdminRoutes);
@@ -87,7 +83,7 @@ app.get('/api/health', (req, res) => {
 
 // Routing Proxy - Ko'p servisli real yo'l marshrutlash
 const GRAPHHOPPER_API_KEY = process.env.GRAPHHOPPER_API_KEY || '';
-const ORS_API_KEY = process.env.ORS_API_KEY || '5b3ce3597851110001cf6248a1b2c3d4e5f6a7b8c9d0e1f2'; // OpenRouteService
+const ORS_API_KEY = process.env.ORS_API_KEY || '';
 
 // OSRM serverlar ro'yxati (bir nechta zaxira)
 const OSRM_SERVERS = [

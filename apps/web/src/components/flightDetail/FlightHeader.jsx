@@ -5,6 +5,17 @@ export default function FlightHeader({ flight, navigate }) {
   const isActive = flight.status === 'active'
   const isInternational = flight?.flightType === 'international'
   
+  // DEBUG - backenddan kelayotgan ma'lumotlarni ko'rish
+  console.log('🔍 Flight data:', {
+    driverProfitPercent: flight.driverProfitPercent,
+    driverProfitAmount: flight.driverProfitAmount,
+    businessProfit: flight.businessProfit,
+    driverOwes: flight.driverOwes,
+    totalPayment: flight.totalPayment,
+    totalGivenBudget: flight.totalGivenBudget,
+    totalExpenses: flight.totalExpenses
+  })
+  
   // USD formatlash
   const formatUSD = (amount) => `$${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   
@@ -13,13 +24,44 @@ export default function FlightHeader({ flight, navigate }) {
   const yolPuli = flight.totalGivenBudget || 0
   const sarflangan = flight.totalExpenses || 0
   const qoldiq = yolPuli - sarflangan
-  const sofFoyda = mijozPuli + qoldiq
-  const driverOwes = flight.driverOwes || flight.businessProfit || (sofFoyda - (flight.driverProfitAmount || 0))
+  
+  // Net profit = Jami kirim - Jami xarajatlar
+  const totalIncome = mijozPuli + yolPuli
+  const netProfit = totalIncome - sarflangan
+  
+  // Shofyor ulushi va sof foyda
+  const driverProfitPercent = flight.driverProfitPercent || 0
+  
+  // Shofyor ulushi - backenddan yoki frontendda hisoblaymiz
+  const driverProfitAmount = flight.driverProfitAmount || (
+    netProfit > 0 && driverProfitPercent > 0 
+      ? Math.round(netProfit * driverProfitPercent / 100) 
+      : 0
+  )
+  
+  // Sof foyda = Net profit - Shofyor ulushi
+  // Backenddan kelsa uni ishlatamiz, aks holda hisoblaymiz
+  const businessProfit = flight.businessProfit || (netProfit - driverProfitAmount)
+  
+  // Shofyor beradigan pul = Sof foyda
+  const driverOwes = flight.driverOwes || businessProfit
+  
+  // DEBUG
+  console.log('🔍 Hisob-kitob:', {
+    'flight.businessProfit': flight.businessProfit,
+    'flight.driverProfitAmount': flight.driverProfitAmount,
+    'flight.driverOwes': flight.driverOwes,
+    netProfit,
+    driverProfitPercent,
+    driverProfitAmount,
+    businessProfit,
+    driverOwes
+  })
 
   // USD qiymatlari (xalqaro reyslar uchun)
   const sarflanganUSD = flight.totalExpensesUSD || 0
   const driverOwesUSD = flight.driverOwesUSD || 0
-  const netProfitUSD = flight.netProfitUSD || 0
+  const businessProfitUSD = flight.businessProfitUSD || (flight.netProfitUSD - (flight.driverProfitAmountUSD || 0)) || 0
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-2xl">
@@ -101,24 +143,24 @@ export default function FlightHeader({ flight, navigate }) {
             <p className={`text-[10px] sm:text-xs ${qoldiq >= 0 ? 'text-cyan-300/70' : 'text-rose-300/70'}`}>💵 Qoldiq</p>
           </div>
 
-          {/* 5. Sof foyda / Zarar */}
-          <div className={`backdrop-blur-sm rounded-xl p-3 border ${sofFoyda >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+          {/* 5. Sof foyda (xarajatlar va shofyor ulushi ayirilgan) */}
+          <div className={`backdrop-blur-sm rounded-xl p-3 border ${businessProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
             {isInternational ? (
               <>
-                <p className={`text-lg sm:text-xl font-bold ${netProfitUSD >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                  {netProfitUSD >= 0 ? '+' : ''}{formatUSD(netProfitUSD)}
+                <p className={`text-lg sm:text-xl font-bold ${businessProfitUSD >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {businessProfitUSD >= 0 ? '+' : ''}{formatUSD(businessProfitUSD)}
                 </p>
-                <p className={`text-[10px] sm:text-xs ${netProfitUSD >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  {netProfitUSD >= 0 ? '📈 Foyda' : '📉 Zarar'}
+                <p className={`text-[10px] sm:text-xs ${businessProfitUSD >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                  📈 Sof foyda
                 </p>
               </>
             ) : (
               <>
-                <p className={`text-lg sm:text-xl font-bold ${sofFoyda >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                  {sofFoyda >= 0 ? '+' : ''}{formatMoney(sofFoyda)}
+                <p className={`text-lg sm:text-xl font-bold ${businessProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {businessProfit >= 0 ? '+' : ''}{formatMoney(businessProfit)}
                 </p>
-                <p className={`text-[10px] sm:text-xs ${sofFoyda >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  {sofFoyda >= 0 ? '📈 Foyda' : '📉 Zarar'}
+                <p className={`text-[10px] sm:text-xs ${businessProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                  📈 Sof foyda
                 </p>
               </>
             )}

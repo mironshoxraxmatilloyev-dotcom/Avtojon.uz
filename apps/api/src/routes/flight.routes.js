@@ -544,7 +544,12 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
       return res.status(404).json({ success: false, message: 'Xarajat topilmadi' });
     }
 
-    const { type, amount, description, quantity, quantityUnit, pricePerUnit, odometer, stationName, location, date } = req.body;
+    const { 
+      type, amount, description, quantity, quantityUnit, pricePerUnit, 
+      odometer, stationName, location, date,
+      // Valyuta ma'lumotlari
+      currency, amountInUSD, amountInUZS, exchangeRate
+    } = req.body;
 
     // Mavjud xarajatni yangilash
     if (type !== undefined) flight.expenses[expenseIndex].type = type;
@@ -557,6 +562,12 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     if (stationName !== undefined) flight.expenses[expenseIndex].stationName = stationName;
     if (location !== undefined) flight.expenses[expenseIndex].location = location;
     if (date !== undefined) flight.expenses[expenseIndex].date = new Date(date);
+    
+    // Valyuta ma'lumotlarini yangilash
+    if (currency !== undefined) flight.expenses[expenseIndex].currency = currency;
+    if (amountInUSD !== undefined) flight.expenses[expenseIndex].amountInUSD = Number(amountInUSD);
+    if (amountInUZS !== undefined) flight.expenses[expenseIndex].amountInUZS = Number(amountInUZS);
+    if (exchangeRate !== undefined) flight.expenses[expenseIndex].exchangeRate = Number(exchangeRate);
 
     await flight.save();
 
@@ -653,6 +664,9 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
 router.put('/:id/complete', protect, businessOnly, async (req, res) => {
   try {
     const { endOdometer, endFuel, driverProfitPercent } = req.body;
+    
+    // DEBUG
+    console.log('🔍 Complete request body:', { endOdometer, endFuel, driverProfitPercent });
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
@@ -679,6 +693,9 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     const percent = Number(driverProfitPercent) || 0;
     flight.driverProfitPercent = percent;
     
+    // DEBUG
+    console.log('🔍 Percent:', percent);
+    
     // ============ XALQARO REYS UCHUN USD DA HISOBLASH ============
     const isInternational = flight.flightType === 'international';
     
@@ -688,6 +705,9 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     
     // Jami to'lov (mijozdan) - so'm da
     const totalPayment = flight.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+    
+    // Jami berilgan yo'l puli
+    const totalGivenBudget = flight.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
     
     // Jami xarajatlar
     let totalExpensesUZS = 0;
@@ -712,7 +732,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     if (isInternational) {
       // To'lovni USD ga konvertatsiya
       const totalPaymentUSD = totalPayment / uzsToUsdRate;
-      const totalGivenBudgetUSD = (flight.totalGivenBudget || 0) / uzsToUsdRate;
+      const totalGivenBudgetUSD = totalGivenBudget / uzsToUsdRate;
       
       // Jami kirim USD da
       const totalIncomeUSD = totalPaymentUSD + totalGivenBudgetUSD;
@@ -743,16 +763,42 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       flight.exchangeRateAtClose = uzsToUsdRate;
       flight.closedWithRates = rates;
     } else {
-      // Mahalliy reys - so'm da hisoblash (eski logika)
-      const totalExpenses = flight.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
-      const profit = totalPayment - totalExpenses;
+      // Mahalliy reys - so'm da hisoblash
+      // SOF FOYDA = Jami kirim - Jami xarajatlar
+      // Jami kirim = Mijozdan olingan to'lov + Yo'l uchun berilgan pul
+      const totalIncome = totalPayment + totalGivenBudget;
+      const totalExpenses = totalExpensesUZS;
+      const netProfit = totalIncome - totalExpenses;
       
-      // Faqat foyda musbat bo'lsa shofyorga ulush beriladi
-      if (profit > 0 && percent > 0) {
-        flight.driverProfitAmount = Math.round(profit * percent / 100);
+      // DEBUG
+      console.log('🔍 Mahalliy reys hisoblash:', {
+        totalPayment,
+        totalGivenBudget,
+        totalIncome,
+        totalExpenses,
+        netProfit,
+        percent
+      });
+      
+      // Shofyor ulushi SOF FOYDADAN hisoblanadi
+      if (netProfit > 0 && percent > 0) {
+        flight.driverProfitAmount = Math.round(netProfit * percent / 100);
       } else {
         flight.driverProfitAmount = 0;
       }
+      
+      // Biznesmen foydasi = Sof foyda - Shofyor ulushi
+      flight.businessProfit = netProfit - flight.driverProfitAmount;
+      
+      // Shofyor beradigan pul = Biznesmen foydasi
+      flight.driverOwes = flight.businessProfit;
+      
+      // DEBUG
+      console.log('🔍 Natija:', {
+        driverProfitAmount: flight.driverProfitAmount,
+        businessProfit: flight.businessProfit,
+        driverOwes: flight.driverOwes
+      });
     }
 
     await flight.save();
@@ -788,6 +834,14 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
+    
+    // DEBUG - qaytarilayotgan ma'lumotlarni ko'rish
+    console.log('🔍 PopulatedFlight:', {
+      driverProfitPercent: populatedFlight.driverProfitPercent,
+      driverProfitAmount: populatedFlight.driverProfitAmount,
+      businessProfit: populatedFlight.businessProfit,
+      driverOwes: populatedFlight.driverOwes
+    });
 
     // Socket xabar - reys yopildi
     const io = req.app.get('io');
@@ -887,23 +941,23 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
 // Valyuta kurslari (helper) - realtime API dan olinadi
 const DEFAULT_CURRENCY_RATES = {
   USD: 1,
-  UZS: 12800,
-  KZT: 480,
-  RUB: 95,
-  EUR: 0.92,
-  TRY: 34,
-  CNY: 7.2,
-  TJS: 11,
-  KGS: 89,
-  TMT: 3.5,
-  AZN: 1.7,
-  GEL: 2.7,
-  BYN: 3.3,
-  UAH: 41,
-  PLN: 4,
-  AFN: 70,
-  IRR: 42000,
-  AED: 3.67
+  UZS: 12850,    // O'zbekiston so'mi (CBU kursi)
+  KZT: 525,      // Qozog'iston tengesi
+  RUB: 103,      // Rossiya rubli (real bozor kursi)
+  EUR: 0.92,     // Yevro
+  TRY: 35,       // Turkiya lirasi
+  CNY: 7.3,      // Xitoy yuani
+  TJS: 11,       // Tojikiston somonisi
+  KGS: 89,       // Qirg'iziston somi
+  TMT: 3.5,      // Turkmaniston manati
+  AZN: 1.7,      // Ozarbayjon manati
+  GEL: 2.7,      // Gruziya larisi
+  BYN: 3.3,      // Belarus rubli
+  UAH: 41,       // Ukraina grivnasi
+  PLN: 4,        // Polsha zlotisi
+  AFN: 70,       // Afg'oniston afg'onisi
+  IRR: 42000,    // Eron riyoli
+  AED: 3.67      // BAA dirhami
 };
 
 // Valyuta kurslarini olish (cache bilan)

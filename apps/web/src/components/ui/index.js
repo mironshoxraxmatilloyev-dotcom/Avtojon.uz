@@ -50,8 +50,6 @@ export {
   DriversListSkeleton,
   FlightDetailSkeleton,
   DriverDetailSkeleton,
-  SalariesSkeleton,
-  TripsSkeleton,
   DriverHomeSkeleton
 } from './Skeleton'
 

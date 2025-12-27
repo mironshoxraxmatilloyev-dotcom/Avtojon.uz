@@ -146,15 +146,60 @@ export default function VehicleDetailPanel() {
 
   const validate = useCallback((type, data) => {
     const e = {}
-    if (type === 'fuel' && (!data.liters || +data.liters <= 0)) e.liters = 'Majburiy'
-    if (type === 'fuel' && (!data.cost || +data.cost <= 0)) e.cost = 'Majburiy'
-    if (type === 'oil' && !data.oilType) e.oilType = 'Majburiy'
-    if ((type === 'oil' || type === 'service') && (!data.cost || +data.cost <= 0)) e.cost = 'Majburiy'
-    if (type === 'tire' && !data.brand) e.brand = 'Majburiy'
-    if (type === 'income' && (!data.amount || +data.amount <= 0)) e.amount = 'Majburiy'
+    const currentOdo = vehicle?.currentOdometer || 0
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+
+    // Sana validatsiyasi
+    if (data.date) {
+      const inputDate = new Date(data.date)
+      if (inputDate > today) e.date = 'Kelajakdagi sana kiritish mumkin emas'
+    }
+
+    // Odometer validatsiyasi
+    if (data.odometer) {
+      const odo = +data.odometer
+      if (odo < 0) e.odometer = 'Salbiy bo\'lishi mumkin emas'
+      if (currentOdo > 0 && Math.abs(odo - currentOdo) > 100000) {
+        e.odometer = 'Juda katta farq (max 100,000 km)'
+      }
+    }
+
+    // Tur bo'yicha validatsiya
+    if (type === 'fuel') {
+      if (!data.liters || +data.liters <= 0) e.liters = 'Majburiy va musbat'
+      else if (+data.liters > 2000) e.liters = 'Juda katta (max 2000)'
+      if (!data.cost || +data.cost <= 0) e.cost = 'Majburiy va musbat'
+      else if (+data.cost > 100000000) e.cost = 'Juda katta'
+    }
+
+    if (type === 'oil') {
+      if (!data.oilType) e.oilType = 'Majburiy'
+      if (!data.cost || +data.cost <= 0) e.cost = 'Majburiy va musbat'
+      else if (+data.cost > 50000000) e.cost = 'Juda katta'
+    }
+
+    if (type === 'tire') {
+      if (!data.brand) e.brand = 'Majburiy'
+      if (data.cost && +data.cost < 0) e.cost = 'Salbiy bo\'lishi mumkin emas'
+      if (data.expectedLifeKm && +data.expectedLifeKm > 500000) e.expectedLifeKm = 'Juda katta'
+    }
+
+    if (type === 'service') {
+      if (!data.cost || +data.cost <= 0) e.cost = 'Majburiy va musbat'
+      else if (+data.cost > 500000000) e.cost = 'Juda katta'
+    }
+
+    if (type === 'income') {
+      if (!data.amount || +data.amount <= 0) e.amount = 'Majburiy va musbat'
+      else if (+data.amount > 1000000000) e.amount = 'Juda katta'
+      if (data.distance && +data.distance < 0) e.distance = 'Salbiy bo\'lishi mumkin emas'
+      if (data.distance && +data.distance > 50000) e.distance = 'Juda katta (max 50,000 km)'
+    }
+
     setErrors(e)
     return !Object.keys(e).length
-  }, [])
+  }, [vehicle?.currentOdometer])
 
   const handleSubmit = useCallback(async (type, form, endpoint, itemId = null) => {
     if (!validate(type, form)) return
@@ -208,11 +253,11 @@ export default function VehicleDetailPanel() {
   if (subscription?.isExpired) return <ExpiredView onUpgrade={() => setShowUpgradeModal(true)} />
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      {/* PRO Sidebar - Desktop - No Scroll */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-slate-200/60 z-40 overflow-hidden">
+    <div className="h-screen overflow-hidden bg-[#f8fafc]">
+      {/* PRO Sidebar - Desktop - Fixed, NO scroll */}
+      <aside className="hidden lg:flex lg:flex-col fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-slate-200/60 z-40 overflow-hidden">
         {/* Back Button */}
-        <div className="p-4 border-b border-slate-100">
+        <div className="flex-shrink-0 p-4 border-b border-slate-100">
           <button onClick={() => navigate('/fleet')} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium transition-colors group">
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             Avtoparkga qaytish
@@ -220,7 +265,7 @@ export default function VehicleDetailPanel() {
         </div>
 
         {/* Vehicle Info */}
-        <div className="p-4 border-b border-slate-100">
+        <div className="flex-shrink-0 p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
               <Truck className="w-6 h-6 text-white" />
@@ -232,15 +277,14 @@ export default function VehicleDetailPanel() {
           </div>
         </div>
 
-        {/* Navigation - No Scroll */}
+        {/* Navigation - NO scroll */}
         <nav className="flex-1 p-3 space-y-1 overflow-hidden">
           {NAV_ITEMS.map(item => (
             <button key={item.id} onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === item.id 
-                  ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}>
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === item.id
+                ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25'
+                : 'text-slate-600 hover:bg-slate-100'
+                }`}>
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === item.id ? 'bg-white/20' : 'bg-slate-100'}`}>
                 <item.icon size={16} />
               </div>
@@ -249,9 +293,9 @@ export default function VehicleDetailPanel() {
           ))}
         </nav>
 
-        {/* Subscription */}
+        {/* Subscription - Fixed at bottom */}
         {subscription?.plan === 'trial' && (
-          <div className="p-4 border-t border-slate-100">
+          <div className="flex-shrink-0 p-4 border-t border-slate-100 bg-white">
             <button onClick={() => setShowUpgradeModal(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-semibold border border-amber-200">
               <Crown size={18} />
               <span>{timeLeft} qoldi</span>
@@ -261,8 +305,8 @@ export default function VehicleDetailPanel() {
       </aside>
 
 
-      {/* Main Content */}
-      <main className="lg:ml-[260px] min-h-screen pb-28 lg:pb-8">
+      {/* Main Content - scrollable with bottom padding for nav */}
+      <main className="lg:ml-[260px] h-screen overflow-y-auto pb-24 lg:pb-8">
         {/* PRO Header - Full Width */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
           <div className="px-4 lg:px-6 xl:px-8 py-4">
@@ -305,20 +349,19 @@ export default function VehicleDetailPanel() {
         </div>
       </main>
 
-      {/* PRO Bottom Navigation - Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 pb-safe">
-        <div className="flex items-center justify-around py-2 px-2">
+      {/* PRO Bottom Navigation - Mobile - Instagram Style Fixed */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-1">
           {NAV_ITEMS.map(item => (
             <button key={item.id} onClick={() => setActiveTab(item.id)}
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                activeTab === item.id 
-                  ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/25' 
-                  : 'bg-slate-100'
-              }`}>
-                <item.icon size={18} className={activeTab === item.id ? 'text-white' : 'text-slate-500'} />
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeTab === item.id
+                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/25'
+                : ''
+                }`}>
+                <item.icon size={20} className={activeTab === item.id ? 'text-white' : 'text-slate-500'} strokeWidth={activeTab === item.id ? 2.5 : 1.5} />
               </div>
-              <span className={`text-[9px] font-semibold ${activeTab === item.id ? 'text-indigo-600' : 'text-slate-400'}`}>
+              <span className={`text-[10px] font-semibold ${activeTab === item.id ? 'text-indigo-600' : 'text-slate-400'}`}>
                 {item.label}
               </span>
             </button>

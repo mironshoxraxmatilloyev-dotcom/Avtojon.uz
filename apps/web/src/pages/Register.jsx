@@ -5,6 +5,11 @@ import { Truck, Lock, ArrowRight, Eye, EyeOff, UserCircle, AlertCircle, Shield, 
 import PhoneInputField from '../components/PhoneInput'
 import { useAlert } from '../components/ui'
 
+// Color Palette:
+// Primary: #2563EB (blue-600)
+// Secondary: #1E293B (slate-800)
+// Accent: #10B981 (emerald-500)
+
 export default function Register() {
   const [form, setForm] = useState({ fullName: '', password: '', phone: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -73,20 +78,19 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/50 flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 border border-white rounded-full" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 border border-white rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white rounded-full" />
+    <div className="min-h-screen flex">
+      {/* Left Side - Emerald Background */}
+      <div className="hidden lg:flex lg:w-1/2 bg-emerald-500 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-400/50 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-600/50 rounded-full blur-3xl" />
         </div>
         
         {/* Logo */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
               <Truck className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">Avtojon</span>
@@ -97,7 +101,8 @@ export default function Register() {
         <div className="relative z-10 space-y-8">
           <div>
             <h1 className="text-4xl font-bold text-white mb-4">
-              Biznesingizni<br />yangi bosqichga olib chiqing
+              Biznesingizni<br />
+              <span className="text-emerald-100">yangi bosqichga</span> olib chiqing
             </h1>
             <p className="text-emerald-100 text-lg max-w-md">
               Minglab kompaniyalar Avtojon bilan ishlaydi. Siz ham qo'shiling!
@@ -119,12 +124,12 @@ export default function Register() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-50">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                 <Truck className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-slate-800">Avtojon</span>
@@ -133,12 +138,12 @@ export default function Register() {
 
           {/* Header */}
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Ro'yxatdan o'ting</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Ro'yxatdan o'ting</h2>
             <p className="text-slate-500">Bir necha daqiqada hisob yarating</p>
           </div>
 
           {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Full Name */}
               <div>
@@ -152,7 +157,7 @@ export default function Register() {
                     onChange={handleChange}
                     onBlur={() => handleBlur('fullName')}
                     onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
                       errors.fullName && touched.fullName 
                         ? 'border-red-300 focus:border-red-500' 
                         : 'border-slate-200 focus:border-emerald-500'
@@ -181,7 +186,7 @@ export default function Register() {
                     value={form.password}
                     onChange={handleChange}
                     onBlur={() => handleBlur('password')}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all ${
+                    className={`w-full pl-12 pr-12 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
                       errors.password && touched.password 
                         ? 'border-red-300 focus:border-red-500' 
                         : 'border-slate-200 focus:border-emerald-500'
@@ -229,7 +234,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-50 transition-all active:scale-[0.98]"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -246,7 +251,7 @@ export default function Register() {
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
               <p className="text-slate-500">
                 Hisobingiz bormi?{' '}
-                <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
                   Kirish
                 </Link>
               </p>
@@ -267,7 +272,7 @@ export default function Register() {
 function Feature({ icon: Icon, text }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-white/10 backdrop-blur rounded-lg flex items-center justify-center">
+      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
         <Icon className="w-5 h-5 text-white" />
       </div>
       <span className="text-white font-medium">{text}</span>

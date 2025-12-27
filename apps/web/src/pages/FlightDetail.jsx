@@ -150,8 +150,7 @@ export default function FlightDetail() {
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
   const allExpenses = (flight.totalExpenses || 0) + borderExpenses + platonExpenses
   const totalIncome = flight.totalIncome || ((flight.totalPayment || 0) + (flight.totalGivenBudget || 0))
-  const netProfit = flight.netProfit || (totalIncome - allExpenses)
-  const driverOwes = flight.driverOwes || flight.businessProfit || 0
+  const netProfit = totalIncome - allExpenses // Sof foyda (jami kirim - xarajatlar)
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -247,15 +246,28 @@ export default function FlightDetail() {
               <p className="text-red-300/70 text-xs mt-1">💸 Sarflangan</p>
             </div>
 
-            {/* 4. Jami (Foyda/Zarar) */}
-            <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
-              <p className={`font-bold text-xl sm:text-2xl ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                {netProfit >= 0 ? '+' : ''}{formatMoney(netProfit)}
-              </p>
-              <p className={`text-xs mt-1 ${netProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                {netProfit >= 0 ? '📈 Jami foyda' : '📉 Jami zarar'}
-              </p>
-            </div>
+            {/* 4. Sof foyda / Shofyor beradi */}
+            {isActive ? (
+              // Faol reys - sof foyda ko'rsatish (hali shofyor ulushi noma'lum)
+              <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+                <p className={`font-bold text-xl sm:text-2xl ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {netProfit >= 0 ? '+' : ''}{formatMoney(netProfit)}
+                </p>
+                <p className={`text-xs mt-1 ${netProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                  {netProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
+                </p>
+              </div>
+            ) : (
+              // Yopilgan reys - sof foyda (shofyor ulushi ayirilgan)
+              <div className={`rounded-xl p-4 border ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+                <p className={`font-bold text-xl sm:text-2xl ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {(flight.businessProfit || flight.driverOwes || 0) >= 0 ? '+' : ''}{formatMoney(flight.businessProfit || flight.driverOwes || netProfit)}
+                </p>
+                <p className="text-xs mt-1 text-blue-300/70">
+                  📈 Sof foyda {flight.driverProfitPercent ? `(${flight.driverProfitPercent}% ayirilgan)` : ''}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -356,12 +368,14 @@ export default function FlightDetail() {
             
             // 🚀 Optimistic update - UI ni darhol yangilash
             if (editingExpense) {
+              const oldAmountUZS = editingExpense.amountInUZS || editingExpense.amount || 0
+              const newAmountUZS = data.amountInUZS || data.amount || 0
               setFlight(prev => ({
                 ...prev,
                 expenses: prev.expenses?.map(e => 
                   e._id === editingExpense._id ? { ...e, ...data } : e
                 ) || [],
-                totalExpenses: (prev.totalExpenses || 0) - (editingExpense.amount || 0) + (Number(data.amount) || 0)
+                totalExpenses: (prev.totalExpenses || 0) - oldAmountUZS + newAmountUZS
               }))
               // Background da serverga yuborish
               api.put(`/flights/${id}/expenses/${editingExpense._id}`, data)
@@ -373,7 +387,7 @@ export default function FlightDetail() {
               setFlight(prev => ({
                 ...prev,
                 expenses: [...(prev.expenses || []), newExpense],
-                totalExpenses: (prev.totalExpenses || 0) + (Number(data.amount) || 0)
+                totalExpenses: (prev.totalExpenses || 0) + (Number(data.amountInUZS) || Number(data.amount) || 0)
               }))
               // Background da serverga yuborish
               api.post(`/flights/${id}/expenses`, data)
@@ -396,13 +410,24 @@ export default function FlightDetail() {
             setShowCompleteModal(false)
             showToast.success('Reys yopildi')
             
-            // 🚀 Optimistic update
+            // Hisob-kitob
+            const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
+            const totalExpenses = flight.totalExpenses || 0
+            const netProfit = totalIncome - totalExpenses
+            const percent = data.driverProfitPercent || 0
+            const driverProfitAmount = netProfit > 0 && percent > 0 ? Math.round(netProfit * percent / 100) : 0
+            const businessProfit = netProfit - driverProfitAmount
+            
+            // 🚀 Optimistic update - shofyor ulushi bilan
             setFlight(prev => ({
               ...prev,
               status: 'completed',
               endOdometer: data.endOdometer,
               endFuel: data.endFuel,
-              driverProfitPercent: data.driverProfitPercent
+              driverProfitPercent: percent,
+              driverProfitAmount: driverProfitAmount,
+              businessProfit: businessProfit,
+              driverOwes: businessProfit
             }))
             
             // Background da serverga yuborish

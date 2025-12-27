@@ -211,7 +211,7 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
       </div>
 
       {/* Sana va Summa */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className={`grid gap-4 ${form.type === 'rental' ? 'grid-cols-1' : 'grid-cols-2'}`}>
         <div>
           <label className="block text-sm text-gray-600 mb-1.5">Sana</label>
           <input
@@ -221,18 +221,24 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
         </div>
-        <div>
-          <label className="block text-sm text-gray-600 mb-1.5">Summa (so'm) *</label>
-          <input
-            type="number"
-            value={form.amount || ''}
-            onChange={e => setForm({ ...form, amount: e.target.value })}
-            placeholder="5 000 000"
-            className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 ${errors.amount ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'
-              }`}
-          />
-          {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
-        </div>
+        {form.type !== 'rental' && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Summa (so'm) *</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={form.amount ? fmt(form.amount) : ''}
+              onChange={e => {
+                const raw = e.target.value.replace(/\s/g, '').replace(/\D/g, '')
+                setForm({ ...form, amount: raw })
+              }}
+              placeholder="5 000 000"
+              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.amount ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'
+                }`}
+            />
+            {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
+          </div>
+        )}
       </div>
 
       {/* Reys uchun qo'shimcha maydonlar */}
@@ -297,27 +303,61 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
 
       {/* Ijara uchun */}
       {form.type === 'rental' && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
+          {/* Kunlar soni */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Kunlar soni</label>
+            <label className="block text-sm text-gray-600 mb-1.5">Kunlar soni *</label>
             <input
               type="number"
               value={form.rentalDays || ''}
-              onChange={e => setForm({ ...form, rentalDays: e.target.value })}
+              onChange={e => {
+                const days = e.target.value
+                setForm(prev => {
+                  const newForm = { ...prev, rentalDays: days }
+                  // Agar kunlik narx kiritilgan bo'lsa, jami summani hisoblash
+                  if (prev.rentalRate && days && Number(days) > 0) {
+                    newForm.amount = String(Number(prev.rentalRate) * Number(days))
+                  }
+                  return newForm
+                })
+              }}
               placeholder="7"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-lg font-medium"
             />
           </div>
+
+          {/* Kunlik narx */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Kunlik narx</label>
+            <label className="block text-sm text-gray-600 mb-1.5">Kunlik narx (so'm) *</label>
             <input
-              type="number"
-              value={form.rentalRate || ''}
-              onChange={e => setForm({ ...form, rentalRate: e.target.value })}
+              type="text"
+              inputMode="numeric"
+              value={form.rentalRate ? fmt(form.rentalRate) : ''}
+              onChange={e => {
+                const raw = e.target.value.replace(/\s/g, '').replace(/\D/g, '')
+                setForm(prev => {
+                  const newForm = { ...prev, rentalRate: raw }
+                  // Agar kunlar kiritilgan bo'lsa, jami summani hisoblash
+                  if (prev.rentalDays && raw && Number(prev.rentalDays) > 0) {
+                    newForm.amount = String(Number(raw) * Number(prev.rentalDays))
+                  }
+                  return newForm
+                })
+              }}
               placeholder="500 000"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-lg font-medium"
             />
           </div>
+
+          {/* Umumiy foyda - avtomatik hisoblanadi */}
+          {form.rentalDays && form.rentalRate && Number(form.rentalDays) > 0 && Number(form.rentalRate) > 0 && (
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-5">
+              <p className="text-sm text-emerald-600 mb-1">Umumiy foyda</p>
+              <p className="text-emerald-700 font-bold text-2xl">
+                {fmt(Number(form.rentalDays) * Number(form.rentalRate))} so'm
+              </p>
+            </div>
+          )}
         </div>
       )}
 

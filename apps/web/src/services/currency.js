@@ -7,26 +7,26 @@ let ratesCache = {
   ttl: 30 * 60 * 1000 // 30 daqiqa
 }
 
-// Default kurslar (fallback)
+// Default kurslar (fallback) - real bozor kurslariga yaqin
 const DEFAULT_RATES = {
   USD: 1,
-  UZS: 12800,
-  RUB: 95,
-  KZT: 480,
-  EUR: 0.92,
-  TRY: 34,
-  CNY: 7.2,
-  TJS: 11,
-  KGS: 89,
-  TMT: 3.5,
-  AZN: 1.7,
-  GEL: 2.7,
-  BYN: 3.3,
-  UAH: 41,
-  PLN: 4,
-  AFN: 70,
-  IRR: 42000,
-  AED: 3.67
+  UZS: 12850,    // O'zbekiston so'mi (CBU kursi)
+  RUB: 103,      // Rossiya rubli (real bozor kursi)
+  KZT: 525,      // Qozog'iston tengesi
+  EUR: 0.92,     // Yevro
+  TRY: 35,       // Turkiya lirasi
+  CNY: 7.3,      // Xitoy yuani
+  TJS: 11,       // Tojikiston somonisi
+  KGS: 89,       // Qirg'iziston somi
+  TMT: 3.5,      // Turkmaniston manati
+  AZN: 1.7,      // Ozarbayjon manati
+  GEL: 2.7,      // Gruziya larisi
+  BYN: 3.3,      // Belarus rubli
+  UAH: 41,       // Ukraina grivnasi
+  PLN: 4,        // Polsha zlotisi
+  AFN: 70,       // Afg'oniston afg'onisi
+  IRR: 42000,    // Eron riyoli
+  AED: 3.67      // BAA dirhami
 }
 
 // Davlatlar va ularning valyutalari

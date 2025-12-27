@@ -29,10 +29,21 @@ export default function DriverSalaries() {
   const handlePaySalary = async (driverId, amount) => {
     setPaying(driverId)
     try {
+      // Optimistic update - darhol UI ni yangilash
+      setDrivers(prev => prev.filter(d => d._id !== driverId))
+      setStats(prev => ({
+        ...prev,
+        totalPending: prev.totalPending - amount,
+        driversCount: prev.driversCount - 1
+      }))
+      
       await api.post(`/drivers/${driverId}/pay-salary`, { amount })
-      fetchSalaries()
+      // Muvaffaqiyatli - serverdan yangi ma'lumotlarni olish
+      await fetchSalaries()
     } catch (err) {
       console.error('Pay salary error:', err)
+      // Xatolik bo'lsa - qayta yuklash
+      await fetchSalaries()
     } finally {
       setPaying(null)
     }

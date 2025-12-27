@@ -8,30 +8,27 @@ let currencyCache = {
   ttl: 60 * 60 * 1000 // 1 soat
 };
 
-// Default kurslar (fallback)
+// Default kurslar (fallback) - real bozor kurslariga yaqin
 const DEFAULT_RATES = {
   USD: 1,
-  UZS: 12800,
-  RUB: 95,
-  KZT: 480,
-  EUR: 0.92,
-  TRY: 34,
-  CNY: 7.2,
-  GBP: 0.79,
-  AED: 3.67,
-  IRR: 42000,
-  AFN: 70,
-  TJS: 11,
-  KGS: 89,
-  TMT: 3.5,
-  AZN: 1.7,
-  GEL: 2.7,
-  BYN: 3.3,
-  UAH: 41,
-  PLN: 4,
-  LTL: 0.92, // EUR ga teng
-  LVL: 0.92,
-  EEK: 0.92
+  UZS: 12850,    // O'zbekiston so'mi
+  RUB: 103,      // Rossiya rubli (real bozor kursi)
+  KZT: 525,      // Qozog'iston tengesi
+  EUR: 0.92,     // Yevro
+  TRY: 35,       // Turkiya lirasi
+  CNY: 7.3,      // Xitoy yuani
+  GBP: 0.79,     // Angliya funti
+  AED: 3.67,     // BAA dirhami
+  IRR: 42000,    // Eron riyoli
+  AFN: 70,       // Afg'oniston afg'onisi
+  TJS: 11,       // Tojikiston somonisi
+  KGS: 89,       // Qirg'iziston somi
+  TMT: 3.5,      // Turkmaniston manati
+  AZN: 1.7,      // Ozarbayjon manati
+  GEL: 2.7,      // Gruziya larisi
+  BYN: 3.3,      // Belarus rubli
+  UAH: 41,       // Ukraina grivnasi
+  PLN: 4         // Polsha zlotisi
 };
 
 // Davlatlar va ularning valyutalari
@@ -60,34 +57,117 @@ const COUNTRY_CURRENCIES = {
   AE: { code: 'AED', symbol: 'د.إ', name: 'BAA dirhami' }
 };
 
-// Realtime valyuta kurslarini olish
+// Realtime valyuta kurslarini olish - bir nechta manbadan
 async function fetchRealTimeRates() {
+  const rates = { USD: 1 };
+  
   try {
-    // Exchangerate-api.com dan kurslarni olish (bepul API)
-    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    
-    if (!response.ok) {
-      throw new Error('API javob bermadi');
+    // 1. O'zbekiston Markaziy Banki (CBU) - UZS kursi
+    try {
+      const cbuResponse = await fetch('https://cbu.uz/uz/arkhiv-kursov-valyut/json/', {
+        signal: AbortSignal.timeout(5000)
+      });
+      if (cbuResponse.ok) {
+        const cbuData = await cbuResponse.json();
+        const usdRate = cbuData.find(c => c.Ccy === 'USD');
+        const rubRate = cbuData.find(c => c.Ccy === 'RUB');
+        const eurRate = cbuData.find(c => c.Ccy === 'EUR');
+        const kztRate = cbuData.find(c => c.Ccy === 'KZT');
+        
+        if (usdRate?.Rate) rates.UZS = parseFloat(usdRate.Rate);
+        // CBU dan boshqa valyutalarning UZS ga nisbatan kursini hisoblash
+        if (rubRate?.Rate && rates.UZS) {
+          rates.RUB = rates.UZS / parseFloat(rubRate.Rate);
+        }
+        if (eurRate?.Rate && rates.UZS) {
+          rates.EUR = rates.UZS / parseFloat(eurRate.Rate);
+        }
+        if (kztRate?.Rate && rates.UZS) {
+          rates.KZT = rates.UZS / parseFloat(kztRate.Rate);
+        }
+      }
+    } catch (e) {
+      console.log('CBU API xatolik:', e.message);
     }
-    
-    const data = await response.json();
-    
-    if (data && data.rates) {
-      // Cache yangilash
-      currencyCache.rates = {
-        USD: 1,
-        ...data.rates
-      };
-      currencyCache.lastUpdated = new Date();
-      
-      return currencyCache.rates;
+
+    // 2. Rossiya Markaziy Banki (CBR) - RUB kursi (agar CBU dan olinmagan bo'lsa)
+    if (!rates.RUB) {
+      try {
+        const cbrResponse = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (cbrResponse.ok) {
+          const cbrData = await cbrResponse.json();
+          if (cbrData?.Valute?.USD?.Value) {
+            rates.RUB = cbrData.Valute.USD.Value; // 1 USD = X RUB
+          }
+        }
+      } catch (e) {
+        console.log('CBR API xatolik:', e.message);
+      }
     }
+
+    // 3. Qozog'iston Milliy Banki (NBK) - KZT kursi (agar CBU dan olinmagan bo'lsa)
+    if (!rates.KZT) {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const nbkResponse = await fetch(`https://nationalbank.kz/rss/get_rates.cfm?fdate=${today}`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (nbkResponse.ok) {
+          const nbkText = await nbkResponse.text();
+          // XML dan USD kursini olish
+          const usdMatch = nbkText.match(/<title>USD<\/title>[\s\S]*?<description>([\d.]+)<\/description>/);
+          if (usdMatch && usdMatch[1]) {
+            rates.KZT = parseFloat(usdMatch[1]);
+          }
+        }
+      } catch (e) {
+        console.log('NBK API xatolik:', e.message);
+      }
+    }
+
+    // 4. Exchangerate-api.com dan qolgan valyutalarni olish
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+        signal: AbortSignal.timeout(5000)
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.rates) {
+          // Faqat mavjud bo'lmagan kurslarni qo'shish
+          Object.keys(data.rates).forEach(currency => {
+            if (!rates[currency]) {
+              rates[currency] = data.rates[currency];
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.log('Exchangerate API xatolik:', e.message);
+    }
+
+    // Default qiymatlarni qo'shish (agar hali olinmagan bo'lsa)
+    Object.keys(DEFAULT_RATES).forEach(currency => {
+      if (!rates[currency]) {
+        rates[currency] = DEFAULT_RATES[currency];
+      }
+    });
+
+    // Cache yangilash
+    currencyCache.rates = rates;
+    currencyCache.lastUpdated = new Date();
     
-    throw new Error('Noto\'g\'ri javob formati');
+    console.log('Valyuta kurslari yangilandi:', {
+      UZS: rates.UZS,
+      RUB: rates.RUB,
+      KZT: rates.KZT,
+      EUR: rates.EUR
+    });
+    
+    return rates;
   } catch (error) {
     console.error('Valyuta kurslarini olishda xatolik:', error.message);
-    
-    // Fallback - default kurslar
     return DEFAULT_RATES;
   }
 }

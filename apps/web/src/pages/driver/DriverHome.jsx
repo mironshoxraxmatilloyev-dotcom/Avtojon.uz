@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAuthStore } from '../../store/authStore'
-import { History, Truck, Clock, Play, Bell, X, WifiOff, RefreshCw } from 'lucide-react'
+import { History } from 'lucide-react'
 import api from '../../services/api'
 import { showToast } from '../../components/Toast'
 import { connectSocket, joinDriverRoom } from '../../services/socket'
@@ -85,6 +85,10 @@ export default function DriverHome() {
     totalBonusAmount: flights.reduce((s, f) => s + (f.profit > 0 ? f.profit : 0), 0) + trips.reduce((s, t) => s + (t.bonusAmount || 0), 0)
   }), [flights, trips])
 
+  const recentFlights = useMemo(() => 
+    flights.filter(f => f.status === 'completed').slice(0, 5)
+  , [flights])
+
   if (loading) return <DriverHomeSkeleton />
   if (error) return <ErrorState error={error} onRetry={() => { setLoading(true); fetchData() }} />
 
@@ -92,30 +96,34 @@ export default function DriverHome() {
     <div className="min-h-screen bg-slate-100">
       <NewTripNotification trip={newTripNotification} onClose={() => setNewTripNotification(null)} />
       <DriverHeader user={user} onLogout={handleLogout} />
-      <DriverTabs activeTab={tab} onTabChange={setTab} />
-      <main className="p-3 space-y-3 pb-6">
-        {tab === 'home' && (
-          <>
-            {activeFlight ? <ActiveFlightCard flight={activeFlight} onConfirm={handleConfirmFlight} actionLoading={actionLoading} />
-              : activeTrip ? <ActiveTripCard trip={activeTrip} onComplete={handleCompleteTrip} actionLoading={actionLoading} />
-              : pendingTrips.length > 0 ? <PendingTrips trips={pendingTrips} onStart={handleStartTrip} actionLoading={actionLoading} />
-              : <EmptyState />}
-            <StatsCards stats={stats} />
-          </>
-        )}
-        {tab === 'history' && (
-          <div className="space-y-3">
-            <FlightHistory flights={flights} onSelect={setSelectedFlight} />
-            <TripHistory trips={trips} />
-            {!flights.length && !trips.length && (
-              <div className="bg-white rounded-xl p-6 text-center border border-slate-100">
-                <History size={32} className="mx-auto mb-2 text-slate-300" />
-                <p className="text-slate-500 text-sm">Reyslar tarixi bo'sh</p>
+      <div className="max-w-2xl mx-auto">
+        <DriverTabs activeTab={tab} onTabChange={setTab} />
+        <main className="p-4 space-y-4 pb-8">
+          {tab === 'home' && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                {activeFlight ? <ActiveFlightCard flight={activeFlight} onConfirm={handleConfirmFlight} actionLoading={actionLoading} />
+                  : activeTrip ? <ActiveTripCard trip={activeTrip} onComplete={handleCompleteTrip} actionLoading={actionLoading} />
+                  : pendingTrips.length > 0 ? <PendingTrips trips={pendingTrips} onStart={handleStartTrip} actionLoading={actionLoading} />
+                  : <EmptyState stats={stats} recentFlights={recentFlights} onSelectFlight={setSelectedFlight} />}
               </div>
-            )}
-          </div>
-        )}
-      </main>
+              {(activeFlight || activeTrip || pendingTrips.length > 0) && <StatsCards stats={stats} />}
+            </div>
+          )}
+          {tab === 'history' && (
+            <div className="space-y-4">
+              <FlightHistory flights={flights} onSelect={setSelectedFlight} />
+              <TripHistory trips={trips} />
+              {!flights.length && !trips.length && (
+                <div className="bg-white rounded-xl p-8 text-center border border-slate-100">
+                  <History size={40} className="mx-auto mb-3 text-slate-300" />
+                  <p className="text-slate-500">Reyslar tarixi bo'sh</p>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
       <FlightDetailModal flight={selectedFlight} onClose={() => setSelectedFlight(null)} />
     </div>
   )

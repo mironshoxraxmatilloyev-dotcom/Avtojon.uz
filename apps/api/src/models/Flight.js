@@ -86,8 +86,8 @@ const countryExpenseSummarySchema = new mongoose.Schema({
 
 // buyurtma (leg) sxemasi - har bir yo'nalish uchun
 const legSchema = new mongoose.Schema({
-  fromCity: { type: String, required: true },
-  toCity: { type: String, required: true },
+  fromCity: { type: String, required: true, trim: true },
+  toCity: { type: String, required: true, trim: true },
   // Koordinatalar (xarita uchun) - ixtiyoriy
   fromCoords: { 
     lat: { type: Number, default: null }, 
@@ -97,13 +97,25 @@ const legSchema = new mongoose.Schema({
     lat: { type: Number, default: null }, 
     lng: { type: Number, default: null } 
   },
-  payment: { type: Number, default: 0 }, // Mijozdan olingan to'lov (so'm)
-  givenBudget: { type: Number, default: 0 }, // Yo'l xarajatlari uchun berilgan pul
-  previousBalance: { type: Number, default: 0 }, // Oldingi buyurtmadan qoldiq
-  totalBudget: { type: Number, default: 0 }, // Jami budget = givenBudget + previousBalance
-  spentAmount: { type: Number, default: 0 }, // Sarflangan summa (xarajatlar)
-  balance: { type: Number, default: 0 }, // Qoldiq = totalBudget - spentAmount
-  distance: { type: Number, default: 0 }, // km
+  payment: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'To\'lov salbiy bo\'lishi mumkin emas']
+  },
+  givenBudget: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Yo\'l puli salbiy bo\'lishi mumkin emas']
+  },
+  previousBalance: { type: Number, default: 0 },
+  totalBudget: { type: Number, default: 0 },
+  spentAmount: { type: Number, default: 0 },
+  balance: { type: Number, default: 0 },
+  distance: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Masofa salbiy bo\'lishi mumkin emas']
+  },
   status: {
     type: String,
     enum: ['pending', 'in_progress', 'completed'],
@@ -121,7 +133,11 @@ const expenseSchema = new mongoose.Schema({
     enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'food', 'repair', 'toll', 'fine', 'border', 'customs', 'transit', 'insurance', 'platon', 'other'],
     required: true
   },
-  amount: { type: Number, required: true }, // Asl valyutadagi summa
+  amount: { 
+    type: Number, 
+    required: true,
+    min: [0, 'Xarajat salbiy bo\'lishi mumkin emas']
+  },
   
   // Valyuta ma'lumotlari (xalqaro reyslar uchun)
   currency: { 
@@ -129,9 +145,9 @@ const expenseSchema = new mongoose.Schema({
     enum: ['UZS', 'USD', 'RUB', 'KZT', 'EUR', 'TRY', 'CNY', 'TJS', 'KGS', 'TMT', 'AZN', 'GEL', 'BYN', 'UAH', 'PLN', 'AFN', 'IRR', 'AED'],
     default: 'UZS' 
   },
-  amountInUSD: { type: Number, default: 0 }, // USD da
-  amountInUZS: { type: Number, default: 0 }, // So'm da
-  exchangeRate: { type: Number, default: 1 }, // Valyuta kursi (USD ga nisbatan)
+  amountInUSD: { type: Number, default: 0, min: 0 },
+  amountInUZS: { type: Number, default: 0, min: 0 },
+  exchangeRate: { type: Number, default: 1, min: 0 },
   
   // Qaysi davlatda sarflangan
   country: { 
@@ -141,25 +157,25 @@ const expenseSchema = new mongoose.Schema({
   },
   
   // Yoqilg'i uchun batafsil ma'lumotlar
-  quantity: { type: Number, default: null }, // Miqdor (litr yoki kub)
+  quantity: { type: Number, default: null, min: 0 },
   quantityUnit: { type: String, enum: ['litr', 'kub', null], default: null },
-  pricePerUnit: { type: Number, default: null }, // 1 litr/kub narxi
+  pricePerUnit: { type: Number, default: null, min: 0 },
   
   // Joylashuv ma'lumotlari
   location: {
-    name: { type: String, default: null }, // Manzil nomi (shahar, AZS nomi)
+    name: { type: String, default: null },
     lat: { type: Number, default: null },
     lng: { type: Number, default: null }
   },
   
   // Odometr ma'lumotlari
-  odometer: { type: Number, default: null }, // Xarajat paytidagi odometr
-  distanceSinceLast: { type: Number, default: null }, // Oldingi yoqilg'idan beri yurgan km
-  fuelConsumption: { type: Number, default: null }, // Sarflanish (litr/100km)
+  odometer: { type: Number, default: null, min: 0 },
+  distanceSinceLast: { type: Number, default: null },
+  fuelConsumption: { type: Number, default: null },
   
   // Qo'shimcha
-  stationName: { type: String, default: null }, // AZS nomi
-  receiptImage: { type: String, default: null }, // Chek rasmi URL
+  stationName: { type: String, default: null },
+  receiptImage: { type: String, default: null },
   description: String,
   
   // Chegara xarajatlari uchun (border, customs, transit, insurance)
@@ -230,8 +246,16 @@ const flightSchema = new mongoose.Schema({
   }],
   
   // Boshlang'ich ma'lumotlar
-  startOdometer: { type: Number, default: 0 }, // Boshlang'ich odometr (km)
-  startFuel: { type: Number, default: 0 }, // Bakdagi yoqilg'i
+  startOdometer: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Odometr salbiy bo\'lishi mumkin emas']
+  },
+  startFuel: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Yoqilg\'i salbiy bo\'lishi mumkin emas']
+  },
   fuelType: { 
     type: String, 
     enum: ['benzin', 'diesel', 'gas', 'metan', 'propan'],
@@ -244,8 +268,16 @@ const flightSchema = new mongoose.Schema({
   },
   
   // Tugatish ma'lumotlari
-  endOdometer: { type: Number, default: 0 },
-  endFuel: { type: Number, default: 0 },
+  endOdometer: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Odometr salbiy bo\'lishi mumkin emas']
+  },
+  endFuel: { 
+    type: Number, 
+    default: 0,
+    min: [0, 'Yoqilg\'i salbiy bo\'lishi mumkin emas']
+  },
   
   // buyurtmalar (cheksiz)
   legs: [legSchema],
@@ -311,8 +343,20 @@ const flightSchema = new mongoose.Schema({
   notes: String
 }, { timestamps: true });
 
-// Saqlashdan oldin hisob-kitob
+// Saqlashdan oldin hisob-kitob va validatsiya
 flightSchema.pre('save', function(next) {
+  // ============ VALIDATSIYA ============
+  
+  // Odometr validatsiyasi - endOdometer >= startOdometer
+  if (this.endOdometer > 0 && this.endOdometer < this.startOdometer) {
+    return next(new Error('Tugatish odometri boshlang\'ich odometrdan kichik bo\'lishi mumkin emas'));
+  }
+  
+  // driverProfitPercent 0-100 oralig'ida bo'lishi kerak
+  if (this.driverProfitPercent < 0 || this.driverProfitPercent > 100) {
+    return next(new Error('Shofyor foizi 0 dan 100 gacha bo\'lishi kerak'));
+  }
+
   // ============ XALQARO REYS HISOBLARI ============
   
   // Chegara o'tish xarajatlari jami
@@ -418,21 +462,18 @@ flightSchema.pre('save', function(next) {
   // 2. Sof foyda = Jami kirim - Jami xarajatlar
   this.netProfit = this.totalIncome - this.totalExpenses;
   
-  // 3. Shofyor ulushi (faqat sof foyda musbat bo'lsa)
-  const percent = this.driverProfitPercent || 0;
-  if (this.netProfit > 0 && percent > 0) {
-    this.driverProfitAmount = Math.round(this.netProfit * percent / 100);
-  } else {
+  // 3. Shofyor ulushi va biznesmen foydasi
+  // MUHIM: Bu qiymatlar faqat reys yopilganda (complete endpoint) hisoblanadi
+  // Faol reyslar uchun shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
+  if (this.status === 'active') {
+    // Faol reyslar uchun - shofyor ulushi 0, chunki hali reys yopilmagan
+    // Biznesmen reys yopganda foizni belgilaydi
     this.driverProfitAmount = 0;
+    this.businessProfit = this.netProfit; // Hali shofyor ulushi ayirilmagan
+    this.driverOwes = 0; // Reys yopilmaganda qarz yo'q
   }
-  
-  // 4. Biznesmen foydasi = Sof foyda - Shofyor ulushi
-  this.businessProfit = this.netProfit - this.driverProfitAmount;
-  
-  // 5. Shofyor beradigan pul = Biznesmen foydasi
-  // (Shofyor qo'lida: totalIncome, sarfladi: totalExpenses, o'ziga oldi: driverProfitAmount)
-  // Qolgan pul = totalIncome - totalExpenses - driverProfitAmount = businessProfit
-  this.driverOwes = this.businessProfit;
+  // Yopilgan reyslar uchun - driverProfitAmount, businessProfit, driverOwes 
+  // complete endpoint da o'rnatilgan, ularni o'zgartirmaymiz
   
   // Reys nomi
   if (this.legs.length > 0) {

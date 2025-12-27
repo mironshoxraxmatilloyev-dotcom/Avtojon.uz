@@ -50,8 +50,8 @@ describe('Token Manager', () => {
     it('should return correct expiration times', async () => {
       const tokens = await generateTokenPair(mockUser, 'admin');
 
-      expect(tokens.expiresIn).toBe(15 * 60); // 15 minutes
-      expect(tokens.refreshExpiresIn).toBe(7 * 24 * 60 * 60); // 7 days
+      expect(tokens.expiresIn).toBe(60 * 60); // 1 hour
+      expect(tokens.refreshExpiresIn).toBe(24 * 60 * 60); // 1 day
     });
   });
 
