@@ -2,7 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 📱 Safe area - minimal, faqat kerak joyda */
+/* 📱 Mobile app - overflow fix */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Safe area - minimal */
 .safe-top {
   padding-top: env(safe-area-inset-top, 0);
 }

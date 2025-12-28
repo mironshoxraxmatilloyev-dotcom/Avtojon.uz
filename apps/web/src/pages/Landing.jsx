@@ -140,7 +140,7 @@ export default function Landing() {
                     )}
                   </button>
                 </div>
-                
+
                 {/* Download App - Shofyorlar uchun */}
                 <div className="mt-6">
                   <a
