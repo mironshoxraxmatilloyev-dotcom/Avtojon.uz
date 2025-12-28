@@ -1,14 +1,31 @@
-import { Preferences } from '@capacitor/preferences'
-import { Capacitor } from '@capacitor/core'
-
 // Capacitor native platformada ishlayaptimi?
-const isNative = Capacitor.isNativePlatform()
+let isNative = false
+let Preferences = null
+
+// Dynamic import - faqat native platformada yuklanadi
+const initCapacitor = async () => {
+  try {
+    const { Capacitor } = await import('@capacitor/core')
+    isNative = Capacitor.isNativePlatform()
+    if (isNative) {
+      const prefs = await import('@capacitor/preferences')
+      Preferences = prefs.Preferences
+    }
+  } catch (e) {
+    // Web da Capacitor yo'q - xato emas
+    isNative = false
+  }
+}
+
+// Init qilish
+const initPromise = initCapacitor()
 
 // Storage utility - Capacitor va Web uchun universal
 export const storage = {
   async get(key) {
+    await initPromise
     try {
-      if (isNative) {
+      if (isNative && Preferences) {
         const { value } = await Preferences.get({ key })
         return value
       }
@@ -20,8 +37,9 @@ export const storage = {
   },
 
   async set(key, value) {
+    await initPromise
     try {
-      if (isNative) {
+      if (isNative && Preferences) {
         await Preferences.set({ key, value: value || '' })
       }
       localStorage.setItem(key, value || '')
@@ -32,8 +50,9 @@ export const storage = {
   },
 
   async remove(key) {
+    await initPromise
     try {
-      if (isNative) {
+      if (isNative && Preferences) {
         await Preferences.remove({ key })
       }
       localStorage.removeItem(key)

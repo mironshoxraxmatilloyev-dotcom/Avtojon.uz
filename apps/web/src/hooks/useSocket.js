@@ -1,13 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { connectSocket, getSocket, disconnectSocket, joinDriverRoom, joinBusinessRoom } from '../services/socket'
 
 // useSocket hook - socket.io bilan ishlash uchun
 export function useSocket() {
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
+  const socketRef = useRef(null)
 
   useEffect(() => {
     const s = connectSocket()
+    socketRef.current = s
     setSocket(s)
 
     const handleConnect = () => setIsConnected(true)
@@ -27,7 +29,22 @@ export function useSocket() {
     }
   }, [])
 
-  return { socket, isConnected, joinDriverRoom, joinBusinessRoom, disconnectSocket }
+  // Stable callbacks
+  const stableJoinDriverRoom = useCallback((driverId) => {
+    joinDriverRoom(driverId)
+  }, [])
+
+  const stableJoinBusinessRoom = useCallback((businessId) => {
+    joinBusinessRoom(businessId)
+  }, [])
+
+  return { 
+    socket, 
+    isConnected, 
+    joinDriverRoom: stableJoinDriverRoom, 
+    joinBusinessRoom: stableJoinBusinessRoom, 
+    disconnectSocket 
+  }
 }
 
 export default useSocket
