@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api, { getErrorMessage } from '../services/api'
+import { storage, saveAuthData, clearAuthData, loadAuthData } from '../utils/storage'
 
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
@@ -7,6 +8,25 @@ export const useAuthStore = create((set, get) => ({
   refreshToken: localStorage.getItem('refreshToken'),
   loading: false,
   error: null,
+  initialized: false,
+
+  // App boshlanganda storage dan yuklash
+  initAuth: async () => {
+    try {
+      const { token, refreshToken, user } = await loadAuthData()
+      set({ 
+        token, 
+        refreshToken, 
+        user, 
+        initialized: true 
+      })
+      return { token, user }
+    } catch (e) {
+      console.error('Auth init error:', e)
+      set({ initialized: true })
+      return { token: null, user: null }
+    }
+  },
 
   // Demo rejimda ekanligini tekshirish
   isDemo: () => {
@@ -23,7 +43,6 @@ export const useAuthStore = create((set, get) => ({
       const { data } = await api.post('/auth/login', { username, password })
       
       if (!data.data?.accessToken || !data.data?.user) {
-        // Eski format (token) ni ham qo'llab-quvvatlash
         if (!data.data?.token || !data.data?.user) {
           throw new Error('Server javobida xatolik')
         }
@@ -32,11 +51,9 @@ export const useAuthStore = create((set, get) => ({
       const accessToken = data.data.accessToken || data.data.token
       const refreshToken = data.data.refreshToken
       
-      localStorage.setItem('token', accessToken)
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken)
-      }
-      localStorage.setItem('user', JSON.stringify(data.data.user))
+      // Capacitor storage ga saqlash
+      await saveAuthData(accessToken, data.data.user, refreshToken)
+      
       set({ 
         user: data.data.user, 
         token: accessToken,
@@ -62,23 +79,18 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Demo login uchun - token va user to'g'ridan-to'g'ri set qilish
-  setAuth: (token, user, refreshToken = null) => {
+  setAuth: async (token, user, refreshToken = null) => {
     if (!token || !user) {
       console.error('setAuth: token yoki user yo\'q')
       return
     }
-    localStorage.setItem('token', token)
-    if (refreshToken) {
-      localStorage.setItem('refreshToken', refreshToken)
-    }
-    localStorage.setItem('user', JSON.stringify(user))
+    await saveAuthData(token, user, refreshToken)
     set({ user, token, refreshToken, error: null })
   },
 
   register: async ({ fullName, password, phone }) => {
     set({ loading: true, error: null })
     
-    // Client-side validation
     if (!fullName?.trim()) {
       set({ loading: false, error: 'Ismingizni kiriting' })
       return { success: false, message: 'Ismingizni kiriting' }
@@ -104,11 +116,9 @@ export const useAuthStore = create((set, get) => ({
       const accessToken = data.data.accessToken || data.data.token
       const refreshToken = data.data.refreshToken
       
-      localStorage.setItem('token', accessToken)
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken)
-      }
-      localStorage.setItem('user', JSON.stringify(data.data.user))
+      // Capacitor storage ga saqlash
+      await saveAuthData(accessToken, data.data.user, refreshToken)
+      
       set({ 
         user: data.data.user, 
         token: accessToken,
@@ -129,16 +139,14 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
-    // Server'ga logout so'rovi (tokenlarni bekor qilish)
     try {
       await api.post('/auth/logout')
     } catch (e) {
       // Xato bo'lsa ham davom etamiz
     }
     
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('user')
+    // Capacitor storage dan o'chirish
+    await clearAuthData()
     
     // Auth cache ni tozalash
     if (typeof window !== 'undefined' && window.__clearAuthCache) {
@@ -149,10 +157,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Update user data
-  updateUser: (userData) => {
+  updateUser: async (userData) => {
     const currentUser = get().user
     const updatedUser = { ...currentUser, ...userData }
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+    await storage.set('user', JSON.stringify(updatedUser))
     set({ user: updatedUser })
   }
 }))

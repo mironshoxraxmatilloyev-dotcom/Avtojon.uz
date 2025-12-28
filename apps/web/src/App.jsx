@@ -5,6 +5,22 @@ import { AlertProvider } from './components/ui'
 import api from './services/api'
 import SubscriptionAlert from './components/subscription/SubscriptionAlert'
 
+// 🚀 Auth initialization hook
+function useInitAuth() {
+  const { initAuth, initialized } = useAuthStore()
+  const [ready, setReady] = useState(false)
+  
+  useEffect(() => {
+    if (!initialized) {
+      initAuth().finally(() => setReady(true))
+    } else {
+      setReady(true)
+    }
+  }, [initAuth, initialized])
+  
+  return ready
+}
+
 // 🚀 LAZY LOADING
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
@@ -176,6 +192,13 @@ const SuperAdminRoute = ({ children }) => {
 }
 
 function App() {
+  const authReady = useInitAuth()
+  
+  // Auth yuklangunga qadar kutish
+  if (!authReady) {
+    return <PageLoader />
+  }
+  
   return (
     <AlertProvider>
       <ScrollToTop />

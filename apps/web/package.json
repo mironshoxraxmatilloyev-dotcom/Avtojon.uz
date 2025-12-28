@@ -13,6 +13,7 @@
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/geolocation": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
     "@react-three/drei": "^9.74.0",
     "@react-three/fiber": "^8.13.0",
     "axios": "^1.6.2",
