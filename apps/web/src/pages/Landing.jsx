@@ -1,5 +1,4 @@
 import { useState, memo, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
@@ -34,6 +33,28 @@ const AnimatedText = memo(({ children, delay = 0 }) => (
   </div>
 ))
 
+// Fixed Header Component - scroll qilinmaydigan navbar
+const FixedHeader = memo(() => (
+  <header className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 pointer-events-auto">
+    <div className="max-w-7xl mx-auto px-6 py-3">
+      <div className="flex justify-between items-center">
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src="/logo.jpg" alt="Avtojon" className="w-10 h-10 rounded-xl object-cover" />
+          <span className="text-xl font-bold text-white">Avtojon ✨</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/login" className="text-white/90 font-medium text-sm px-4 py-2 hover:text-white transition-colors">
+            Kirish
+          </Link>
+          <Link to="/register" className="bg-white text-indigo-600 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg hover:bg-amber-300 hover:text-indigo-700 transition-all">
+            Boshlash
+          </Link>
+        </div>
+      </div>
+    </div>
+  </header>
+))
+
 export default function Landing() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
@@ -54,44 +75,9 @@ export default function Landing() {
     }
   }, [setAuth, navigate])
 
-  // Fixed Header - Portal orqali body ga render qilinadi
-  const FixedHeader = () => createPortal(
-    <header 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 99999,
-        background: 'linear-gradient(to right, #4f46e5, #9333ea, #ec4899)',
-      }}
-    >
-      <div className="container mx-auto px-4 sm:px-6 py-3">
-        <div className="flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src="/logo.jpg" alt="Avtojon" className="w-10 h-10 rounded-xl object-cover" />
-            <h1 className="text-xl font-bold text-white flex items-center gap-1.5">
-              Avtojon <Sparkles className="w-4 h-4 text-amber-300" />
-            </h1>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="text-white/90 hover:text-white transition-colors font-medium text-sm px-4 py-2">
-              Kirish
-            </Link>
-            <Link to="/register" className="bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-black/10 transition-all">
-              Boshlash
-            </Link>
-          </div>
-        </div>
-      </div>
-    </header>,
-    document.body
-  )
-
   return (
-    <div className="landing-page min-h-screen overflow-hidden">
-      {/* Fixed Header - Portal orqali */}
+    <div className="landing-page min-h-screen overflow-x-hidden">
+      {/* Fixed Header - scroll qilinmaydi */}
       <FixedHeader />
 
       {/* Hero Section with Gradient Background */}

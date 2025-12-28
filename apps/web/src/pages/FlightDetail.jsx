@@ -212,18 +212,6 @@ export default function FlightDetail() {
                 </div>
               </div>
             </div>
-
-            {/* Right - Quick Stats */}
-            <div className="flex items-center gap-3">
-              <div className="px-4 py-3 bg-white/10 rounded-xl">
-                <p className="text-slate-500 text-xs uppercase">Buyurtmalar</p>
-                <p className="text-white font-bold text-lg">{flight.legs?.length || 0}</p>
-              </div>
-              <div className="px-4 py-3 bg-white/10 rounded-xl">
-                <p className="text-slate-500 text-xs uppercase">Masofa</p>
-                <p className="text-white font-bold text-lg">{flight.totalDistance || 0} km</p>
-              </div>
-            </div>
           </div>
 
           {/* Stats Cards - 4 ta asosiy ko'rsatkich */}
@@ -231,19 +219,19 @@ export default function FlightDetail() {
             {/* 1. Yo'l uchun berilgan */}
             <div className="bg-amber-500/20 rounded-xl p-4 border border-amber-500/30">
               <p className="text-amber-400 font-bold text-xl sm:text-2xl">{formatMoney(flight.totalGivenBudget || 0)}</p>
-              <p className="text-amber-300/70 text-xs mt-1">🛣️ Yo'l uchun</p>
+              <p className="text-amber-300/70 text-xs mt-1">Yo'l uchun</p>
             </div>
 
             {/* 2. Mijozdan olingan */}
             <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-500/30">
               <p className="text-emerald-400 font-bold text-xl sm:text-2xl">+{formatMoney(flight.totalPayment || 0)}</p>
-              <p className="text-emerald-300/70 text-xs mt-1">💰 Mijozdan</p>
+              <p className="text-emerald-300/70 text-xs mt-1">Mijozdan</p>
             </div>
 
             {/* 3. Sarflangan */}
             <div className="bg-red-500/20 rounded-xl p-4 border border-red-500/30">
               <p className="text-red-400 font-bold text-xl sm:text-2xl">-{formatMoney(allExpenses)}</p>
-              <p className="text-red-300/70 text-xs mt-1">💸 Sarflangan</p>
+              <p className="text-red-300/70 text-xs mt-1">Sarflangan</p>
             </div>
 
             {/* 4. Sof foyda / Shofyor beradi */}
@@ -264,7 +252,7 @@ export default function FlightDetail() {
                   {(flight.businessProfit || flight.driverOwes || 0) >= 0 ? '+' : ''}{formatMoney(flight.businessProfit || flight.driverOwes || netProfit)}
                 </p>
                 <p className="text-xs mt-1 text-blue-300/70">
-                  📈 Sof foyda {flight.driverProfitPercent ? `(${flight.driverProfitPercent}% ayirilgan)` : ''}
+                  Sof foyda {flight.driverProfitPercent ? `(${flight.driverProfitPercent}% ayirilgan)` : ''}
                 </p>
               </div>
             )}
@@ -326,12 +314,12 @@ export default function FlightDetail() {
             // 🚀 Modal ni darhol yopish
             setShowLegModal(false)
             showToast.success('Buyurtma qo\'shildi')
-            
+
             // 🚀 Optimistic update
             const tempId = `temp_${Date.now()}`
             const newLeg = { ...data, _id: tempId, createdAt: new Date().toISOString() }
             const newLegsCount = (flight.legs?.length || 0) + 1
-            
+
             setFlight(prev => ({
               ...prev,
               legs: [...(prev.legs || []), newLeg],
@@ -339,7 +327,7 @@ export default function FlightDetail() {
               totalGivenBudget: (prev.totalGivenBudget || 0) + (Number(data.givenBudget) || 0)
             }))
             setSelectedLegIndex(newLegsCount - 1)
-            
+
             // Background da serverga yuborish
             api.post(`/flights/${id}/legs`, data)
               .then(res => {
@@ -365,14 +353,14 @@ export default function FlightDetail() {
             // 🚀 Modal ni darhol yopish
             setShowExpenseModal(false)
             showToast.success(editingExpense ? 'Yangilandi' : 'Qo\'shildi')
-            
+
             // 🚀 Optimistic update - UI ni darhol yangilash
             if (editingExpense) {
               const oldAmountUZS = editingExpense.amountInUZS || editingExpense.amount || 0
               const newAmountUZS = data.amountInUZS || data.amount || 0
               setFlight(prev => ({
                 ...prev,
-                expenses: prev.expenses?.map(e => 
+                expenses: prev.expenses?.map(e =>
                   e._id === editingExpense._id ? { ...e, ...data } : e
                 ) || [],
                 totalExpenses: (prev.totalExpenses || 0) - oldAmountUZS + newAmountUZS
@@ -394,7 +382,7 @@ export default function FlightDetail() {
                 .then(res => res.data?.data && setFlight(res.data.data))
                 .catch(() => fetchFlight(false))
             }
-            
+
             setSelectedLegForExpense(null)
             setEditingExpense(null)
           }}
@@ -409,7 +397,7 @@ export default function FlightDetail() {
             // 🚀 Modal ni darhol yopish
             setShowCompleteModal(false)
             showToast.success('Reys yopildi')
-            
+
             // Hisob-kitob
             const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
             const totalExpenses = flight.totalExpenses || 0
@@ -417,7 +405,7 @@ export default function FlightDetail() {
             const percent = data.driverProfitPercent || 0
             const driverProfitAmount = netProfit > 0 && percent > 0 ? Math.round(netProfit * percent / 100) : 0
             const businessProfit = netProfit - driverProfitAmount
-            
+
             // 🚀 Optimistic update - shofyor ulushi bilan
             setFlight(prev => ({
               ...prev,
@@ -429,7 +417,7 @@ export default function FlightDetail() {
               businessProfit: businessProfit,
               driverOwes: businessProfit
             }))
-            
+
             // Background da serverga yuborish
             api.put(`/flights/${id}/complete`, data)
               .then(res => res.data?.data && setFlight(res.data.data))
@@ -446,22 +434,22 @@ export default function FlightDetail() {
             // 🚀 Modal ni darhol yopish
             setShowPaymentModal(false)
             showToast.success('To\'lov saqlandi')
-            
+
             // 🚀 Optimistic update
             const legId = selectedLegForPayment._id
             const oldPayment = selectedLegForPayment.payment || 0
             const newPayment = Number(payment) || 0
-            
+
             setFlight(prev => ({
               ...prev,
-              legs: prev.legs?.map(l => 
+              legs: prev.legs?.map(l =>
                 l._id === legId ? { ...l, payment: newPayment } : l
               ) || [],
               totalPayment: (prev.totalPayment || 0) - oldPayment + newPayment
             }))
-            
+
             setSelectedLegForPayment(null)
-            
+
             // Background da serverga yuborish
             api.put(`/flights/${id}/legs/${legId}/payment`, { payment })
               .then(res => res.data?.data && setFlight(res.data.data))
