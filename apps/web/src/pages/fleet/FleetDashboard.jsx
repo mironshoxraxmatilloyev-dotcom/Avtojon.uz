@@ -232,16 +232,18 @@ export default function FleetDashboard() {
         <div className="p-5 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Truck className="w-5 h-5 text-white" />
-              </div>
+              <img 
+                src="/logo.jpg" 
+                alt="Avtojon Logo" 
+                className="w-11 h-11 rounded-xl object-cover shadow-lg shadow-blue-500/30"
+              />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-md flex items-center justify-center shadow-md">
                 <Sparkles className="w-2.5 h-2.5 text-white" />
               </div>
             </div>
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Avtopark
+                Avtojon
               </h1>
               <p className="text-[10px] text-slate-400 font-medium">Fleet Management Pro</p>
             </div>
@@ -355,9 +357,11 @@ export default function FleetDashboard() {
               <div className="flex items-center gap-3">
                 {/* Mobile Logo */}
                 <div className="lg:hidden relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                    <Truck className="w-5 h-5 text-white" />
-                  </div>
+                  <img 
+                    src="/logo.jpg" 
+                    alt="Avtojon Logo" 
+                    className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-blue-500/25"
+                  />
                 </div>
                 <div>
                   <h2 className="text-lg lg:text-xl font-bold text-slate-900">

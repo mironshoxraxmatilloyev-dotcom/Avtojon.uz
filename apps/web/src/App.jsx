@@ -201,10 +201,12 @@ function App() {
   
   return (
     <AlertProvider>
-      <ScrollToTop />
-      <SubscriptionAlert />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      {/* 📱 Status bar uchun global padding */}
+      <div className="safe-area-wrapper">
+        <ScrollToTop />
+        <SubscriptionAlert />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           {/* Public */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -234,6 +236,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      </div>
     </AlertProvider>
   )
 }

@@ -90,9 +90,7 @@ export default function Register() {
         {/* Logo */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Truck className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
             <span className="text-2xl font-bold text-white">Avtojon</span>
           </Link>
         </div>
@@ -129,9 +127,7 @@ export default function Register() {
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <Truck className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
               <span className="text-2xl font-bold text-slate-800">Avtojon</span>
             </Link>
           </div>

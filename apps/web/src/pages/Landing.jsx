@@ -67,12 +67,10 @@ export default function Landing() {
 
         {/* Header */}
         <header className="relative z-20">
-          <div className="container mx-auto px-4 sm:px-6 py-5">
+          <div className="container mx-auto px-4 sm:px-6 py-4">
             <div className="flex justify-between items-center">
               <Link to="/" className="flex items-center gap-2.5">
-                <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                  <Truck className="w-6 h-6 text-white" />
-                </div>
+                <img src="/logo.jpg" alt="Avtojon" className="w-10 h-10 rounded-xl object-cover" />
                 <h1 className="text-xl font-bold text-white flex items-center gap-1.5">
                   Avtojon <Sparkles className="w-4 h-4 text-amber-300" />
                 </h1>
