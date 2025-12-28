@@ -290,7 +290,7 @@ export default function Flights() {
     const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
     
     const confirmMessage = profit > 0 && driverPercent > 0
-      ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nShofyorga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
+      ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nHaydovchiga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
       : `${selectedFlight.name} reysini yopishni xohlaysizmi?`
     
     const confirmed = await alert.confirm({
@@ -495,7 +495,7 @@ export default function Flights() {
 
     const confirmed = await alert.confirm({
       title: "Reysni bekor qilish",
-      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Shofyor bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
+      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Haydovchi bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
       confirmText: "Ha, bekor qilish",
       cancelText: "Yo'q",
       type: "danger"
@@ -980,7 +980,7 @@ export default function Flights() {
             <Route size={40} className="text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Reyslar topilmadi</h3>
-          <p className="text-gray-500 mb-6">Shofyorlar sahifasidan yangi reys oching</p>
+          <p className="text-gray-500 mb-6">Haydovchilar sahifasidan yangi reys oching</p>
         </div>
       )}
 
@@ -1240,10 +1240,10 @@ export default function Flights() {
                   </div>
                 </div>
 
-                {/* Shofyor ulushi - har doim ko'rsatiladi */}
+                {/* Haydovchi ulushi - har doim ko'rsatiladi */}
                 <div className={`bg-gradient-to-r ${selectedFlight.profit > 0 ? 'from-emerald-500/10 to-teal-500/10 border-emerald-500/20' : 'from-red-500/10 to-orange-500/10 border-red-500/20'} rounded-xl p-4 border`}>
                   <label className={`block text-sm font-medium mb-2 ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    💰 Shofyorga foydadan necha % berasiz?
+                    💰 Haydovchiga foydadan necha % berasiz?
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -1259,7 +1259,7 @@ export default function Flights() {
                   </div>
                   {completeForm.driverProfitPercent > 0 && (
                     <div className={`mt-3 p-3 rounded-lg flex items-center justify-between ${selectedFlight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                      <span className={`text-sm ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>Shofyorga:</span>
+                      <span className={`text-sm ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>Haydovchiga:</span>
                       <span className={`font-bold ${selectedFlight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {selectedFlight.profit > 0 
                           ? `${formatMoney(Math.round(selectedFlight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`

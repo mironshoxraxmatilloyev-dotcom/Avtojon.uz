@@ -34,16 +34,10 @@ export function RecentFlights({ flights }) {
             <Clock className="text-purple-600" size={16} />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-gray-900">Songgi reyslar</h2>
+            <h2 className="text-base sm:text-lg font-bold text-gray-900">So'nggi reyslar</h2>
             <p className="text-xs sm:text-sm text-gray-500">Oxirgi faoliyat</p>
           </div>
         </div>
-        <button 
-          onClick={() => navigate('/dashboard/flights')}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-        >
-          Barchasi <ArrowRight size={14} />
-        </button>
       </div>
 
       <div className="space-y-3">

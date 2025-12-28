@@ -34,14 +34,14 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver }) 
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
             {getGreeting()}, {user?.companyName || 'Admin'}! 👋
           </h1>
-          <p className="text-blue-200 text-sm sm:text-base">Shofyorlarni boshqaring va kuzating</p>
+          <p className="text-blue-200 text-sm sm:text-base">Haydovchilarni boshqaring va kuzating</p>
         </div>
         <button 
           onClick={onAddDriver} 
           className="group px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-slate-900 rounded-lg sm:rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
         >
           <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
-          <span className="hidden sm:inline">Yangi shofyor</span>
+          <span className="hidden sm:inline">Yangi haydovchi</span>
           <span className="sm:hidden">Qo'shish</span>
           <ArrowUpRight size={14} className="sm:w-4 sm:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform hidden sm:block" />
         </button>

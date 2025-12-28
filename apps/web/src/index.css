@@ -15,10 +15,18 @@ html, body {
   min-height: 100vh;
 }
 
+/* Landing page uchun - fixed header bor, padding kerak emas */
+.safe-area-wrapper:has(.landing-page) {
+  padding-top: 0 !important;
+}
+
 /* iOS va yangi Android uchun env() */
 @supports (padding-top: env(safe-area-inset-top)) {
   .safe-area-wrapper {
     padding-top: max(env(safe-area-inset-top, 24px), 24px);
+  }
+  .safe-area-wrapper:has(.landing-page) {
+    padding-top: 0 !important;
   }
 }
 
@@ -100,6 +108,21 @@ nav[style*="position: fixed"][style*="bottom: 0"] {
   bottom: 0 !important;
   transform: translateZ(0) !important;
   -webkit-transform: translateZ(0) !important;
+}
+
+/* 🚀 Landing page fixed header */
+header.fixed,
+.landing-header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  will-change: transform !important;
 }
 
 /* Modal ochilganda scroll yo'qotish */

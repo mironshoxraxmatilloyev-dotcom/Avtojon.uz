@@ -166,17 +166,17 @@ export default function FlightHeader({ flight, navigate }) {
             )}
           </div>
 
-          {/* 6. Shofyor beradi */}
+          {/* 6. Haydovchi beradi */}
           <div className="bg-purple-500/20 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30">
             {isInternational ? (
               <>
                 <p className="text-purple-400 text-lg sm:text-xl font-bold">{formatUSD(driverOwesUSD)}</p>
-                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Shofyor beradi</p>
+                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Haydovchi beradi</p>
               </>
             ) : (
               <>
                 <p className="text-purple-400 text-lg sm:text-xl font-bold">{formatMoney(driverOwes)}</p>
-                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Shofyor beradi</p>
+                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Haydovchi beradi</p>
               </>
             )}
           </div>

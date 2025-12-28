@@ -53,7 +53,7 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
         />
         <StatCard
           icon={Truck}
-          label="Shofyorlar"
+          label="Haydovchilar"
           value={<AnimatedCounter value={stats.drivers || 0} />}
           color="emerald"
           onClick={() => setActiveTab('drivers')}
@@ -124,7 +124,7 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
           />
           <QuickAction
             icon={Truck}
-            label="Shofyorlar"
+            label="Haydovchilar"
             color="emerald"
             onClick={() => setActiveTab('drivers')}
           />

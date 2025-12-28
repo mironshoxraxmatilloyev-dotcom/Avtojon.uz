@@ -46,7 +46,7 @@ export default function DriverDetail() {
   const fetchData = useCallback(async (showLoader = true) => {
     // Vaqtinchalik ID tekshirish - temp_ bilan boshlanuvchi ID lar hali saqlanmagan
     if (id?.startsWith('temp_')) {
-      setError({ type: 'notfound', message: 'Bu shofyor hali saqlanmagan' })
+      setError({ type: 'notfound', message: 'Bu haydovchi hali saqlanmagan' })
       setLoading(false)
       return
     }
@@ -65,7 +65,7 @@ export default function DriverDetail() {
       setFlights(flightsRes.data.data || [])
     } catch (err) {
       if (err.response?.status === 404 || err.response?.status === 400) {
-        setError({ type: 'notfound', message: 'Shofyor topilmadi' })
+        setError({ type: 'notfound', message: 'Haydovchi topilmadi' })
       } else {
         setError({
           type: err.isNetworkError ? 'network' : 'generic',

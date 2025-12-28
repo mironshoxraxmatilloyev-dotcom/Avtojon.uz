@@ -670,7 +670,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
           <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-violet-500/10 rounded-2xl p-5 border border-purple-500/20">
             <div className="flex items-center gap-2 mb-4">
               <Percent size={20} className="text-purple-400" />
-              <h3 className="text-white font-bold text-lg">Shofyor ulushi</h3>
+              <h3 className="text-white font-bold text-lg">Haydovchi ulushi</h3>
             </div>
 
             <div className="grid grid-cols-6 gap-2 mb-5">
@@ -691,7 +691,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-purple-500/20 rounded-xl p-4 border border-purple-500/30">
-                <p className="text-purple-300 text-sm mb-1">Shofyor ulushi ({percent}%)</p>
+                <p className="text-purple-300 text-sm mb-1">Haydovchi ulushi ({percent}%)</p>
                 {isInternational ? (
                   <>
                     <p className="text-purple-400 font-bold text-xl">{formatUSD(driverShareUSD)}</p>
@@ -702,7 +702,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
                 )}
               </div>
               <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-4 border border-amber-500/30">
-                <p className="text-amber-300 text-sm mb-1">Shofyor beradi</p>
+                <p className="text-amber-300 text-sm mb-1">Haydovchi beradi</p>
                 {isInternational ? (
                   <>
                     <p className="text-amber-400 font-bold text-2xl">{formatUSD(driverOwesUSD)}</p>

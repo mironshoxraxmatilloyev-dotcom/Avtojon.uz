@@ -45,13 +45,13 @@ export default function FinancialSummary({ flight }) {
           color="red" 
         />
         <SummaryBox 
-          label={`Shofyor ulushi (${flight.driverProfitPercent || 0}%)`} 
+          label={`Haydovchi ulushi (${flight.driverProfitPercent || 0}%)`} 
           value={isInternational ? formatUSD(driverProfitAmountUSD) : formatMoney(flight.driverProfitAmount || 0)} 
           subValue={isInternational ? `≈ ${formatMoney(flight.driverProfitAmount || 0)}` : null}
           color="purple" 
         />
         <SummaryBox 
-          label="Shofyor berdi" 
+          label="Haydovchi berdi" 
           value={isInternational ? formatUSD(driverOwesUSD) : formatMoney(driverOwes)} 
           subValue={isInternational ? `≈ ${formatMoney(driverOwes)}` : null}
           color="emerald" 

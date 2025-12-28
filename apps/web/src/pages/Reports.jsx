@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { 
-  BarChart3, TrendingUp, Users, Route, Fuel, Calendar, 
+import {
+  BarChart3, TrendingUp, Users, Route, Fuel, Calendar,
   ArrowUpRight, Activity, DollarSign, Clock, CheckCircle,
   X, ChevronLeft, ChevronRight, Filter, Sparkles, Download, FileSpreadsheet
 } from 'lucide-react'
@@ -52,9 +52,9 @@ const exportToExcel = (data, filename) => {
 
   let xml = xmlHeader
 
-  // Shofyorlar sheet
+  // Haydovchilar sheet
   xml += `
-  <Worksheet ss:Name="Shofyorlar">
+  <Worksheet ss:Name="Haydovchilar">
     <Table>
       <Column ss:Width="50"/>
       <Column ss:Width="150"/>
@@ -64,7 +64,7 @@ const exportToExcel = (data, filename) => {
         <Cell ss:StyleID="header"><Data ss:Type="String">Ism</Data></Cell>
         <Cell ss:StyleID="header"><Data ss:Type="String">Holat</Data></Cell>
       </Row>`
-  
+
   data.drivers.forEach((d, i) => {
     xml += `
       <Row>
@@ -87,11 +87,11 @@ const exportToExcel = (data, filename) => {
       <Column ss:Width="100"/>
       <Row ss:Height="30">
         <Cell ss:StyleID="header"><Data ss:Type="String">№</Data></Cell>
-        <Cell ss:StyleID="header"><Data ss:Type="String">Shofyor</Data></Cell>
+        <Cell ss:StyleID="header"><Data ss:Type="String">Haydovchi</Data></Cell>
         <Cell ss:StyleID="header"><Data ss:Type="String">Sana</Data></Cell>
         <Cell ss:StyleID="header"><Data ss:Type="String">Holat</Data></Cell>
       </Row>`
-  
+
   data.flights.forEach((f, i) => {
     xml += `
       <Row>
@@ -120,15 +120,15 @@ const exportToExcel = (data, filename) => {
         <Cell ss:StyleID="header"><Data ss:Type="String">Qiymat</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">👥 Jami shofyorlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">👥 Jami haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bo'sh shofyorlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bo'sh haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.free}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">🚗 Band shofyorlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">🚗 Band haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.busy}</Data></Cell>
       </Row>
       <Row><Cell/></Row>
@@ -195,23 +195,23 @@ const ProBarChart = ({ data, color = 'blue' }) => {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-sm font-medium text-gray-700">{item.label}</span>
             <span className="text-sm font-bold text-gray-900">
-              {typeof item.value === 'number' && item.value > 1000 
-                ? new Intl.NumberFormat('uz-UZ').format(item.value) 
+              {typeof item.value === 'number' && item.value > 1000
+                ? new Intl.NumberFormat('uz-UZ').format(item.value)
                 : item.value}
             </span>
           </div>
           <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div 
+            <div
               className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out group-hover:opacity-90"
-              style={{ 
+              style={{
                 width: `${(item.value / maxValue) * 100}%`,
                 background: `linear-gradient(90deg, ${c.from}, ${c.to})`,
                 boxShadow: `0 0 20px ${c.from}40`
               }}
             />
-            <div 
+            <div
               className="absolute inset-y-0 left-0 rounded-full animate-pulse opacity-50"
-              style={{ 
+              style={{
                 width: `${(item.value / maxValue) * 100}%`,
                 background: `linear-gradient(90deg, ${c.from}, ${c.to})`
               }}
@@ -227,7 +227,7 @@ const ProBarChart = ({ data, color = 'blue' }) => {
 const ProDonutChart = ({ data, title, total }) => {
   const [animated, setAnimated] = useState(false)
   useEffect(() => { setTimeout(() => setAnimated(true), 100) }, [])
-  
+
   let cumulativePercent = 0
   const radius = 15.9
   const circumference = 2 * Math.PI * radius
@@ -237,18 +237,18 @@ const ProDonutChart = ({ data, title, total }) => {
       <div className="relative w-36 h-36 sm:w-44 sm:h-44">
         {/* Glow effect */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-xl" />
-        
+
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90 relative z-10">
           {/* Background circle */}
           <circle cx="18" cy="18" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="3.5" />
-          
+
           {/* Data segments */}
           {data.map((item, i) => {
             const percent = (item.value / (total || 1)) * 100
             const strokeDasharray = animated ? `${(percent / 100) * circumference} ${circumference}` : `0 ${circumference}`
             const strokeDashoffset = -(cumulativePercent / 100) * circumference
             cumulativePercent += percent
-            
+
             return (
               <circle
                 key={i}
@@ -265,7 +265,7 @@ const ProDonutChart = ({ data, title, total }) => {
             )
           })}
         </svg>
-        
+
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
           <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent">
@@ -274,12 +274,12 @@ const ProDonutChart = ({ data, title, total }) => {
           <span className="text-xs sm:text-sm text-gray-500 font-medium">{title}</span>
         </div>
       </div>
-      
+
       {/* Legend */}
       <div className="flex sm:flex-col gap-4 sm:gap-3">
         {data.map((item, i) => (
           <div key={i} className="flex items-center gap-3 group cursor-default">
-            <div 
+            <div
               className="w-4 h-4 rounded-lg transition-transform group-hover:scale-110"
               style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}50` }}
             />
@@ -297,7 +297,7 @@ const ProDonutChart = ({ data, title, total }) => {
 // Professional Area Chart
 const ProLineChart = ({ data }) => {
   const [hovered, setHovered] = useState(null)
-  
+
   if (!data || data.length === 0) {
     return (
       <div className="h-56 flex items-center justify-center text-gray-400">
@@ -308,10 +308,10 @@ const ProLineChart = ({ data }) => {
       </div>
     )
   }
-  
+
   const maxValue = Math.max(...data.map(d => d.value), 1)
   const total = data.reduce((sum, d) => sum + d.value, 0)
-  
+
   // Chart dimensions
   const width = 500
   const height = 200
@@ -410,15 +410,15 @@ const ProLineChart = ({ data }) => {
             if (!showPoint && data.length > 10) return null // Oylik uchun 0 nuqtalarni yashirish
             return (
               <g key={i}>
-                <circle 
-                  cx={p.x} 
-                  cy={p.y} 
-                  r={hovered === i ? 7 : (p.value > 0 ? 4 : 2)} 
-                  fill={p.value > 0 ? 'white' : '#e5e7eb'} 
-                  stroke={p.value > 0 ? '#3b82f6' : '#d1d5db'} 
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={hovered === i ? 7 : (p.value > 0 ? 4 : 2)}
+                  fill={p.value > 0 ? 'white' : '#e5e7eb'}
+                  stroke={p.value > 0 ? '#3b82f6' : '#d1d5db'}
                   strokeWidth={p.value > 0 ? 2 : 1}
-                  className="transition-all duration-200 cursor-pointer" 
-                  style={{ filter: hovered === i ? 'drop-shadow(0 2px 4px rgba(59,130,246,0.4))' : 'none' }} 
+                  className="transition-all duration-200 cursor-pointer"
+                  style={{ filter: hovered === i ? 'drop-shadow(0 2px 4px rgba(59,130,246,0.4))' : 'none' }}
                 />
                 {hovered === i && <circle cx={p.x} cy={p.y} r="3" fill="#3b82f6" />}
               </g>
@@ -455,7 +455,7 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
   }, [isOpen])
 
   if (!isOpen) return null
-  
+
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -484,13 +484,13 @@ const DetailModal = ({ isOpen, onClose, title, icon: Icon, color, children }) =>
 
 // Pro Stat Card
 const StatCard = ({ icon: Icon, label, value, subtext, color, bgColor, gradient, onClick }) => (
-  <div 
+  <div
     onClick={onClick}
     className={`relative overflow-hidden bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all duration-300 cursor-pointer group`}
   >
     {/* Background decoration */}
     <div className={`absolute -right-8 -top-8 w-24 h-24 ${bgColor} rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500`} />
-    
+
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 ${bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
@@ -558,7 +558,7 @@ export default function Reports() {
     const { start, end } = getPeriodRange()
     const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
     const shortMonths = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek']
-    
+
     if (period === 'daily') return `${start.getDate()}-${months[start.getMonth()]}, ${start.getFullYear()}`
     if (period === 'weekly') return `${start.getDate()}-${shortMonths[start.getMonth()]} - ${end.getDate()}-${shortMonths[end.getMonth()]}, ${end.getFullYear()}`
     return `${months[start.getMonth()]}, ${start.getFullYear()}`
@@ -603,7 +603,7 @@ export default function Reports() {
           const fDate = new Date(f.createdAt)
           return fDate.getDate() === d && fDate.getMonth() === start.getMonth() && fDate.getFullYear() === start.getFullYear()
         }).length
-        data.push({ 
+        data.push({
           label: d % 5 === 1 || d === daysInMonth ? String(d) : '', // Faqat 1, 6, 11, 16, 21, 26, 31 ko'rsatiladi
           fullLabel: `${d}-kun`,
           value: count,
@@ -621,15 +621,15 @@ export default function Reports() {
           _id: `demo${i}`,
           status: i < 3 ? 'active' : 'completed',
           createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-          driver: { fullName: `Shofyor ${i + 1}` },
+          driver: { fullName: `Haydovchi ${i + 1}` },
           totalDistance: Math.floor(Math.random() * 500) + 100
         }))
         const demoDrivers = Array.from({ length: 8 }, (_, i) => ({
-          _id: `d${i}`, fullName: `Shofyor ${i + 1}`, status: i < 3 ? 'busy' : 'free'
+          _id: `d${i}`, fullName: `Haydovchi ${i + 1}`, status: i < 3 ? 'busy' : 'free'
         }))
-        setRawData({ 
-          drivers: demoDrivers, 
-          flights: demoFlights, 
+        setRawData({
+          drivers: demoDrivers,
+          flights: demoFlights,
           expenses: { totalAmount: 45000000 },
           fuelStats: {
             totalDistance: 15000,
@@ -670,10 +670,10 @@ export default function Reports() {
   useEffect(() => {
     const { drivers, flights, fuelStats } = rawData
     const filteredFlights = filterByPeriod(flights)
-    
+
     // Yoqilg'i va xarajatlar - API dan kelgan ma'lumotlar
     const fuelData = fuelStats || { fuel: {}, expensesByType: {} }
-    
+
     setStats({
       drivers: {
         total: drivers.length,
@@ -739,7 +739,7 @@ export default function Reports() {
               </div>
             </h1>
           </div>
-          
+
           {/* Excel Download Button */}
           <button
             onClick={() => exportToExcel(
@@ -765,21 +765,20 @@ export default function Reports() {
                 <button
                   key={p.key}
                   onClick={() => setPeriod(p.key)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    period === p.key 
-                      ? 'bg-white text-blue-600 shadow-md shadow-blue-500/20' 
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${period === p.key
+                    ? 'bg-white text-blue-600 shadow-md shadow-blue-500/20'
+                    : 'text-gray-500 hover:text-gray-900'
+                    }`}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigatePeriod(-1)} 
+            <button
+              onClick={() => navigatePeriod(-1)}
               className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
             >
               <ChevronLeft size={20} className="text-gray-600" />
@@ -788,8 +787,8 @@ export default function Reports() {
               <Calendar size={16} className="text-blue-500" />
               <span className="text-sm font-semibold text-gray-700">{getPeriodLabel()}</span>
             </div>
-            <button 
-              onClick={() => navigatePeriod(1)} 
+            <button
+              onClick={() => navigatePeriod(1)}
               className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
             >
               <ChevronRight size={20} className="text-gray-600" />
@@ -800,20 +799,20 @@ export default function Reports() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Shofyorlar" value={stats.drivers.total}
+        <StatCard icon={Users} label="Haydovchilar" value={stats.drivers.total}
           subtext={`${stats.drivers.free} bosh, ${stats.drivers.busy} band`}
           color="text-blue-600" bgColor="bg-blue-100"
           onClick={() => setModal({ open: true, type: 'drivers' })} />
-        
+
         <StatCard icon={Route} label="Reyslar" value={stats.flights.total}
           subtext={`${stats.flights.completed} tugatilgan`}
           color="text-emerald-600" bgColor="bg-emerald-100"
           onClick={() => setModal({ open: true, type: 'flights' })} />
-        
+
         <StatCard icon={Activity} label="Faol reyslar" value={stats.flights.active}
           subtext="Hozir yo'lda" color="text-orange-600" bgColor="bg-orange-100"
           onClick={() => setModal({ open: true, type: 'active' })} />
-        
+
         <StatCard icon={DollarSign} label="Xarajatlar" value={formatMoney(stats.expenses.total)}
           subtext="so'm" color="text-red-600" bgColor="bg-red-100"
           onClick={() => setModal({ open: true, type: 'expenses' })} />
@@ -845,12 +844,12 @@ export default function Reports() {
               <Users className="text-white" size={22} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900 text-lg">Shofyorlar holati</h3>
+              <h3 className="font-bold text-gray-900 text-lg">Haydovchilar holati</h3>
               <p className="text-sm text-gray-500">Hozirgi vaqtda</p>
             </div>
             <ArrowUpRight size={20} className="text-gray-300 group-hover:text-emerald-500 transition-colors" />
           </div>
-          <ProDonutChart 
+          <ProDonutChart
             data={[
               { label: 'Bo\'sh', value: stats.drivers.free, color: '#10b981' },
               { label: 'Band', value: stats.drivers.busy, color: '#f97316' },
@@ -873,7 +872,7 @@ export default function Reports() {
             </div>
             <ArrowUpRight size={20} className="text-gray-300 group-hover:text-orange-500 transition-colors" />
           </div>
-          <ProBarChart 
+          <ProBarChart
             data={[
               { label: 'Yoqilg\'i', value: stats.expenses.fuel },
               { label: 'Ovqat', value: stats.expenses.food || 0 },
@@ -904,7 +903,7 @@ export default function Reports() {
             </div>
             <ArrowUpRight size={20} className="text-gray-300 group-hover:text-purple-500 transition-colors" />
           </div>
-          <ProDonutChart 
+          <ProDonutChart
             data={[
               { label: 'Tugatilgan', value: stats.flights.completed, color: '#10b981' },
               { label: 'Faol', value: stats.flights.active, color: '#f97316' },
@@ -993,34 +992,32 @@ export default function Reports() {
 
       {/* Modals */}
       <DetailModal isOpen={modal.open && modal.type === 'drivers'} onClose={() => setModal({ open: false })}
-        title="Shofyorlar batafsil" icon={Users} color="from-blue-500 to-indigo-600">
+        title="Haydovchilar batafsil" icon={Users} color="from-blue-500 to-indigo-600">
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 text-center border border-emerald-100">
               <p className="text-4xl font-bold text-emerald-600">{stats.drivers.free}</p>
-              <p className="text-sm text-emerald-700 mt-1">Bo'sh shofyorlar</p>
+              <p className="text-sm text-emerald-700 mt-1">Bo'sh haydovchilar</p>
             </div>
             <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-5 text-center border border-orange-100">
               <p className="text-4xl font-bold text-orange-600">{stats.drivers.busy}</p>
-              <p className="text-sm text-orange-700 mt-1">Band shofyorlar</p>
+              <p className="text-sm text-orange-700 mt-1">Band haydovchilar</p>
             </div>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 mb-4">Shofyorlar ro'yxati</h4>
+            <h4 className="font-semibold text-gray-900 mb-4">Haydovchilar ro'yxati</h4>
             <div className="space-y-2 max-h-64 overflow-auto pr-2">
               {rawData.drivers.map(driver => (
                 <div key={driver._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ${
-                      driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-red-500' : 'bg-gradient-to-br from-emerald-500 to-teal-500'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ${driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-red-500' : 'bg-gradient-to-br from-emerald-500 to-teal-500'
+                      }`}>
                       {driver.fullName?.charAt(0)}
                     </div>
                     <span className="font-medium text-gray-900">{driver.fullName}</span>
                   </div>
-                  <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                    driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
-                  }`}>
+                  <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
                     {driver.status === 'busy' ? 'Band' : 'Bo\'sh'}
                   </span>
                 </div>
@@ -1052,9 +1049,8 @@ export default function Reports() {
                     <p className="font-medium text-gray-900">{flight.driver?.fullName || 'Noma\'lum'}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{new Date(flight.createdAt).toLocaleDateString('uz-UZ')}</p>
                   </div>
-                  <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                    flight.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'
-                  }`}>
+                  <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${flight.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'
+                    }`}>
                     {flight.status === 'completed' ? 'Tugatilgan' : 'Faol'}
                   </span>
                 </div>
@@ -1104,7 +1100,7 @@ export default function Reports() {
             </p>
             <p className="text-sm text-red-700 mt-2">Jami xarajat (so'm)</p>
           </div>
-          
+
           {/* Yoqilg'i statistikasi */}
           <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-5 border border-cyan-100">
             <div className="flex items-center gap-2 mb-4">

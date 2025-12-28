@@ -70,7 +70,7 @@ export default function DriverSalaries() {
               <Wallet className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">Shofyor oyliklari</h3>
+              <h3 className="font-bold text-slate-900 text-lg">Haydovchi oyliklari</h3>
               <p className="text-sm text-slate-500">Reyslardan olingan foiz ulushlar</p>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function DriverSalaries() {
             <p className="text-2xl font-bold text-amber-600">{formatMoney(stats.totalPending)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-slate-100">
-            <p className="text-xs text-slate-500">Shofyorlar soni</p>
+            <p className="text-xs text-slate-500">Haydovchilar soni</p>
             <p className="text-2xl font-bold text-slate-600">{stats.driversCount} ta</p>
           </div>
         </div>

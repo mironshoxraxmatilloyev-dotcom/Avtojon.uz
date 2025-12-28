@@ -8,7 +8,7 @@ const MENU_ITEMS = [
 const MANAGEMENT_ITEMS = [
   { id: "businessmen", label: "Biznesmenlar", icon: Users },
   { id: "users", label: "Individual", icon: UserCircle },
-  { id: "drivers", label: "Shofyorlar", icon: Truck },
+  { id: "drivers", label: "Haydovchilar", icon: Truck },
   { id: "vehicles", label: "Mashinalar", icon: Car },
 ]
 

@@ -193,50 +193,60 @@ const SuperAdminRoute = ({ children }) => {
 
 function App() {
   const authReady = useInitAuth()
+  const location = useLocation()
   
   // Auth yuklangunga qadar kutish
   if (!authReady) {
     return <PageLoader />
   }
   
+  // Landing page uchun safe-area-wrapper ishlatmaymiz
+  const isLandingPage = location.pathname === '/'
+  
   return (
     <AlertProvider>
-      {/* 📱 Status bar uchun global padding */}
-      <div className="safe-area-wrapper">
-        <ScrollToTop />
-        <SubscriptionAlert />
+      <ScrollToTop />
+      <SubscriptionAlert />
+      {isLandingPage ? (
         <Suspense fallback={<PageLoader />}>
           <Routes>
-          {/* Public */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Landing />} />
+          </Routes>
+        </Suspense>
+      ) : (
+        <div className="safe-area-wrapper">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-          {/* Business - Super Admin yaratgan biznesmenlar uchun */}
-          <Route path="/dashboard" element={<BusinessRoute><DashboardLayout /></BusinessRoute>}>
-            <Route index element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-            <Route path="drivers" element={<Suspense fallback={<PageLoader />}><Drivers /></Suspense>} />
-            <Route path="drivers/:id" element={<Suspense fallback={<PageLoader />}><DriverDetail /></Suspense>} />
-            <Route path="flights" element={<Suspense fallback={<PageLoader />}><Flights /></Suspense>} />
-            <Route path="flights/:id" element={<Suspense fallback={<PageLoader />}><FlightDetail /></Suspense>} />
-            <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
-          </Route>
+              {/* Business - Super Admin yaratgan biznesmenlar uchun */}
+              <Route path="/dashboard" element={<BusinessRoute><DashboardLayout /></BusinessRoute>}>
+                <Route index element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+                <Route path="drivers" element={<Suspense fallback={<PageLoader />}><Drivers /></Suspense>} />
+                <Route path="drivers/:id" element={<Suspense fallback={<PageLoader />}><DriverDetail /></Suspense>} />
+                <Route path="flights" element={<Suspense fallback={<PageLoader />}><Flights /></Suspense>} />
+                <Route path="flights/:id" element={<Suspense fallback={<PageLoader />}><FlightDetail /></Suspense>} />
+                <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
+              </Route>
 
-          {/* Driver */}
-          <Route path="/driver" element={<DriverRoute><Suspense fallback={<PageLoader />}><DriverHome /></Suspense></DriverRoute>} />
+              {/* Driver */}
+              <Route path="/driver" element={<DriverRoute><Suspense fallback={<PageLoader />}><DriverHome /></Suspense></DriverRoute>} />
 
-          {/* Super Admin */}
-          <Route path="/super-admin" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><SuperAdminPanel /></Suspense></SuperAdminRoute>} />
+              {/* Super Admin */}
+              <Route path="/super-admin" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><SuperAdminPanel /></Suspense></SuperAdminRoute>} />
 
-          {/* Fleet - Register qilganlar uchun */}
-          <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
-          <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
+              {/* Fleet - Register qilganlar uchun */}
+              <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
+              <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      </div>
+              {/* Catch all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
+      )}
     </AlertProvider>
   )
 }

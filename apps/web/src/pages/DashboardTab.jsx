@@ -133,7 +133,7 @@ export default function DashboardTab({ stats, setActiveTab }) {
         <StatCard
           icon={Truck}
           value={stats?.drivers?.total || 0}
-          label="Shofyorlar"
+          label="Haydovchilar"
           trend={`${stats?.drivers?.busy || 0} band`}
           trendUp={false}
           gradient="from-pink-500 to-rose-500"

@@ -324,7 +324,7 @@ export function CompleteModal({ show, onClose, onSubmit, form, setForm, flight }
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Shofyor ulushi (%)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Haydovchi ulushi (%)</label>
           <input
             type="number"
             value={form.driverProfitPercent}
@@ -345,11 +345,11 @@ export function CompleteModal({ show, onClose, onSubmit, form, setForm, flight }
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-slate-600 text-sm">Shofyor ulushi ({driverPercent}%):</span>
+            <span className="text-slate-600 text-sm">Haydovchi ulushi ({driverPercent}%):</span>
             <span className="text-purple-600 font-bold">{formatMoney(driverAmount)} so'm</span>
           </div>
           <div className="flex justify-between items-center border-t border-slate-200 pt-3">
-            <span className="text-slate-700 font-medium">Shofyor beradi:</span>
+            <span className="text-slate-700 font-medium">Haydovchi beradi:</span>
             <span className="text-emerald-600 font-bold text-xl">{formatMoney(driverOwes)} so'm</span>
           </div>
         </div>

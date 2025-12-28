@@ -99,7 +99,7 @@ export default function Login() {
               <span className="text-blue-200">osonlashtiring</span>
             </h1>
             <p className="text-blue-100 text-lg max-w-md">
-              Reyslar, shofyorlar, mashinalar va moliyaviy hisobotlarni bir joydan nazorat qiling
+              Reyslar, haydovchilar, mashinalar va moliyaviy hisobotlarni bir joydan nazorat qiling
             </p>
           </div>
 

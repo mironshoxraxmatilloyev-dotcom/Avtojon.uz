@@ -61,15 +61,15 @@ function MapCenterUpdater({ locations, selectedDriver, shouldCenter }) {
   return null
 }
 
-export function LiveMap({ 
-  driverLocations, 
-  activeFlights, 
-  tripRoutes, 
-  selectedDriver, 
+export function LiveMap({
+  driverLocations,
+  activeFlights,
+  tripRoutes,
+  selectedDriver,
   shouldCenterMap,
   onRefresh,
   fullScreenMap,
-  setFullScreenMap 
+  setFullScreenMap
 }) {
   const onlineDrivers = driverLocations.filter(d => d.lastLocation).length
 
@@ -80,26 +80,24 @@ export function LiveMap({
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       <MapCenterUpdater locations={driverLocations} selectedDriver={selectedDriver} shouldCenter={shouldCenterMap} />
-      
+
       {/* Shofyorlar markerlari */}
       {driverLocations.filter(d => d.lastLocation).map((driver) => (
-        <Marker 
-          key={driver._id} 
+        <Marker
+          key={driver._id}
           position={[driver.lastLocation.lat, driver.lastLocation.lng]}
           icon={createDriverIcon(driver.fullName, driver.status)}
         >
           <Popup>
             <div className="text-center p-3 min-w-[160px]">
-              <div className={`w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 ${
-                driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-amber-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-              }`}>
+              <div className={`w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 ${driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-amber-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                }`}>
                 {driver.fullName?.charAt(0)}
               </div>
               <p className="font-bold text-gray-900">{driver.fullName}</p>
               <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
-              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
-                driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
-              }`}>
+              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                }`}>
                 {driver.status === 'busy' ? '🚛 Reysda' : '✅ Bo\'sh'}
               </span>
             </div>
@@ -114,7 +112,7 @@ export function LiveMap({
             const route = tripRoutes[`flight-${flight._id}-${leg._id}`]
             const fromCoords = (leg.fromCoords?.lat && leg.fromCoords?.lng) ? leg.fromCoords : route?.fromCoords
             const toCoords = (leg.toCoords?.lat && leg.toCoords?.lng) ? leg.toCoords : route?.toCoords
-            
+
             return (
               <span key={`leg-${leg._id || idx}`}>
                 {route?.coordinates && (
@@ -137,7 +135,7 @@ export function LiveMap({
         <div className="absolute top-4 left-4 right-4 z-[10000] flex justify-between items-center">
           <div className="bg-white/95 backdrop-blur rounded-xl px-4 py-2 shadow-lg">
             <h3 className="font-bold text-gray-900">Jonli xarita</h3>
-            <p className="text-sm text-gray-500">{onlineDrivers} ta shofyor online</p>
+            <p className="text-sm text-gray-500">{onlineDrivers} ta haydovchi online</p>
           </div>
           <div className="flex gap-2">
             <button onClick={onRefresh} className="p-3 bg-white/95 backdrop-blur rounded-xl shadow-lg hover:bg-white transition">
@@ -163,7 +161,7 @@ export function LiveMap({
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-gray-900">Jonli xarita</h2>
-            <p className="text-xs sm:text-sm text-gray-500">{onlineDrivers} ta shofyor online</p>
+            <p className="text-xs sm:text-sm text-gray-500">{onlineDrivers} ta haydovchi online</p>
           </div>
         </div>
         <button

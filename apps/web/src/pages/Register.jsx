@@ -110,7 +110,7 @@ export default function Register() {
           {/* Features */}
           <div className="space-y-4">
             <Feature icon={BarChart3} text="Moliyaviy hisobotlar" />
-            <Feature icon={Users} text="Shofyorlarni boshqarish" />
+            <Feature icon={Users} text="Haydovchilarni boshqarish" />
             <Feature icon={Shield} text="Xavfsiz va ishonchli" />
           </div>
         </div>

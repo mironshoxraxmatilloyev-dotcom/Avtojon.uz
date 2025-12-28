@@ -97,8 +97,8 @@ export default function DriverDebts() {
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">Shofyor qarzdorliklari</h3>
-              <p className="text-sm text-slate-500">Reyslardan keyin shofyorlar beradigan pullar</p>
+              <h3 className="font-bold text-slate-900 text-lg">Haydovchi qarzdorliklari</h3>
+              <p className="text-sm text-slate-500">Reyslardan keyin haydovchilar beradigan pullar</p>
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function DriverDebts() {
               <CheckCircle className="w-8 h-8 text-slate-400" />
             </div>
             <p className="text-slate-600 font-medium">Qarzdorlik yo'q</p>
-            <p className="text-slate-400 text-sm mt-1">Barcha shofyorlar hisob-kitobni tugatgan</p>
+            <p className="text-slate-400 text-sm mt-1">Barcha haydovchilar hisob-kitobni tugatgan</p>
           </div>
         ) : (
           debts.filter(f => f.driverPaymentStatus !== 'paid').map(flight => (

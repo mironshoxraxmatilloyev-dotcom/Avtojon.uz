@@ -74,10 +74,10 @@ export default function DriverModal({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">
-                  {editingDriver ? 'Tahrirlash' : 'Yangi shofyor'}
+                  {editingDriver ? 'Tahrirlash' : 'Yangi haydovchi'}
                 </h2>
                 <p className="text-blue-300 text-sm">
-                  {editingDriver ? 'Ma\'lumotlarni yangilang' : 'Yangi shofyor qo\'shing'}
+                  {editingDriver ? 'Ma\'lumotlarni yangilang' : 'Yangi haydovchi qo\'shing'}
                 </p>
               </div>
             </div>

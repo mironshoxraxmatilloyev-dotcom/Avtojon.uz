@@ -35,7 +35,7 @@ export default function StatsTab({ stats, setActiveTab }) {
         <AnimatedStatCard 
           icon={Truck}
           value={stats.drivers.total}
-          label="Shofyorlar"
+          label="Haydovchilar"
           sub={`${stats.drivers.busy} band`}
           gradient="from-blue-500 to-cyan-600"
           delay={100}
@@ -86,11 +86,11 @@ export default function StatsTab({ stats, setActiveTab }) {
           </div>
         </div>
 
-        {/* Shofyorlar */}
+        {/* Haydovchilar */}
         <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-5 border border-white/5">
           <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
             <Truck className="w-5 h-5 text-blue-400" />
-            Shofyorlar holati
+            Haydovchilar holati
           </h3>
           <div className="flex items-center justify-center py-4">
             <DonutChart 

@@ -1,4 +1,5 @@
 import { useState, memo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
@@ -12,7 +13,7 @@ const features = [
   { icon: MapPin, title: 'Real-time GPS', desc: 'Mashinalaringizni jonli xaritada kuzating', gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30' },
   { icon: BarChart3, title: 'Tahlil va hisobotlar', desc: 'Xarajatlar va samaradorlikni tahlil qiling', gradient: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-500/30' },
   { icon: Shield, title: 'Xavfsiz tizim', desc: 'Ma\'lumotlaringiz to\'liq himoyalangan', gradient: 'from-violet-500 to-purple-600', shadow: 'shadow-violet-500/30' },
-  { icon: Truck, title: 'Oson boshqaruv', desc: 'Shofyorlar va mashinalarni boshqaring', gradient: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-500/30' },
+  { icon: Truck, title: 'Oson boshqaruv', desc: 'Haydovchilar va mashinalarni boshqaring', gradient: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-500/30' },
   { icon: Fuel, title: 'Yoqilg\'i hisobi', desc: 'Har bir litr yoqilg\'ini nazorat qiling', gradient: 'from-rose-500 to-pink-600', shadow: 'shadow-rose-500/30' },
   { icon: Calculator, title: 'Avtomatik hisob', desc: 'Foyda va xarajatlar avtomatik', gradient: 'from-cyan-500 to-blue-600', shadow: 'shadow-cyan-500/30' },
 ]
@@ -53,8 +54,46 @@ export default function Landing() {
     }
   }, [setAuth, navigate])
 
+  // Fixed Header - Portal orqali body ga render qilinadi
+  const FixedHeader = () => createPortal(
+    <header 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 99999,
+        background: 'linear-gradient(to right, #4f46e5, #9333ea, #ec4899)',
+      }}
+    >
+      <div className="container mx-auto px-4 sm:px-6 py-3">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="/logo.jpg" alt="Avtojon" className="w-10 h-10 rounded-xl object-cover" />
+            <h1 className="text-xl font-bold text-white flex items-center gap-1.5">
+              Avtojon <Sparkles className="w-4 h-4 text-amber-300" />
+            </h1>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-white/90 hover:text-white transition-colors font-medium text-sm px-4 py-2">
+              Kirish
+            </Link>
+            <Link to="/register" className="bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-black/10 transition-all">
+              Boshlash
+            </Link>
+          </div>
+        </div>
+      </div>
+    </header>,
+    document.body
+  )
+
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="landing-page min-h-screen overflow-hidden">
+      {/* Fixed Header - Portal orqali */}
+      <FixedHeader />
+
       {/* Hero Section with Gradient Background */}
       <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
         {/* Decorative Elements */}
@@ -65,31 +104,8 @@ export default function Landing() {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
         </div>
 
-        {/* Header */}
-        <header className="relative z-20">
-          <div className="container mx-auto px-4 sm:px-6 py-4">
-            <div className="flex justify-between items-center">
-              <Link to="/" className="flex items-center gap-2.5">
-                <img src="/logo.jpg" alt="Avtojon" className="w-10 h-10 rounded-xl object-cover" />
-                <h1 className="text-xl font-bold text-white flex items-center gap-1.5">
-                  Avtojon <Sparkles className="w-4 h-4 text-amber-300" />
-                </h1>
-              </Link>
-
-              <div className="flex items-center gap-3">
-                <Link to="/login" className="text-white/90 hover:text-white transition-colors font-medium text-sm px-4 py-2">
-                  Kirish
-                </Link>
-                <Link to="/register" className="bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-black/10 transition-all">
-                  Boshlash
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Hero Content */}
-        <section className="relative z-10 pt-16 sm:pt-20 pb-32 sm:pb-40">
+        <section className="relative z-10 pt-20 sm:pt-24 pb-16 sm:pb-20">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto text-center">
               {/* Badge */}
@@ -111,7 +127,7 @@ export default function Landing() {
               {/* Subtitle */}
               <AnimatedText delay={0.3}>
                 <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Mashinalar, shofyorlar va reyslarni bir platformada boshqaring.
+                  Mashinalar, haydovchilar va reyslarni bir platformada boshqaring.
                   Real-time monitoring va avtomatik hisob-kitob.
                 </p>
               </AnimatedText>
@@ -139,7 +155,7 @@ export default function Landing() {
                   </button>
                 </div>
 
-                {/* Download App - Shofyorlar uchun */}
+                {/* Download App - Haydovchilar uchun */}
                 <div className="mt-6">
                   <a
                     href="/api/downloads/avtojon.apk"
@@ -166,17 +182,17 @@ export default function Landing() {
         </section>
 
         {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#eef2ff" />
+        <div className="absolute bottom-0 left-0 right-0 -mb-px">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full block">
+            <path d="M0 80L60 73C120 67 240 53 360 47C480 40 600 40 720 43C840 47 960 53 1080 57C1200 60 1320 60 1380 60L1440 60V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="#eef2ff" />
           </svg>
         </div>
       </div>
 
       {/* Stats Section - Light Indigo Background */}
-      <section className="relative z-10 bg-indigo-50 -mt-1">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto -mt-16">
+      <section className="relative z-10 bg-indigo-50">
+        <div className="container mx-auto px-4 sm:px-6 py-6">
+          <div className="max-w-4xl mx-auto">
             <AnimatedText delay={0.6}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {stats.map(({ value, label, color }) => (
@@ -229,7 +245,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
               { step: '01', title: 'Ro\'yxatdan o\'ting', desc: 'Bir daqiqada hisob yarating', icon: Users, gradient: 'from-indigo-500 to-purple-600', shadow: 'shadow-indigo-500/30', bg: 'bg-indigo-50' },
-              { step: '02', title: 'Ma\'lumot kiriting', desc: 'Mashina va shofyorlarni qo\'shing', icon: Truck, gradient: 'from-purple-500 to-pink-600', shadow: 'shadow-purple-500/30', bg: 'bg-purple-50' },
+              { step: '02', title: 'Ma\'lumot kiriting', desc: 'Mashina va haydovchilarni qo\'shing', icon: Truck, gradient: 'from-purple-500 to-pink-600', shadow: 'shadow-purple-500/30', bg: 'bg-purple-50' },
               { step: '03', title: 'Boshqaring', desc: 'Reyslarni real-time kuzating', icon: TrendingUp, gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30', bg: 'bg-emerald-50' }
             ].map(({ step, title, desc, icon: Icon, gradient, shadow, bg }) => (
               <div key={step} className="relative group">

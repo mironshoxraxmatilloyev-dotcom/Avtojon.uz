@@ -336,7 +336,7 @@ export default function SuperAdminPanel() {
           <ArrowLeft className="w-5 h-5 text-slate-300" />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-white">Shofyorlar</h2>
+          <h2 className="text-xl font-bold text-white">Haydovchilar</h2>
           <p className="text-slate-400 text-xs">{drivers.length} ta shofyor</p>
         </div>
       </div>
@@ -358,7 +358,7 @@ export default function SuperAdminPanel() {
             </div>
           </div>
         ))}
-        {drivers.length === 0 && <EmptyState icon={Truck} title="Shofyorlar yo'q" />}
+        {drivers.length === 0 && <EmptyState icon={Truck} title="Haydovchilar yo'q" />}
       </div>
     </div>
   )
