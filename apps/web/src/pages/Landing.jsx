@@ -5,7 +5,7 @@ import api from '../services/api'
 import {
   Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles,
   CheckCircle, Star, Users, Route, TrendingUp, Play,
-  Fuel, Calculator, Globe
+  Fuel, Calculator, Globe, Download, Smartphone
 } from 'lucide-react'
 
 const features = [
@@ -139,6 +139,19 @@ export default function Landing() {
                       <><Play size={20} /> Demo ko'rish</>
                     )}
                   </button>
+                </div>
+                
+                {/* Download App - Shofyorlar uchun */}
+                <div className="mt-6">
+                  <a
+                    href="/api/downloads/avtojon.apk"
+                    download="Avtojon.apk"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500/90 hover:bg-emerald-400 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-emerald-500/20 backdrop-blur-sm"
+                  >
+                    <Smartphone size={18} />
+                    <span> Ilovani  yuklab olish</span>
+                    <Download size={16} />
+                  </a>
                 </div>
               </AnimatedText>
 

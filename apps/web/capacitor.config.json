@@ -1,5 +1,17 @@
 {
   "appId": "uz.avtojon.app",
   "appName": "Avtojon",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://avtojon.uz",
+    "cleartext": true
+  },
+  "plugins": {
+    "Geolocation": {
+      "permissions": ["location", "coarseLocation"]
+    }
+  },
+  "android": {
+    "allowMixedContent": true
+  }
 }

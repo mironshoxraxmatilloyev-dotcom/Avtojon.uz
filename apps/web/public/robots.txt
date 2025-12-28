@@ -1,0 +1,18 @@
+# Avtojon - Yuk tashish boshqaruv platformasi
+# https://avtojon.uz
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /drivers
+Disallow: /flights
+Disallow: /reports
+Disallow: /fleet
+Disallow: /super-admin
+
+# Sitemap
+Sitemap: https://avtojon.uz/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

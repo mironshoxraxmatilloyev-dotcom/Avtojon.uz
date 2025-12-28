@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 
 // Middleware
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -64,6 +65,9 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Rate limiting (barcha API uchun)
 app.use('/api', apiLimiter);
+
+// Static files - APK yuklab olish uchun
+app.use('/api/downloads', express.static(path.join(__dirname, '../public/downloads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
