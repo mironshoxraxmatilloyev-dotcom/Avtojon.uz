@@ -62,7 +62,7 @@ export default function EmptyState({ stats, recentFlights = [], onSelectFlight }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-slate-800 text-sm font-medium truncate">
-                    {flight.legs?.[0]?.from || 'Noma\'lum'} → {flight.legs?.[flight.legs.length - 1]?.to || 'Noma\'lum'}
+                    {flight.legs?.[0]?.fromCity || 'Reys'} → {flight.legs?.[flight.legs.length - 1]?.toCity || ''}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Calendar size={10} />

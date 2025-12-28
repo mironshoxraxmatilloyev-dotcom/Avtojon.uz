@@ -20,12 +20,12 @@ createRoot(document.getElementById('root')).render(
       <App />
       <Suspense fallback={null}>
         <Toaster 
-          position="top-right"
+          position="top-center"
           toastOptions={{
             duration: 3000,
             style: { background: 'transparent', boxShadow: 'none', padding: 0 },
           }}
-          containerStyle={{ top: 16, right: 16 }}
+          containerStyle={{ top: 12 }}
         />
       </Suspense>
     </BrowserRouter>

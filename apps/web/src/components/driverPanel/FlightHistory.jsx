@@ -1,6 +1,19 @@
 import { Route, ChevronRight, Wallet, MapPin, Package } from 'lucide-react'
 import { formatMoney, formatDate } from './constants'
 
+// Reys nomini legs dan olish
+const getFlightRoute = (flight) => {
+  if (!flight?.legs?.length) return 'Reys'
+  const firstLeg = flight.legs[0]
+  const lastLeg = flight.legs[flight.legs.length - 1]
+  const from = firstLeg?.fromCity || ''
+  const to = lastLeg?.toCity || ''
+  if (from && to) return `${from} → ${to}`
+  if (from) return from
+  if (to) return to
+  return 'Reys'
+}
+
 export default function FlightHistory({ flights, onSelect }) {
   if (!flights?.length) return null
 
@@ -14,20 +27,20 @@ export default function FlightHistory({ flights, onSelect }) {
     <div className="space-y-2">
       {flights.map((flight) => {
         const status = statusConfig[flight.status] || statusConfig.cancelled
+        const routeName = getFlightRoute(flight)
         return (
           <button
             key={flight._id}
             onClick={() => onSelect(flight)}
             className="w-full text-left bg-white rounded-xl p-3 border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all active:scale-[0.99]"
           >
-            {/* Header */}
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2.5">
                 <div className={`w-9 h-9 ${status.bg} rounded-lg flex items-center justify-center`}>
                   <Route size={16} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-slate-800 font-medium text-sm">{flight.name || 'Reys'}</p>
+                  <p className="text-slate-800 font-medium text-sm">{routeName}</p>
                   <p className="text-slate-400 text-xs">{formatDate(flight.createdAt)}</p>
                 </div>
               </div>
@@ -39,7 +52,6 @@ export default function FlightHistory({ flights, onSelect }) {
               </div>
             </div>
 
-            {/* Stats row */}
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1 text-slate-500">
                 <Package size={12} />
@@ -55,7 +67,6 @@ export default function FlightHistory({ flights, onSelect }) {
               </div>
             </div>
 
-            {/* Driver earnings badge */}
             {flight.status === 'completed' && flight.driverProfitAmount > 0 && (
               <div className="mt-2 pt-2 border-t border-slate-100">
                 <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-xs font-medium">
