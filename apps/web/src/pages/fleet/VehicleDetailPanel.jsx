@@ -255,6 +255,275 @@ export default function VehicleDetailPanel() {
     } catch { }
   }, [bulkTireForm, id, alert])
 
+  // Ovozli yoqilg'i qo'shish
+  const handleVoiceFuel = useCallback(async (voiceData) => {
+    // Yoqilg'i turi mapping
+    const fuelTypeMap = {
+      'fuel_metan': 'metan',
+      'fuel_benzin': 'benzin',
+      'fuel_diesel': 'diesel',
+      'fuel_propan': 'propan',
+      'fuel_gas': 'gas'
+    }
+    
+    const fuelType = fuelTypeMap[voiceData.type] || vehicle?.fuelType || 'diesel'
+    const liters = voiceData.quantity || 0
+    const cost = voiceData.amount || 0
+    const odometer = vehicle?.currentOdometer || 0
+    
+    // Optimistic update
+    const tempId = `temp_${Date.now()}`
+    const newRefill = {
+      _id: tempId,
+      date: new Date().toISOString(),
+      liters,
+      cost,
+      odometer,
+      fuelType,
+      station: voiceData.description || 'Ovoz orqali kiritildi'
+    }
+    
+    setFuelData(prev => ({
+      ...prev,
+      refills: [newRefill, ...prev.refills],
+      stats: {
+        ...prev.stats,
+        totalLiters: (prev.stats?.totalLiters || 0) + liters,
+        totalCost: (prev.stats?.totalCost || 0) + cost
+      }
+    }))
+    
+    alert.success('🎤 Yoqilg\'i qo\'shildi!')
+    
+    // Serverga yuborish
+    try {
+      await api.post(`/maintenance/vehicles/${id}/fuel`, {
+        date: new Date().toISOString().split('T')[0],
+        liters,
+        cost,
+        odometer,
+        fuelType,
+        station: voiceData.description || 'Ovoz orqali kiritildi'
+      })
+      loadData() // Ma'lumotlarni yangilash
+    } catch (err) {
+      console.error('Yoqilg\'i saqlashda xatolik:', err)
+    }
+  }, [id, vehicle?.fuelType, vehicle?.currentOdometer, alert, loadData])
+
+  // Ovozli moy qo'shish
+  const handleVoiceOil = useCallback(async (voiceData) => {
+    const cost = Number(voiceData.cost) || 0
+    const odometer = Number(voiceData.odometer) || vehicle?.currentOdometer || 0
+    
+    const tempId = `temp_${Date.now()}`
+    const newChange = {
+      _id: tempId,
+      date: new Date().toISOString(),
+      oilType: voiceData.oilType || '',
+      oilBrand: voiceData.oilBrand || '',
+      liters: Number(voiceData.liters) || 0,
+      cost,
+      odometer,
+      nextChangeOdometer: Number(voiceData.nextChangeOdometer) || odometer + 10000
+    }
+    
+    setOilData(prev => ({
+      ...prev,
+      changes: [newChange, ...prev.changes]
+    }))
+    
+    alert.success('🎤 Moy almashtirish qo\'shildi!')
+    
+    try {
+      await api.post(`/maintenance/vehicles/${id}/oil`, {
+        date: new Date().toISOString().split('T')[0],
+        oilType: voiceData.oilType || '',
+        oilBrand: voiceData.oilBrand || '',
+        liters: Number(voiceData.liters) || 0,
+        cost,
+        odometer,
+        nextChangeOdometer: Number(voiceData.nextChangeOdometer) || odometer + 10000
+      })
+      loadData()
+    } catch (err) {
+      console.error('Moy saqlashda xatolik:', err)
+    }
+  }, [id, vehicle?.currentOdometer, alert, loadData])
+
+  // Ovozli shina qo'shish
+  const handleVoiceTire = useCallback(async (voiceData) => {
+    const cost = Number(voiceData.cost) || 0
+    const count = Number(voiceData.count) || 1
+    const installOdometer = Number(voiceData.installOdometer) || Number(voiceData.odometer) || vehicle?.currentOdometer || 0
+    
+    // Agar count > 1 bo'lsa, bir nechta shina qo'shish
+    if (count > 1) {
+      const positions = count === 6 
+        ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)']
+        : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng'].slice(0, count)
+      
+      const newTires = positions.map((position, i) => ({
+        _id: `temp_${Date.now()}_${i}`,
+        position,
+        brand: voiceData.brand || '',
+        size: voiceData.size || '',
+        installDate: new Date().toISOString(),
+        installOdometer,
+        expectedLifeKm: 50000,
+        cost: Math.round(cost / count),
+        remainingKm: 50000,
+        status: 'new'
+      }))
+      
+      setTires(prev => [...prev, ...newTires])
+      alert.success(`🎤 ${count} ta shina qo'shildi!`)
+      
+      try {
+        await Promise.all(positions.map(position => 
+          api.post(`/maintenance/vehicles/${id}/tires`, {
+            position,
+            brand: voiceData.brand || '',
+            size: voiceData.size || '',
+            installDate: new Date().toISOString().split('T')[0],
+            installOdometer,
+            expectedLifeKm: 50000,
+            cost: Math.round(cost / count)
+          })
+        ))
+        loadData()
+      } catch (err) {
+        console.error('Shinalar saqlashda xatolik:', err)
+      }
+    } else {
+      // Bitta shina
+      const tempId = `temp_${Date.now()}`
+      const newTire = {
+        _id: tempId,
+        position: voiceData.position || 'Old chap',
+        brand: voiceData.brand || '',
+        size: voiceData.size || '',
+        installDate: new Date().toISOString(),
+        installOdometer,
+        expectedLifeKm: 50000,
+        cost,
+        remainingKm: 50000,
+        status: 'new'
+      }
+      
+      setTires(prev => [...prev, newTire])
+      alert.success('🎤 Shina qo\'shildi!')
+      
+      try {
+        await api.post(`/maintenance/vehicles/${id}/tires`, {
+          position: voiceData.position || 'Old chap',
+          brand: voiceData.brand || '',
+          size: voiceData.size || '',
+          installDate: new Date().toISOString().split('T')[0],
+          installOdometer,
+          expectedLifeKm: 50000,
+          cost
+        })
+        loadData()
+      } catch (err) {
+        console.error('Shina saqlashda xatolik:', err)
+      }
+    }
+  }, [id, vehicle?.currentOdometer, alert, loadData])
+
+  // Ovozli xizmat qo'shish
+  const handleVoiceService = useCallback(async (voiceData) => {
+    const cost = Number(voiceData.cost) || 0
+    const odometer = Number(voiceData.odometer) || vehicle?.currentOdometer || 0
+    
+    const tempId = `temp_${Date.now()}`
+    const newService = {
+      _id: tempId,
+      type: voiceData.type || 'TO-1',
+      date: new Date().toISOString(),
+      odometer,
+      cost,
+      description: voiceData.description || '',
+      serviceName: voiceData.serviceName || ''
+    }
+    
+    setServices(prev => ({
+      ...prev,
+      services: [newService, ...prev.services],
+      stats: {
+        ...prev.stats,
+        totalCost: (prev.stats?.totalCost || 0) + cost
+      }
+    }))
+    
+    alert.success('🎤 Xizmat qo\'shildi!')
+    
+    try {
+      await api.post(`/maintenance/vehicles/${id}/services`, {
+        type: voiceData.type || 'TO-1',
+        date: new Date().toISOString().split('T')[0],
+        odometer,
+        cost,
+        description: voiceData.description || '',
+        serviceName: voiceData.serviceName || ''
+      })
+      loadData()
+    } catch (err) {
+      console.error('Xizmat saqlashda xatolik:', err)
+    }
+  }, [id, vehicle?.currentOdometer, alert, loadData])
+
+  // Ovozli daromad qo'shish
+  const handleVoiceIncome = useCallback(async (voiceData) => {
+    const amount = Number(voiceData.amount) || 0
+    
+    const tempId = `temp_${Date.now()}`
+    const newIncome = {
+      _id: tempId,
+      type: voiceData.type || 'trip',
+      date: new Date().toISOString(),
+      amount,
+      fromCity: voiceData.fromCity || '',
+      toCity: voiceData.toCity || '',
+      distance: Number(voiceData.distance) || 0,
+      cargoWeight: Number(voiceData.cargoWeight) || 0,
+      clientName: voiceData.clientName || '',
+      rentalDays: Number(voiceData.rentalDays) || 0,
+      rentalRate: Number(voiceData.rentalRate) || 0,
+      description: voiceData.description || ''
+    }
+    
+    setIncomeData(prev => ({
+      ...prev,
+      incomes: [newIncome, ...prev.incomes],
+      stats: {
+        ...prev.stats,
+        totalIncome: (prev.stats?.totalIncome || 0) + amount
+      }
+    }))
+    
+    alert.success('🎤 Daromad qo\'shildi!')
+    
+    try {
+      await api.post(`/maintenance/vehicles/${id}/income`, {
+        type: voiceData.type || 'trip',
+        date: new Date().toISOString().split('T')[0],
+        amount,
+        fromCity: voiceData.fromCity || '',
+        toCity: voiceData.toCity || '',
+        distance: Number(voiceData.distance) || 0,
+        cargoWeight: Number(voiceData.cargoWeight) || 0,
+        clientName: voiceData.clientName || '',
+        rentalDays: Number(voiceData.rentalDays) || 0,
+        rentalRate: Number(voiceData.rentalRate) || 0,
+        description: voiceData.description || ''
+      })
+      loadData()
+    } catch (err) {
+      console.error('Daromad saqlashda xatolik:', err)
+    }
+  }, [id, alert, loadData])
+
   if (loading) return <LoadingSkeleton />
   if (!vehicle) return <NotFound onBack={() => navigate('/fleet')} />
   if (subscription?.isExpired) return <ExpiredView onUpgrade={() => setShowUpgradeModal(true)} />
@@ -348,11 +617,11 @@ export default function VehicleDetailPanel() {
         {/* Content - Full Width */}
         <div className="p-4 lg:p-6 xl:p-8 w-full">
           {activeTab === 'summary' && <SummaryTab vehicle={vehicle} stats={stats} fuelData={fuelData} oilData={oilData} tires={tires} services={services} />}
-          {activeTab === 'income' && <IncomeTab data={incomeData} onAdd={() => openModal('income')} onEdit={(item) => openModal('income', item)} onDelete={(i) => handleDelete('income', i)} />}
-          {activeTab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} />}
-          {activeTab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} />}
-          {activeTab === 'tires' && <TiresTab tires={tires} onAdd={() => openModal('tire')} onAddBulk={() => openModal('tire-bulk')} onEdit={(item) => openModal('tire', item)} onDelete={(i) => handleDelete('tires', i)} />}
-          {activeTab === 'services' && <ServicesTab data={services} onAdd={() => openModal('service')} onEdit={(item) => openModal('service', item)} onDelete={(i) => handleDelete('services', i)} />}
+          {activeTab === 'income' && <IncomeTab data={incomeData} onAdd={() => openModal('income')} onEdit={(item) => openModal('income', item)} onDelete={(i) => handleDelete('income', i)} onVoiceAdd={handleVoiceIncome} />}
+          {activeTab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} vehicleId={id} onVoiceAdd={handleVoiceFuel} />}
+          {activeTab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} onVoiceAdd={handleVoiceOil} />}
+          {activeTab === 'tires' && <TiresTab tires={tires} onAdd={() => openModal('tire')} onAddBulk={() => openModal('tire-bulk')} onEdit={(item) => openModal('tire', item)} onDelete={(i) => handleDelete('tires', i)} onVoiceAdd={handleVoiceTire} />}
+          {activeTab === 'services' && <ServicesTab data={services} onAdd={() => openModal('service')} onEdit={(item) => openModal('service', item)} onDelete={(i) => handleDelete('services', i)} onVoiceAdd={handleVoiceService} />}
         </div>
       </main>
 

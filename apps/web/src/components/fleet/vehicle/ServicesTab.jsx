@@ -1,8 +1,10 @@
-import { memo } from 'react'
-import { Plus, Wrench, Edit2, Trash2 } from 'lucide-react'
+import { memo, useState } from 'react'
+import { Plus, Wrench, Edit2, Trash2, Mic } from 'lucide-react'
 import { fmt, fmtDate } from './constants'
+import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
-export const ServicesTab = memo(({ data, onAdd, onEdit, onDelete }) => {
+export const ServicesTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const { services = [], stats = {} } = data
 
   return (
@@ -19,8 +21,15 @@ export const ServicesTab = memo(({ data, onAdd, onEdit, onDelete }) => {
         </div>
       </div>
 
-      {/* Add Button */}
-      <div className="flex justify-end">
+      {/* Add Buttons */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowVoiceRecorder(true)}
+          className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+        >
+          <Mic size={18} />
+          🎤 Ovoz bilan
+        </button>
         <button
           onClick={onAdd}
           className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
@@ -29,6 +38,20 @@ export const ServicesTab = memo(({ data, onAdd, onEdit, onDelete }) => {
           Xizmat qo'shish
         </button>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceMaintenanceRecorder
+          context="service"
+          onResult={(voiceData) => {
+            setShowVoiceRecorder(false)
+            if (onVoiceAdd) {
+              onVoiceAdd(voiceData)
+            }
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
 
       {/* Services List - Light Mode */}
       {services.length > 0 ? (

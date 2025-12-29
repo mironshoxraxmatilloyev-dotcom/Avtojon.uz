@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom'
 import {
   X, Route, Map, DollarSign, CheckCircle, Wallet, TrendingUp, TrendingDown,
   Calculator, Percent, ArrowRight, Sparkles, Fuel, Utensils, Wrench, Car,
-  Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet
+  Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet,
+  Mic
 } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
 import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, formatMoney } from './constants'
+import VoiceRecorder from '../VoiceRecorder'
 
 // Icon mapping
 const ICONS = {
@@ -191,6 +193,7 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
 // ============================================
 export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, editingExpense, onClose, onSubmit }) {
   const isInternational = flight?.flightType === 'international'
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
   const [form, setForm] = useState(() => ({
     category: editingExpense?.type?.startsWith('fuel_') ? 'fuel' : editingExpense?.type?.startsWith('border_') ? 'border' : (editingExpense?.type || 'fuel'),
@@ -317,6 +320,19 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
         </div>
 
         <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(95vh-100px)]">
+          {/* Ovozli kiritish tugmasi */}
+          {!editingExpense && (
+            <button
+              type="button"
+              onClick={() => setShowVoiceRecorder(true)}
+              className="w-full py-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl transition-all flex items-center justify-center gap-3"
+            >
+              <Mic size={22} />
+              🎤 Ovoz bilan kiritish
+              <Sparkles size={16} className="text-amber-300" />
+            </button>
+          )}
+
           {/* Kategoriyalar */}
           <div>
             <label className="block text-sm font-semibold text-slate-600 mb-3">Kategoriya tanlang</label>
@@ -547,6 +563,19 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
           </button>
         </div>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          flightId={flight?._id}
+          selectedLeg={selectedLeg}
+          onResult={(data) => {
+            setShowVoiceRecorder(false)
+            onSubmit(data)
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
     </ModalWrapper>,
     document.body
   )

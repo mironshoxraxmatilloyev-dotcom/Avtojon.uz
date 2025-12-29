@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAlert } from '../../components/ui'
 import api from '../../services/api'
-import { Plus, LogOut, Truck, Home, BarChart3, AlertTriangle, Crown, Sparkles } from 'lucide-react'
+import { Plus, LogOut, Truck, Home, BarChart3, AlertTriangle, Crown, Sparkles, Mic } from 'lucide-react'
 import { HomeTab, StatsTab, ServiceTab, VehicleModal, UpgradeModal, ExpiredView } from '../../components/fleet'
+import VoiceVehicleCreator from '../../components/fleet/VoiceVehicleCreator'
 
 // Cache
 const CACHE_KEY = 'fleet_vehicles'
@@ -46,6 +47,7 @@ export default function FleetDashboard() {
   const [activeTab, setActiveTab] = useState('home')
   const [subscription, setSubscription] = useState(() => getCache(CACHE_SUB_KEY))
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showVoiceModal, setShowVoiceModal] = useState(false)
   const [timeLeft, setTimeLeft] = useState('')
   const [fleetAnalytics, setFleetAnalytics] = useState(null)
 
@@ -212,6 +214,26 @@ export default function FleetDashboard() {
     })
     alert.success('O\'chirildi')
     api.delete(`/vehicles/${id}`).catch(() => fetchVehicles())
+  }, [fetchVehicles, alert])
+
+  // Ovoz bilan mashina qo'shish
+  const handleVoiceVehicle = useCallback(async (vehicleData) => {
+    setShowVoiceModal(false)
+    
+    try {
+      const res = await api.post('/vehicles', vehicleData)
+      if (res.data?.data?._id) {
+        setVehicles(prev => {
+          const updated = [res.data.data, ...prev]
+          setCache(CACHE_KEY, updated)
+          return updated
+        })
+        alert.success('🎤 Mashina qo\'shildi!')
+      }
+    } catch (err) {
+      alert.error('Xatolik', err.response?.data?.message || 'Mashina qo\'shishda xatolik')
+      fetchVehicles()
+    }
   }, [fetchVehicles, alert])
 
   const navItems = [
@@ -389,13 +411,22 @@ export default function FleetDashboard() {
                 
                 {/* Add Button */}
                 {activeTab === 'home' && (
-                  <button
-                    onClick={() => openModal()}
-                    className="flex items-center gap-1.5 px-3 lg:px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-500/30 active:scale-[0.98]"
-                  >
-                    <Plus size={16} strokeWidth={2.5} />
-                    <span className="hidden sm:inline">Mashina qo'shish</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setShowVoiceModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-violet-500/30 active:scale-[0.98]"
+                    >
+                      <Mic size={16} strokeWidth={2.5} />
+                      <span className="hidden sm:inline">🎤</span>
+                    </button>
+                    <button
+                      onClick={() => openModal()}
+                      className="flex items-center gap-1.5 px-3 lg:px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-500/30 active:scale-[0.98]"
+                    >
+                      <Plus size={16} strokeWidth={2.5} />
+                      <span className="hidden sm:inline">Mashina qo'shish</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -477,6 +508,12 @@ export default function FleetDashboard() {
           onSubmit={handleSubmit}
           onClose={() => setShowModal(false)}
           isEdit={!!editVehicle}
+        />
+      )}
+      {showVoiceModal && (
+        <VoiceVehicleCreator
+          onResult={handleVoiceVehicle}
+          onClose={() => setShowVoiceModal(false)}
         />
       )}
       {showUpgradeModal && (

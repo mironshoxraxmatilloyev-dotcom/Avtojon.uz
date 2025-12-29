@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { useAlert, DriversListSkeleton, NetworkError, ServerError } from '../components/ui'
 import LocationPicker from '../components/LocationPicker'
 import { useSocket } from '../hooks/useSocket'
+import VoiceFlightCreator from '../components/VoiceFlightCreator'
 import {
     DriverCard,
     DriversHeader,
@@ -79,6 +80,7 @@ export default function DriversNew() {
     const [showModal, setShowModal] = useState(false)
     const [showFlightModal, setShowFlightModal] = useState(false)
     const [showLocationPicker, setShowLocationPicker] = useState(false)
+    const [showVoiceFlight, setShowVoiceFlight] = useState(false)
     const [editingDriver, setEditingDriver] = useState(null)
     const [selectedDriver, setSelectedDriver] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
@@ -206,7 +208,7 @@ export default function DriversNew() {
 
     useEffect(() => { fetchData() }, [fetchData])
     useEffect(() => {
-        const isModalOpen = showModal || showFlightModal || showLocationPicker
+        const isModalOpen = showModal || showFlightModal || showLocationPicker || showVoiceFlight
         if (isModalOpen) {
             document.body.style.overflow = 'hidden'
             document.documentElement.style.overflow = 'hidden'
@@ -218,7 +220,7 @@ export default function DriversNew() {
             document.body.style.overflow = ''
             document.documentElement.style.overflow = ''
         }
-    }, [showModal, showFlightModal, showLocationPicker])
+    }, [showModal, showFlightModal, showLocationPicker, showVoiceFlight])
 
 
     // Add/Update driver
@@ -348,6 +350,71 @@ export default function DriversNew() {
             })
     }
 
+    // Ovoz bilan reys ochish
+    const handleVoiceFlightCreate = async (flightData) => {
+        if (isDemoMode) { 
+            alert.info('Demo rejim', 'Demo versiyada ishlamaydi')
+            setShowVoiceFlight(false)
+            return 
+        }
+
+        const driver = drivers.find(d => d._id === flightData.driverId)
+        const vehicle = flightData.vehicleId 
+            ? vehicles.find(v => v._id === flightData.vehicleId)
+            : getDriverVehicle(flightData.driverId)
+        
+        if (!driver) {
+            alert.error('Xatolik', 'Haydovchi topilmadi')
+            return
+        }
+        if (!vehicle) {
+            alert.error('Xatolik', 'Mashina biriktirilmagan')
+            return
+        }
+
+        const leg = flightData.legs[0]
+        const driverId = driver._id
+
+        // Optimistic update
+        const tempFlight = {
+            _id: 'temp_' + Date.now(),
+            name: `${leg.fromCity} → ${leg.toCity}`,
+            status: 'active',
+            driver: { _id: driverId, fullName: driver.fullName },
+            vehicle: { _id: vehicle._id, plateNumber: vehicle.plateNumber },
+            legs: [{ fromCity: leg.fromCity, toCity: leg.toCity, status: 'in_progress', givenBudget: leg.givenBudget }],
+            totalGivenBudget: leg.givenBudget || 0
+        }
+
+        dispatch({ type: 'START_FLIGHT', driverId, flight: tempFlight })
+        setShowVoiceFlight(false)
+        showToast.success(`🎤 Mashrut ochildi: ${leg.fromCity} → ${leg.toCity}`)
+
+        // API so'rovi - FlightModal bilan bir xil format
+        const payload = {
+            driverId,
+            startOdometer: Number(flightData.startOdometer) || 0,
+            startFuel: Number(flightData.startFuel) || 0,
+            fuelType: flightData.fuelType || 'metan',
+            fuelUnit: flightData.fuelType === 'metan' || flightData.fuelType === 'propan' ? 'kub' : 'litr',
+            flightType: flightData.flightType || 'domestic',
+            firstLeg: {
+                fromCity: leg.fromCity,
+                toCity: leg.toCity,
+                fromCoords: leg.fromCoords,
+                toCoords: leg.toCoords,
+                givenBudget: leg.givenBudget || 0
+            }
+        }
+
+        api.post('/flights', payload)
+            .then((res) => dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: res.data.data }))
+            .catch((err) => {
+                showToast.error(err.response?.data?.message || 'Xatolik')
+                dispatch({ type: 'REVERT_FLIGHT', driverId })
+            })
+    }
+
     const handleEdit = (e, driver) => {
         e.stopPropagation()
         setEditingDriver(driver)
@@ -395,6 +462,7 @@ export default function DriversNew() {
                 drivers={drivers}
                 vehicles={vehicles}
                 onAddDriver={() => { setEditingDriver(null); resetForm(); setShowModal(true) }}
+                onVoiceFlight={() => setShowVoiceFlight(true)}
             />
 
             <DriversSearch
@@ -449,6 +517,16 @@ export default function DriversNew() {
                 selectedDriver={selectedDriver}
                 selectedVehicle={selectedDriver ? getDriverVehicle(selectedDriver._id) : null}
             />
+
+            {/* Voice Flight Creator */}
+            {showVoiceFlight && (
+                <VoiceFlightCreator
+                    drivers={drivers.filter(d => d.status === 'free')}
+                    vehicles={vehicles}
+                    onResult={handleVoiceFlightCreate}
+                    onClose={() => setShowVoiceFlight(false)}
+                />
+            )}
 
             {/* LocationPicker olib tashlandi - faqat AddressAutocomplete ishlatiladi */}
         </div>

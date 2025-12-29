@@ -58,48 +58,51 @@ export default function DriverModal({
   if (!show) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/90 p-0 sm:p-4">
       <div className="absolute inset-0" onClick={handleClose} />
       <div 
-        className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto" 
+        className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-t-2xl sm:rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto" 
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile drag handle */}
+        <div className="sm:hidden w-12 h-1 bg-white/30 rounded-full mx-auto mt-2 mb-1" />
+        
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-t-3xl" />
+        <div className="p-4 sm:p-6 border-b border-white/10">
+          <div className="absolute inset-x-0 top-0 h-16 sm:h-20 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-t-2xl sm:rounded-t-3xl" />
           <div className="relative flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <User className="w-7 h-7 text-white" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <User className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-lg sm:text-xl font-bold text-white">
                   {editingDriver ? 'Tahrirlash' : 'Yangi haydovchi'}
                 </h2>
-                <p className="text-blue-300 text-sm">
+                <p className="text-blue-300 text-xs sm:text-sm">
                   {editingDriver ? 'Ma\'lumotlarni yangilang' : 'Yangi haydovchi qo\'shing'}
                 </p>
               </div>
             </div>
             <button 
               onClick={handleClose} 
-              className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition"
+              className="p-2 sm:p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition"
             >
-              <X size={24} />
+              <X size={22} className="sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6 pb-6 sm:pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div>
-              <label className="block text-base font-semibold text-blue-200 mb-3">Username *</label>
+              <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Username *</label>
               <input 
                 type="text" 
                 value={form.username} 
                 onChange={(e) => setForm({ ...form, username: e.target.value })} 
-                className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition disabled:opacity-50" 
+                className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition disabled:opacity-50" 
                 placeholder="username" 
                 required 
                 disabled={!!editingDriver} 
@@ -107,22 +110,22 @@ export default function DriverModal({
             </div>
             {!editingDriver && (
               <div>
-                <label className="block text-base font-semibold text-blue-200 mb-3">Parol *</label>
+                <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Parol *</label>
                 <div className="relative">
                   <input 
                     type={showPassword ? 'text' : 'password'} 
                     value={form.password} 
                     onChange={(e) => setForm({ ...form, password: e.target.value })} 
-                    className="w-full px-5 py-4 pr-14 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 pr-12 sm:pr-14 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                     placeholder="********" 
                     required 
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
                   >
-                    {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                    {showPassword ? <EyeOff size={20} className="sm:w-[22px] sm:h-[22px]" /> : <Eye size={20} className="sm:w-[22px] sm:h-[22px]" />}
                   </button>
                 </div>
               </div>
@@ -130,19 +133,19 @@ export default function DriverModal({
           </div>
 
           <div>
-            <label className="block text-base font-semibold text-blue-200 mb-3">To'liq ism *</label>
+            <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">To'liq ism *</label>
             <input 
               type="text" 
               value={form.fullName} 
               onChange={(e) => setForm({ ...form, fullName: e.target.value })} 
-              className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+              className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
               placeholder="Ism Familiya" 
               required 
             />
           </div>
 
           <div className="dark-phone">
-            <label className="block text-base font-semibold text-blue-200 mb-3">Telefon</label>
+            <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Telefon</label>
             <PhoneInputDark 
               value={form.phone} 
               onChange={(phone) => setForm({ ...form, phone })} 
@@ -153,8 +156,8 @@ export default function DriverModal({
           {/* Parol (faqat tahrirlash rejimida) */}
           {editingDriver && (
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-base font-semibold text-blue-200">Parol</label>
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <label className="text-sm sm:text-base font-semibold text-blue-200">Parol</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -162,9 +165,9 @@ export default function DriverModal({
                     setNewPassword('')
                     setShowNewPassword(false)
                   }}
-                  className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm text-amber-400 hover:text-amber-300 transition"
                 >
-                  <RefreshCw size={16} />
+                  <RefreshCw size={14} className="sm:w-4 sm:h-4" />
                   {editingPassword ? 'Bekor qilish' : 'Yangilash'}
                 </button>
               </div>
@@ -174,20 +177,20 @@ export default function DriverModal({
                     type={showNewPassword ? 'text' : 'password'} 
                     value={newPassword} 
                     onChange={(e) => setNewPassword(e.target.value)} 
-                    className="w-full px-5 py-4 pr-14 text-lg bg-white/5 border border-amber-500/50 rounded-xl text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 pr-12 sm:pr-14 text-base sm:text-lg bg-white/5 border border-amber-500/50 rounded-xl text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
                     placeholder="Yangi parol (kamida 6 ta belgi)" 
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
                   >
-                    {showNewPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                    {showNewPassword ? <EyeOff size={20} className="sm:w-[22px] sm:h-[22px]" /> : <Eye size={20} className="sm:w-[22px] sm:h-[22px]" />}
                   </button>
                 </div>
               ) : (
-                <div className="px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-slate-400">
+                <div className="px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-slate-400">
                   ••••••••
                 </div>
               )}
@@ -196,38 +199,38 @@ export default function DriverModal({
 
           {/* Vehicle (only for new driver) */}
           {!editingDriver && (
-            <div className="pt-5 border-t border-white/10">
-              <h3 className="text-xl font-semibold text-white mb-5">🚛 Mashina ma'lumotlari</h3>
-              <div className="space-y-5">
+            <div className="pt-4 sm:pt-5 border-t border-white/10">
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-5">🚛 Mashina ma'lumotlari</h3>
+              <div className="space-y-4 sm:space-y-5">
                 <div>
-                  <label className="block text-base font-semibold text-blue-200 mb-3">Davlat raqami *</label>
+                  <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Davlat raqami *</label>
                   <input 
                     type="text" 
                     value={form.plateNumber} 
                     onChange={(e) => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} 
-                    className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
                     placeholder="01 A 123 AB" 
                     required 
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-2 gap-3 sm:gap-5">
                   <div>
-                    <label className="block text-base font-semibold text-blue-200 mb-3">Marka</label>
+                    <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Marka</label>
                     <input 
                       type="text" 
                       value={form.brand} 
                       onChange={(e) => setForm({ ...form, brand: e.target.value })} 
-                      className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                       placeholder="MAN, Volvo..." 
                     />
                   </div>
                   <div>
-                    <label className="block text-base font-semibold text-blue-200 mb-3">Yil</label>
+                    <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Yil</label>
                     <input 
                       type="number" 
                       value={form.year} 
                       onChange={(e) => setForm({ ...form, year: e.target.value })} 
-                      className="w-full px-5 py-4 text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
                       placeholder="2020" 
                     />
                   </div>
@@ -240,7 +243,7 @@ export default function DriverModal({
           <button 
             type="submit" 
             disabled={saving}
-            className="w-full py-5 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 sm:py-5 text-base sm:text-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {saving ? 'Saqlanmoqda...' : (editingDriver ? 'Saqlash' : "Qo'shish")}
           </button>

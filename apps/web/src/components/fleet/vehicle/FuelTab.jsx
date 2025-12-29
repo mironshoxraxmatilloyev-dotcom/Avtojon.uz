@@ -1,10 +1,12 @@
-import { memo } from 'react'
-import { Plus, Fuel, Edit2, Trash2, TrendingUp } from 'lucide-react'
+import { memo, useState } from 'react'
+import { Plus, Fuel, Edit2, Trash2, TrendingUp, Mic } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { fmt, fmtDate } from './constants'
+import VoiceRecorder from '../../VoiceRecorder'
 
-export const FuelTab = memo(({ data, onAdd, onEdit, onDelete }) => {
+export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, vehicleId, onVoiceAdd }) => {
   const { refills = [], stats = {} } = data
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
   const chartData = [...refills]
     .reverse()
@@ -49,8 +51,15 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete }) => {
         </div>
       )}
 
-      {/* Add Button */}
-      <div className="flex justify-end">
+      {/* Add Buttons */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowVoiceRecorder(true)}
+          className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+        >
+          <Mic size={18} />
+          🎤 Ovoz bilan
+        </button>
         <button
           onClick={onAdd}
           className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/25"
@@ -59,6 +68,19 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete }) => {
           Yoqilg'i qo'shish
         </button>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onResult={(voiceData) => {
+            setShowVoiceRecorder(false)
+            if (onVoiceAdd) {
+              onVoiceAdd(voiceData)
+            }
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
 
       {/* List - Light Mode */}
       {refills.length > 0 ? (

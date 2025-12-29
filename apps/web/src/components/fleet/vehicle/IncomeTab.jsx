@@ -1,6 +1,7 @@
-import { memo } from 'react'
-import { Plus, DollarSign, Truck, Home, Briefcase, Gift, Edit2, Trash2, TrendingUp, Calendar } from 'lucide-react'
+import { memo, useState } from 'react'
+import { Plus, DollarSign, Truck, Home, Briefcase, Gift, Edit2, Trash2, TrendingUp, Calendar, Mic } from 'lucide-react'
 import { fmt, fmtDate } from './constants'
+import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
 // Daromad turlari
 const INCOME_TYPES = {
@@ -10,8 +11,9 @@ const INCOME_TYPES = {
   other: { label: 'Boshqa', icon: Gift, color: 'amber', description: 'Boshqa daromad' }
 }
 
-export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete }) => {
-  const { incomes = [], stats = {} } = data
+export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
+  const { incomes = [], stats = {} }  = data
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
   // Daromad turlarini guruhlash
   const byType = incomes.reduce((acc, inc) => {
@@ -28,14 +30,37 @@ export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete }) => {
           <h2 className="text-xl font-bold text-gray-900">Daromadlar</h2>
           <p className="text-gray-500 text-sm mt-1">Mashina keltirgan daromadlar</p>
         </div>
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-emerald-500/25"
-        >
-          <Plus size={18} />
-          <span className="hidden sm:inline">Daromad qo'shish</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowVoiceRecorder(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-violet-500/25"
+          >
+            <Mic size={18} />
+            <span className="hidden sm:inline">🎤 Ovoz</span>
+          </button>
+          <button
+            onClick={onAdd}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-emerald-500/25"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Daromad qo'shish</span>
+          </button>
+        </div>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceMaintenanceRecorder
+          context="income"
+          onResult={(voiceData) => {
+            setShowVoiceRecorder(false)
+            if (onVoiceAdd) {
+              onVoiceAdd(voiceData)
+            }
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
 
       {/* Stats Cards - Light Mode */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

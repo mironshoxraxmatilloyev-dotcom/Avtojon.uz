@@ -18,6 +18,7 @@ const flightRoutes = require('./routes/flight.routes');
 const superAdminRoutes = require('./routes/superAdmin.routes');
 const vehicleMaintenanceRoutes = require('./routes/vehicleMaintenance.routes');
 const currencyRoutes = require('./routes/currency.routes');
+const voiceRoutes = require('./routes/voice.routes');
 
 const app = express();
 
@@ -60,8 +61,8 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 app.use(morgan('dev'));
-app.use(express.json({ limit: '10kb' })); // Body size limit
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '10mb' })); // Body size limit - audio uchun kattaroq
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting (barcha API uchun)
 app.use('/api', apiLimiter);
@@ -79,6 +80,7 @@ app.use('/api/flights', flightRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/maintenance', vehicleMaintenanceRoutes);
 app.use('/api/currency', currencyRoutes);
+app.use('/api/voice', voiceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

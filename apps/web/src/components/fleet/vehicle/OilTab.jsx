@@ -1,8 +1,10 @@
-import { memo } from 'react'
-import { Plus, Droplets, Edit2, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
+import { memo, useState } from 'react'
+import { Plus, Droplets, Edit2, Trash2, AlertTriangle, CheckCircle, Mic } from 'lucide-react'
 import { fmt, fmtDate, OIL_STATUS } from './constants'
+import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
-export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
+export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const { changes = [], status = 'ok', remainingKm = 0, lastChange } = data
 
   const statusColors = {
@@ -49,8 +51,15 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
         )}
       </div>
 
-      {/* Add Button */}
-      <div className="flex justify-end">
+      {/* Add Buttons */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowVoiceRecorder(true)}
+          className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+        >
+          <Mic size={18} />
+          🎤 Ovoz bilan
+        </button>
         <button
           onClick={onAdd}
           className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-amber-500/25"
@@ -59,6 +68,20 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete }) => {
           Moy almashtirish
         </button>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceMaintenanceRecorder
+          context="oil"
+          onResult={(voiceData) => {
+            setShowVoiceRecorder(false)
+            if (onVoiceAdd) {
+              onVoiceAdd(voiceData)
+            }
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
 
       {/* History - Light Mode */}
       {changes.length > 0 ? (

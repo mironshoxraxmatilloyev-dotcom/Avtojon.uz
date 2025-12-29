@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const axios = require('axios');
 const Flight = require('../models/Flight');
 const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
@@ -1009,14 +1010,11 @@ async function getCurrencyRates() {
   }
   
   try {
-    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.rates) {
-        currencyRatesCache.rates = { USD: 1, ...data.rates };
-        currencyRatesCache.lastUpdated = now;
-        return currencyRatesCache.rates;
-      }
+    const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', { timeout: 5000 });
+    if (response.data && response.data.rates) {
+      currencyRatesCache.rates = { USD: 1, ...response.data.rates };
+      currencyRatesCache.lastUpdated = now;
+      return currencyRatesCache.rates;
     }
   } catch (e) {
     console.error('Valyuta kurslarini olishda xatolik:', e.message);

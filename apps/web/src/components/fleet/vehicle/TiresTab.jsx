@@ -1,8 +1,10 @@
-import { memo } from 'react'
-import { Plus, Circle, Edit2, Trash2 } from 'lucide-react'
+import { memo, useState } from 'react'
+import { Plus, Circle, Edit2, Trash2, Mic } from 'lucide-react'
 import { fmt, fmtDate, TIRE_STATUS } from './constants'
+import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
-export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete }) => {
+export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoiceAdd }) => {
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const wornCount = tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length
   const newCount = tires.filter(t => (t.calculatedStatus || t.status) === 'new').length
 
@@ -27,6 +29,13 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete }) => 
       {/* Add Buttons */}
       <div className="flex flex-wrap gap-3 justify-end">
         <button
+          onClick={() => setShowVoiceRecorder(true)}
+          className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+        >
+          <Mic size={18} />
+          🎤 Ovoz bilan
+        </button>
+        <button
           onClick={onAddBulk}
           className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium flex items-center gap-2 transition-all border border-gray-200"
         >
@@ -41,6 +50,20 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete }) => 
           Bitta shina
         </button>
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceMaintenanceRecorder
+          context="tire"
+          onResult={(voiceData) => {
+            setShowVoiceRecorder(false)
+            if (onVoiceAdd) {
+              onVoiceAdd(voiceData)
+            }
+          }}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
 
       {/* Tires Grid - Light Mode */}
       {tires.length > 0 ? (
