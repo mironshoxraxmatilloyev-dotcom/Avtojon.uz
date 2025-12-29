@@ -1,6 +1,6 @@
 # Avtojon.uz
 
-Yuk tashish kompaniyalari uchun shofyorlar va reyslarni boshqarish tizimi.
+Yuk tashish kompaniyalari uchun shofyorlar va mashrutlarni boshqarish tizimi.
 
 ## 🚀 Texnologiyalar
 
@@ -112,7 +112,7 @@ avtojon/
 
 - ✅ Shofyorlarni boshqarish
 - ✅ Mashinalarni boshqarish
-- ✅ Reyslarni ochish va yopish
+- ✅ Mashrutlarni ochish va yopish
 - ✅ Xarajatlarni kuzatish
 - ✅ Real-time yangilanishlar (Socket.io)
 - ✅ Jonli xarita

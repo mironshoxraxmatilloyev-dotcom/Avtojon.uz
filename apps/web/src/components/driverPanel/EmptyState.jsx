@@ -12,9 +12,9 @@ export default function EmptyState({ stats, recentFlights = [], onSelectFlight }
           <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center mx-auto mb-2">
             <Truck size={24} className="text-slate-400" />
           </div>
-          <h3 className="text-slate-800 font-semibold text-sm mb-0.5">Faol reys yo'q</h3>
+          <h3 className="text-slate-800 font-semibold text-sm mb-0.5">Faol marshrut yo'q</h3>
           <p className="text-slate-400 text-xs">
-            Yangi reys tayinlanganda xabar olasiz
+            Yangi marshrut tayinlanganda xabar olasiz
           </p>
         </div>
         
@@ -45,7 +45,7 @@ export default function EmptyState({ stats, recentFlights = [], onSelectFlight }
       {hasRecentFlights && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-            <h4 className="text-slate-800 font-semibold text-sm">Oxirgi reyslar</h4>
+            <h4 className="text-slate-800 font-semibold text-sm">Oxirgi marshrutlar</h4>
             <span className="text-xs text-slate-400">{recentFlights.length} ta</span>
           </div>
           <div className="divide-y divide-slate-50">
@@ -62,7 +62,7 @@ export default function EmptyState({ stats, recentFlights = [], onSelectFlight }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-slate-800 text-sm font-medium truncate">
-                    {flight.legs?.[0]?.fromCity || 'Reys'} → {flight.legs?.[flight.legs.length - 1]?.toCity || ''}
+                    {flight.legs?.[0]?.fromCity || 'Marshrut'} → {flight.legs?.[flight.legs.length - 1]?.toCity || ''}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Calendar size={10} />
@@ -87,8 +87,8 @@ export default function EmptyState({ stats, recentFlights = [], onSelectFlight }
               <Bell size={14} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-slate-700 text-sm font-medium mb-0.5">Reyslar tarixi bo'sh</p>
-              <p className="text-slate-500 text-xs">Birinchi reysingiz tayinlanganda bu yerda ko'rinadi</p>
+              <p className="text-slate-700 text-sm font-medium mb-0.5">Marshrutlar tarixi bo'sh</p>
+              <p className="text-slate-500 text-xs">Birinchi marshrutingiz tayinlanganda bu yerda ko'rinadi</p>
             </div>
           </div>
         </div>

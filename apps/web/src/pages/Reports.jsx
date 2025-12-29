@@ -133,15 +133,15 @@ const exportToExcel = (data, filename) => {
       </Row>
       <Row><Cell/></Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">📦 Jami reyslar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">📦 Jami marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">✔️ Tugatilgan reyslar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">✔️ Tugatilgan marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.completed}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">🔄 Faol reyslar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">🔄 Faol marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.active}</Data></Cell>
       </Row>
       <Row><Cell/></Row>
@@ -809,7 +809,7 @@ export default function Reports() {
           color="text-emerald-600" bgColor="bg-emerald-100"
           onClick={() => setModal({ open: true, type: 'flights' })} />
 
-        <StatCard icon={Activity} label="Faol reyslar" value={stats.flights.active}
+        <StatCard icon={Activity} label="Faol marshrutlar" value={stats.flights.active}
           subtext="Hozir yo'lda" color="text-orange-600" bgColor="bg-orange-100"
           onClick={() => setModal({ open: true, type: 'active' })} />
 
@@ -898,7 +898,7 @@ export default function Reports() {
               <Route className="text-white" size={22} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900 text-lg">Reyslar holati</h3>
+              <h3 className="font-bold text-gray-900 text-lg">Marshrutlar holati</h3>
               <p className="text-sm text-gray-500">{getPeriodLabel()}</p>
             </div>
             <ArrowUpRight size={20} className="text-gray-300 group-hover:text-purple-500 transition-colors" />
@@ -946,7 +946,7 @@ export default function Reports() {
             <p className="text-4xl sm:text-5xl font-bold">
               {stats.flights.total > 0 ? Math.round((stats.flights.completed / stats.flights.total) * 100) : 0}%
             </p>
-            <p className="text-emerald-200 mt-2">tugatilgan reyslar</p>
+            <p className="text-emerald-200 mt-2">tugatilgan marshrutlar</p>
           </div>
         </div>
 
@@ -1061,7 +1061,7 @@ export default function Reports() {
       </DetailModal>
 
       <DetailModal isOpen={modal.open && modal.type === 'active'} onClose={() => setModal({ open: false })}
-        title="Faol reyslar" icon={Activity} color="from-orange-500 to-red-600">
+        title="Faol marshrutlar" icon={Activity} color="from-orange-500 to-red-600">
         <div className="space-y-4">
           {stats.flights.active === 0 ? (
             <div className="text-center py-12 text-gray-500">
@@ -1069,7 +1069,7 @@ export default function Reports() {
                 <Clock size={40} className="text-gray-300" />
               </div>
               <p className="text-lg font-medium">Hozirda faol reys yo'q</p>
-              <p className="text-sm text-gray-400 mt-1">Yangi reys boshlanganida bu yerda ko'rinadi</p>
+              <p className="text-sm text-gray-400 mt-1">Yangi marshrut boshlanganida bu yerda ko'rinadi</p>
             </div>
           ) : (
             <div className="space-y-3">

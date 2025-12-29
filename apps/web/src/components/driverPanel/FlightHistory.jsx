@@ -3,7 +3,7 @@ import { formatMoney, formatDate } from './constants'
 
 // Reys nomini legs dan olish
 const getFlightRoute = (flight) => {
-  if (!flight?.legs?.length) return 'Reys'
+  if (!flight?.legs?.length) return 'Marshrut'
   const firstLeg = flight.legs[0]
   const lastLeg = flight.legs[flight.legs.length - 1]
   const from = firstLeg?.fromCity || ''
@@ -11,7 +11,7 @@ const getFlightRoute = (flight) => {
   if (from && to) return `${from} → ${to}`
   if (from) return from
   if (to) return to
-  return 'Reys'
+  return 'Marshrut'
 }
 
 export default function FlightHistory({ flights, onSelect }) {

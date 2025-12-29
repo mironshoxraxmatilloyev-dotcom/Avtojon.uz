@@ -157,7 +157,7 @@ export function useOptimisticUpdate() {
     }
   }, [])
 
-  // 🚀 Reys ochish
+  // 🚀 Marshrut ochish
   const startFlightOptimistic = useCallback(async ({
     flightData,
     setDrivers,
@@ -208,7 +208,7 @@ export function useOptimisticUpdate() {
         return newMap
       })
       
-      const errorMsg = err.response?.data?.message || 'Reys ochishda xatolik'
+      const errorMsg = err.response?.data?.message || 'Marshrut ochishda xatolik'
       showToast.error(errorMsg)
       onError?.(err)
       return { success: false, error: errorMsg }

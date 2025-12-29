@@ -31,18 +31,22 @@ app.set('io', io);
 
 // Socket.io ulanishlar
 io.on('connection', (socket) => {
-  if (isDev) console.log(`🔌 Socket ulandi: ${socket.id}`);
+  console.log(`🔌 Socket ulandi: ${socket.id}`);
 
   socket.on('join-business', (businessId) => {
-    socket.join(`business-${businessId}`);
+    const room = `business-${businessId}`;
+    socket.join(room);
+    console.log(`💼 Business room joined: ${room} by ${socket.id}`);
   });
 
   socket.on('join-driver', (driverId) => {
-    socket.join(`driver-${driverId}`);
+    const room = `driver-${driverId}`;
+    socket.join(room);
+    console.log(`🚛 Driver room joined: ${room} by ${socket.id}`);
   });
 
   socket.on('disconnect', () => {
-    if (isDev) console.log(`❌ Socket uzildi: ${socket.id}`);
+    console.log(`❌ Socket uzildi: ${socket.id}`);
   });
 });
 
@@ -55,6 +59,30 @@ if (isDev) {
       rooms[roomName] = { size: sockets.size, sockets: Array.from(sockets) };
     });
     res.json({ connectedClients: io.sockets.sockets.size, rooms });
+  });
+
+  // Test: expense-confirmed eventini yuborish
+  app.get('/api/socket-test-expense/:businessId/:flightId', (req, res) => {
+    const roomName = `business-${req.params.businessId}`;
+    const room = io.sockets.adapter.rooms.get(roomName);
+    
+    io.to(roomName).emit('expense-confirmed', { 
+      flight: { _id: req.params.flightId, test: true }, 
+      expenseId: 'test-expense',
+      message: 'Test: Xarajat tasdiqlandi!' 
+    });
+    
+    io.to(roomName).emit('flight-updated', { 
+      flight: { _id: req.params.flightId, test: true }, 
+      message: 'Test: Flight updated!' 
+    });
+    
+    res.json({ 
+      roomName, 
+      clientsCount: room?.size || 0, 
+      message: 'Test xabarlar yuborildi',
+      flightId: req.params.flightId
+    });
   });
 
   app.get('/api/socket-broadcast/:businessId', (req, res) => {

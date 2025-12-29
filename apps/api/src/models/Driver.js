@@ -62,7 +62,7 @@ const driverSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Maosh salbiy bo\'lishi mumkin emas']
   },
-  // Har reys uchun foiz
+  // Har mashrut uchun foiz
   perTripRate: {
     type: Number,
     default: 0,
@@ -88,6 +88,11 @@ const driverSchema = new mongoose.Schema({
   earningsLastUpdated: {
     type: Date,
     default: null
+  },
+  // Haydovchidagi joriy pul (avvalgi mashrutlardan qolgan)
+  currentBalance: {
+    type: Number,
+    default: 0
   },
   // To'lov tarixi
   salaryPayments: [{

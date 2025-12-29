@@ -283,7 +283,7 @@ export function ExpenseModal({ show, onClose, onSubmit, form, setForm, isEditing
   )
 }
 
-// Reysni yopish modali
+// Marshrutni yopish modali
 export function CompleteModal({ show, onClose, onSubmit, form, setForm, flight }) {
   const totalIncome = (flight?.totalPayment || 0) + (flight?.totalGivenBudget || 0)
   const netProfit = totalIncome - (flight?.totalExpenses || 0)
@@ -292,7 +292,7 @@ export function CompleteModal({ show, onClose, onSubmit, form, setForm, flight }
   const driverOwes = netProfit - driverAmount
 
   return (
-    <Modal show={show} onClose={onClose} title="Reysni yopish" icon={Receipt} iconColor="blue">
+    <Modal show={show} onClose={onClose} title="Marshrutni yopish" icon={Receipt} iconColor="blue">
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -358,7 +358,7 @@ export function CompleteModal({ show, onClose, onSubmit, form, setForm, flight }
           type="submit"
           className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
-          Reysni yopish
+          Marshrutni yopish
         </button>
       </form>
     </Modal>

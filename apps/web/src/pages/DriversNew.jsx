@@ -102,7 +102,7 @@ export default function DriversNew() {
             if (data.flight) {
                 const driverId = data.flight.driver?._id || data.flight.driver
                 dispatch({ type: 'START_FLIGHT', driverId, flight: data.flight })
-                showToast.success(data.message || 'Yangi reys boshlandi!')
+                showToast.success(data.message || 'Yangi marshrut boshlandi!')
             }
         })
 
@@ -122,7 +122,7 @@ export default function DriversNew() {
             if (data.flight) {
                 const driverId = data.flight.driver?._id || data.flight.driver
                 dispatch({ type: 'REVERT_FLIGHT', driverId })
-                showToast.success(data.message || 'Reys yopildi!')
+                showToast.success(data.message || 'Marshrut yopildi!')
             }
         })
 
@@ -131,7 +131,7 @@ export default function DriversNew() {
             if (data.flight) {
                 const driverId = data.flight.driver?._id || data.flight.driver
                 dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: data.flight })
-                showToast.success(data.message || 'Reys tasdiqlandi!')
+                showToast.success(data.message || 'Mashrut tasdiqlandi!')
             }
         })
 
@@ -143,7 +143,7 @@ export default function DriversNew() {
                 if (driverId) {
                     dispatch({ type: 'REVERT_FLIGHT', driverId })
                 }
-                showToast.warning(data.message || 'Reys o\'chirildi')
+                showToast.warning(data.message || 'Mashrut o\'chirildi')
             }
         })
 
@@ -152,7 +152,7 @@ export default function DriversNew() {
             if (data.flight) {
                 const driverId = data.flight.driver?._id || data.flight.driver
                 dispatch({ type: 'REVERT_FLIGHT', driverId })
-                showToast.warning(data.message || 'Reys bekor qilindi')
+                showToast.warning(data.message || 'Marshrut bekor qilindi')
             }
         })
 
@@ -317,7 +317,7 @@ export default function DriversNew() {
         dispatch({ type: 'START_FLIGHT', driverId, flight: tempFlight })
         setShowFlightModal(false)
         setSelectedDriver(null)
-        showToast.success(`Reys ochildi: ${fromCity} → ${toCity}`)
+        showToast.success(`Mashrut ochildi: ${fromCity} → ${toCity}`)
 
         // Form tozalanadi
         const formData = { ...flightForm }

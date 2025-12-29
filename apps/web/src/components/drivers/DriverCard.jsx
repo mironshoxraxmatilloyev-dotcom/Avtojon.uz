@@ -41,7 +41,7 @@ export default function DriverCard({
             ? 'bg-orange-100 text-orange-700' 
             : 'bg-green-100 text-green-700'
         }`}>
-          {driver.status === 'busy' ? 'Reysda' : "Bo'sh"}
+          {driver.status === 'busy' ? 'Marshrutda' : "Bo'sh"}
         </span>
       </div>
 
@@ -79,7 +79,7 @@ export default function DriverCard({
             <div className="flex items-center gap-2 min-w-0">
               <Route size={14} className="sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
               <span className="font-medium text-orange-700 text-xs sm:text-sm truncate">
-                {flight.name || 'Faol reys'}
+                {flight.name || 'Faol marshrut'}
               </span>
             </div>
             <span className="text-[10px] sm:text-xs text-orange-500 flex-shrink-0">
@@ -93,11 +93,11 @@ export default function DriverCard({
       <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-gray-100">
         <div className="min-w-0">
           <p className="text-[10px] sm:text-xs text-gray-400">
-            {driver.paymentType === 'per_trip' ? '💰 Reys uchun' : '💵 Oylik'}
+            {driver.paymentType === 'per_trip' ? '💰 Marshrut uchun' : '💵 Oylik'}
           </p>
           <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">
             {driver.paymentType === 'per_trip' 
-              ? formatMoney(driver.perTripRate) + '/reys' 
+              ? formatMoney(driver.perTripRate) + '/marshrut' 
               : formatMoney(driver.baseSalary)}
           </p>
           {/* To'lanmagan daromad */}
@@ -112,7 +112,7 @@ export default function DriverCard({
             <button 
               onClick={(e) => { e.stopPropagation(); onStartFlight(driver) }} 
               className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition" 
-              title="Reys ochish"
+              title="Marshrut ochish"
             >
               <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
@@ -121,7 +121,7 @@ export default function DriverCard({
             <button 
               onClick={(e) => { e.stopPropagation(); onViewFlight(flight._id) }} 
               className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition" 
-              title="Reysni davom ettirish"
+              title="Marshrutni davom ettirish"
             >
               <Route size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>

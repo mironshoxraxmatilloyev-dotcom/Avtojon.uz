@@ -21,6 +21,7 @@ export default function DriverHome() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('home')
   const [driverId, setDriverId] = useState(null)
+  const [currentBalance, setCurrentBalance] = useState(0)
   const [newTripNotification, setNewTripNotification] = useState(null)
   const [selectedFlight, setSelectedFlight] = useState(null)
   const [error, setError] = useState(null)
@@ -30,21 +31,36 @@ export default function DriverHome() {
     const { silent = false } = options
     if (!silent) setError(null)
     try {
-      const [tripsRes, profileRes, flightsRes] = await Promise.all([
-        api.get('/driver/me/trips'),
-        api.get('/driver/me'),
-        api.get('/driver/me/flights').catch(() => ({ data: { data: [] } }))
-      ])
-      const allTrips = tripsRes.data.data || []
-      const allFlights = flightsRes.data.data || []
-      setTrips(allTrips)
-      setActiveTrip(allTrips.find(t => t.status === 'in_progress') || null)
-      setPendingTrips(allTrips.filter(t => t.status === 'pending'))
-      setFlights(allFlights)
-      setActiveFlight(allFlights.find(f => f.status === 'active') || null)
-      if (profileRes.data.data?._id) setDriverId(profileRes.data.data._id)
+      // 🚀 TEZKOR: Bitta so'rov bilan barcha ma'lumotlarni olish
+      const res = await api.get('/driver/me/dashboard')
+      const { driver, activeFlight: active, allFlights, stats: serverStats } = res.data.data
+      
+      setFlights(allFlights || [])
+      setActiveFlight(active || null)
+      setTrips([]) // Eski trip tizimi endi ishlatilmaydi
+      setActiveTrip(null)
+      setPendingTrips([])
+      if (driver?._id) setDriverId(driver._id)
+      if (driver?.currentBalance !== undefined) setCurrentBalance(driver.currentBalance)
     } catch (err) {
-      if (!silent) setError({ type: err.isNetworkError ? 'network' : 'generic', message: err.userMessage || "Ma'lumotlarni yuklashda xatolik" })
+      // Fallback - eski usul
+      try {
+        const [tripsRes, profileRes, flightsRes] = await Promise.all([
+          api.get('/driver/me/trips'),
+          api.get('/driver/me'),
+          api.get('/driver/me/flights').catch(() => ({ data: { data: [] } }))
+        ])
+        const allTrips = tripsRes.data.data || []
+        const allFlights = flightsRes.data.data || []
+        setTrips(allTrips)
+        setActiveTrip(allTrips.find(t => t.status === 'in_progress') || null)
+        setPendingTrips(allTrips.filter(t => t.status === 'pending'))
+        setFlights(allFlights)
+        setActiveFlight(allFlights.find(f => f.status === 'active') || null)
+        if (profileRes.data.data?._id) setDriverId(profileRes.data.data._id)
+      } catch (fallbackErr) {
+        if (!silent) setError({ type: fallbackErr.isNetworkError ? 'network' : 'generic', message: fallbackErr.userMessage || "Ma'lumotlarni yuklashda xatolik" })
+      }
     } finally {
       setLoading(false)
     }
@@ -53,10 +69,42 @@ export default function DriverHome() {
   useEffect(() => {
     fetchData()
     if (!navigator.geolocation) return
-    const sendLoc = (p) => api.post('/driver/me/location', { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed }).catch(() => {})
-    const watchId = navigator.geolocation.watchPosition(sendLoc, () => {}, { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 })
-    const interval = setInterval(() => navigator.geolocation.getCurrentPosition(sendLoc, () => {}, { enableHighAccuracy: true, timeout: 20000, maximumAge: 3000 }), 15000)
-    return () => { navigator.geolocation.clearWatch(watchId); clearInterval(interval) }
+    
+    // Joylashuvni yuborish - faqat interval bilan (30 sekundda 1 marta)
+    let lastSentTime = 0
+    const MIN_INTERVAL = 30000 // 30 sekund
+    
+    const sendLocation = (position) => {
+      const now = Date.now()
+      // Oxirgi yuborishdan 30 sekund o'tmagan bo'lsa, yubormaymiz
+      if (now - lastSentTime < MIN_INTERVAL) return
+      lastSentTime = now
+      
+      api.post('/driver/me/location', { 
+        lat: position.coords.latitude, 
+        lng: position.coords.longitude, 
+        accuracy: position.coords.accuracy, 
+        speed: position.coords.speed 
+      }).catch(() => {})
+    }
+    
+    // Dastlabki joylashuvni olish
+    navigator.geolocation.getCurrentPosition(sendLocation, () => {}, { 
+      enableHighAccuracy: true, 
+      timeout: 30000, 
+      maximumAge: 10000 
+    })
+    
+    // Har 30 sekundda yangilash
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(sendLocation, () => {}, { 
+        enableHighAccuracy: true, 
+        timeout: 20000, 
+        maximumAge: 10000 
+      })
+    }, MIN_INTERVAL)
+    
+    return () => clearInterval(interval)
   }, [fetchData])
 
   useEffect(() => {
@@ -64,9 +112,9 @@ export default function DriverHome() {
     const socket = connectSocket()
     const join = () => joinDriverRoom(driverId)
     socket.connected ? join() : socket.on('connect', join)
-    const onNew = (d) => { showToast.success('🚛 Yangi reys!'); setNewTripNotification(d.trip || d.flight); fetchData(); setTimeout(() => setNewTripNotification(null), 5000) }
+    const onNew = (d) => { showToast.success('🚛 Yangi marshrut!'); setNewTripNotification(d.trip || d.flight); fetchData(); setTimeout(() => setNewTripNotification(null), 5000) }
     const onUpdate = (d) => { if (d.flight) { setActiveFlight(p => p?._id === d.flight._id ? d.flight : p); setFlights(p => p.map(f => f._id === d.flight._id ? d.flight : f)) } }
-    const onComplete = (d) => { showToast.success('✅ Reys yopildi!'); setActiveFlight(null); d.flight ? setFlights(p => p.map(f => f._id === d.flight._id ? d.flight : f)) : fetchData({ silent: true }) }
+    const onComplete = (d) => { showToast.success('✅ Marshrut yopildi!'); setActiveFlight(null); d.flight ? setFlights(p => p.map(f => f._id === d.flight._id ? d.flight : f)) : fetchData({ silent: true }) }
     const onCancel = () => { showToast.error('❌ Bekor qilindi!'); setActiveTrip(null); setActiveFlight(null); fetchData({ silent: true }) }
     ;['new-trip', 'new-flight', 'flight-started'].forEach(e => socket.on(e, onNew))
     socket.on('flight-updated', onUpdate)
@@ -89,6 +137,16 @@ export default function DriverHome() {
     flights.filter(f => f.status === 'completed').slice(0, 5)
   , [flights])
 
+  // Xarajat tasdiqlanganda flight ni yangilash
+  const handleFlightUpdate = useCallback((updatedFlight) => {
+    // Modal ochiq bo'lsa yangilash, aks holda faqat state yangilash
+    setSelectedFlight(prev => prev?._id === updatedFlight._id ? updatedFlight : prev)
+    setFlights(prev => prev.map(f => f._id === updatedFlight._id ? updatedFlight : f))
+    if (activeFlight?._id === updatedFlight._id) {
+      setActiveFlight(updatedFlight)
+    }
+  }, [activeFlight])
+
   if (loading) return <DriverHomeSkeleton />
   if (error) return <ErrorState error={error} onRetry={() => { setLoading(true); fetchData() }} />
 
@@ -102,12 +160,12 @@ export default function DriverHome() {
           {tab === 'home' && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                {activeFlight ? <ActiveFlightCard flight={activeFlight} onConfirm={handleConfirmFlight} actionLoading={actionLoading} />
+                {activeFlight ? <ActiveFlightCard flight={activeFlight} onConfirm={handleConfirmFlight} actionLoading={actionLoading} onFlightUpdate={handleFlightUpdate} />
                   : activeTrip ? <ActiveTripCard trip={activeTrip} onComplete={handleCompleteTrip} actionLoading={actionLoading} />
                   : pendingTrips.length > 0 ? <PendingTrips trips={pendingTrips} onStart={handleStartTrip} actionLoading={actionLoading} />
                   : <EmptyState stats={stats} recentFlights={recentFlights} onSelectFlight={setSelectedFlight} />}
               </div>
-              {(activeFlight || activeTrip || pendingTrips.length > 0) && <StatsCards stats={stats} />}
+              {(activeFlight || activeTrip || pendingTrips.length > 0) && <StatsCards stats={stats} currentBalance={currentBalance} />}
             </div>
           )}
           {tab === 'history' && (
@@ -117,14 +175,14 @@ export default function DriverHome() {
               {!flights.length && !trips.length && (
                 <div className="bg-white rounded-xl p-8 text-center border border-slate-100">
                   <History size={40} className="mx-auto mb-3 text-slate-300" />
-                  <p className="text-slate-500">Reyslar tarixi bo'sh</p>
+                  <p className="text-slate-500">Marshrutlar tarixi bo'sh</p>
                 </div>
               )}
             </div>
           )}
         </main>
       </div>
-      <FlightDetailModal flight={selectedFlight} onClose={() => setSelectedFlight(null)} />
+      <FlightDetailModal flight={selectedFlight} onClose={() => setSelectedFlight(null)} onUpdate={handleFlightUpdate} />
     </div>
   )
 }

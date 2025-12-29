@@ -4,7 +4,7 @@ export default function DriversSearch({ searchQuery, setSearchQuery, filterStatu
   const filters = [
     { value: 'all', label: 'Barchasi' },
     { value: 'free', label: "Bo'sh" },
-    { value: 'busy', label: 'Reysda' }
+    { value: 'busy', label: 'Marshrutda' }
   ]
 
   return (

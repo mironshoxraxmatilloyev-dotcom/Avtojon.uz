@@ -293,7 +293,7 @@ export const useDataStore = create((set, get) => ({
     }
   },
 
-  // 🚀 Reys ochish - OPTIMISTIC
+  // 🚀 Marshrut ochish - OPTIMISTIC
   startFlight: async (flightData) => {
     const { driverId } = flightData
     const tempId = 'temp_' + Date.now()
@@ -350,7 +350,7 @@ export const useDataStore = create((set, get) => ({
     }
   },
 
-  // 🚀 Reys tugatish - OPTIMISTIC
+  // 🚀 Mashrut tugatish - OPTIMISTIC
   completeFlight: async (flightId) => {
     const state = get()
     const flight = state.flights.find(f => f._id === flightId)

@@ -1,29 +1,67 @@
 import { formatMoney } from './constants'
+import { Wallet, CheckCircle, Clock, AlertCircle, ArrowRight } from 'lucide-react'
 
-export default function FinancialSummary({ flight }) {
+export default function FinancialSummary({ flight, onCollectPayment }) {
   const isInternational = flight?.flightType === 'international'
+  const isCompleted = flight?.status === 'completed'
   
-  const totalIncome = flight.totalIncome || (flight.totalPayment + flight.totalGivenBudget)
-  const netProfit = flight.netProfit || (totalIncome - (flight.totalExpenses || 0))
+  // Avvalgi marshrutdan qolgan pul
+  const previousBalance = flight.previousBalance || 0
+  
+  // Jami kirim (avvalgi qoldiq bilan)
+  const totalIncome = flight.totalIncome || (previousBalance + flight.totalPayment + flight.totalGivenBudget)
   const driverOwes = flight.driverOwes || flight.businessProfit || 0
+
+  // To'lov holati
+  const driverPaidAmount = flight.driverPaidAmount || 0
+  const driverRemainingDebt = flight.driverRemainingDebt ?? (driverOwes - driverPaidAmount)
+  const paymentStatus = flight.driverPaymentStatus || 'pending'
 
   // USD qiymatlari (xalqaro reyslar uchun)
   const totalIncomeUSD = flight.totalIncomeUSD || 0
-  const netProfitUSD = flight.netProfitUSD || 0
   const driverOwesUSD = flight.driverOwesUSD || 0
   const totalExpensesUSD = flight.totalExpensesUSD || 0
   const driverProfitAmountUSD = flight.driverProfitAmountUSD || 0
 
   // USD formatlash
-  const formatUSD = (amount) => `$${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const formatUSD = (amount) => `${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  // To'lov status badge
+  const getPaymentStatusBadge = () => {
+    if (paymentStatus === 'paid') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold">
+          <CheckCircle size={12} />
+          To'langan
+        </span>
+      )
+    }
+    if (paymentStatus === 'partial') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 rounded-lg text-xs font-semibold">
+          <Clock size={12} />
+          Qisman
+        </span>
+      )
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs font-semibold">
+        <AlertCircle size={12} />
+        Kutilmoqda
+      </span>
+    )
+  }
 
   return (
     <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700">
-      <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-        <span className="text-lg">📊</span> 
-        Moliyaviy xulosa
-        {isInternational && <span className="text-amber-400 text-sm">(USD)</span>}
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-semibold flex items-center gap-2">
+          <span className="text-lg">📊</span> 
+          Moliyaviy xulosa
+          {isInternational && <span className="text-amber-400 text-sm">(USD)</span>}
+        </h3>
+        {isCompleted && driverOwes > 0 && getPaymentStatusBadge()}
+      </div>
       
       {isInternational && flight.exchangeRateAtClose && (
         <p className="text-slate-400 text-xs mb-3">
@@ -32,10 +70,18 @@ export default function FinancialSummary({ flight }) {
       )}
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Avvalgi qoldiq - faqat bor bo'lsa ko'rsatish */}
+        {previousBalance > 0 && (
+          <SummaryBox 
+            label="Avvalgi qoldiq" 
+            value={formatMoney(previousBalance)} 
+            color="amber" 
+          />
+        )}
         <SummaryBox 
-          label="Jami kirim" 
+          label={previousBalance > 0 ? "Jami kirim (qoldiq bilan)" : "Jami kirim"} 
           value={isInternational ? formatUSD(totalIncomeUSD) : formatMoney(totalIncome)} 
-          subValue={isInternational ? `≈ ${formatMoney(totalIncome)}` : null}
+          subValue={isInternational ? `≈ ${formatMoney(totalIncome)}` : (previousBalance > 0 ? `${formatMoney(flight.totalPayment + flight.totalGivenBudget)} + ${formatMoney(previousBalance)}` : null)}
           color="emerald" 
         />
         <SummaryBox 
@@ -51,13 +97,61 @@ export default function FinancialSummary({ flight }) {
           color="purple" 
         />
         <SummaryBox 
-          label="Haydovchi berdi" 
-          value={isInternational ? formatUSD(driverOwesUSD) : formatMoney(driverOwes)} 
+          label={paymentStatus === 'paid' ? 'Haydovchi berdi' : paymentStatus === 'partial' ? 'Qolgan qarz' : 'Haydovchi beradi'} 
+          value={isInternational ? formatUSD(driverOwesUSD) : formatMoney(paymentStatus === 'partial' ? driverRemainingDebt : driverOwes)} 
           subValue={isInternational ? `≈ ${formatMoney(driverOwes)}` : null}
           color="emerald" 
-          highlight 
+          highlight={paymentStatus !== 'paid'}
         />
       </div>
+
+      {/* To'lov qismi - faqat yopilgan reyslar uchun */}
+      {isCompleted && driverOwes > 0 && (
+        <div className="mt-4 pt-4 border-t border-slate-700">
+          {/* To'lov progressi */}
+          {driverPaidAmount > 0 && paymentStatus !== 'paid' && (
+            <div className="mb-3">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-400">To'langan: {formatMoney(driverPaidAmount)}</span>
+                <span className="text-amber-400">Qoldi: {formatMoney(driverRemainingDebt)}</span>
+              </div>
+              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all"
+                  style={{ width: `${Math.min((driverPaidAmount / driverOwes) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* To'lov tarixi */}
+          {flight.driverPayments?.length > 0 && (
+            <div className="mb-3">
+              <p className="text-slate-400 text-xs mb-2">To'lov tarixi:</p>
+              <div className="flex flex-wrap gap-2">
+                {flight.driverPayments.slice(-3).map((p, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">
+                    <CheckCircle size={10} />
+                    {formatMoney(p.amount)}
+                    <span className="text-slate-500">({new Date(p.date).toLocaleDateString('uz-UZ')})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pul olish tugmasi */}
+          {paymentStatus !== 'paid' && onCollectPayment && (
+            <button
+              onClick={onCollectPayment}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
+            >
+              <Wallet size={18} />
+              Haydovchidan pul olish
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -66,7 +160,8 @@ function SummaryBox({ label, value, subValue, color, highlight }) {
   const colors = {
     emerald: 'text-emerald-400',
     red: 'text-red-400',
-    purple: 'text-purple-400'
+    purple: 'text-purple-400',
+    amber: 'text-amber-400'
   }
 
   return (

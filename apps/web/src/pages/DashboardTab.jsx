@@ -55,7 +55,7 @@ export default function DashboardTab({ stats, setActiveTab }) {
           <div className="flex gap-5">
             <div className="px-6 py-4 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20">
               <span className="text-white/70 text-base block mb-1">
-                Faol reyslar
+                Faol marshrutlar
               </span>
               <p className="text-white font-bold text-3xl">
                 {stats?.flights?.active || 0}
@@ -63,7 +63,7 @@ export default function DashboardTab({ stats, setActiveTab }) {
             </div>
             <div className="px-6 py-4 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20">
               <span className="text-white/70 text-base block mb-1">
-                Jami reyslar
+                Jami marshrutlar
               </span>
               <p className="text-white font-bold text-3xl">
                 {stats?.flights?.total || 0}
@@ -115,7 +115,7 @@ export default function DashboardTab({ stats, setActiveTab }) {
         <StatCard
           icon={Route}
           value={stats?.flights?.total || 0}
-          label="Jami reyslar"
+          label="Jami marshrutlar"
           trend={`${stats?.flights?.active || 0} faol`}
           trendUp={true}
           gradient="from-violet-500 to-purple-500"
@@ -175,7 +175,7 @@ export default function DashboardTab({ stats, setActiveTab }) {
           <ActivityItem
             icon={Route}
             color="emerald"
-            title="Yangi reys yaratildi"
+            title="Yangi marshrut yaratildi"
             time="3 soat oldin"
           />
         </div>

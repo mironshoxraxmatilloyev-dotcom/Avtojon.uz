@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Route, Plus, Pencil, Trash2, MapPin, Fuel, Utensils, Wrench, Car, FileText, Package, DollarSign, Wallet, ArrowRight, Navigation, CheckCircle2, Building2, Truck, Shield, CircleDot, Circle, Droplet } from 'lucide-react'
-import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney } from './constants'
+import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney, isHeavyExpense } from './constants'
 
 // Icon mapping
 const ICONS = {
@@ -12,7 +12,13 @@ const CATEGORY_ICONS = {
   fuel: Fuel,
   food: Utensils,
   repair: Wrench,
+  repair_small: Wrench,
+  repair_major: Wrench,
   toll: Car,
+  wash: Droplet,
+  tire: Circle,
+  accident: Shield,
+  insurance: Shield,
   fine: FileText,
   other: Package,
   border: Navigation
@@ -229,24 +235,40 @@ export default function LegsWithExpenses({
                   const isFuel = expense.type?.startsWith('fuel_')
                   const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
                   const IconComp = ICONS[expType.iconName] || Package
+                  const isConfirmed = expense.confirmedByDriver
+                  const isHeavy = isHeavyExpense(expense.type) || expense.expenseClass === 'heavy'
 
                   return (
-                    <div key={expense._id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl group hover:bg-slate-100 transition-colors">
+                    <div key={expense._id} className={`flex items-center gap-4 p-4 rounded-xl group hover:bg-slate-100 transition-colors ${isConfirmed ? 'bg-emerald-50' : isHeavy ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}`}>
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${expType.iconColor ? 'bg-white border border-slate-100' : 'bg-gradient-to-br ' + (expType.color || 'from-gray-500 to-slate-500')}`}>
                         <IconComp className={`w-6 h-6 ${expType.iconColor || 'text-white'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-800">
-                          {expType.label}
+                        <p className="font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                          <span>{expType.label}</span>
                           {isFuel && expense.quantity && (
-                            <span className="text-slate-400 font-normal ml-2">• {expense.quantity} {fuelUnit}</span>
+                            <span className="text-slate-400 font-normal">• {expense.quantity} {fuelUnit}</span>
+                          )}
+                          {isFuel && expense.odometer && (
+                            <span className="text-blue-500 font-normal text-sm">• 🚗 {expense.odometer.toLocaleString()} km</span>
+                          )}
+                          {isHeavy && (
+                            <span className="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">🏢 Biznesmen</span>
+                          )}
+                          {isConfirmed ? (
+                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">✓ Tasdiqlangan</span>
+                          ) : (
+                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">⏳ Kutilmoqda</span>
                           )}
                         </p>
                         <p className="text-sm text-slate-400 truncate">
-                          {expense.description || new Date(expense.date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' })}
+                          {expense.date && (
+                            <span className="mr-2">📅 {new Date(expense.date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          )}
+                          {expense.description && <span>• {expense.description}</span>}
                         </p>
                       </div>
-                      <p className="font-bold text-red-500 text-lg">-{formatMoney(expense.amountInUZS || expense.amount)}</p>
+                      <p className={`font-bold text-lg ${isHeavy ? 'text-rose-600' : 'text-red-500'}`}>-{formatMoney(expense.amountInUZS || expense.amount)}</p>
                       {isActive && (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => onEditExpense(expense)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg">

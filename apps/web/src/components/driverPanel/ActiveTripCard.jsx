@@ -14,7 +14,7 @@ export default function ActiveTripCard({ trip, onComplete, actionLoading }) {
               <Route size={22} className="text-white" />
             </div>
             <div>
-              <h3 className="text-white font-bold">Faol reys</h3>
+              <h3 className="text-white font-bold">Faol marshrut</h3>
               <p className="text-white/80 text-sm">Yo'ldasiz</p>
             </div>
           </div>

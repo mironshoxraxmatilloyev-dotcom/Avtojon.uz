@@ -101,7 +101,7 @@ const VehicleIncomeSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   amount: { type: Number, required: true },
   description: { type: String },
-  // Reys uchun
+  // Mashrut uchun
   fromCity: { type: String },
   toCity: { type: String },
   distance: { type: Number }, // km

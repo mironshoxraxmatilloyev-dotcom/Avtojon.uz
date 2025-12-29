@@ -7,48 +7,52 @@ const getSocketURL = () => {
   if (socketUrl && socketUrl.startsWith('http')) {
     return socketUrl
   }
-  
+
   // 2. API URL dan yasash
   const apiUrl = import.meta.env.VITE_API_URL
   if (apiUrl && apiUrl.startsWith('http')) {
     return apiUrl.replace('/api', '')
   }
-  
+
   // 3. Production URL - hardcoded fallback
   const hostname = window.location.hostname
-  
+
   // Localhost - development
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000'
   }
-  
+
   // Capacitor app yoki production web
-  // avtojon.uz domenida bo'lsa
   if (hostname.includes('avtojon')) {
     return 'https://avtojon.uz'
   }
-  
+
   // Boshqa holatda - production default
   return 'https://avtojon.uz'
 }
 
 let socket = null
 let pendingRooms = { driver: null, business: null }
-let reconnectAttempts = 0
-const MAX_RECONNECT_ATTEMPTS = 10
 
 export const connectSocket = () => {
+  // Agar socket mavjud va ulangan bo'lsa, qaytarish
   if (socket?.connected) {
     return socket
   }
 
+  // Agar socket mavjud lekin ulanmagan bo'lsa, qayta ulanish
+  if (socket) {
+    socket.connect()
+    return socket
+  }
+
   const url = getSocketURL()
-  console.log('🔌 Socket ulanmoqda:', url)
 
   socket = io(url, {
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
+    upgrade: true,
     reconnection: true,
-    reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
@@ -57,37 +61,24 @@ export const connectSocket = () => {
   })
 
   socket.on('connect', () => {
-    console.log('✅ Socket ulandi:', socket.id)
-    reconnectAttempts = 0
-    
     // Xonalarga qayta qo'shilish
     if (pendingRooms.driver) {
       socket.emit('join-driver', pendingRooms.driver)
-      console.log('🚛 Driver xonasiga qo\'shildi:', pendingRooms.driver)
     }
     if (pendingRooms.business) {
       socket.emit('join-business', pendingRooms.business)
-      console.log('💼 Business xonasiga qo\'shildi:', pendingRooms.business)
     }
-  })
-
-  socket.on('disconnect', (reason) => {
-    console.log('❌ Socket uzildi:', reason)
-  })
-
-  socket.on('connect_error', (error) => {
-    reconnectAttempts++
-    console.log(`⚠️ Socket xatosi (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}):`, error.message)
-  })
-
-  socket.on('reconnect', (attemptNumber) => {
-    console.log('🔄 Socket qayta ulandi, urinish:', attemptNumber)
   })
 
   return socket
 }
 
-export const getSocket = () => socket
+export const getSocket = () => {
+  if (!socket) {
+    return connectSocket()
+  }
+  return socket
+}
 
 export const disconnectSocket = () => {
   if (socket) {
@@ -100,42 +91,36 @@ export const disconnectSocket = () => {
 // Shofyor xonasiga qo'shilish
 export const joinDriverRoom = (driverId) => {
   if (!driverId) return
-  
+
   pendingRooms.driver = driverId
-  
-  if (socket?.connected) {
-    socket.emit('join-driver', driverId)
-    console.log('🚛 Driver xonasiga qo\'shildi:', driverId)
-  } else {
-    // Socket yo'q bo'lsa, ulanish
-    connectSocket()
+
+  const s = getSocket()
+  if (s?.connected) {
+    s.emit('join-driver', driverId)
   }
 }
 
 // Biznesmen xonasiga qo'shilish
 export const joinBusinessRoom = (businessId) => {
   if (!businessId) return
-  
+
   const id = businessId.toString()
   pendingRooms.business = id
-  
-  if (socket?.connected) {
-    socket.emit('join-business', id)
-    console.log('💼 Business xonasiga qo\'shildi:', id)
-  } else {
-    // Socket yo'q bo'lsa, ulanish
-    connectSocket()
+
+  const s = getSocket()
+  if (s?.connected) {
+    s.emit('join-business', id)
   }
 }
 
 // Socket holatini tekshirish
 export const isSocketConnected = () => socket?.connected || false
 
-export default { 
-  connectSocket, 
-  getSocket, 
-  disconnectSocket, 
-  joinDriverRoom, 
+export default {
+  connectSocket,
+  getSocket,
+  disconnectSocket,
+  joinDriverRoom,
   joinBusinessRoom,
   isSocketConnected
 }

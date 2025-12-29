@@ -1,33 +1,37 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, CheckCircle, X, TrendingUp, TrendingDown, DollarSign, Wallet,
+  ArrowLeft, CheckCircle, X,
   Truck, User, Calendar, Sparkles, Zap
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
 import { useAlert, FlightDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import LocationPicker from '../components/LocationPicker'
-import { useSocket } from '../hooks/useSocket'
+import { connectSocket, joinBusinessRoom } from '../services/socket'
+import { useAuthStore } from '../store/authStore'
 import {
   OdometerFuelCard,
   LegsWithExpenses,
   InternationalSection,
+  FinancialSummary,
   formatMoney
 } from '../components/flightDetail'
+import FuelConsumptionCard from '../components/flightDetail/FuelConsumptionCard'
 import {
   LegModal,
   ExpenseModal,
   CompleteModal,
   PaymentModal,
-  PlatonModal
+  PlatonModal,
+  DriverPaymentModal
 } from '../components/flightDetail/AllModals'
 
 export default function FlightDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const alert = useAlert()
-  const { socket } = useSocket()
+  const { user } = useAuthStore()
 
   const [flight, setFlight] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -40,6 +44,7 @@ export default function FlightDetail() {
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [showPlatonModal, setShowPlatonModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showDriverPaymentModal, setShowDriverPaymentModal] = useState(false)
 
   // Selected items
   const [selectedLegForPayment, setSelectedLegForPayment] = useState(null)
@@ -50,7 +55,7 @@ export default function FlightDetail() {
   // Fetch flight
   const fetchFlight = useCallback(async (showLoader = true) => {
     if (id?.startsWith('temp_')) {
-      setError({ type: 'notfound', message: 'Bu reys hali saqlanmagan' })
+      setError({ type: 'notfound', message: 'Bu mashrut hali saqlanmagan' })
       setLoading(false)
       return
     }
@@ -61,7 +66,7 @@ export default function FlightDetail() {
       setFlight(res.data.data)
     } catch (err) {
       if (err.response?.status === 404 || err.response?.status === 400) {
-        setError({ type: 'notfound', message: 'Reys topilmadi' })
+        setError({ type: 'notfound', message: 'Mashrut topilmadi' })
       } else {
         setError({ type: err.isNetworkError ? 'network' : 'generic', message: err.userMessage || 'Xatolik' })
       }
@@ -72,27 +77,47 @@ export default function FlightDetail() {
 
   useEffect(() => { fetchFlight() }, [id])
 
-  // Socket listeners
+  // Socket listeners - to'g'ridan-to'g'ri socket bilan ishlash
   useEffect(() => {
-    if (!socket) return
+    // user yo'q bo'lsa, socket setup qilmaymiz (xato emas, faqat kutamiz)
+    if (!user?._id) return
+
+    // Socket ni olish yoki yaratish
+    const socket = connectSocket()
+
+    // Biznesmen room ga ulanish
+    joinBusinessRoom(user._id)
+
     const handleUpdate = (data) => {
       if (data.flight?._id === id) {
         setFlight(data.flight)
         if (data.message) showToast.success(data.message)
       }
     }
+
+    const handleExpenseConfirmed = (data) => {
+      if (data.flight?._id === id) {
+        setFlight(data.flight)
+        showToast.success('✅ Haydovchi xarajatni tasdiqladi')
+      }
+    }
+    
+    // Barcha kerakli eventlarni tinglash
     socket.on('flight-updated', handleUpdate)
     socket.on('flight-completed', handleUpdate)
     socket.on('flight-confirmed', handleUpdate)
+    socket.on('expense-confirmed', handleExpenseConfirmed)
+    
     return () => {
       socket.off('flight-updated', handleUpdate)
       socket.off('flight-completed', handleUpdate)
       socket.off('flight-confirmed', handleUpdate)
+      socket.off('expense-confirmed', handleExpenseConfirmed)
     }
-  }, [socket, id])
+  }, [id, user?._id])
 
   if (loading) return <FlightDetailSkeleton />
-  if (error?.type === 'notfound') return <NotFoundError title="Reys topilmadi" onBack={() => navigate('/dashboard/drivers')} />
+  if (error?.type === 'notfound') return <NotFoundError title="Mashrut topilmadi" onBack={() => navigate('/dashboard/drivers')} />
   if (error?.type === 'network') return <NetworkError onRetry={fetchFlight} message={error.message} />
   if (!flight) return null
 
@@ -138,10 +163,10 @@ export default function FlightDetail() {
   const handleEditPlaton = () => setShowPlatonModal(true)
 
   const handleCancelFlight = async () => {
-    const confirmed = await alert.confirm({ title: "Bekor qilish", message: "Reysni bekor qilishni xohlaysizmi?", type: "danger" })
+    const confirmed = await alert.confirm({ title: "Bekor qilish", message: "Marshrutni bekor qilishni xohlaysizmi?", type: "danger" })
     if (!confirmed) return
     setFlight(prev => ({ ...prev, status: 'cancelled' }))
-    showToast.success('Reys bekor qilindi')
+    showToast.success('Marshrut bekor qilindi')
     api.put(`/flights/${id}/cancel`).then(res => res.data?.data && setFlight(res.data.data)).catch(() => fetchFlight())
   }
 
@@ -187,7 +212,7 @@ export default function FlightDetail() {
               <div>
                 <div className="flex items-center gap-3 mb-1.5">
                   <h1 className="text-xl sm:text-2xl font-bold text-white">
-                    {flight.name || 'Yangi reys'}
+                    {flight.name || 'Yangi marshrut'}
                   </h1>
                   <span className={`px-3 py-1 rounded-lg text-sm font-semibold ${isActive
                     ? 'bg-emerald-500/20 text-emerald-400'
@@ -236,7 +261,7 @@ export default function FlightDetail() {
 
             {/* 4. Sof foyda / Shofyor beradi */}
             {isActive ? (
-              // Faol reys - sof foyda ko'rsatish (hali shofyor ulushi noma'lum)
+              // Faol marshrut - sof foyda ko'rsatish (hali shofyor ulushi noma'lum)
               <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
                 <p className={`font-bold text-xl sm:text-2xl ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
                   {netProfit >= 0 ? '+' : ''}{formatMoney(netProfit)}
@@ -246,7 +271,7 @@ export default function FlightDetail() {
                 </p>
               </div>
             ) : (
-              // Yopilgan reys - sof foyda (shofyor ulushi ayirilgan)
+              // Yopilgan mashrut - sof foyda (shofyor ulushi ayirilgan)
               <div className={`rounded-xl p-4 border ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
                 <p className={`font-bold text-xl sm:text-2xl ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
                   {(flight.businessProfit || flight.driverOwes || 0) >= 0 ? '+' : ''}{formatMoney(flight.businessProfit || flight.driverOwes || netProfit)}
@@ -262,7 +287,31 @@ export default function FlightDetail() {
 
       {/* Main Content */}
       <div className="space-y-4">
+        {/* Avvalgi qoldiq - agar bor bo'lsa */}
+        {(flight.previousBalance > 0 || flight.driver?.currentBalance > 0) && (
+          <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <div>
+                  <p className="text-purple-200 text-sm">Avvalgi marshrutdan qolgan</p>
+                  <p className="text-white font-bold text-xl">{formatMoney(flight.previousBalance || 0)} so'm</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-purple-200 text-xs">Haydovchida</p>
+                <p className="text-white font-semibold">{flight.driver?.fullName}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <OdometerFuelCard flight={flight} />
+
+        {/* Yoqilg'i sarflanishi statistikasi */}
+        <FuelConsumptionCard flight={flight} />
 
         <LegsWithExpenses
           flight={flight}
@@ -282,6 +331,14 @@ export default function FlightDetail() {
           onEditPlaton={handleEditPlaton}
         />
 
+        {/* Moliyaviy xulosa - faqat yopilgan reyslar uchun */}
+        {!isActive && (
+          <FinancialSummary 
+            flight={flight} 
+            onCollectPayment={() => setShowDriverPaymentModal(true)}
+          />
+        )}
+
         {/* Action Buttons */}
         {isActive && (
           <div className="space-y-3 pt-3">
@@ -290,7 +347,7 @@ export default function FlightDetail() {
               className="w-full py-5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-[0.99] transition-all"
             >
               <CheckCircle size={22} />
-              Reysni yopish
+              Marshrutni yopish
               <Sparkles size={18} className="text-amber-300" />
             </button>
 
@@ -299,7 +356,7 @@ export default function FlightDetail() {
               className="w-full py-4 bg-white text-red-500 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 border border-red-100 hover:bg-red-50 transition-colors"
             >
               <X size={18} />
-              Reysni bekor qilish
+              Marshrutni bekor qilish
             </button>
           </div>
         )}
@@ -396,7 +453,7 @@ export default function FlightDetail() {
           onSubmit={(data) => {
             // 🚀 Modal ni darhol yopish
             setShowCompleteModal(false)
-            showToast.success('Reys yopildi')
+            showToast.success('Marshrut yopildi')
 
             // Hisob-kitob
             const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
@@ -466,6 +523,38 @@ export default function FlightDetail() {
             api.put(`/flights/${id}/platon`, data).then(() => fetchFlight())
             setShowPlatonModal(false)
             showToast.success('Platon saqlandi')
+          }}
+        />
+      )}
+
+      {showDriverPaymentModal && (
+        <DriverPaymentModal
+          flight={flight}
+          onClose={() => setShowDriverPaymentModal(false)}
+          onSubmit={(data) => {
+            // 🚀 Modal ni darhol yopish
+            setShowDriverPaymentModal(false)
+            showToast.success('To\'lov qabul qilindi')
+
+            // 🚀 Optimistic update
+            const newPaidAmount = (flight.driverPaidAmount || 0) + data.amount
+            const totalOwed = flight.driverOwes || 0
+            const newRemainingDebt = totalOwed - newPaidAmount
+            const newStatus = newRemainingDebt <= 0 ? 'paid' : 'partial'
+
+            setFlight(prev => ({
+              ...prev,
+              driverPaidAmount: newPaidAmount,
+              driverRemainingDebt: newRemainingDebt,
+              driverPaymentStatus: newStatus,
+              driverPaymentDate: newStatus === 'paid' ? new Date().toISOString() : prev.driverPaymentDate,
+              driverPayments: [...(prev.driverPayments || []), { amount: data.amount, date: new Date().toISOString(), note: data.note || '' }]
+            }))
+
+            // Background da serverga yuborish
+            api.post(`/flights/${id}/driver-payment`, data)
+              .then(res => res.data?.data && setFlight(res.data.data))
+              .catch(() => fetchFlight(false))
           }}
         />
       )}

@@ -25,7 +25,7 @@ export default function FlightHeader({ flight, onBack, formatMoney }) {
               {flight.driver?.fullName?.charAt(0) || '?'}
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold truncate">{flight.name || 'Yangi marshrut'}</h1>
               <p className="text-emerald-200 text-xs sm:text-sm truncate">{flight.driver?.fullName} • {flight.vehicle?.plateNumber}</p>
             </div>
           </div>
@@ -54,7 +54,7 @@ export default function FlightHeader({ flight, onBack, formatMoney }) {
             <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm ${
               isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
             }`}>
-              {isActive ? '🟢 Faol reys' : '✅ Yopilgan'}
+              {isActive ? '🟢 Faol marshrut' : '✅ Yopilgan'}
             </span>
           </div>
         </div>

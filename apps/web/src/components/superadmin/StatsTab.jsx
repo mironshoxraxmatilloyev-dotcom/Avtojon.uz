@@ -117,7 +117,7 @@ export default function StatsTab({ stats, setActiveTab }) {
       <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-5 border border-white/5">
         <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
           <Route className="w-5 h-5 text-emerald-400" />
-          Reyslar holati
+          Marshrutlar holati
         </h3>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
@@ -150,7 +150,7 @@ export default function StatsTab({ stats, setActiveTab }) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <SummaryItem value={stats.businessmen.total + stats.drivers.total} label="Jami foydalanuvchilar" color="violet" />
           <SummaryItem value={stats.businessmen.active + stats.drivers.free} label="Faol foydalanuvchilar" color="emerald" />
-          <SummaryItem value={stats.flights.active} label="Joriy reyslar" color="amber" />
+          <SummaryItem value={stats.flights.active} label="Joriy marshrutlar" color="amber" />
           <SummaryItem value={stats.vehicles.total} label="Ro'yxatdagi mashinalar" color="blue" />
         </div>
       </div>

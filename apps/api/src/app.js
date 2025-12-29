@@ -253,7 +253,7 @@ function decodePolyline(encoded, precision = 6) {
   return coords;
 }
 
-// OpenRouteService dan marshrut olish (xalqaro reyslar uchun yaxshi)
+// OpenRouteService dan marshrut olish (xalqaro mashrutlar uchun yaxshi)
 async function tryOpenRouteService(startCoords, endCoords) {
   const [lon1, lat1] = startCoords;
   const [lon2, lat2] = endCoords;

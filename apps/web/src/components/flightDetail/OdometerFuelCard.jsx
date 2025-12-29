@@ -25,11 +25,26 @@ export default function OdometerFuelCard({ flight }) {
     ? flight.endOdometer - flight.startOdometer
     : flight.legs?.reduce((sum, leg) => sum + (leg.distance || 0), 0) || flight.totalDistance || 0
 
-  const totalFuelUsed = isKubType ? fuelData.kub : fuelData.litr
-  const fuelUsedText = totalFuelUsed > 0 ? `${totalFuelUsed} ${mainUnit}` : '-'
-  const fuelEfficiency = totalFuelUsed > 0 && totalDistance > 0 
-    ? (totalDistance / totalFuelUsed).toFixed(1) 
-    : null
+  // Olingan yoqilg'i (to'ldirishlar)
+  const totalFuelAdded = isKubType ? fuelData.kub : fuelData.litr
+  const fuelUsedText = totalFuelAdded > 0 ? `${totalFuelAdded} ${mainUnit}` : '-'
+  
+  // Sarflanish hisoblash - boshlang'ich yoqilg'i + olinganlar - qoldiq
+  // Agar qoldiq yo'q bo'lsa, boshlang'ich yoqilg'i bilan hisoblash
+  let fuelEfficiency = null
+  if (totalDistance > 0) {
+    if (flight.startFuel && flight.endFuel !== undefined && flight.endFuel !== null) {
+      // To'liq ma'lumot bor - aniq hisoblash
+      const actualUsed = (flight.startFuel || 0) + totalFuelAdded - (flight.endFuel || 0)
+      if (actualUsed > 0) {
+        fuelEfficiency = (totalDistance / actualUsed).toFixed(1)
+      }
+    } else if (flight.startFuel && flight.startFuel > 0) {
+      // Faqat boshlang'ich yoqilg'i bor - taxminiy hisoblash
+      // Sarflangan = boshlang'ich yoqilg'i (chunki oxirgi to'ldirishgacha yetib keldi)
+      fuelEfficiency = (totalDistance / flight.startFuel).toFixed(1)
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

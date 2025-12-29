@@ -164,7 +164,7 @@ export default function DriverDetail() {
     const toCity = flightForm.toCity
     setShowFlightModal(false)
     setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'metan', fuelUnit: 'kub' })
-    showToast.success(`Reys ochilmoqda: ${fromCity} → ${toCity}`)
+    showToast.success(`Mashrut ochilmoqda: ${fromCity} → ${toCity}`)
     api.post('/flights', payload)
       .then((res) => navigate(`/dashboard/flights/${res.data.data._id}`))
       .catch((err) => showToast.error(err.response?.data?.message || 'Xatolik yuz berdi'))
@@ -174,7 +174,7 @@ export default function DriverDetail() {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
 
   const driverStatusConfig = {
-    busy: { label: 'Reysda', color: 'from-orange-500 to-amber-600', icon: Activity, bg: 'bg-orange-500' },
+    busy: { label: 'Marshrutda', color: 'from-orange-500 to-amber-600', icon: Activity, bg: 'bg-orange-500' },
     offline: { label: 'Offline', color: 'from-slate-500 to-slate-600', icon: Clock, bg: 'bg-slate-500' },
     available: { label: "Bo'sh", color: 'from-emerald-500 to-teal-600', icon: CheckCircle, bg: 'bg-emerald-500' }
   }
@@ -242,8 +242,8 @@ export default function DriverDetail() {
                     <Route size={22} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-emerald-100 text-sm">Faol reys</p>
-                    <p className="font-bold text-white text-lg">{activeFlight.name || 'Joriy reys'}</p>
+                    <p className="text-emerald-100 text-sm">Faol marshrut</p>
+                    <p className="font-bold text-white text-lg">{activeFlight.name || 'Joriy mashrut'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl">
@@ -265,7 +265,7 @@ export default function DriverDetail() {
                   </div>
                   <div>
                     <p className="text-blue-100 text-sm">Haydovchi bo'sh</p>
-                    <p className="font-bold text-white text-lg">Yangi reys boshlash</p>
+                    <p className="font-bold text-white text-lg">Yangi marshrut boshlash</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl">
@@ -298,6 +298,42 @@ export default function DriverDetail() {
                 <p className="text-sm text-gray-500 mt-2">Kutilmoqda</p>
               </div>
             </div>
+            
+            {/* Joriy balans - haydovchidagi pul */}
+            {driver.currentBalance !== undefined && (
+              <div className={`mt-4 p-4 rounded-xl ${driver.currentBalance > 0 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'bg-slate-100 border border-slate-200'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💰</span>
+                    <div>
+                      <p className={`text-sm ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-500'}`}>Haydovchidagi pul</p>
+                      <p className={`text-2xl font-bold ${driver.currentBalance > 0 ? 'text-white' : 'text-slate-600'}`}>{formatMoney(driver.currentBalance || 0)} so'm</p>
+                    </div>
+                  </div>
+                  <p className={`text-xs ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-400'}`}>
+                    {driver.currentBalance > 0 ? 'Avvalgi marshrutdan qolgan' : 'Qoldiq yo\'q'}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {/* Marshrutlardan ulushlar */}
+            {flights.filter(f => f.status === 'completed' && f.driverProfitAmount > 0).length > 0 && (
+              <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                <p className="text-sm text-purple-600 font-medium mb-3">📊 Marshrutlardan ulushlar</p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {flights.filter(f => f.status === 'completed' && f.driverProfitAmount > 0).slice(0, 5).map(f => (
+                    <div key={f._id} className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600 truncate flex-1">{f.name}</span>
+                      <span className="text-purple-600 font-semibold ml-2">
+                        +{formatMoney(f.driverProfitAmount)} ({f.driverProfitPercent || 0}%)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="mt-5 p-5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-between">
               <div>
                 <p className="text-blue-200 text-sm">Jami daromad</p>
@@ -325,7 +361,14 @@ export default function DriverDetail() {
             </div>
             {flights.length > 0 ? (
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {flights.slice(0, 10).map((flight) => (
+                {flights.slice(0, 10).map((flight) => {
+                  const hasDebt = flight.status === 'completed' && flight.driverOwes > 0
+                  const paidAmount = flight.driverPaidAmount || 0
+                  const remaining = (flight.driverOwes || 0) - paidAmount
+                  const isPaid = flight.driverPaymentStatus === 'paid'
+                  const isPartial = flight.driverPaymentStatus === 'partial'
+                  
+                  return (
                   <div 
                     key={flight._id} 
                     onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
@@ -338,7 +381,7 @@ export default function DriverDetail() {
                       <Route size={18} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{flight.name || 'Reys'}</p>
+                      <p className="font-semibold text-gray-900 truncate">{flight.name || 'Marshrut'}</p>
                       <p className="text-sm text-gray-500">{formatDate(flight.createdAt)} • {flight.totalDistance || 0} km</p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -349,11 +392,20 @@ export default function DriverDetail() {
                         {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
                       </span>
                       {flight.driverProfitAmount > 0 && (
-                        <p className="text-sm font-bold text-emerald-600">+{formatMoney(flight.driverProfitAmount)}</p>
+                        <p className="text-sm font-bold text-purple-600">Ulush: +{formatMoney(flight.driverProfitAmount)}</p>
+                      )}
+                      {hasDebt && !isPaid && (
+                        <p className={`text-xs ${isPartial ? 'text-amber-600' : 'text-red-500'}`}>
+                          {isPartial ? `Qoldi: ${formatMoney(remaining)}` : `Beradi: ${formatMoney(flight.driverOwes)}`}
+                        </p>
+                      )}
+                      {isPaid && flight.driverOwes > 0 && (
+                        <p className="text-xs text-emerald-600">✓ To'langan</p>
                       )}
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-12">
@@ -411,7 +463,7 @@ export default function DriverDetail() {
       </div>
 
 
-      {/* Reys ochish Modal */}
+      {/* Marshrut ochish Modal */}
       {showFlightModal && createPortal(
         <div 
           className="fixed inset-0 z-[9999] bg-black/90 overflow-y-auto"
@@ -429,7 +481,7 @@ export default function DriverDetail() {
                       <Play className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Yangi reys</h2>
+                      <h2 className="text-xl font-bold text-white">Yangi marshrut</h2>
                       <p className="text-emerald-300 text-base">{driver.fullName}</p>
                     </div>
                   </div>
@@ -440,6 +492,21 @@ export default function DriverDetail() {
               </div>
 
               <form onSubmit={handleStartFlight} className="p-6 space-y-5">
+                {/* Avvalgi qoldiq - agar bor bo'lsa */}
+                {driver.currentBalance > 0 && (
+                  <div className="p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl border border-purple-500/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">💰</span>
+                        <div>
+                          <p className="text-purple-300 text-sm">Avvalgi marshrutdan qolgan</p>
+                          <p className="text-white font-bold text-xl">{formatMoney(driver.currentBalance)} so'm</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {vehicle && (
                   <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center gap-4">
                     <Truck size={22} className="text-blue-400" />
@@ -451,7 +518,7 @@ export default function DriverDetail() {
                 )}
 
                 <div>
-                  <label className="block text-base font-medium text-emerald-200 mb-3">Reys turi</label>
+                  <label className="block text-base font-medium text-emerald-200 mb-3">Marshrut turi</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -583,7 +650,7 @@ export default function DriverDetail() {
                   type="submit" 
                   className="w-full py-4 text-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
                 >
-                  <Play size={20} /> Reysni boshlash
+                  <Play size={20} /> Marshrutni boshlash
                 </button>
               </form>
             </div>

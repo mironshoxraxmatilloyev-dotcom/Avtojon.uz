@@ -125,7 +125,7 @@ export default function Dashboard() {
     }
   }, [user?._id, isDemoMode, joinBusinessRoom])
 
-  // 🔌 Socket.io - Real-time GPS yangilanishi va reys eventlari
+  // 🔌 Socket.io - Real-time GPS yangilanishi va mashrut eventlari
   useEffect(() => {
     if (!socket) return
 
@@ -263,7 +263,7 @@ export default function Dashboard() {
         const [driversRes, vehiclesRes, flightsRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/vehicles'),
-          api.get('/flights?limit=20') // Faqat oxirgi 20 ta reys
+          api.get('/flights?limit=20') // Faqat oxirgi 20 ta mashrut
         ])
 
         const drivers = driversRes.data.data || []
@@ -413,7 +413,7 @@ export default function Dashboard() {
 
       </AnimatedCard>
 
-      {/* Faol reyslar (yangi tizim - flights) */}
+      {/* Faol marshrutlar (yangi tizim - flights) */}
       {activeFlights.length > 0 && (
         <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200/60">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
@@ -422,8 +422,8 @@ export default function Dashboard() {
                 <Route className="text-white" size={18} />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-800">Faol reyslar</h2>
-                <p className="text-xs sm:text-sm text-slate-500">{activeFlights.length} ta reys yo'lda</p>
+                <h2 className="text-base sm:text-lg font-bold text-slate-800">Faol marshrutlar</h2>
+                <p className="text-xs sm:text-sm text-slate-500">{activeFlights.length} ta mashrut yo'lda</p>
               </div>
             </div>
             <button onClick={() => fetchDriverLocations(true)} className="p-2 sm:p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition">
@@ -448,7 +448,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-start gap-2 text-sm text-slate-700 mb-3">
                     <MapPin size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                    <span className="font-medium truncate">{flight.name || 'Yangi reys'}</span>
+                    <span className="font-medium truncate">{flight.name || 'Yangi marshrut'}</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
                     <span className="flex items-center gap-1">
@@ -478,7 +478,7 @@ export default function Dashboard() {
 
 
 
-      {/* Xarita va Oxirgi reyslar - 2 ustunli layout */}
+      {/* Xarita va Oxirgi marshrutlar - 2 ustunli layout */}
       {!fullScreenMap && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
           {/* Jonli xarita - chap tomon (3/5) */}
@@ -524,7 +524,7 @@ export default function Dashboard() {
                         <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
                         <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                           }`}>
-                          {driver.status === 'busy' ? '🚛 Reysda' : '✅ Bo\'sh'}
+                          {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
                         </span>
                         {driver.lastLocation?.accuracy && (
                           <p className="text-xs text-gray-400 mt-1">📍 ±{Math.round(driver.lastLocation.accuracy)}m</p>
@@ -537,15 +537,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Oxirgi reyslar - o'ng tomon (2/5) */}
+          {/* Oxirgi marshrutlar - o'ng tomon (2/5) */}
           <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 sm:gap-3 mb-4">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg sm:rounded-xl flex items-center justify-center">
                 <Route className="text-purple-600" size={16} />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-gray-900">Oxirgi reyslar</h2>
-                <p className="text-xs sm:text-sm text-gray-500">{recentFlights.length} ta reys</p>
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">Oxirgi marshrutlar</h2>
+                <p className="text-xs sm:text-sm text-gray-500">{recentFlights.length} ta mashrut</p>
               </div>
             </div>
             <div className="space-y-3" style={{ maxHeight: '370px', overflowY: 'auto' }}>
@@ -571,7 +571,7 @@ export default function Dashboard() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 text-sm truncate">{flight.driver?.fullName || 'Noma\'lum'}</p>
-                        <p className="text-xs text-gray-500 truncate">{flight.name || 'Yangi reys'}</p>
+                        <p className="text-xs text-gray-500 truncate">{flight.name || 'Yangi marshrut'}</p>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-[10px] font-medium flex-shrink-0 ${
                         flight.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
@@ -640,7 +640,7 @@ export default function Dashboard() {
                       <p className="text-gray-500">{driver.phone || 'Telefon yo\'q'}</p>
                       <span className={`inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                         }`}>
-                        {driver.status === 'busy' ? '🚛 Reysda' : '✅ Bo\'sh'}
+                        {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
                       </span>
                       {driver.lastLocation?.accuracy && (
                         <p className={`mt-3 text-sm font-medium ${driver.lastLocation.accuracy < 50 ? 'text-emerald-600' :

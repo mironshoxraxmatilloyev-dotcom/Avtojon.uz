@@ -1,18 +1,27 @@
 import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle } from 'lucide-react'
 import { formatMoney, formatDate, EXPENSE_LABELS } from './constants'
+import api from '../../services/api'
+import { useState, useEffect } from 'react'
 
 // Reys nomini legs dan olish
 const getFlightRoute = (flight) => {
-  if (!flight?.legs?.length) return 'Reys'
+  if (!flight?.legs?.length) return 'Marshrut'
   const firstLeg = flight.legs[0]
   const lastLeg = flight.legs[flight.legs.length - 1]
   const from = firstLeg?.fromCity || ''
   const to = lastLeg?.toCity || ''
   if (from && to) return `${from} → ${to}`
-  return 'Reys'
+  return 'Marshrut'
 }
 
-export default function FlightDetailModal({ flight, onClose }) {
+export default function FlightDetailModal({ flight: initialFlight, onClose, onUpdate }) {
+  const [flight, setFlight] = useState(initialFlight)
+
+  // initialFlight o'zgarganda flight ni yangilash
+  useEffect(() => {
+    setFlight(initialFlight)
+  }, [initialFlight])
+
   if (!flight) return null
 
   const totalIncome = (flight.totalPayment || 0) + (flight.roadMoney || flight.totalGivenBudget || 0)
@@ -26,6 +35,35 @@ export default function FlightDetailModal({ flight, onClose }) {
     active: 'bg-blue-500',
     cancelled: 'bg-red-500'
   }
+
+  // Xarajatni tasdiqlash - OPTIMISTIC UPDATE
+  const handleConfirmExpense = async (expenseId) => {
+    // 🚀 Darhol UI ni yangilash (optimistic)
+    const updatedFlight = {
+      ...flight,
+      expenses: flight.expenses.map(e =>
+        e._id === expenseId ? { ...e, confirmedByDriver: true, confirmedAt: new Date().toISOString() } : e
+      )
+    }
+    setFlight(updatedFlight)
+    if (onUpdate) onUpdate(updatedFlight)
+
+    // Background da serverga yuborish
+    try {
+      const res = await api.put(`/driver/me/flights/${flight._id}/expenses/${expenseId}/confirm`)
+      if (res.data.success && res.data.data) {
+        setFlight(res.data.data)
+        if (onUpdate) onUpdate(res.data.data)
+      }
+    } catch (err) {
+      // Xatolik bo'lsa, qaytarish
+      console.error('Xarajatni tasdiqlashda xatolik:', err)
+      setFlight(flight)
+    }
+  }
+
+  // Tasdiqlanmagan xarajatlar soni
+  const unconfirmedCount = flight.expenses?.filter(e => !e.confirmedByDriver).length || 0
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={onClose}>
@@ -84,17 +122,49 @@ export default function FlightDetailModal({ flight, onClose }) {
           {/* Xarajatlar */}
           {flight.expenses?.length > 0 && (
             <div className="bg-slate-50 rounded-xl p-3">
-              <h4 className="text-slate-700 font-semibold text-sm mb-2">💸 Xarajatlar ({flight.expenses.length})</h4>
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-slate-700 font-semibold text-sm">💸 Xarajatlar ({flight.expenses.length})</h4>
+                {unconfirmedCount > 0 && (
+                  <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                    {unconfirmedCount} ta tasdiqlanmagan
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {flight.expenses.map((exp, idx) => {
                   const info = EXPENSE_LABELS[exp.type] || EXPENSE_LABELS.other
+                  const isConfirmed = exp.confirmedByDriver
                   return (
-                    <div key={exp._id || idx} className="flex items-center justify-between p-2 bg-white rounded-lg">
-                      <span className="text-slate-700 flex items-center gap-1.5 text-sm">
-                        <span>{info.icon}</span>
-                        <span className="font-medium">{info.label}</span>
-                      </span>
-                      <span className="text-red-500 font-bold text-sm">-{formatMoney(exp.amount)}</span>
+                    <div key={exp._id || idx} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isConfirmed ? 'bg-emerald-50 border border-emerald-200' : 'bg-white border border-slate-100'}`}>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-lg">{info.icon}</span>
+                        <div className="min-w-0">
+                          <span className="text-slate-700 font-medium text-sm block truncate">{info.label}</span>
+                          {exp.description && <span className="text-slate-400 text-xs block truncate">{exp.description}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-red-500 font-bold text-sm">-{formatMoney(exp.amount)}</span>
+                        <button
+                          type="button"
+                          disabled={isConfirmed}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (!isConfirmed) handleConfirmExpense(exp._id)
+                          }}
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isConfirmed 
+                              ? 'bg-emerald-500 border-emerald-500' 
+                              : 'border-slate-300 hover:border-emerald-400 hover:bg-emerald-50'
+                          }`}
+                        >
+                          {isConfirmed && (
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   )
                 })}

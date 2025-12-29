@@ -15,7 +15,7 @@ export default function NewTripNotification({ trip, onClose }) {
               <Bell className="w-6 h-6 text-white animate-pulse" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-bold text-lg">🚛 Yangi reys!</h3>
+              <h3 className="text-white font-bold text-lg">🚛 Yangi marshrut!</h3>
               <p className="text-emerald-100 text-sm">{tripName}</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg">

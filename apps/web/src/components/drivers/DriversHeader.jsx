@@ -10,7 +10,7 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver }) 
 
   const stats = [
     { label: 'Jami', value: drivers.length, icon: Users, color: 'from-blue-400 to-blue-600' },
-    { label: 'Reysda', value: drivers.filter(d => d.status === 'busy').length, icon: Activity, color: 'from-orange-400 to-orange-600' },
+    { label: 'Marshrutda', value: drivers.filter(d => d.status === 'busy').length, icon: Activity, color: 'from-orange-400 to-orange-600' },
     { label: "Bo'sh", value: drivers.filter(d => d.status === 'free').length, icon: User, color: 'from-green-400 to-green-600' },
     { label: 'Mashinalar', value: vehicles.length, icon: Truck, color: 'from-purple-400 to-purple-600' },
   ]

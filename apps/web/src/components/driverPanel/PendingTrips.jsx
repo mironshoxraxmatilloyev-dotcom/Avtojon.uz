@@ -7,7 +7,7 @@ export default function PendingTrips({ trips, onStart, actionLoading }) {
     <div className="space-y-4">
       <h2 className="text-gray-800 font-bold text-lg flex items-center gap-2">
         <Clock className="text-amber-500" size={22} />
-        Kutilayotgan reyslar
+        Kutilayotgan marshrutlar
       </h2>
       {trips.map((trip) => (
         <div key={trip._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">

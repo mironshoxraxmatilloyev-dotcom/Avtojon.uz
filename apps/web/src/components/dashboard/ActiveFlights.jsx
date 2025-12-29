@@ -14,7 +14,7 @@ export function ActiveFlights({ flights, onRefresh }) {
             <Route className="text-emerald-600" size={16} />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-gray-900">Faol reyslar</h2>
+            <h2 className="text-base sm:text-lg font-bold text-gray-900">Faol marshrutlar</h2>
             <p className="text-xs sm:text-sm text-gray-500">{flights.length} ta reys yo'lda</p>
           </div>
         </div>
@@ -53,7 +53,7 @@ function FlightCard({ flight, onClick }) {
         
         <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-600 mb-2">
           <MapPin size={14} className="sm:w-4 sm:h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-          <span className="font-medium truncate">{flight.name || 'Yangi reys'}</span>
+          <span className="font-medium truncate">{flight.name || 'Yangi marshrut'}</span>
         </div>
         
         <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-500">

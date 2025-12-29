@@ -81,7 +81,7 @@ export default function Flights() {
     socket.on('flight-started', (data) => {
       if (data.flight) {
         setFlights(prev => [data.flight, ...prev])
-        showToast.success(data.message || 'Yangi reys boshlandi!')
+        showToast.success(data.message || 'Yangi marshrut boshlandi!')
       }
     })
 
@@ -99,7 +99,7 @@ export default function Flights() {
     socket.on('flight-completed', (data) => {
       if (data.flight) {
         setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-        showToast.success(data.message || 'Reys yopildi!')
+        showToast.success(data.message || 'Marshrut yopildi!')
       }
     })
 
@@ -107,7 +107,7 @@ export default function Flights() {
     socket.on('flight-confirmed', (data) => {
       if (data.flight) {
         setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-        showToast.success(data.message || 'Reys tasdiqlandi!')
+        showToast.success(data.message || 'Mashrut tasdiqlandi!')
       }
     })
 
@@ -115,7 +115,7 @@ export default function Flights() {
     socket.on('flight-deleted', (data) => {
       if (data.flightId) {
         setFlights(prev => prev.filter(f => f._id !== data.flightId))
-        showToast.warning(data.message || 'Reys o\'chirildi')
+        showToast.warning(data.message || 'Mashrut o\'chirildi')
       }
     })
 
@@ -123,7 +123,7 @@ export default function Flights() {
     socket.on('flight-cancelled', (data) => {
       if (data.flight) {
         setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-        showToast.warning(data.message || 'Reys bekor qilindi')
+        showToast.warning(data.message || 'Marshrut bekor qilindi')
       }
     })
 
@@ -281,7 +281,7 @@ export default function Flights() {
       })
   }
 
-  // Reysni yopish
+  // Marshrutni yopish
   const handleComplete = async (e) => {
     e.preventDefault()
     
@@ -294,7 +294,7 @@ export default function Flights() {
       : `${selectedFlight.name} reysini yopishni xohlaysizmi?`
     
     const confirmed = await alert.confirm({
-      title: "Reysni yopish",
+      title: "Marshrutni yopish",
       message: confirmMessage,
       confirmText: "Ha, yopish",
       cancelText: "Bekor qilish",
@@ -324,7 +324,7 @@ export default function Flights() {
     setShowCompleteModal(false)
     setCompleteForm({ endOdometer: '', endFuel: '', driverProfitPercent: '' })
     setExpandedFlight(null)
-    showToast.success('Reys yopildi!')
+    showToast.success('Marshrut yopildi!')
 
     // Fonda API
     api.put(`/flights/${flightId}/complete`, completeData)
@@ -488,14 +488,14 @@ export default function Flights() {
       })
   }
 
-  // Reysni bekor qilish
+  // Marshrutni bekor qilish
   const handleCancelFlight = async (flightId) => {
     const flight = flights.find(f => f._id === flightId)
     if (!flight) return
 
     const confirmed = await alert.confirm({
-      title: "Reysni bekor qilish",
-      message: `"${flight.name || 'Bu reys'}" ni bekor qilishni xohlaysizmi? Haydovchi bo'shatiladi va reys bekor qilingan deb belgilanadi.`,
+      title: "Marshrutni bekor qilish",
+      message: `"${flight.name || 'Bu mashrut'}" ni bekor qilishni xohlaysizmi? Haydovchi bo'shatiladi va marshrut bekor qilingan deb belgilanadi.`,
       confirmText: "Ha, bekor qilish",
       cancelText: "Yo'q",
       type: "danger"
@@ -509,7 +509,7 @@ export default function Flights() {
       status: 'cancelled'
     } : f))
     setExpandedFlight(null)
-    showToast.success('Reys bekor qilindi')
+    showToast.success('Marshrut bekor qilindi')
 
     // Fonda API
     api.put(`/flights/${flightId}/cancel`)
@@ -564,7 +564,7 @@ export default function Flights() {
             })()}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Reyslar 🚛</h1>
-          <p className="text-green-200">Faol va tugatilgan reyslar</p>
+          <p className="text-green-200">Faol va tugatilgan marshrutlar</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
@@ -574,7 +574,7 @@ export default function Flights() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold">{activeCount}</p>
-                  <p className="text-green-200 text-xs">Faol reyslar</p>
+                  <p className="text-green-200 text-xs">Faol marshrutlar</p>
                 </div>
               </div>
             </div>
@@ -631,7 +631,7 @@ export default function Flights() {
                     {flight.driver?.fullName?.charAt(0) || '?'}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Yangi reys'}</h3>
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Yangi marshrut'}</h3>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">
                       {flight.flightType === 'international' ? '🌍' : '🇺🇿'} {flight.driver?.fullName} • {flight.vehicle?.plateNumber}
                     </p>
@@ -753,7 +753,7 @@ export default function Flights() {
                   </div>
                 </div>
 
-                {/* ============ XALQARO REYS BO'LIMLARI ============ */}
+                {/* ============ XALQARO MASHRUT BO'LIMLARI ============ */}
                 {flight.flightType === 'international' && (
                   <>
                     {/* Chegara xarajatlari */}
@@ -934,9 +934,9 @@ export default function Flights() {
                       className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
                     >
                       <X size={16} />
-                      Reysni bekor qilish
+                      Marshrutni bekor qilish
                     </button>
-                    {/* Xalqaro reys uchun qo'shimcha tugmalar */}
+                    {/* Xalqaro marshrut uchun qo'shimcha tugmalar */}
                     {flight.flightType === 'international' && (
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
@@ -1211,7 +1211,7 @@ export default function Flights() {
                       <CheckCircle className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-white">Reysni yopish</h2>
+                      <h2 className="text-lg font-bold text-white">Marshrutni yopish</h2>
                       <p className="text-blue-300 text-sm">{selectedFlight.name}</p>
                     </div>
                   </div>
@@ -1294,7 +1294,7 @@ export default function Flights() {
                 </div>
 
                 <button type="submit" className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold">
-                  Reysni yopish
+                  Marshrutni yopish
                 </button>
               </form>
             </div>

@@ -11,7 +11,7 @@ export const DriversFilter = memo(function DriversFilter({
   const filters = [
     { value: 'all', label: 'Barchasi' },
     { value: 'free', label: "Bo'sh" },
-    { value: 'busy', label: 'Reysda' }
+    { value: 'busy', label: 'Marshrutda' }
   ]
 
   return (

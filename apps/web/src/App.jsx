@@ -4,6 +4,26 @@ import { useAuthStore } from './store/authStore'
 import { AlertProvider } from './components/ui'
 import api from './services/api'
 import SubscriptionAlert from './components/subscription/SubscriptionAlert'
+import { connectSocket, joinBusinessRoom, joinDriverRoom } from './services/socket'
+
+// 🔌 Global Socket Connection Hook
+function useGlobalSocket() {
+  const { user, token } = useAuthStore()
+
+  useEffect(() => {
+    if (!user || !token) return
+
+    // Socket ni ulash
+    connectSocket()
+
+    // Role ga qarab room ga qo'shilish
+    if (user.role === 'business' && user._id) {
+      joinBusinessRoom(user._id)
+    } else if (user.role === 'driver' && user.driverId) {
+      joinDriverRoom(user.driverId)
+    }
+  }, [user, token])
+}
 
 // 🚀 Auth initialization hook
 function useInitAuth() {
@@ -194,6 +214,9 @@ const SuperAdminRoute = ({ children }) => {
 function App() {
   const authReady = useInitAuth()
   const location = useLocation()
+  
+  // 🔌 Global socket ulanishi
+  useGlobalSocket()
   
   // Auth yuklangunga qadar kutish
   if (!authReady) {

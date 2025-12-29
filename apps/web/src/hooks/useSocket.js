@@ -1,29 +1,55 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { connectSocket, getSocket, disconnectSocket, joinDriverRoom, joinBusinessRoom } from '../services/socket'
+import {
+  connectSocket,
+  getSocket,
+  disconnectSocket,
+  joinDriverRoom,
+  joinBusinessRoom
+} from '../services/socket'
 
 // useSocket hook - socket.io bilan ishlash uchun
 export function useSocket() {
-  const [socket, setSocket] = useState(null)
+  const [socket, setSocket] = useState(() => getSocket())
   const [isConnected, setIsConnected] = useState(false)
-  const socketRef = useRef(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    const s = connectSocket()
-    socketRef.current = s
-    setSocket(s)
+    mountedRef.current = true
 
-    const handleConnect = () => setIsConnected(true)
-    const handleDisconnect = () => setIsConnected(false)
+    // Socket ni olish yoki yaratish
+    let s = getSocket()
+    if (!s) {
+      s = connectSocket()
+    }
+
+    if (mountedRef.current) {
+      setSocket(s)
+      setIsConnected(s?.connected || false)
+    }
+
+    const handleConnect = () => {
+      if (mountedRef.current) {
+        setIsConnected(true)
+        setSocket(s)
+      }
+    }
+
+    const handleDisconnect = () => {
+      if (mountedRef.current) {
+        setIsConnected(false)
+      }
+    }
 
     s.on('connect', handleConnect)
     s.on('disconnect', handleDisconnect)
 
     // Agar allaqachon ulangan bo'lsa
-    if (s.connected) {
+    if (s.connected && mountedRef.current) {
       setIsConnected(true)
     }
 
     return () => {
+      mountedRef.current = false
       s.off('connect', handleConnect)
       s.off('disconnect', handleDisconnect)
     }
@@ -31,19 +57,23 @@ export function useSocket() {
 
   // Stable callbacks
   const stableJoinDriverRoom = useCallback((driverId) => {
-    joinDriverRoom(driverId)
+    if (driverId) {
+      joinDriverRoom(driverId)
+    }
   }, [])
 
   const stableJoinBusinessRoom = useCallback((businessId) => {
-    joinBusinessRoom(businessId)
+    if (businessId) {
+      joinBusinessRoom(businessId)
+    }
   }, [])
 
-  return { 
-    socket, 
-    isConnected, 
-    joinDriverRoom: stableJoinDriverRoom, 
-    joinBusinessRoom: stableJoinBusinessRoom, 
-    disconnectSocket 
+  return {
+    socket,
+    isConnected,
+    joinDriverRoom: stableJoinDriverRoom,
+    joinBusinessRoom: stableJoinBusinessRoom,
+    disconnectSocket
   }
 }
 

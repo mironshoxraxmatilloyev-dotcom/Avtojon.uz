@@ -130,7 +130,7 @@ export default function VehicleDetailPanel() {
     if (type === 'tire') setTireForm(item ? { position: item.position || TIRE_POSITIONS[0], brand: item.brand || '', model: item.model || '', size: item.size || '', installDate: item.installDate?.split('T')[0] || today(), installOdometer: item.installOdometer?.toString() || '', expectedLifeKm: item.expectedLifeKm?.toString() || '80000', cost: item.cost?.toString() || '' } : initTireForm(odo))
     if (type === 'service') setServiceForm(item ? { type: item.type || 'TO-1', date: item.date?.split('T')[0] || today(), odometer: item.odometer?.toString() || '', cost: item.cost?.toString() || '', description: item.description || '', serviceName: item.serviceName || '' } : initServiceForm(odo))
     if (type === 'tire-bulk') setBulkTireForm({ brand: '', size: '', cost: '', count: '4', installOdometer: odo })
-    if (type === 'income') setIncomeForm(item ? { type: item.type || 'trip', date: item.date?.split('T')[0] || today(), amount: item.amount?.toString() || '', fromCity: item.fromCity || '', toCity: item.toCity || '', distance: item.distance?.toString() || '', cargoWeight: item.cargoWeight?.toString() || '', clientName: item.clientName || '', description: item.description || '' } : initIncomeForm())
+    if (type === 'income') setIncomeForm(item ? { type: item.type || 'trip', date: item.date?.split('T')[0] || today(), amount: item.amount?.toString() || '', fromCity: item.fromCity || '', toCity: item.toCity || '', distance: item.distance?.toString() || '', cargoWeight: item.cargoWeight?.toString() || '', clientName: item.clientName || '', rentalDays: item.rentalDays?.toString() || '', rentalRate: item.rentalRate?.toString() || '', description: item.description || '' } : initIncomeForm())
   }, [vehicle?.currentOdometer, vehicle?.fuelType])
 
   const handleDelete = useCallback(async (type, itemId) => {
@@ -191,8 +191,15 @@ export default function VehicleDetailPanel() {
     }
 
     if (type === 'income') {
-      if (!data.amount || +data.amount <= 0) e.amount = 'Majburiy va musbat'
-      else if (+data.amount > 1000000000) e.amount = 'Juda katta'
+      // Ijara uchun rentalDays va rentalRate tekshirish
+      if (data.type === 'rental') {
+        if (!data.rentalDays || +data.rentalDays <= 0) e.rentalDays = 'Kunlar sonini kiriting'
+        if (!data.rentalRate || +data.rentalRate <= 0) e.rentalRate = 'Kunlik narxni kiriting'
+      } else {
+        // Boshqa turlar uchun amount tekshirish
+        if (!data.amount || +data.amount <= 0) e.amount = 'Majburiy va musbat'
+        else if (+data.amount > 1000000000) e.amount = 'Juda katta'
+      }
       if (data.distance && +data.distance < 0) e.distance = 'Salbiy bo\'lishi mumkin emas'
       if (data.distance && +data.distance > 50000) e.distance = 'Juda katta (max 50,000 km)'
     }

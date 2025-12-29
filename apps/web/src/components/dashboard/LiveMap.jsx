@@ -98,14 +98,14 @@ export function LiveMap({
               <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                 }`}>
-                {driver.status === 'busy' ? '🚛 Reysda' : '✅ Bo\'sh'}
+                {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
               </span>
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Faol reyslar marshruti */}
+      {/* Faol marshrutlar marshruti */}
       {activeFlights.map((flight) => (
         <span key={`flight-route-${flight._id}`}>
           {flight.legs?.map((leg, idx) => {

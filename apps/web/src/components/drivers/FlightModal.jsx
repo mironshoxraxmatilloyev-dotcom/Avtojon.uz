@@ -24,7 +24,7 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
                 <Route className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Yangi reys</h2>
+                <h2 className="text-lg font-bold text-white">Yangi marshrut</h2>
                 <p className="text-green-300 text-sm">{selectedDriver.fullName}</p>
               </div>
             </div>
@@ -39,7 +39,7 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">Reys turi</label>
+            <label className="block text-sm font-medium text-slate-400 mb-2">Marshrut turi</label>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setForm({ ...form, flightType: 'domestic' })} className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 ${isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}><span>🇺🇿</span><span className="font-medium text-sm">Mahalliy</span></button>
               <button type="button" onClick={() => setForm({ ...form, flightType: 'international' })} className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 ${!isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}><span>🌍</span><span className="font-medium text-sm">Xalqaro</span></button>
@@ -57,7 +57,7 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
               <div><label className="block text-sm font-medium text-slate-400 mb-1.5">Berilgan pul</label><input type="text" inputMode="numeric" value={formatNumber(form.givenBudget)} onChange={(e) => setForm({ ...form, givenBudget: e.target.value.replace(/\s/g, '') })} className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none" placeholder="200 000" /></div>
             </div>
           </div>
-          <button type="submit" className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25">🚀 Reysni boshlash</button>
+          <button type="submit" className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25">🚀 Marshrutni boshlash</button>
         </form>
       </div>
     </div>,

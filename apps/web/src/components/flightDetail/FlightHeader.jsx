@@ -87,7 +87,7 @@ export default function FlightHeader({ flight, navigate }) {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-bold truncate">{flight.name || 'Yangi reys'}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold truncate">{flight.name || 'Yangi marshrut'}</h1>
                 <span className={`px-2 py-0.5 rounded-full font-medium text-xs flex items-center gap-1 ${
                   isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-blue-500/20 text-blue-300'
                 }`}>

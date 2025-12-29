@@ -3,7 +3,7 @@ import { AnimatedStatCard } from '../ui'
 
 export function QuickStats({ stats }) {
   const quickStats = [
-    { label: 'Faol reyslar', value: stats.activeTrips, icon: Activity, color: 'from-orange-400 to-orange-600' },
+    { label: 'Faol marshrutlar', value: stats.activeTrips, icon: Activity, color: 'from-orange-400 to-orange-600' },
     { label: 'Yoldagi haydovchilar', value: stats.busyDrivers, icon: Truck, color: 'from-blue-400 to-blue-600' },
     { label: 'Bo\'sh haydovchilar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
     { label: 'Kutilayotgan', value: stats.pendingTrips, icon: Clock, color: 'from-purple-400 to-purple-600' },
@@ -31,9 +31,9 @@ export function QuickStats({ stats }) {
 export function MainStats({ stats, onNavigate }) {
   const mainStats = [
     { label: 'Jami haydovchilar', value: stats.drivers, icon: Users, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50', link: '/dashboard/drivers' },
-    { label: 'Tugatilgan reyslar', value: stats.completedTrips, icon: CheckCircle, gradient: 'from-green-500 to-green-600', bg: 'bg-green-50', link: '/dashboard/drivers' },
+    { label: 'Tugatilgan marshrutlar', value: stats.completedTrips, icon: CheckCircle, gradient: 'from-green-500 to-green-600', bg: 'bg-green-50', link: '/dashboard/drivers' },
     { label: 'Jami mashinalar', value: stats.vehicles, icon: Truck, gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50', link: '/dashboard/drivers' },
-    { label: 'Jami reyslar', value: stats.completedTrips + stats.activeTrips, icon: Route, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50', link: '/dashboard/drivers' },
+    { label: 'Jami marshrutlar', value: stats.completedTrips + stats.activeTrips, icon: Route, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50', link: '/dashboard/drivers' },
   ]
 
   return (

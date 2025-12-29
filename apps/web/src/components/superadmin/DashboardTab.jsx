@@ -95,11 +95,11 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Jami reyslar</span>
+              <span className="text-slate-400">Jami marshrutlar</span>
               <span className="text-white font-semibold">{totalFlights || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Faol reyslar</span>
+              <span className="text-slate-400">Faol marshrutlar</span>
               <span className="text-amber-400 font-semibold">{activeFlights || 0}</span>
             </div>
           </div>

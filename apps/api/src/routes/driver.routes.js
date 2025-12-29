@@ -35,7 +35,7 @@ router.get('/locations', protect, businessOnly, async (req, res) => {
 // Barcha shofyorlar (biznesmen uchun) - faqat aktiv shofyorlar
 router.get('/', protect, businessOnly, async (req, res) => {
   try {
-    // lastLocation ham qaytarish (reys qo'shishda kerak)
+    // lastLocation ham qaytarish (mashrut qo'shishda kerak)
     const drivers = await Driver.find({ user: req.user._id, isActive: true })
       .select('-password')
       .lean();
@@ -65,6 +65,11 @@ router.get('/:id', protect, businessOnly, async (req, res) => {
     
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+    
+    // currentBalance default qiymat (eski driverlar uchun)
+    if (driver.currentBalance === undefined) {
+      driver.currentBalance = 0;
     }
     
     // Mashina ma'lumotini driver ga qo'shish
@@ -182,7 +187,7 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
       { isActive: false, currentDriver: null }
     );
     
-    // Shofyorning faol reyslarini bekor qilish
+    // Shofyorning faol mashrutlarini bekor qilish
     await Flight.updateMany(
       { driver: req.params.id, status: 'active' },
       { status: 'cancelled' }

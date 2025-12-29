@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// ============ XALQARO REYS UCHUN SXEMALAR ============
+// ============ XALQARO MASHRUT UCHUN SXEMALAR ============
 
 // Qo'llab-quvvatlanadigan davlatlar
 const SUPPORTED_COUNTRIES = ['UZB', 'KZ', 'RU', 'TJ', 'KG', 'TM', 'AF', 'CN', 'TR', 'IR', 'AZ', 'GE', 'BY', 'UA', 'PL', 'DE', 'LT', 'LV', 'EE', 'FI'];
@@ -130,8 +130,27 @@ const legSchema = new mongoose.Schema({
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan', 'food', 'repair', 'toll', 'fine', 'border', 'customs', 'transit', 'insurance', 'platon', 'other'],
+    enum: [
+      // Yoqilg'i
+      'fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan',
+      // Yengil xarajatlar
+      'food', 'toll', 'wash', 'fine', 'repair_small',
+      // Katta xarajatlar
+      'repair_major', 'tire', 'accident', 'insurance',
+      // Chegara
+      'border', 'border_customs', 'border_transit', 'border_insurance', 'border_other',
+      // Eski turlar (backward compatibility)
+      'repair', 'customs', 'transit', 'platon',
+      // Boshqa
+      'other'
+    ],
     required: true
+  },
+  // Xarajat turi: 'light' = yengil (shofyor hisobidan), 'heavy' = katta (biznesmen hisobidan)
+  expenseClass: {
+    type: String,
+    enum: ['light', 'heavy'],
+    default: 'light'
   },
   amount: { 
     type: Number, 
@@ -139,7 +158,11 @@ const expenseSchema = new mongoose.Schema({
     min: [0, 'Xarajat salbiy bo\'lishi mumkin emas']
   },
   
-  // Valyuta ma'lumotlari (xalqaro reyslar uchun)
+  // Haydovchi tasdiqlashi
+  confirmedByDriver: { type: Boolean, default: false },
+  confirmedAt: { type: Date, default: null },
+  
+  // Valyuta ma'lumotlari (xalqaro mashrutlar uchun)
   currency: { 
     type: String, 
     enum: ['UZS', 'USD', 'RUB', 'KZT', 'EUR', 'TRY', 'CNY', 'TJS', 'KGS', 'TMT', 'AZN', 'GEL', 'BYN', 'UAH', 'PLN', 'AFN', 'IRR', 'AED'],
@@ -192,7 +215,7 @@ const expenseSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
-// Asosiy Flight (Reys) modeli
+// Asosiy Flight (Mashrut) modeli
 const flightSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -210,17 +233,17 @@ const flightSchema = new mongoose.Schema({
     required: true
   },
   
-  // Reys nomi (avtomatik: birinchi va oxirgi shahar)
+  // Mashrut nomi (avtomatik: birinchi va oxirgi shahar)
   name: String,
   
-  // Reys turi: 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
+  // Mashrut turi: 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
   flightType: {
     type: String,
     enum: ['domestic', 'international'],
     default: 'domestic'
   },
   
-  // ============ XALQARO REYS MAYDONLARI ============
+  // ============ XALQARO MASHRUT MAYDONLARI ============
   // Yo'nalish nuqtalari
   waypoints: [waypointSchema],
   
@@ -267,6 +290,12 @@ const flightSchema = new mongoose.Schema({
     default: 'litr'
   },
   
+  // Avvalgi mashrutdan qolgan pul (mashrut ochilganda haydovchidagi balans)
+  previousBalance: {
+    type: Number,
+    default: 0
+  },
+  
   // Tugatish ma'lumotlari
   endOdometer: { 
     type: Number, 
@@ -290,6 +319,12 @@ const flightSchema = new mongoose.Schema({
   totalGivenBudget: { type: Number, default: 0 }, // Jami berilgan yo'l xarajati
   totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar) - so'm da
   totalExpensesUSD: { type: Number, default: 0 }, // Jami xarajatlar USD da
+  // Yengil xarajatlar (shofyor hisobidan ayiriladi)
+  lightExpenses: { type: Number, default: 0 },
+  lightExpensesUSD: { type: Number, default: 0 },
+  // Katta xarajatlar (biznesmen hisobidan)
+  heavyExpenses: { type: Number, default: 0 },
+  heavyExpensesUSD: { type: Number, default: 0 },
   totalDistance: { type: Number, default: 0 }, // Jami masofa
   
   // Yo'l puli (biznesmen shofyorga bergan pul)
@@ -307,7 +342,7 @@ const flightSchema = new mongoose.Schema({
   businessProfit: { type: Number, default: 0 }, // Biznesmen foydasi = netProfit - driverProfitAmount
   driverOwes: { type: Number, default: 0 }, // Shofyor beradigan pul = businessProfit (yoki totalIncome - totalExpenses - driverProfitAmount)
   
-  // ============ XALQARO REYS UCHUN USD MAYDONLARI ============
+  // ============ XALQARO MASHRUT UCHUN USD MAYDONLARI ============
   totalPaymentUSD: { type: Number, default: 0 }, // Jami to'lov USD da
   totalIncomeUSD: { type: Number, default: 0 }, // Jami kirim USD da
   netProfitUSD: { type: Number, default: 0 }, // Sof foyda USD da
@@ -333,10 +368,21 @@ const flightSchema = new mongoose.Schema({
   // Shofyor to'lov statusi (pul berdi/bermadi)
   driverPaymentStatus: {
     type: String,
-    enum: ['pending', 'paid'],
+    enum: ['pending', 'partial', 'paid'],
     default: 'pending'
   },
   driverPaymentDate: { type: Date, default: null },
+  
+  // Qisman to'lov ma'lumotlari
+  driverPaidAmount: { type: Number, default: 0 }, // Haydovchi bergan summa
+  driverRemainingDebt: { type: Number, default: 0 }, // Qolgan qarz
+  
+  // To'lov tarixi
+  driverPayments: [{
+    amount: { type: Number, required: true },
+    date: { type: Date, default: Date.now },
+    note: { type: String, default: '' }
+  }],
   
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
@@ -357,7 +403,7 @@ flightSchema.pre('save', function(next) {
     return next(new Error('Shofyor foizi 0 dan 100 gacha bo\'lishi kerak'));
   }
 
-  // ============ XALQARO REYS HISOBLARI ============
+  // ============ XALQARO MASHRUT HISOBLARI ============
   
   // Chegara o'tish xarajatlari jami
   if (this.borderCrossings && this.borderCrossings.length > 0) {
@@ -413,23 +459,33 @@ flightSchema.pre('save', function(next) {
   this.totalDistance = this.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
   
   // ============ XARAJATLAR HISOBLASH (USD va UZS) ============
+  // Katta xarajat turlari - biznesmen hisobidan
+  const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance'];
+  
   let totalExpensesUZS = 0;
   let totalExpensesUSD = 0;
+  let lightExpensesUZS = 0; // Yengil xarajatlar (shofyor hisobidan)
+  let lightExpensesUSD = 0;
+  let heavyExpensesUZS = 0; // Katta xarajatlar (biznesmen hisobidan)
+  let heavyExpensesUSD = 0;
   
   this.expenses.forEach(exp => {
-    // Agar amountInUZS va amountInUSD mavjud bo'lsa
-    if (exp.amountInUZS) {
-      totalExpensesUZS += exp.amountInUZS;
-    } else {
-      // Eski format - amount so'm da deb hisoblaymiz
-      totalExpensesUZS += exp.amount || 0;
-    }
+    // Xarajat turini aniqlash
+    const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
     
-    if (exp.amountInUSD) {
-      totalExpensesUSD += exp.amountInUSD;
+    // Agar amountInUZS va amountInUSD mavjud bo'lsa
+    const amountUZS = exp.amountInUZS || exp.amount || 0;
+    const amountUSD = exp.amountInUSD || (exp.amount || 0) / 12800;
+    
+    totalExpensesUZS += amountUZS;
+    totalExpensesUSD += amountUSD;
+    
+    if (isHeavy) {
+      heavyExpensesUZS += amountUZS;
+      heavyExpensesUSD += amountUSD;
     } else {
-      // Eski format - so'm dan USD ga konvertatsiya (1 USD = 12800 so'm)
-      totalExpensesUSD += (exp.amount || 0) / 12800;
+      lightExpensesUZS += amountUZS;
+      lightExpensesUSD += amountUSD;
     }
   });
   
@@ -448,6 +504,12 @@ flightSchema.pre('save', function(next) {
   this.totalExpenses = Math.round(totalExpensesUZS);
   this.totalExpensesUSD = Math.round(totalExpensesUSD * 100) / 100;
   
+  // Yengil va katta xarajatlarni saqlash
+  this.lightExpenses = Math.round(lightExpensesUZS);
+  this.lightExpensesUSD = Math.round(lightExpensesUSD * 100) / 100;
+  this.heavyExpenses = Math.round(heavyExpensesUZS);
+  this.heavyExpensesUSD = Math.round(heavyExpensesUSD * 100) / 100;
+  
   // Oxirgi qoldiq (haydovchi qaytarishi kerak) - eski
   // finalBalance = Jami berilgan pul - Jami xarajatlar
   this.finalBalance = this.totalGivenBudget - this.totalExpenses;
@@ -463,19 +525,19 @@ flightSchema.pre('save', function(next) {
   this.netProfit = this.totalIncome - this.totalExpenses;
   
   // 3. Shofyor ulushi va biznesmen foydasi
-  // MUHIM: Bu qiymatlar faqat reys yopilganda (complete endpoint) hisoblanadi
-  // Faol reyslar uchun shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
+  // MUHIM: Bu qiymatlar faqat mashrut yopilganda (complete endpoint) hisoblanadi
+  // Faol mashrutlar uchun shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
   if (this.status === 'active') {
-    // Faol reyslar uchun - shofyor ulushi 0, chunki hali reys yopilmagan
-    // Biznesmen reys yopganda foizni belgilaydi
+    // Faol mashrutlar uchun - shofyor ulushi 0, chunki hali mashrut yopilmagan
+    // Biznesmen mashrut yopganda foizni belgilaydi
     this.driverProfitAmount = 0;
     this.businessProfit = this.netProfit; // Hali shofyor ulushi ayirilmagan
-    this.driverOwes = 0; // Reys yopilmaganda qarz yo'q
+    this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
   }
-  // Yopilgan reyslar uchun - driverProfitAmount, businessProfit, driverOwes 
+  // Yopilgan mashrutlar uchun - driverProfitAmount, businessProfit, driverOwes 
   // complete endpoint da o'rnatilgan, ularni o'zgartirmaymiz
   
-  // Reys nomi
+  // Mashrut nomi
   if (this.legs.length > 0) {
     const firstCity = this.legs[0].fromCity;
     const lastCity = this.legs[this.legs.length - 1].toCity;
@@ -486,9 +548,9 @@ flightSchema.pre('save', function(next) {
 });
 
 // 🚀 Indexlar - tez qidiruv uchun
-flightSchema.index({ user: 1, status: 1 }); // Biznesmen reyslari
-flightSchema.index({ driver: 1, status: 1 }); // Shofyor reyslari
-flightSchema.index({ user: 1, createdAt: -1 }); // Oxirgi reyslar
-flightSchema.index({ status: 1, createdAt: -1 }); // Faol reyslar
+flightSchema.index({ user: 1, status: 1 }); // Biznesmen mashrutlari
+flightSchema.index({ driver: 1, status: 1 }); // Shofyor mashrutlari
+flightSchema.index({ user: 1, createdAt: -1 }); // Oxirgi mashrutlar
+flightSchema.index({ status: 1, createdAt: -1 }); // Faol mashrutlar
 
 module.exports = mongoose.model('Flight', flightSchema);

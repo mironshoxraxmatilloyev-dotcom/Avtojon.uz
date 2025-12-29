@@ -29,17 +29,15 @@ export default function DriverSalaries() {
   const handlePaySalary = async (driverId, amount) => {
     setPaying(driverId)
     try {
-      // Optimistic update - darhol UI ni yangilash
+      await api.post(`/drivers/${driverId}/pay-salary`, { amount })
+      
+      // Muvaffaqiyatli - UI ni yangilash
       setDrivers(prev => prev.filter(d => d._id !== driverId))
       setStats(prev => ({
         ...prev,
-        totalPending: prev.totalPending - amount,
-        driversCount: prev.driversCount - 1
+        totalPending: Math.max(0, prev.totalPending - amount),
+        driversCount: Math.max(0, prev.driversCount - 1)
       }))
-      
-      await api.post(`/drivers/${driverId}/pay-salary`, { amount })
-      // Muvaffaqiyatli - serverdan yangi ma'lumotlarni olish
-      await fetchSalaries()
     } catch (err) {
       console.error('Pay salary error:', err)
       // Xatolik bo'lsa - qayta yuklash
@@ -71,7 +69,7 @@ export default function DriverSalaries() {
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-lg">Haydovchi oyliklari</h3>
-              <p className="text-sm text-slate-500">Reyslardan olingan foiz ulushlar</p>
+              <p className="text-sm text-slate-500">Marshrutlardan olingan foiz ulushlar</p>
             </div>
           </div>
         </div>

@@ -103,11 +103,16 @@ const registerLimiter = createRateLimiter({
   message: 'Juda ko\'p ro\'yxatdan o\'tish urinishi.'
 });
 
-// Location limiter
+// Location limiter - 1 daqiqada 200 ta (har 0.3 sekundda 1 ta)
 const locationLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  max: 50,
-  message: 'Juda ko\'p joylashuv so\'rovi.'
+  max: 200,
+  message: 'Juda ko\'p joylashuv so\'rovi.',
+  keyGenerator: (req) => {
+    // Driver ID bo'yicha limit
+    const driverId = req.driver?._id || req.ip || 'unknown';
+    return `location:${driverId}`;
+  }
 });
 
 // Password limiter

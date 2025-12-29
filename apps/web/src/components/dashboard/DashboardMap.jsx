@@ -103,7 +103,7 @@ export const DashboardMap = memo(function DashboardMap({
                 <p className="font-bold">{driver.fullName}</p>
                 <p className="text-sm text-gray-500">{driver.phone}</p>
                 <p className={`text-xs ${driver.status === 'busy' ? 'text-orange-500' : 'text-green-500'}`}>
-                  {driver.status === 'busy' ? 'Reysda' : "Bo'sh"}
+                  {driver.status === 'busy' ? 'Marshrutda' : "Bo'sh"}
                 </p>
               </div>
             </Popup>

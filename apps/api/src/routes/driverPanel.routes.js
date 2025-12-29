@@ -18,6 +18,46 @@ router.get('/me', protect, driverOnly, async (req, res) => {
   }
 });
 
+// 🚀 TEZKOR: Barcha ma'lumotlarni bitta so'rovda olish
+router.get('/me/dashboard', protect, driverOnly, async (req, res) => {
+  try {
+    // Parallel so'rovlar
+    const [driver, flights] = await Promise.all([
+      Driver.findById(req.driver._id).select('-password').lean(),
+      Flight.find({ driver: req.driver._id })
+        .populate('vehicle', 'plateNumber brand model')
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean()
+    ]);
+
+    // Faol mashrut
+    const activeFlight = flights.find(f => f.status === 'active') || null;
+    
+    // Tugallangan reyslar (oxirgi 10 ta)
+    const completedFlights = flights.filter(f => f.status === 'completed').slice(0, 10);
+    
+    // Statistika
+    const stats = {
+      totalCompletedFlights: flights.filter(f => f.status === 'completed').length,
+      totalEarnings: flights.reduce((sum, f) => sum + (f.driverProfitAmount || 0), 0)
+    };
+
+    res.json({ 
+      success: true, 
+      data: {
+        driver,
+        activeFlight,
+        completedFlights,
+        allFlights: flights,
+        stats
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GPS joylashuvni yuborish - Real-time Socket.io
 router.post('/me/location', protect, driverOnly, locationLimiter, validate(driverSchemas.location), asyncHandler(async (req, res) => {
   const { lat, lng, accuracy, speed, heading, timestamp } = req.body;
@@ -92,7 +132,7 @@ router.get('/me/flights', protect, driverOnly, async (req, res) => {
   }
 });
 
-// Faol reys olish
+// Faol mashrut olish
 router.get('/me/flights/active', protect, driverOnly, async (req, res) => {
   try {
     const flight = await Flight.findOne({ 
@@ -116,11 +156,11 @@ router.put('/me/flights/:id/confirm', protect, driverOnly, async (req, res) => {
     });
     
     if (!flight) {
-      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
+      return res.status(404).json({ success: false, message: 'Faol mashrut topilmadi' });
     }
 
     if (flight.driverConfirmed) {
-      return res.status(400).json({ success: false, message: 'Reys allaqachon tasdiqlangan' });
+      return res.status(400).json({ success: false, message: 'Mashrut allaqachon tasdiqlangan' });
     }
 
     flight.driverConfirmed = true;
@@ -133,13 +173,13 @@ router.put('/me/flights/:id/confirm', protect, driverOnly, async (req, res) => {
 
     const io = req.app.get('io');
     if (io) {
-      io.to(`business-${flight.user}`).emit('flight-confirmed', {
+      io.to(`business-${flight.user.toString()}`).emit('flight-confirmed', {
         flight: populatedFlight,
         message: `${req.driver.fullName} reysni tasdiqladi!`
       });
     }
 
-    res.json({ success: true, data: populatedFlight, message: 'Reys tasdiqlandi!' });
+    res.json({ success: true, data: populatedFlight, message: 'Mashrut tasdiqlandi!' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -155,7 +195,7 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
     });
     
     if (!flight) {
-      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
+      return res.status(404).json({ success: false, message: 'Faol mashrut topilmadi' });
     }
 
     const leg = flight.legs.id(req.params.legId);
@@ -173,7 +213,7 @@ router.put('/me/flights/:id/legs/:legId/complete', protect, driverOnly, async (r
 
     const io = req.app.get('io');
     if (io) {
-      io.to(`business-${flight.user}`).emit('flight-updated', {
+      io.to(`business-${flight.user.toString()}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `${req.driver.fullName} buyurtmani tugatdi: ${leg.fromCity} → ${leg.toCity}`
       });
@@ -254,7 +294,7 @@ router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) =>
     const io = req.app.get('io');
     if (io) {
       const expenseLabel = type && type.startsWith('fuel_') ? 'yoqilg\'i oldi' : 'xarajat qo\'shdi';
-      io.to(`business-${flight.user}`).emit('flight-updated', {
+      io.to(`business-${flight.user.toString()}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `${req.driver.fullName} ${expenseLabel}`
       });
@@ -262,6 +302,66 @@ router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) =>
 
     res.json({ success: true, data: populatedFlight });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Xarajatni tasdiqlash (haydovchi)
+router.put('/me/flights/:id/expenses/:expenseId/confirm', protect, driverOnly, async (req, res) => {
+  try {
+    const flight = await Flight.findOne({ 
+      _id: req.params.id, 
+      driver: req.driver._id
+    });
+    
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Mashrut topilmadi' });
+    }
+
+    const expense = flight.expenses.id(req.params.expenseId);
+    if (!expense) {
+      return res.status(404).json({ success: false, message: 'Xarajat topilmadi' });
+    }
+
+    if (expense.confirmedByDriver) {
+      return res.status(400).json({ success: false, message: 'Xarajat allaqachon tasdiqlangan' });
+    }
+
+    expense.confirmedByDriver = true;
+    expense.confirmedAt = new Date();
+    await flight.save();
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Biznesmenga xabar yuborish
+    const io = req.app.get('io');
+    if (io) {
+      // user ObjectId ni string ga o'girish
+      const businessId = flight.user.toString();
+      const businessRoom = `business-${businessId}`;
+      
+      console.log('📤 Expense confirmed - sending to room:', businessRoom);
+      console.log('📤 Flight ID:', flight._id.toString());
+      
+      // expense-confirmed eventi
+      io.to(businessRoom).emit('expense-confirmed', {
+        flight: populatedFlight,
+        expenseId: req.params.expenseId,
+        message: `${req.driver.fullName} xarajatni tasdiqladi`
+      });
+      
+      // flight-updated eventi ham yuboramiz (backup sifatida)
+      io.to(businessRoom).emit('flight-updated', {
+        flight: populatedFlight,
+        message: `✅ ${req.driver.fullName} xarajatni tasdiqladi`
+      });
+    }
+
+    res.json({ success: true, data: populatedFlight, message: 'Xarajat tasdiqlandi!' });
+  } catch (error) {
+    console.error('Expense confirm error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

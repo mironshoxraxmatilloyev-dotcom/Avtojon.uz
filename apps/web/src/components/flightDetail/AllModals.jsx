@@ -198,7 +198,9 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
     amount: editingExpense?.amount?.toString() || '',
     currency: editingExpense?.currency || 'UZS',
     description: editingExpense?.description || '',
-    quantity: editingExpense?.quantity?.toString() || ''
+    quantity: editingExpense?.quantity?.toString() || '',
+    odometer: editingExpense?.odometer?.toString() || '',
+    date: editingExpense?.date ? new Date(editingExpense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   }))
 
   const [rates, setRates] = useState(null)
@@ -256,15 +258,22 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
       amountInUZS = convertedToUZS || Number(form.amount)
     }
 
+    // Katta xarajat turlarini aniqlash
+    const HEAVY_TYPES = ['repair_major', 'tire', 'accident', 'insurance']
+    const expenseType = isFuel ? form.type : isBorder ? form.type : form.category
+    const expenseClass = HEAVY_TYPES.includes(expenseType) ? 'heavy' : 'light'
+
     onSubmit({
-      type: isFuel ? form.type : isBorder ? form.type : form.category,
+      type: expenseType,
+      expenseClass,
       amount: Number(form.amount),
       currency: isBorder ? 'USD' : form.currency,
       amountInUSD,
       amountInUZS,
       description: form.description,
       quantity: isFuel && form.quantity ? Number(form.quantity) : null,
-      date: new Date(),
+      odometer: isFuel && form.odometer ? Number(form.odometer) : null,
+      date: form.date ? new Date(form.date) : new Date(),
       legId: selectedLeg?.leg?._id || null,
       legIndex: selectedLeg?.index ?? null,
       exchangeRate: rates?.[form.currency] || 1
@@ -482,6 +491,38 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
             </div>
           )}
 
+          {/* Spidometr - faqat yoqilg'i uchun */}
+          {isFuel && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-3">
+                🚗 Spidometr (km)
+              </label>
+              <input
+                type="number"
+                value={form.odometer}
+                onChange={e => setForm(f => ({ ...f, odometer: e.target.value }))}
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+                placeholder={flight?.startOdometer ? `Boshlang'ich: ${flight.startOdometer} km` : 'Spidometr ko\'rsatkichi'}
+              />
+              {flight?.startOdometer && form.odometer && Number(form.odometer) > flight.startOdometer && (
+                <p className="text-blue-600 text-sm mt-2">
+                  📏 Boshlang'ichdan: +{(Number(form.odometer) - flight.startOdometer).toLocaleString()} km
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Sana */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-3">📅 Sana</label>
+            <input
+              type="date"
+              value={form.date}
+              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+              className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
+            />
+          </div>
+
           {/* Izoh */}
           <div>
             <label className="block text-sm font-semibold text-slate-600 mb-3">Izoh (ixtiyoriy)</label>
@@ -513,7 +554,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
 
 
 // ============================================
-// COMPLETE MODAL - Reysni yopish (PRO)
+// COMPLETE MODAL - Marshrutni yopish (PRO)
 // ============================================
 export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSubmit }) {
   const [form, setForm] = useState({
@@ -537,7 +578,11 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
 
   const uzsToUsdRate = rates?.UZS || 12800
 
-  const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
+  // Avvalgi marshrutdan qolgan pul
+  const previousBalance = flight.previousBalance || 0
+
+  // Jami kirim (avvalgi qoldiq bilan)
+  const totalIncome = previousBalance + (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
   const borderExpenses = flight.borderCrossingsTotalUZS || (flight.borderCrossingsTotalUSD ? Math.round(flight.borderCrossingsTotalUSD * 12800) : 0)
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
   const allExpenses = (flight.totalExpenses || 0) + borderExpenses + platonExpenses
@@ -584,7 +629,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
                 <CheckCircle className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Reysni yopish</h2>
+                <h2 className="text-xl font-bold text-white">Marshrutni yopish</h2>
                 <p className="text-blue-400/80 text-sm mt-0.5">
                   Yakuniy hisob-kitob {isInternational && <span className="text-amber-400">(USD)</span>}
                 </p>
@@ -615,7 +660,9 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
               <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/10 rounded-xl p-4 border border-emerald-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp size={18} className="text-emerald-400" />
-                  <span className="text-emerald-400/80 text-sm font-medium">Jami kirim</span>
+                  <span className="text-emerald-400/80 text-sm font-medium">
+                    Jami kirim {previousBalance > 0 && '(qoldiq bilan)'}
+                  </span>
                 </div>
                 {isInternational ? (
                   <>
@@ -623,7 +670,14 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
                     <p className="text-emerald-400/60 text-xs mt-1">≈ {formatMoney(totalIncome)} so'm</p>
                   </>
                 ) : (
-                  <p className="text-emerald-400 font-bold text-2xl">+{formatMoney(totalIncome)}</p>
+                  <>
+                    <p className="text-emerald-400 font-bold text-2xl">+{formatMoney(totalIncome)}</p>
+                    {previousBalance > 0 && (
+                      <p className="text-emerald-400/60 text-xs mt-1">
+                        {formatMoney(flight.totalPayment + flight.totalGivenBudget)} + {formatMoney(previousBalance)} qoldiq
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -743,7 +797,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
             className="w-full py-5 bg-gradient-to-r from-blue-500 via-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={22} />
-            Reysni yopish
+            Marshrutni yopish
             <Sparkles size={18} className="text-amber-300" />
           </button>
         </form>
@@ -828,6 +882,194 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit 
             <CheckCircle size={22} />
             To'lovni saqlash
           </button>
+        </div>
+      </div>
+    </ModalWrapper>,
+    document.body
+  )
+})
+
+// ============================================
+// DRIVER PAYMENT MODAL - Haydovchidan pul olish
+// ============================================
+export const DriverPaymentModal = memo(function DriverPaymentModal({ flight, onClose, onSubmit }) {
+  const [amount, setAmount] = useState('')
+  const [note, setNote] = useState('')
+
+  const totalOwed = flight.driverOwes || 0
+  const previouslyPaid = flight.driverPaidAmount || 0
+  const remaining = totalOwed - previouslyPaid
+
+  // Tez summa tugmalari - qolgan qarzga qarab
+  const quickAmounts = useMemo(() => {
+    if (remaining <= 0) return []
+    const amounts = []
+    // 25%, 50%, 75%, 100% qolgan qarzdan
+    const percentages = [0.25, 0.5, 0.75, 1]
+    percentages.forEach(p => {
+      const val = Math.round(remaining * p / 1000) * 1000 // 1000 ga yaxlitlash
+      if (val > 0 && val <= remaining && !amounts.includes(val)) {
+        amounts.push(val)
+      }
+    })
+    return amounts.slice(0, 4)
+  }, [remaining])
+
+  const handleSubmit = useCallback(() => {
+    const paymentAmount = Number(amount)
+    if (!paymentAmount || paymentAmount <= 0) return
+    if (paymentAmount > remaining) {
+      return // Qolgan qarzdan ko'p bo'lishi mumkin emas
+    }
+    onSubmit({ amount: paymentAmount, note })
+  }, [amount, note, remaining, onSubmit])
+
+  const isFullPayment = Number(amount) === remaining
+
+  return createPortal(
+    <ModalWrapper onClose={onClose} size="md">
+      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl">
+        <div className="relative px-6 py-5 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-transparent to-teal-500/10">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
+          <div className="relative flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
+                <Wallet className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Haydovchidan pul olish</h2>
+                <p className="text-emerald-400/80 text-sm mt-0.5">
+                  {flight.driver?.fullName || 'Haydovchi'}
+                </p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
+              <X size={22} />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Qarz holati */}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-sm">Jami qarz:</span>
+              <span className="text-white font-bold">{formatMoney(totalOwed)} so'm</span>
+            </div>
+            {previouslyPaid > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-emerald-400 text-sm">To'langan:</span>
+                <span className="text-emerald-400 font-bold">-{formatMoney(previouslyPaid)} so'm</span>
+              </div>
+            )}
+            <div className="border-t border-white/10 pt-3 flex justify-between items-center">
+              <span className="text-amber-400 font-semibold">Qolgan qarz:</span>
+              <span className="text-amber-400 font-bold text-xl">{formatMoney(remaining)} so'm</span>
+            </div>
+          </div>
+
+          {/* Tez tanlash */}
+          {quickAmounts.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-400 mb-3">Tez tanlash</label>
+              <div className="grid grid-cols-4 gap-2">
+                {quickAmounts.map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setAmount(amt.toString())}
+                    className={`py-3 rounded-xl text-sm font-bold transition-all ${Number(amount) === amt
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                  >
+                    {formatMoney(amt)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* To'liq to'lash tugmasi */}
+          {remaining > 0 && (
+            <button
+              type="button"
+              onClick={() => setAmount(remaining.toString())}
+              className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isFullPayment
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
+                }`}
+            >
+              <CheckCircle size={20} />
+              To'liq to'lash ({formatMoney(remaining)})
+            </button>
+          )}
+
+          {/* Summa kiritish */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-3">To'lov summasi</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={amount ? formatMoney(amount) : ''}
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '')
+                if (Number(val) <= remaining) {
+                  setAmount(val)
+                }
+              }}
+              className="w-full px-6 py-6 bg-white/5 border-2 border-white/10 rounded-2xl text-white text-3xl font-bold text-center placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+              placeholder="0"
+              autoFocus
+            />
+            <p className="text-center text-slate-500 text-sm mt-2">so'm</p>
+            {Number(amount) > remaining && (
+              <p className="text-center text-red-400 text-sm mt-1">Qolgan qarzdan ko'p bo'lishi mumkin emas</p>
+            )}
+          </div>
+
+          {/* Izoh */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Izoh (ixtiyoriy)</label>
+            <input
+              type="text"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+              placeholder="Masalan: Naqd pul, karta orqali..."
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!amount || Number(amount) <= 0 || Number(amount) > remaining}
+            className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 shadow-xl shadow-emerald-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
+          >
+            <CheckCircle size={22} />
+            {isFullPayment ? 'To\'liq to\'lash' : 'Qisman to\'lash'}
+          </button>
+
+          {/* To'lov tarixi */}
+          {flight.driverPayments?.length > 0 && (
+            <div className="border-t border-white/10 pt-4">
+              <h4 className="text-slate-400 text-sm font-semibold mb-3">To'lov tarixi</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {flight.driverPayments.map((p, i) => (
+                  <div key={i} className="flex justify-between items-center text-sm bg-white/5 rounded-lg px-3 py-2">
+                    <div>
+                      <span className="text-emerald-400 font-semibold">{formatMoney(p.amount)}</span>
+                      {p.note && <span className="text-slate-500 ml-2">- {p.note}</span>}
+                    </div>
+                    <span className="text-slate-500 text-xs">
+                      {new Date(p.date).toLocaleDateString('uz-UZ')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </ModalWrapper>,

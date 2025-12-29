@@ -4,7 +4,7 @@ import { fmt, fmtDate } from './constants'
 
 // Daromad turlari
 const INCOME_TYPES = {
-  trip: { label: 'Reys', icon: Truck, color: 'blue', description: 'Yuk tashish' },
+  trip: { label: 'Marshrut', icon: Truck, color: 'blue', description: 'Yuk tashish' },
   rental: { label: 'Ijara', icon: Home, color: 'purple', description: 'Mashinani ijaraga berish' },
   contract: { label: 'Shartnoma', icon: Briefcase, color: 'emerald', description: 'Doimiy shartnoma' },
   other: { label: 'Boshqa', icon: Gift, color: 'amber', description: 'Boshqa daromad' }
@@ -241,7 +241,7 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
         )}
       </div>
 
-      {/* Reys uchun qo'shimcha maydonlar */}
+      {/* Marshrut uchun qo'shimcha maydonlar */}
       {form.type === 'trip' && (
         <>
           <div className="grid grid-cols-2 gap-4">
@@ -322,8 +322,9 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 })
               }}
               placeholder="7"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-lg font-medium"
+              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.rentalDays ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'}`}
             />
+            {errors.rentalDays && <p className="text-red-500 text-xs mt-1">{errors.rentalDays}</p>}
           </div>
 
           {/* Kunlik narx */}
@@ -345,8 +346,9 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 })
               }}
               placeholder="500 000"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-lg font-medium"
+              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.rentalRate ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'}`}
             />
+            {errors.rentalRate && <p className="text-red-500 text-xs mt-1">{errors.rentalRate}</p>}
           </div>
 
           {/* Umumiy foyda - avtomatik hisoblanadi */}

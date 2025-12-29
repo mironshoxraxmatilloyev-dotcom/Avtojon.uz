@@ -396,7 +396,7 @@ router.get('/drivers', superAdminAuth, asyncHandler(async (req, res) => {
   });
 }));
 
-// Barcha reyslarni olish
+// Barcha mashrutlarni olish
 router.get('/flights', superAdminAuth, asyncHandler(async (req, res) => {
   const { status } = req.query;
   const query = {};
