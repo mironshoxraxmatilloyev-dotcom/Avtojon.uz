@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import api, { getErrorMessage } from '../services/api'
 import { storage, saveAuthData, clearAuthData, loadAuthData } from '../utils/storage'
+import { preventAutoSignIn } from '../utils/credentials'
 
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
@@ -147,6 +148,9 @@ export const useAuthStore = create((set, get) => ({
     
     // Capacitor storage dan o'chirish
     await clearAuthData()
+    
+    // Credential API - avtomatik login ni to'xtatish
+    await preventAutoSignIn()
     
     // Auth cache ni tozalash
     if (typeof window !== 'undefined' && window.__clearAuthCache) {

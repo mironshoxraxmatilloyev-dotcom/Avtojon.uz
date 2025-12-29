@@ -10,6 +10,9 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
     <!-- Primary SEO Meta Tags -->
     <title>Avtojon - Yuk tashish boshqaruvi | O'zbekiston #1 Logistika platformasi</title>
     <meta name="title" content="Avtojon - Yuk tashish boshqaruvi | O'zbekiston #1 Logistika platformasi" />
@@ -167,5 +170,16 @@
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('SW registered:', reg.scope))
+            .catch((err) => console.log('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

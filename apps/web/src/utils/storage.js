@@ -2,6 +2,75 @@
 let isNative = false
 let Preferences = null
 
+// IndexedDB - PWA uchun ishonchli storage
+const DB_NAME = 'avtojon-auth'
+const STORE_NAME = 'auth'
+let db = null
+
+const openDB = () => {
+  return new Promise((resolve, reject) => {
+    if (db) return resolve(db)
+    
+    const request = indexedDB.open(DB_NAME, 1)
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => {
+      db = request.result
+      resolve(db)
+    }
+    request.onupgradeneeded = (e) => {
+      const database = e.target.result
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME)
+      }
+    }
+  })
+}
+
+const idbGet = async (key) => {
+  try {
+    const database = await openDB()
+    return new Promise((resolve) => {
+      const tx = database.transaction(STORE_NAME, 'readonly')
+      const store = tx.objectStore(STORE_NAME)
+      const request = store.get(key)
+      request.onsuccess = () => resolve(request.result || null)
+      request.onerror = () => resolve(null)
+    })
+  } catch {
+    return null
+  }
+}
+
+const idbSet = async (key, value) => {
+  try {
+    const database = await openDB()
+    return new Promise((resolve) => {
+      const tx = database.transaction(STORE_NAME, 'readwrite')
+      const store = tx.objectStore(STORE_NAME)
+      store.put(value, key)
+      tx.oncomplete = () => resolve(true)
+      tx.onerror = () => resolve(false)
+    })
+  } catch {
+    return false
+  }
+}
+
+const idbRemove = async (key) => {
+  try {
+    const database = await openDB()
+    return new Promise((resolve) => {
+      const tx = database.transaction(STORE_NAME, 'readwrite')
+      const store = tx.objectStore(STORE_NAME)
+      store.delete(key)
+      tx.oncomplete = () => resolve(true)
+      tx.onerror = () => resolve(false)
+    })
+  } catch {
+    return false
+  }
+}
+
 // Dynamic import - faqat native platformada yuklanadi
 const initCapacitor = async () => {
   try {
@@ -29,7 +98,17 @@ export const storage = {
         const { value } = await Preferences.get({ key })
         return value
       }
-      return localStorage.getItem(key)
+      // Web: localStorage + IndexedDB fallback
+      let value = localStorage.getItem(key)
+      if (!value) {
+        // localStorage da yo'q - IndexedDB dan tekshirish
+        value = await idbGet(key)
+        if (value) {
+          // IndexedDB da bor - localStorage ga sync qilish
+          localStorage.setItem(key, value)
+        }
+      }
+      return value
     } catch (e) {
       console.error('Storage get error:', e)
       return localStorage.getItem(key)
@@ -42,7 +121,9 @@ export const storage = {
       if (isNative && Preferences) {
         await Preferences.set({ key, value: value || '' })
       }
+      // Web: localStorage + IndexedDB backup
       localStorage.setItem(key, value || '')
+      await idbSet(key, value || '')
     } catch (e) {
       console.error('Storage set error:', e)
       localStorage.setItem(key, value || '')
@@ -56,6 +137,7 @@ export const storage = {
         await Preferences.remove({ key })
       }
       localStorage.removeItem(key)
+      await idbRemove(key)
     } catch (e) {
       console.error('Storage remove error:', e)
       localStorage.removeItem(key)

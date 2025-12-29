@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Truck, User, Lock, ArrowRight, Eye, EyeOff, AlertCircle, Shield, Zap, CheckCircle } from 'lucide-react'
+import { User, Lock, ArrowRight, Eye, EyeOff, AlertCircle, Shield, Zap, CheckCircle } from 'lucide-react'
 import { useAlert } from '../components/ui'
+import { saveCredentials, getSilentCredentials } from '../utils/credentials'
 
 // Color Palette:
 // Primary: #2563EB (blue-600)
@@ -15,10 +16,45 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
-  const { login, loading } = useAuthStore()
+  const [autoLogging, setAutoLogging] = useState(true)
+  const { login, loading, token } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
   const passwordRef = useRef(null)
+
+  // Avtomatik login - brauzer parol menejeridan
+  useEffect(() => {
+    // Agar allaqachon login bo'lgan bo'lsa
+    if (token) {
+      setAutoLogging(false)
+      return
+    }
+
+    const tryAutoLogin = async () => {
+      try {
+        const creds = await getSilentCredentials()
+        if (creds?.username && creds?.password) {
+          // Avtomatik login qilish
+          const result = await login(creds.username, creds.password)
+          if (result.success) {
+            const redirectPath = {
+              driver: '/driver',
+              super_admin: '/super-admin',
+              business: '/dashboard',
+              admin: '/fleet',
+            }[result.role] || '/fleet'
+            navigate(redirectPath)
+            return
+          }
+        }
+      } catch (e) {
+        // Xato bo'lsa - oddiy login ko'rsatamiz
+      }
+      setAutoLogging(false)
+    }
+
+    tryAutoLogin()
+  }, [token, login, navigate])
 
   const validateUsername = (value) => {
     if (!value.trim()) return 'Username kiriting'
@@ -57,20 +93,35 @@ export default function Login() {
     try {
       const result = await login(username, password)
       if (result.success) {
+        // Brauzer parol menejeriga saqlash
+        await saveCredentials(username, password)
+        
         alert.success('Xush kelibsiz!', `Salom, ${result.user?.fullName || username}`)
         const redirectPath = {
-          'driver': '/driver',
-          'super_admin': '/super-admin',
-          'business': '/dashboard',
-          'admin': '/fleet'
+          driver: '/driver',
+          super_admin: '/super-admin',
+          business: '/dashboard',
+          admin: '/fleet',
         }[result.role] || '/fleet'
         navigate(redirectPath)
       } else {
-        alert.error("Kirish xatosi", result.message || "Username yoki parol noto'g'ri")
+        alert.error('Kirish xatosi', result.message || "Username yoki parol noto'g'ri")
       }
     } catch (error) {
-      alert.error("Xatolik", error.userMessage || "Serverga ulanishda xatolik")
+      alert.error('Xatolik', error.userMessage || 'Serverga ulanishda xatolik')
     }
+  }
+
+  // Avtomatik login bo'layotganda loading ko'rsatish
+  if (autoLogging) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-500 mt-3 text-sm">Kirish...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
