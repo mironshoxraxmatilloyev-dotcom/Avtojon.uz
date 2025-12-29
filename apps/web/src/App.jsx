@@ -266,7 +266,7 @@ function App() {
               <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
 
               {/* Payment */}
-              <Route path="/payment" element={<PrivateRoute><Suspense fallback={<PageLoader />}><Payment /></Suspense></PrivateRoute>} />
+              <Route path="/payment" element={<FleetRoute><Suspense fallback={<PageLoader />}><Payment /></Suspense></FleetRoute>} />
               <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><Payment /></Suspense>} />
               <Route path="/payment/failed" element={<Suspense fallback={<PageLoader />}><Payment /></Suspense>} />
 
