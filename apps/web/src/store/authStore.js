@@ -4,17 +4,27 @@ import { storage, saveAuthData, clearAuthData, loadAuthData } from '../utils/sto
 import { preventAutoSignIn } from '../utils/credentials'
 
 export const useAuthStore = create((set, get) => ({
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token'),
-  refreshToken: localStorage.getItem('refreshToken'),
+  // ❌ localStorage dan olmaymiz - native da ishlamaydi
+  // ✅ initAuth() orqali Capacitor Preferences dan yuklanadi
+  user: null,
+  token: null,
+  refreshToken: null,
   loading: false,
   error: null,
   initialized: false,
 
-  // App boshlanganda storage dan yuklash
+  // App boshlanganda storage dan yuklash - MUHIM!
   initAuth: async () => {
     try {
+      console.log('[Auth] Initializing from persistent storage...')
       const { token, refreshToken, user } = await loadAuthData()
+      console.log('[Auth] Loaded:', { hasToken: !!token, hasUser: !!user })
+      
+      if (token && user) {
+        // Token va user bor - API header ni ham set qilish
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      }
+      
       set({ 
         token, 
         refreshToken, 
@@ -23,7 +33,7 @@ export const useAuthStore = create((set, get) => ({
       })
       return { token, user }
     } catch (e) {
-      console.error('Auth init error:', e)
+      console.error('[Auth] Init error:', e)
       set({ initialized: true })
       return { token: null, user: null }
     }

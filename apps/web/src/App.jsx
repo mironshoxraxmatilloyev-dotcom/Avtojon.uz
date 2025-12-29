@@ -27,16 +27,28 @@ function useGlobalSocket() {
 
 // 🚀 Auth initialization hook
 function useInitAuth() {
-  const { initAuth, initialized } = useAuthStore()
+  const { initAuth, initialized, token, user } = useAuthStore()
   const [ready, setReady] = useState(false)
   
   useEffect(() => {
-    if (!initialized) {
-      initAuth().finally(() => setReady(true))
-    } else {
+    const init = async () => {
+      if (!initialized) {
+        console.log('[App] Initializing auth...')
+        const result = await initAuth()
+        console.log('[App] Auth initialized:', { hasToken: !!result.token, hasUser: !!result.user })
+      }
       setReady(true)
     }
+    
+    init()
   }, [initAuth, initialized])
+  
+  // Debug log
+  useEffect(() => {
+    if (ready) {
+      console.log('[App] Ready state:', { token: !!token, user: !!user, role: user?.role })
+    }
+  }, [ready, token, user])
   
   return ready
 }
