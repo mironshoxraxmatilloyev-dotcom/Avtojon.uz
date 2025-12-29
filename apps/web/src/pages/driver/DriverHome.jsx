@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAuthStore } from '../../store/authStore'
+import { useTranslation } from '../../store/langStore'
 import { History } from 'lucide-react'
 import api from '../../services/api'
 import { showToast } from '../../components/Toast'
@@ -13,6 +14,7 @@ import {
 
 export default function DriverHome() {
   const { user, logout } = useAuthStore()
+  const { t } = useTranslation()
   const [activeTrip, setActiveTrip] = useState(null)
   const [pendingTrips, setPendingTrips] = useState([])
   const [trips, setTrips] = useState([])
@@ -175,7 +177,7 @@ export default function DriverHome() {
               {!flights.length && !trips.length && (
                 <div className="bg-white rounded-xl p-8 text-center border border-slate-100">
                   <History size={40} className="mx-auto mb-3 text-slate-300" />
-                  <p className="text-slate-500">Marshrutlar tarixi bo'sh</p>
+                  <p className="text-slate-500">{t('historyEmpty')}</p>
                 </div>
               )}
             </div>

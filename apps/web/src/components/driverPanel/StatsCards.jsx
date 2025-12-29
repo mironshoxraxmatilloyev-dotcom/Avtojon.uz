@@ -1,7 +1,10 @@
 import { CheckCircle, Banknote, Wallet } from 'lucide-react'
 import { formatMoney } from './constants'
+import { useTranslation } from '../../store/langStore'
 
 export default function StatsCards({ stats, currentBalance }) {
+  const { t } = useTranslation()
+
   return (
     <>
       {/* Joriy balans - haydovchidagi pul */}
@@ -13,7 +16,7 @@ export default function StatsCards({ stats, currentBalance }) {
             </div>
             <div>
               <p className="text-white font-bold text-2xl truncate">{formatMoney(currentBalance)}</p>
-              <p className="text-amber-100 text-sm font-medium">Joriy balans</p>
+              <p className="text-amber-100 text-sm font-medium">{t('currentBalance')}</p>
             </div>
           </div>
         </div>
@@ -27,7 +30,7 @@ export default function StatsCards({ stats, currentBalance }) {
           </div>
           <div>
             <p className="text-white font-bold text-3xl">{stats.totalCompletedTrips}</p>
-            <p className="text-emerald-100 text-sm font-medium">Tugatilgan marshrutlar</p>
+            <p className="text-emerald-100 text-sm font-medium">{t('completedTrips')}</p>
           </div>
         </div>
       </div>
@@ -39,8 +42,10 @@ export default function StatsCards({ stats, currentBalance }) {
             <Banknote className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-white font-bold text-2xl truncate">+{formatMoney(stats.totalBonusAmount)}</p>
-            <p className="text-blue-100 text-sm font-medium">Jami daromad</p>
+            <p className="text-white font-bold text-2xl truncate">
+              +{formatMoney(stats.totalBonusAmount)}
+            </p>
+            <p className="text-blue-100 text-sm font-medium">{t('totalEarnings')}</p>
           </div>
         </div>
       </div>

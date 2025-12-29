@@ -2,20 +2,33 @@ import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle } from 'lucide-re
 import { formatMoney, formatDate, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
+import { useTranslation } from '../../store/langStore'
 
 // Mashrut nomini legs dan olish
-const getFlightRoute = (flight) => {
-  if (!flight?.legs?.length) return 'Marshrut'
+const getFlightRoute = (flight, t) => {
+  if (!flight?.legs?.length) return t('route')
   const firstLeg = flight.legs[0]
   const lastLeg = flight.legs[flight.legs.length - 1]
   const from = firstLeg?.fromCity || ''
   const to = lastLeg?.toCity || ''
   if (from && to) return `${from} → ${to}`
-  return 'Marshrut'
+  return t('route')
 }
 
 export default function FlightDetailModal({ flight: initialFlight, onClose, onUpdate }) {
   const [flight, setFlight] = useState(initialFlight)
+  const { t, lang } = useTranslation()
+
+  // Expense labels - til bo'yicha
+  const expenseLabels = {
+    fuel: { icon: '⛽', label: lang === 'ru' ? 'Ёқилғи' : "Yoqilg'i" },
+    food: { icon: '🍽️', label: lang === 'ru' ? 'Овқат' : 'Ovqat' },
+    repair: { icon: '🔧', label: lang === 'ru' ? 'Таъмирлаш' : "Ta'mirlash" },
+    toll: { icon: '🛣️', label: lang === 'ru' ? 'Йўл тўлови' : "Yo'l to'lovi" },
+    parking: { icon: '🅿️', label: lang === 'ru' ? 'Парковка' : 'Parkovka' },
+    wash: { icon: '🚿', label: lang === 'ru' ? 'Ювиш' : 'Yuvish' },
+    other: { icon: '📦', label: lang === 'ru' ? 'Бошқа' : 'Boshqa' },
+  }
 
   // initialFlight o'zgarganda flight ni yangilash
   useEffect(() => {
@@ -28,7 +41,7 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
   const totalExpenses = flight.totalExpenses || 0
   const netProfit = flight.netProfit || flight.profit || (totalIncome - totalExpenses)
   const driverOwes = flight.driverOwes || flight.businessProfit || 0
-  const routeName = getFlightRoute(flight)
+  const routeName = getFlightRoute(flight, t)
 
   const statusColors = {
     completed: 'bg-emerald-500',
@@ -65,6 +78,31 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
   // Tasdiqlanmagan xarajatlar soni
   const unconfirmedCount = flight.expenses?.filter(e => !e.confirmedByDriver).length || 0
 
+  // Tarjimalar
+  const labels = {
+    distance: lang === 'ru' ? 'Масофа' : 'Masofa',
+    orders: lang === 'ru' ? 'Буюртмалар' : 'Buyurtmalar',
+    clientPayment: lang === 'ru' ? 'Мижоздан олинган' : 'Mijozdan olingan',
+    clientPaymentHint: lang === 'ru' ? 'Буюртмалар учун тўлов' : "Buyurtmalar uchun to'lov",
+    roadExpense: lang === 'ru' ? 'Йўл харажати' : "Yo'l xarajati",
+    roadExpenseHint: lang === 'ru' ? 'Йўлда сарфлаш учун' : "Yo'lda sarflash uchun",
+    ordersTitle: lang === 'ru' ? '📦 Буюртмалар' : '📦 Buyurtmalar',
+    expensesTitle: lang === 'ru' ? '💸 Харажатлар' : '💸 Xarajatlar',
+    unconfirmed: lang === 'ru' ? 'та тасдиқланмаган' : 'ta tasdiqlanmagan',
+    calculation: lang === 'ru' ? '📊 Ҳисоб-китоб' : '📊 Hisob-kitob',
+    totalIncome: lang === 'ru' ? 'Жами кирим' : 'Jami kirim',
+    totalExpense: lang === 'ru' ? 'Жами харажат' : 'Jami xarajat',
+    netProfit: lang === 'ru' ? 'Соф фойда' : 'Sof foyda',
+    yourShare: lang === 'ru' ? '🎁 Улушингиз' : '🎁 Ulushingiz',
+    mustPay: lang === 'ru' ? '💰 Бериш керак:' : '💰 Berish kerak:',
+    willReturn: lang === 'ru' ? '💵 Сизга қайтарилади:' : '💵 Sizga qaytariladi:',
+    paid: lang === 'ru' ? 'Тўланган' : "To'langan",
+    waiting: lang === 'ru' ? 'Кутилмоқда' : 'Kutilmoqda',
+    close: lang === 'ru' ? 'Ёпиш' : 'Yopish',
+    count: lang === 'ru' ? 'та' : 'ta',
+    sum: lang === 'ru' ? 'сўм' : "so'm",
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={onClose}>
       <div
@@ -92,16 +130,16 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
         <div className="p-4 space-y-3 overflow-y-auto flex-1">
           {/* Asosiy ma'lumotlar */}
           <div className="grid grid-cols-2 gap-2">
-            <StatBox icon={MapPin} label="Masofa" value={`${flight.totalDistance || 0} km`} />
-            <StatBox icon={Package} label="Buyurtmalar" value={`${flight.legs?.length || 0} ta`} />
-            <StatBox icon={Wallet} label="Mijozdan olingan" value={formatMoney(flight.totalPayment)} color="emerald" hint="Buyurtmalar uchun to'lov" />
-            <StatBox icon={Wallet} label="Yo'l xarajati" value={formatMoney(flight.roadMoney || flight.totalGivenBudget || 0)} color="blue" hint="Yo'lda sarflash uchun" />
+            <StatBox icon={MapPin} label={labels.distance} value={`${flight.totalDistance || 0} km`} />
+            <StatBox icon={Package} label={labels.orders} value={`${flight.legs?.length || 0} ${labels.count}`} />
+            <StatBox icon={Wallet} label={labels.clientPayment} value={formatMoney(flight.totalPayment)} color="emerald" hint={labels.clientPaymentHint} />
+            <StatBox icon={Wallet} label={labels.roadExpense} value={formatMoney(flight.roadMoney || flight.totalGivenBudget || 0)} color="blue" hint={labels.roadExpenseHint} />
           </div>
 
           {/* Buyurtmalar */}
           {flight.legs?.length > 0 && (
             <div className="bg-slate-50 rounded-xl p-3">
-              <h4 className="text-slate-700 font-semibold text-sm mb-2">📦 Buyurtmalar</h4>
+              <h4 className="text-slate-700 font-semibold text-sm mb-2">{labels.ordersTitle}</h4>
               <div className="space-y-1.5">
                 {flight.legs.map((leg, idx) => (
                   <div key={leg._id || idx} className="flex items-center gap-2 p-2 bg-white rounded-lg">
@@ -123,16 +161,16 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
           {flight.expenses?.length > 0 && (
             <div className="bg-slate-50 rounded-xl p-3">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-slate-700 font-semibold text-sm">💸 Xarajatlar ({flight.expenses.length})</h4>
+                <h4 className="text-slate-700 font-semibold text-sm">{labels.expensesTitle} ({flight.expenses.length})</h4>
                 {unconfirmedCount > 0 && (
                   <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                    {unconfirmedCount} ta tasdiqlanmagan
+                    {unconfirmedCount} {labels.unconfirmed}
                   </span>
                 )}
               </div>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {flight.expenses.map((exp, idx) => {
-                  const info = EXPENSE_LABELS[exp.type] || EXPENSE_LABELS.other
+                  const info = expenseLabels[exp.type] || expenseLabels.other
                   const isConfirmed = exp.confirmedByDriver
                   return (
                     <div key={exp._id || idx} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isConfirmed ? 'bg-emerald-50 border border-emerald-200' : 'bg-white border border-slate-100'}`}>
@@ -174,30 +212,30 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
 
           {/* Hisob-kitob */}
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-3 border border-indigo-100">
-            <h4 className="text-indigo-800 font-semibold text-sm mb-2">📊 Hisob-kitob</h4>
+            <h4 className="text-indigo-800 font-semibold text-sm mb-2">{labels.calculation}</h4>
             <div className="space-y-1.5 text-sm">
-              <SummaryRow label="Jami kirim" value={`${formatMoney(totalIncome)} so'm`} />
-              <SummaryRow label="Jami xarajat" value={`-${formatMoney(totalExpenses)} so'm`} valueClass="text-red-500" />
+              <SummaryRow label={labels.totalIncome} value={`${formatMoney(totalIncome)} ${labels.sum}`} />
+              <SummaryRow label={labels.totalExpense} value={`-${formatMoney(totalExpenses)} ${labels.sum}`} valueClass="text-red-500" />
               <div className="border-t border-indigo-200 pt-1.5 mt-1.5">
-                <SummaryRow label="Sof foyda" value={`${formatMoney(netProfit)} so'm`} valueClass={netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'} bold />
+                <SummaryRow label={labels.netProfit} value={`${formatMoney(netProfit)} ${labels.sum}`} valueClass={netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'} bold />
               </div>
               {(flight.driverProfitPercent > 0 || flight.driverProfitAmount > 0) && (
-                <SummaryRow label={`🎁 Ulushingiz (${flight.driverProfitPercent || 0}%)`} value={`+${formatMoney(flight.driverProfitAmount || 0)} so'm`} valueClass="text-amber-600" bold />
+                <SummaryRow label={`${labels.yourShare} (${flight.driverProfitPercent || 0}%)`} value={`+${formatMoney(flight.driverProfitAmount || 0)} ${labels.sum}`} valueClass="text-amber-600" bold />
               )}
             </div>
 
             {driverOwes > 0 && (
               <div className="mt-3 p-3 bg-purple-100 rounded-lg border border-purple-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-purple-800 font-medium text-sm">💰 Berish kerak:</span>
-                  <span className="text-purple-800 font-bold">{formatMoney(driverOwes)} so'm</span>
+                  <span className="text-purple-800 font-medium text-sm">{labels.mustPay}</span>
+                  <span className="text-purple-800 font-bold">{formatMoney(driverOwes)} {labels.sum}</span>
                 </div>
                 {flight.status === 'completed' && (
                   <div className="mt-1.5 flex items-center gap-1">
                     {flight.driverPaymentStatus === 'paid' ? (
-                      <span className="text-emerald-600 text-xs flex items-center gap-1"><CheckCircle size={12} /> To'langan</span>
+                      <span className="text-emerald-600 text-xs flex items-center gap-1"><CheckCircle size={12} /> {labels.paid}</span>
                     ) : (
-                      <span className="text-amber-600 text-xs flex items-center gap-1"><Clock size={12} /> Kutilmoqda</span>
+                      <span className="text-amber-600 text-xs flex items-center gap-1"><Clock size={12} /> {labels.waiting}</span>
                     )}
                   </div>
                 )}
@@ -207,8 +245,8 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
             {driverOwes < 0 && (
               <div className="mt-3 p-3 bg-emerald-100 rounded-lg border border-emerald-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-emerald-800 font-medium text-sm">💵 Sizga qaytariladi:</span>
-                  <span className="text-emerald-800 font-bold">{formatMoney(Math.abs(driverOwes))} so'm</span>
+                  <span className="text-emerald-800 font-medium text-sm">{labels.willReturn}</span>
+                  <span className="text-emerald-800 font-bold">{formatMoney(Math.abs(driverOwes))} {labels.sum}</span>
                 </div>
               </div>
             )}
@@ -218,7 +256,7 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
         {/* Footer */}
         <div className="p-3 border-t border-slate-100 flex-shrink-0">
           <button onClick={onClose} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
-            Yopish
+            {labels.close}
           </button>
         </div>
       </div>

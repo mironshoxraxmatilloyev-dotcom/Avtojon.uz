@@ -1,9 +1,10 @@
 import { Route, ChevronRight, Wallet, MapPin, Package } from 'lucide-react'
 import { formatMoney, formatDate } from './constants'
+import { useTranslation } from '../../store/langStore'
 
 // Mashrut nomini legs dan olish
-const getFlightRoute = (flight) => {
-  if (!flight?.legs?.length) return 'Marshrut'
+const getFlightRoute = (flight, t) => {
+  if (!flight?.legs?.length) return t('route')
   const firstLeg = flight.legs[0]
   const lastLeg = flight.legs[flight.legs.length - 1]
   const from = firstLeg?.fromCity || ''
@@ -11,23 +12,25 @@ const getFlightRoute = (flight) => {
   if (from && to) return `${from} → ${to}`
   if (from) return from
   if (to) return to
-  return 'Marshrut'
+  return t('route')
 }
 
 export default function FlightHistory({ flights, onSelect }) {
+  const { t } = useTranslation()
+
   if (!flights?.length) return null
 
   const statusConfig = {
-    completed: { bg: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700', label: 'Tugatilgan' },
-    active: { bg: 'bg-blue-500', badge: 'bg-blue-100 text-blue-700', label: 'Faol' },
-    cancelled: { bg: 'bg-red-500', badge: 'bg-red-100 text-red-700', label: 'Bekor' }
+    completed: { bg: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700', label: t('completed') },
+    active: { bg: 'bg-blue-500', badge: 'bg-blue-100 text-blue-700', label: t('active') },
+    cancelled: { bg: 'bg-red-500', badge: 'bg-red-100 text-red-700', label: t('cancelled') },
   }
 
   return (
     <div className="space-y-2">
       {flights.map((flight) => {
         const status = statusConfig[flight.status] || statusConfig.cancelled
-        const routeName = getFlightRoute(flight)
+        const routeName = getFlightRoute(flight, t)
         return (
           <button
             key={flight._id}
@@ -55,7 +58,7 @@ export default function FlightHistory({ flights, onSelect }) {
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1 text-slate-500">
                 <Package size={12} />
-                <span>{flight.legs?.length || 0} ta</span>
+                <span>{flight.legs?.length || 0} {t('count')}</span>
               </div>
               <div className="flex items-center gap-1 text-slate-500">
                 <MapPin size={12} />
@@ -70,7 +73,7 @@ export default function FlightHistory({ flights, onSelect }) {
             {flight.status === 'completed' && flight.driverProfitAmount > 0 && (
               <div className="mt-2 pt-2 border-t border-slate-100">
                 <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-xs font-medium">
-                  💰 Ulush: {formatMoney(flight.driverProfitAmount)} ({flight.driverProfitPercent}%)
+                  💰 {t('share')}: {formatMoney(flight.driverProfitAmount)} ({flight.driverProfitPercent}%)
                 </span>
               </div>
             )}
