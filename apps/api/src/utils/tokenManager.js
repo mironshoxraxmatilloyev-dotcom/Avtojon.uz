@@ -9,12 +9,12 @@ const { getRedis, isRedisConnected } = require('../config/redis');
 const config = {
   accessToken: {
     secret: process.env.JWT_SECRET,
-    expiresIn: '1h', // 1 soat (oldin 15 daqiqa edi)
+    expiresIn: '1h', // 1 soat
   },
   refreshToken: {
     secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh_v2',
-    expiresIn: '1d', // 1 kun
-    expiresInMs: 24 * 60 * 60 * 1000, // 1 kun millisekund
+    expiresIn: '30d', // 30 kun - haydovchilar uchun qulay
+    expiresInMs: 30 * 24 * 60 * 60 * 1000, // 30 kun millisekund
   },
 };
 
@@ -124,7 +124,7 @@ const generateTokenPair = async (user, role) => {
     refreshToken,
     tokenId,
     expiresIn: 60 * 60, // 1 soat (sekundlarda)
-    refreshExpiresIn: 24 * 60 * 60, // 1 kun (sekundlarda)
+    refreshExpiresIn: 30 * 24 * 60 * 60, // 30 kun (sekundlarda)
   };
 };
 

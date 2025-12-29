@@ -35,7 +35,7 @@ const AnimatedText = memo(({ children, delay = 0 }) => (
 
 // Fixed Header Component - scroll qilinmaydigan navbar
 const FixedHeader = memo(() => (
-  <header className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 pointer-events-auto">
+  <header className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 pointer-events-auto pt-[env(safe-area-inset-top)]">
     <div className="max-w-7xl mx-auto px-6 py-3">
       <div className="flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2.5">
@@ -91,7 +91,7 @@ export default function Landing() {
         </div>
 
         {/* Hero Content */}
-        <section className="relative z-10 pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <section className="relative z-10 pt-[calc(5rem+env(safe-area-inset-top))] sm:pt-[calc(6rem+env(safe-area-inset-top))] pb-16 sm:pb-20">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto text-center">
               {/* Badge */}
