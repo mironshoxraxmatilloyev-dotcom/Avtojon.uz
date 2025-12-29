@@ -979,8 +979,8 @@ export default function Flights() {
           <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Route size={40} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Reyslar topilmadi</h3>
-          <p className="text-gray-500 mb-6">Haydovchilar sahifasidan yangi reys oching</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Mashrutlar topilmadi</h3>
+          <p className="text-gray-500 mb-6">Haydovchilar sahifasidan yangi mashrut oching</p>
         </div>
       )}
 

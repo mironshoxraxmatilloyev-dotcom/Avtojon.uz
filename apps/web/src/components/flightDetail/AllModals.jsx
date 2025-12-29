@@ -59,7 +59,7 @@ const ModalWrapper = memo(({ children, onClose, size = 'lg' }) => {
 // ============================================
 export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOpenLocationPicker }) {
   const lastLeg = flight.legs?.[flight.legs.length - 1]
-  const isLocal = flight?.flightType !== 'international' // Mahalliy reys
+  const isLocal = flight?.flightType !== 'international' // Mahalliy mashrut
   const [form, setForm] = useState({
     fromCity: lastLeg?.toCity || '',
     toCity: '',

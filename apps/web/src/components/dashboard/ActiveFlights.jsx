@@ -15,7 +15,7 @@ export function ActiveFlights({ flights, onRefresh }) {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-gray-900">Faol marshrutlar</h2>
-            <p className="text-xs sm:text-sm text-gray-500">{flights.length} ta reys yo'lda</p>
+            <p className="text-xs sm:text-sm text-gray-500">{flights.length} ta mashrut yo'lda</p>
           </div>
         </div>
         <button onClick={onRefresh} className="p-1.5 sm:p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg sm:rounded-xl transition">

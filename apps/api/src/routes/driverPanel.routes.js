@@ -237,7 +237,7 @@ router.post('/me/flights/:id/expenses', protect, driverOnly, async (req, res) =>
     });
     
     if (!flight) {
-      return res.status(404).json({ success: false, message: 'Faol reys topilmadi' });
+      return res.status(404).json({ success: false, message: 'Faol mashrut topilmadi' });
     }
 
     let distanceSinceLast = null;

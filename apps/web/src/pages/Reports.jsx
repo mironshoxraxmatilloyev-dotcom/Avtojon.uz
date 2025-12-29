@@ -361,7 +361,7 @@ const ProLineChart = ({ data }) => {
         <div className="text-sm text-gray-500">
           {hovered !== null ? (
             <span className="text-gray-900 font-medium">
-              {data[hovered]?.fullLabel || data[hovered]?.label || `${data[hovered]?.day}-kun`}: <span className="text-blue-600">{data[hovered]?.value} ta reys</span>
+              {data[hovered]?.fullLabel || data[hovered]?.label || `${data[hovered]?.day}-kun`}: <span className="text-blue-600">{data[hovered]?.value} ta mashrut</span>
             </span>
           ) : (
             <span>Grafik ustiga kuring</span>
@@ -369,7 +369,7 @@ const ProLineChart = ({ data }) => {
         </div>
         <div className="text-right">
           <span className="text-2xl font-bold text-gray-900">{total}</span>
-          <span className="text-sm text-gray-500 ml-1">ta reys</span>
+          <span className="text-sm text-gray-500 ml-1">ta mashrut</span>
         </div>
       </div>
 
@@ -924,12 +924,12 @@ export default function Reports() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <TrendingUp size={24} />
               </div>
-              <span className="font-medium">O'rtacha reys/{period === 'daily' ? 'soat' : period === 'weekly' ? 'kun' : 'hafta'}</span>
+              <span className="font-medium">O'rtacha mashrut/{period === 'daily' ? 'soat' : period === 'weekly' ? 'kun' : 'hafta'}</span>
             </div>
             <p className="text-4xl sm:text-5xl font-bold">
               {stats.chartData.length > 0 ? Math.round(stats.chartData.reduce((a, b) => a + b.value, 0) / stats.chartData.length) : 0}
             </p>
-            <p className="text-blue-200 mt-2">ta reys</p>
+            <p className="text-blue-200 mt-2">ta mashrut</p>
           </div>
         </div>
 
@@ -1068,7 +1068,7 @@ export default function Reports() {
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock size={40} className="text-gray-300" />
               </div>
-              <p className="text-lg font-medium">Hozirda faol reys yo'q</p>
+              <p className="text-lg font-medium">Hozirda faol mashrut yo'q</p>
               <p className="text-sm text-gray-400 mt-1">Yangi marshrut boshlanganida bu yerda ko'rinadi</p>
             </div>
           ) : (

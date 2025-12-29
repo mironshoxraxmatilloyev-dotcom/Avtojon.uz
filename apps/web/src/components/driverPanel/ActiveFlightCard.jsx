@@ -189,7 +189,7 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
           </div>
         )}
 
-        {/* Reys holati */}
+        {/* Mashrut holati */}
         <div className="flex items-center justify-center gap-2 py-3 bg-blue-50 rounded-xl border border-blue-200">
           <Route size={18} className="text-blue-600" />
           <span className="text-blue-600 font-medium">Marshrut faol</span>

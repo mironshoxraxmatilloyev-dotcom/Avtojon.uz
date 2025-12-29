@@ -348,76 +348,96 @@ export default function DriverDebts() {
             <p className="text-slate-400 text-sm mt-1">Barcha haydovchilar hisob-kitobni tugatgan</p>
           </div>
         ) : (
-          debts.filter(f => f.driverPaymentStatus !== 'paid').map(flight => {
-            const totalOwed = flight.driverOwes || 0
-            const paidAmount = flight.driverPaidAmount || 0
-            const remaining = totalOwed - paidAmount
-            const isPartial = flight.driverPaymentStatus === 'partial'
+          // Haydovchilarni guruhlash - bir xil haydovchi faqat 1 marta ko'rinsin
+          (() => {
+            const unpaidDebts = debts.filter(f => f.driverPaymentStatus !== 'paid')
+            const groupedByDriver = {}
+            
+            unpaidDebts.forEach(flight => {
+              const driverId = flight.driver?._id || flight.driver?.id || 'unknown'
+              if (!groupedByDriver[driverId]) {
+                groupedByDriver[driverId] = {
+                  driver: flight.driver,
+                  flights: [],
+                  totalOwed: 0,
+                  totalPaid: 0
+                }
+              }
+              groupedByDriver[driverId].flights.push(flight)
+              groupedByDriver[driverId].totalOwed += (flight.driverOwes || 0)
+              groupedByDriver[driverId].totalPaid += (flight.driverPaidAmount || 0)
+            })
 
-            return (
-              <div key={flight._id} className="p-4 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center justify-between gap-4">
-                  {/* Driver info */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white bg-purple-500">
-                      {flight.driver?.fullName?.charAt(0) || '?'}
+            return Object.values(groupedByDriver).map(group => {
+              const remaining = group.totalOwed - group.totalPaid
+              const hasPartialPayment = group.totalPaid > 0
+
+              return (
+                <div key={group.driver?._id || group.driver?.id || 'unknown'} className="p-4 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Driver info */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white bg-purple-500">
+                        {group.driver?.fullName?.charAt(0) || '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 truncate">{group.driver?.fullName}</p>
+                        <p className="text-sm text-slate-500">{group.flights.length} ta marshrut</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-slate-900 truncate">{flight.driver?.fullName}</p>
-                      <p className="text-sm text-slate-500 truncate">{flight.name}</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(flight.completedAt || flight.createdAt).toLocaleDateString('uz-UZ')}
-                      </p>
+
+                    {/* Amount & Action */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="text-right">
+                        {hasPartialPayment ? (
+                          <>
+                            <p className="font-bold text-lg text-amber-600">{formatMoney(remaining)} so'm</p>
+                            <p className="text-xs text-emerald-500">
+                              <CheckCircle size={10} className="inline mr-1" />
+                              {formatMoney(group.totalPaid)} to'langan
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-bold text-lg text-red-600">{formatMoney(group.totalOwed)} so'm</p>
+                            <p className="text-xs flex items-center justify-end gap-1 text-amber-500">
+                              <Clock size={12} />
+                              Kutilmoqda
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Pul olish tugmasi - birinchi to'lanmagan marshrutni ochadi */}
+                      <button
+                        onClick={() => {
+                          // Eng eski to'lanmagan marshrutni topish
+                          const unpaidFlight = group.flights.find(f => f.driverPaymentStatus !== 'paid') || group.flights[0]
+                          setSelectedFlight(unpaidFlight)
+                        }}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/25"
+                      >
+                        <Wallet size={16} className="inline mr-1" />
+                        Pul olish
+                      </button>
                     </div>
                   </div>
 
-                  {/* Amount & Action */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <div className="text-right">
-                      {isPartial ? (
-                        <>
-                          <p className="font-bold text-lg text-amber-600">{formatMoney(remaining)} so'm</p>
-                          <p className="text-xs text-emerald-500">
-                            <CheckCircle size={10} className="inline mr-1" />
-                            {formatMoney(paidAmount)} to'langan
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-bold text-lg text-red-600">{formatMoney(totalOwed)} so'm</p>
-                          <p className="text-xs flex items-center justify-end gap-1 text-amber-500">
-                            <Clock size={12} />
-                            Kutilmoqda
-                          </p>
-                        </>
-                      )}
+                  {/* Progress bar for partial payments */}
+                  {hasPartialPayment && (
+                    <div className="mt-3">
+                      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all"
+                          style={{ width: `${Math.min((group.totalPaid / group.totalOwed) * 100, 100)}%` }}
+                        />
+                      </div>
                     </div>
-
-                    {/* Pul olish tugmasi */}
-                    <button
-                      onClick={() => setSelectedFlight(flight)}
-                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/25"
-                    >
-                      <Wallet size={16} className="inline mr-1" />
-                      Pul olish
-                    </button>
-                  </div>
+                  )}
                 </div>
-
-                {/* Progress bar for partial payments */}
-                {isPartial && (
-                  <div className="mt-3">
-                    <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all"
-                        style={{ width: `${Math.min((paidAmount / totalOwed) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })
+              )
+            })
+          })()
         )}
       </div>
 

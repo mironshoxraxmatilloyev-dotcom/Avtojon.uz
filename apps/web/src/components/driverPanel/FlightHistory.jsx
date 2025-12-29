@@ -1,7 +1,7 @@
 import { Route, ChevronRight, Wallet, MapPin, Package } from 'lucide-react'
 import { formatMoney, formatDate } from './constants'
 
-// Reys nomini legs dan olish
+// Mashrut nomini legs dan olish
 const getFlightRoute = (flight) => {
   if (!flight?.legs?.length) return 'Marshrut'
   const firstLeg = flight.legs[0]

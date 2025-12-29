@@ -71,7 +71,7 @@ export default function FuelConsumptionCard({ flight }) {
           let distance, consumption, prevOdometer, prevQuantity
 
           if (idx === 0) {
-            // Birinchi yoqilg'i - reys boshidan hisoblash
+            // Birinchi yoqilg'i - mashrut boshidan hisoblash
             prevOdometer = flight.startOdometer
             prevQuantity = flight.startFuel
             distance = (fuel.odometer || 0) - prevOdometer

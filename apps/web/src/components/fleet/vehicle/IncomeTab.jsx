@@ -110,7 +110,7 @@ const IncomeCard = memo(({ income, onEdit, onDelete }) => {
               </span>
             </div>
 
-            {/* Reys ma'lumotlari */}
+            {/* Mashrut ma'lumotlari */}
             {income.type === 'trip' && income.fromCity && income.toCity && (
               <p className="text-gray-900 font-medium mt-1">
                 {income.fromCity} → {income.toCity}
@@ -159,7 +159,7 @@ const EmptyState = memo(({ onAdd }) => (
     </div>
     <h3 className="text-lg font-medium text-gray-900 mb-2">Daromad yo'q</h3>
     <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-      Mashina keltirgan daromadlarni qo'shing - reys, ijara yoki boshqa
+      Mashina keltirgan daromadlarni qo'shing - mashrut, ijara yoki boshqa
     </p>
     <button
       onClick={onAdd}

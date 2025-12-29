@@ -3,7 +3,7 @@ import { formatMoney, formatDate, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
 
-// Reys nomini legs dan olish
+// Mashrut nomini legs dan olish
 const getFlightRoute = (flight) => {
   if (!flight?.legs?.length) return 'Marshrut'
   const firstLeg = flight.legs[0]
