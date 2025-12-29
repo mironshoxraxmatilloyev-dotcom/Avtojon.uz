@@ -27,7 +27,7 @@ const strongPassword = Joi.string()
     'string.pattern.base': 'Parol kamida 1 ta katta harf, 1 ta kichik harf, 1 ta raqam va 1 ta maxsus belgi (@$!%*?&) bo\'lishi kerak'
   });
 
-// Oddiy parol (mavjud foydalanuvchilar uchun)
+// Oddiy parol (mavjud foydalanuvchilar uchun) - lotin va kirill
 const simplePassword = Joi.string()
   .min(6)
   .max(128)
@@ -36,17 +36,16 @@ const simplePassword = Joi.string()
     'string.max': 'Parol 128 ta belgidan oshmasligi kerak'
   });
 
-// Username validatsiyasi
+// Username validatsiyasi - lotin va kirill harflarini qabul qiladi
 const username = Joi.string()
   .min(3)
   .max(30)
-  .pattern(/^[a-zA-Z0-9_]+$/)
-  .lowercase()
+  .pattern(/^[a-zA-Zа-яёўқғҳА-ЯЁЎҚҒҲ0-9_]+$/)
   .trim()
   .messages({
     'string.min': 'Username kamida 3 ta belgidan iborat bo\'lishi kerak',
     'string.max': 'Username 30 ta belgidan oshmasligi kerak',
-    'string.pattern.base': 'Username faqat harflar, raqamlar va pastki chiziq (_) dan iborat bo\'lishi kerak'
+    'string.pattern.base': 'Username faqat harflar (lotin/kirill), raqamlar va pastki chiziq (_) dan iborat bo\'lishi kerak'
   });
 
 // ==========================================

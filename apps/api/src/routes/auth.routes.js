@@ -86,10 +86,10 @@ const SUPER_ADMIN = {
 // Umumiy login (super_admin, admin, biznesmen va shofyor uchun)
 router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(async (req, res) => {
     const { username, password } = req.body;
-    const cleanUsername = username.toLowerCase().trim();
+    const cleanUsername = username.trim();
 
     // 1. Super Admin tekshir (.env dan)
-    if (cleanUsername === SUPER_ADMIN.login.toLowerCase() && password === SUPER_ADMIN.password) {
+    if (cleanUsername.toLowerCase() === SUPER_ADMIN.login.toLowerCase() && password === SUPER_ADMIN.password) {
         const tokens = await generateTokenPair({ _id: 'super_admin', username: SUPER_ADMIN.login }, 'super_admin');
         return res.json({
             success: true,
@@ -105,8 +105,8 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
         });
     }
 
-    // 2. Avval admin tekshir
-    const user = await User.findOne({ username: cleanUsername });
+    // 2. Avval admin tekshir (case-insensitive)
+    const user = await User.findOne({ username: { $regex: new RegExp(`^${cleanUsername}$`, 'i') } });
     if (user && await user.comparePassword(password)) {
         const tokens = await generateTokenPair(user, 'admin');
         const subscription = user.checkSubscription ? user.checkSubscription() : null;
@@ -126,8 +126,11 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
         });
     }
 
-    // Keyin biznesmen tekshir
-    const businessman = await Businessman.findOne({ username: cleanUsername, isActive: true });
+    // Keyin biznesmen tekshir (case-insensitive)
+    const businessman = await Businessman.findOne({ 
+        username: { $regex: new RegExp(`^${cleanUsername}$`, 'i') }, 
+        isActive: true 
+    });
     if (businessman) {
         const isMatch = await businessman.comparePassword(password);
         if (isMatch) {
@@ -150,8 +153,11 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
         }
     }
 
-    // Keyin shofyor tekshir (faqat aktiv shofyorlar)
-    const driver = await Driver.findOne({ username: cleanUsername, isActive: true });
+    // Keyin shofyor tekshir (case-insensitive, faqat aktiv shofyorlar)
+    const driver = await Driver.findOne({ 
+        username: { $regex: new RegExp(`^${cleanUsername}$`, 'i') }, 
+        isActive: true 
+    });
     if (driver && await driver.comparePassword(password)) {
         const tokens = await generateTokenPair(driver, 'driver');
         return res.json({
