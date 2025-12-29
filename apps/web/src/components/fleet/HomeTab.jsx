@@ -1,45 +1,53 @@
 import { memo } from 'react'
-import { Search, X, CheckCircle, AlertTriangle, TrendingUp, Trophy, Plus, Sparkles, Car } from 'lucide-react'
+import { Search, X, TrendingUp, TrendingDown, DollarSign, Clock, Plus, Sparkles, Car } from 'lucide-react'
 import { VehicleCard } from './VehicleCard'
+
+const fmt = (n) => {
+  const abs = Math.abs(n || 0)
+  if (abs >= 1000000000) return `${(n / 1000000000).toFixed(1)}B`
+  if (abs >= 1000000) return `${(n / 1000000).toFixed(1)}M`
+  if (abs >= 1000) return `${(n / 1000).toFixed(0)}K`
+  return n?.toString() || '0'
+}
 
 export const HomeTab = memo(({ 
   vehicles, stats, search, setSearch, onVehicleClick, 
   onEdit, onDelete, showMenu, setShowMenu, loading, openModal,
   fleetAnalytics
 }) => {
+  const totalIncome = fleetAnalytics?.summary?.totalIncome || 0
+  const totalExpenses = fleetAnalytics?.summary?.totalExpenses || 0
   const netProfit = fleetAnalytics?.summary?.netProfit || 0
-  const topVehicle = fleetAnalytics?.mostProfitable
+  const alertsCount = fleetAnalytics?.alertsCount || 0
 
   return (
-    <div className="space-y-8">
-      {/* PRO Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+    <div className="space-y-6">
+      {/* PRO Stats Cards - 4 ta asosiy ko'rsatkich */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <ProStatCard
+          icon={DollarSign}
+          label="Daromad"
+          value={fmt(totalIncome)}
+          color="emerald"
+        />
+        <ProStatCard
+          icon={TrendingDown}
+          label="Xarajat"
+          value={fmt(totalExpenses)}
+          color="red"
+        />
         <ProStatCard
           icon={TrendingUp}
-          label="Oylik foyda"
-          value={`${netProfit >= 0 ? '+' : ''}${(netProfit / 1000000).toFixed(1)}M`}
+          label="Sof foyda"
+          value={`${netProfit >= 0 ? '+' : ''}${fmt(netProfit)}`}
           color={netProfit >= 0 ? 'emerald' : 'red'}
         />
         <ProStatCard
-          icon={Trophy}
-          label="Top mashina"
-          value={topVehicle?.plateNumber || '-'}
-          subValue={topVehicle ? `+${(topVehicle.profit / 1000000).toFixed(1)}M` : null}
-          color="amber"
-        />
-        <ProStatCard
-          icon={CheckCircle}
-          label="Yaxshi holat"
-          value={stats.excellent}
-          color="indigo"
-          percent={stats.total > 0 ? Math.round((stats.excellent / stats.total) * 100) : 0}
-        />
-        <ProStatCard
-          icon={AlertTriangle}
-          label="Diqqat talab"
-          value={stats.attention}
+          icon={Clock}
+          label="Muddati kelayotgan"
+          value={alertsCount}
           color="orange"
-          pulse={stats.attention > 0}
+          pulse={alertsCount > 0}
         />
       </div>
 

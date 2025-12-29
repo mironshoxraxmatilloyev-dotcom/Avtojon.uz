@@ -44,8 +44,15 @@ const OilChangeSchema = new mongoose.Schema({
   cost: { type: Number, required: true },
   nextChangeOdometer: { type: Number },
   nextChangeDate: { type: Date },
+  // Moy filtri
   filterChanged: { type: Boolean, default: false },
   filterCost: { type: Number, default: 0 },
+  // Havo filtri
+  airFilterChanged: { type: Boolean, default: false },
+  airFilterCost: { type: Number, default: 0 },
+  // Yoqilg'i filtri
+  fuelFilterChanged: { type: Boolean, default: false },
+  fuelFilterCost: { type: Number, default: 0 },
   note: { type: String }
 }, { timestamps: true })
 
@@ -57,6 +64,7 @@ const TireSchema = new mongoose.Schema({
   brand: { type: String, required: true },
   model: { type: String },
   size: { type: String },
+  serialNumber: { type: String }, // DOT raqami
   cost: { type: Number, default: 0 },
   installDate: { type: Date, default: Date.now },
   installOdometer: { type: Number, required: true },

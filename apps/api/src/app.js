@@ -81,6 +81,7 @@ app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/maintenance', vehicleMaintenanceRoutes);
 app.use('/api/currency', currencyRoutes);
 app.use('/api/voice', voiceRoutes);
+app.use('/api/payments', require('./routes/payment.routes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -51,28 +51,100 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
   )
 })
 
-export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
-  <form onSubmit={onSubmit} className="space-y-5">
-    <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40, 10W-40..." required />
-    <div className="grid grid-cols-2 gap-5">
-      <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} />
-      <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} required />
-    </div>
-    <div className="grid grid-cols-2 gap-5">
-      <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
-      <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
-    </div>
-    <Input 
-      label="Keyingi almashtirish (km)" 
-      type="number" 
-      value={form.nextChangeKm} 
-      onChange={v => setForm(f => ({ ...f, nextChangeKm: v }))} 
-      placeholder="10000"
-    />
-    <p className="text-sm text-gray-500 -mt-2">Necha km dan keyin moy almashtiriladi (default: 10,000 km)</p>
-    <SubmitButton isEdit={isEdit} />
-  </form>
-))
+export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
+  // Jami xarajatni hisoblash
+  const totalCost = (Number(form.cost) || 0) + 
+    (form.filterChanged ? (Number(form.filterCost) || 0) : 0) +
+    (form.airFilterChanged ? (Number(form.airFilterCost) || 0) : 0) +
+    (form.fuelFilterChanged ? (Number(form.fuelFilterCost) || 0) : 0)
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-5">
+      <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40, 10W-40..." required />
+      <div className="grid grid-cols-2 gap-5">
+        <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} />
+        <Input label="Moy narxi (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} required />
+      </div>
+      <div className="grid grid-cols-2 gap-5">
+        <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
+        <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
+      </div>
+
+      {/* Filtrlar bo'limi */}
+      <div className="border-t border-gray-200 pt-5">
+        <p className="text-base font-medium text-gray-700 mb-4">Filtrlar</p>
+        
+        {/* Moy filtri */}
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.filterChanged || false}
+              onChange={e => setForm(f => ({ ...f, filterChanged: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            />
+            <span className="text-gray-700 font-medium">Moy filtri almashtirildi</span>
+          </label>
+          {form.filterChanged && (
+            <Input label="Moy filtri narxi (so'm)" type="number" value={form.filterCost} onChange={v => setForm(f => ({ ...f, filterCost: v }))} placeholder="50 000" />
+          )}
+        </div>
+
+        {/* Havo filtri */}
+        <div className="space-y-3 mt-3">
+          <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.airFilterChanged || false}
+              onChange={e => setForm(f => ({ ...f, airFilterChanged: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            />
+            <span className="text-gray-700 font-medium">Havo filtri almashtirildi</span>
+          </label>
+          {form.airFilterChanged && (
+            <Input label="Havo filtri narxi (so'm)" type="number" value={form.airFilterCost} onChange={v => setForm(f => ({ ...f, airFilterCost: v }))} placeholder="30 000" />
+          )}
+        </div>
+
+        {/* Yoqilg'i filtri */}
+        <div className="space-y-3 mt-3">
+          <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.fuelFilterChanged || false}
+              onChange={e => setForm(f => ({ ...f, fuelFilterChanged: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            />
+            <span className="text-gray-700 font-medium">Yoqilg'i filtri almashtirildi</span>
+          </label>
+          {form.fuelFilterChanged && (
+            <Input label="Yoqilg'i filtri narxi (so'm)" type="number" value={form.fuelFilterCost} onChange={v => setForm(f => ({ ...f, fuelFilterCost: v }))} placeholder="40 000" />
+          )}
+        </div>
+      </div>
+
+      {/* Jami xarajat */}
+      {totalCost > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-amber-700 font-medium">Jami xarajat:</span>
+            <span className="text-amber-700 font-bold text-xl">{formatNumber(totalCost)} so'm</span>
+          </div>
+        </div>
+      )}
+
+      <Input 
+        label="Keyingi almashtirish (km)" 
+        type="number" 
+        value={form.nextChangeKm} 
+        onChange={v => setForm(f => ({ ...f, nextChangeKm: v }))} 
+        placeholder="10000"
+      />
+      <p className="text-sm text-gray-500 -mt-2">Necha km dan keyin moy almashtiriladi (default: 10,000 km)</p>
+      <SubmitButton isEdit={isEdit} />
+    </form>
+  )
+})
 
 export const TireForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="space-y-5">
@@ -82,6 +154,7 @@ export const TireForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
       <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} placeholder="Michelin, Bridgestone..." required />
       <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
     </div>
+    <Input label="Shina raqami (DOT)" value={form.serialNumber} onChange={v => setForm(f => ({ ...f, serialNumber: v }))} placeholder="DOT XXXX XXXX 2024" />
     <div className="grid grid-cols-2 gap-5">
       <Input label="O'rnatish sanasi" type="date" value={form.installDate} onChange={v => setForm(f => ({ ...f, installDate: v }))} />
       <Input label="O'rnatish km" type="number" value={form.installOdometer} onChange={v => setForm(f => ({ ...f, installOdometer: v }))} />

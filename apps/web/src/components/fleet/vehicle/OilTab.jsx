@@ -87,7 +87,11 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
       {changes.length > 0 ? (
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-900">Tarix</h3>
-          {changes.map(c => (
+          {changes.map(c => {
+            const totalCost = (c.cost || 0) + (c.filterCost || 0) + (c.airFilterCost || 0) + (c.fuelFilterCost || 0)
+            const hasFilters = c.filterChanged || c.airFilterChanged || c.fuelFilterChanged
+            
+            return (
             <div key={c._id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
@@ -98,10 +102,31 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
                     <p className="text-gray-900 font-semibold">{c.oilType || 'Moy'}</p>
                     <p className="text-gray-500 text-sm">{fmtDate(c.date)} • {fmt(c.odometer)} km</p>
                     {c.oilBrand && <p className="text-gray-400 text-sm">{c.oilBrand}</p>}
+                    {/* Filtrlar */}
+                    {hasFilters && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {c.filterChanged && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-medium">
+                            Moy filtri
+                          </span>
+                        )}
+                        {c.airFilterChanged && (
+                          <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-xs rounded-md font-medium">
+                            Havo filtri
+                          </span>
+                        )}
+                        {c.fuelFilterChanged && (
+                          <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-medium">
+                            Yoqilg'i filtri
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-amber-600 font-bold">{fmt(c.cost)} so'm</p>
+                  <p className="text-amber-600 font-bold">{fmt(totalCost)} so'm</p>
+                  {hasFilters && <p className="text-gray-400 text-xs">moy: {fmt(c.cost)}</p>}
                   <div className="flex gap-1 mt-2">
                     <button onClick={() => onEdit(c)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-500 transition-colors">
                       <Edit2 size={16} />
@@ -113,7 +138,8 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">

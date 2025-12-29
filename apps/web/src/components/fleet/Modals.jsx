@@ -1,5 +1,6 @@
 import { memo } from 'react'
-import { X, Crown, Zap, AlertTriangle, Phone, Truck, Fuel, Wrench, BarChart3, Headphones, Check, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { X, Crown, Zap, AlertTriangle, Phone, Truck, Fuel, Wrench, BarChart3, Headphones, Check, Sparkles, CreditCard } from 'lucide-react'
 
 const SUPPORT_PHONE = '+998 88 019 19 09'
 
@@ -91,7 +92,15 @@ const handleCall = () => {
   window.location.href = `tel:${SUPPORT_PHONE.replace(/\s/g, '')}`
 }
 
-export const UpgradeModal = memo(({ onClose, canClose }) => (
+export const UpgradeModal = memo(({ onClose, canClose }) => {
+  const navigate = useNavigate()
+  
+  const handlePayment = () => {
+    onClose?.()
+    navigate('/payment')
+  }
+  
+  return (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border-2 border-slate-200">
       {/* Header with gradient */}
@@ -130,16 +139,27 @@ export const UpgradeModal = memo(({ onClose, canClose }) => (
           <div className="flex items-center justify-between mb-4">
             <span className="text-slate-600 font-medium">Oylik obuna</span>
             <div className="text-right">
-              <span className="text-4xl font-bold text-slate-900">50,000</span>
+              <span className="text-4xl font-bold text-slate-900">99,000</span>
               <span className="text-slate-500 ml-1">so'm/oy</span>
             </div>
           </div>
+          
+          {/* Online to'lov tugmasi */}
+          <button
+            onClick={handlePayment}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/25 mb-3"
+          >
+            <CreditCard className="w-5 h-5" />
+            <span className="text-lg">Online to'lash</span>
+          </button>
+          
+          {/* Telefon orqali */}
           <button
             onClick={handleCall}
-            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-4 px-4 rounded-xl transition-all shadow-lg shadow-emerald-500/25"
+            className="w-full flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-all"
           >
             <Phone className="w-5 h-5" />
-            <span className="text-lg">{SUPPORT_PHONE}</span>
+            <span>{SUPPORT_PHONE}</span>
           </button>
         </div>
 
@@ -149,7 +169,8 @@ export const UpgradeModal = memo(({ onClose, canClose }) => (
       </div>
     </div>
   </div>
-))
+  )
+})
 
 export const ExpiredView = memo(({ showModal, setShowModal }) => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50/30 to-orange-50/30 flex items-center justify-center p-4">

@@ -43,10 +43,13 @@ export const initFuelForm = (odo = '', ft = 'diesel') => ({
   date: today(), liters: '', cost: '', odometer: odo, fuelType: ft, station: '' 
 })
 export const initOilForm = (odo = '') => ({ 
-  date: today(), odometer: odo, oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '' 
+  date: today(), odometer: odo, oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '',
+  filterChanged: false, filterCost: '',
+  airFilterChanged: false, airFilterCost: '',
+  fuelFilterChanged: false, fuelFilterCost: ''
 })
 export const initTireForm = (odo = '') => ({ 
-  position: TIRE_POSITIONS[0], brand: '', model: '', size: '', installDate: today(), 
+  position: TIRE_POSITIONS[0], brand: '', model: '', size: '', serialNumber: '', installDate: today(), 
   installOdometer: odo, expectedLifeKm: 80000, cost: '' 
 })
 export const initServiceForm = (odo = '') => ({ 
@@ -54,7 +57,7 @@ export const initServiceForm = (odo = '') => ({
 })
 export const initIncomeForm = () => ({
   type: 'trip', date: today(), amount: '', fromCity: '', toCity: '', 
-  distance: '', cargoWeight: '', clientName: '', description: ''
+  cargoWeight: '', clientName: '', description: ''
 })
 export const initExpenseForm = () => ({
   type: 'other', date: today(), amount: '', description: ''

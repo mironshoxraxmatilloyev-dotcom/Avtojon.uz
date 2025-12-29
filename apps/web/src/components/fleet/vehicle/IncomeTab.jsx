@@ -293,16 +293,6 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1.5">Masofa (km)</label>
-              <input
-                type="number"
-                value={form.distance || ''}
-                onChange={e => setForm({ ...form, distance: e.target.value })}
-                placeholder="300"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                />
-              </div>
-            <div>
               <label className="block text-sm text-gray-600 mb-1.5">Yuk (tonna)</label>
               <input
                 type="number"
@@ -312,16 +302,16 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Mijoz</label>
-            <input
-              type="text"
-              value={form.clientName || ''}
-              onChange={e => setForm({ ...form, clientName: e.target.value })}
-              placeholder="Mijoz nomi (ixtiyoriy)"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            />
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">Mijoz</label>
+              <input
+                type="text"
+                value={form.clientName || ''}
+                onChange={e => setForm({ ...form, clientName: e.target.value })}
+                placeholder="Mijoz nomi"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
           </div>
         </>
       )}
@@ -417,7 +407,6 @@ export const initIncomeForm = () => ({
   amount: '',
   fromCity: '',
   toCity: '',
-  distance: '',
   cargoWeight: '',
   clientName: '',
   rentalDays: '',

@@ -88,6 +88,7 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
                     <div>
                       <p className="text-gray-900 font-semibold">{t.position}</p>
                       <p className="text-gray-500 text-sm">{t.brand} {t.size}</p>
+                      {t.serialNumber && <p className="text-gray-400 text-xs">{t.serialNumber}</p>}
                     </div>
                   </div>
                   <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${colors.bg} ${colors.text} border ${colors.border}`}>

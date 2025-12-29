@@ -55,6 +55,7 @@ const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
 const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
 const FleetDashboard = lazy(() => import('./pages/fleet/FleetDashboard'))
 const VehicleDetailPanel = lazy(() => import('./pages/fleet/VehicleDetailPanel'))
+const Payment = lazy(() => import('./pages/Payment'))
 
 import DashboardLayout from './components/layout/DashboardLayout'
 
@@ -263,6 +264,11 @@ function App() {
               {/* Fleet - Register qilganlar uchun */}
               <Route path="/fleet" element={<FleetRoute><Suspense fallback={<PageLoader />}><FleetDashboard /></Suspense></FleetRoute>} />
               <Route path="/fleet/vehicle/:id" element={<FleetRoute><Suspense fallback={<PageLoader />}><VehicleDetailPanel /></Suspense></FleetRoute>} />
+
+              {/* Payment */}
+              <Route path="/payment" element={<PrivateRoute><Suspense fallback={<PageLoader />}><Payment /></Suspense></PrivateRoute>} />
+              <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><Payment /></Suspense>} />
+              <Route path="/payment/failed" element={<Suspense fallback={<PageLoader />}><Payment /></Suspense>} />
 
               {/* Catch all */}
               <Route path="*" element={<Navigate to="/" replace />} />

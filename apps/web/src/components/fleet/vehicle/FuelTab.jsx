@@ -1,12 +1,36 @@
 import { memo, useState } from 'react'
-import { Plus, Fuel, Edit2, Trash2, TrendingUp, Mic } from 'lucide-react'
+import { Plus, Fuel, Edit2, Trash2, TrendingUp, Mic, Gauge } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { fmt, fmtDate } from './constants'
 import VoiceRecorder from '../../VoiceRecorder'
 
-export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, vehicleId, onVoiceAdd }) => {
+export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicle }) => {
   const { refills = [], stats = {} } = data
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
+
+  // Yoqilg'i sarfini hisoblash
+  const fuelEfficiency = (() => {
+    if (refills.length < 2) return null
+    const sorted = [...refills].sort((a, b) => (a.odometer || 0) - (b.odometer || 0))
+    const firstOdo = sorted[0]?.odometer || 0
+    const lastOdo = sorted[sorted.length - 1]?.odometer || 0
+    const totalKm = lastOdo - firstOdo
+    const totalLiters = sorted.slice(1).reduce((sum, r) => sum + (r.liters || 0), 0)
+    
+    if (totalKm <= 0 || totalLiters <= 0) return null
+    
+    const isMetan = vehicle?.fuelType === 'metan' || vehicle?.fuelType === 'gas'
+    const per100km = (totalLiters / totalKm) * 100
+    const kmPerUnit = totalKm / totalLiters
+    
+    return {
+      per100km: Math.round(per100km * 10) / 10,
+      kmPerUnit: Math.round(kmPerUnit * 10) / 10,
+      isMetan,
+      totalKm,
+      totalLiters
+    }
+  })()
 
   const chartData = [...refills]
     .reverse()
@@ -19,7 +43,36 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, vehicleId, onVoice
 
   return (
     <div className="space-y-8">
-      {/* Stats - Light Mode */}
+      {/* Yoqilg'i sarfi - asosiy ko'rsatkich */}
+      {fuelEfficiency && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Gauge className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Yoqilg'i sarfi</h3>
+              <p className="text-gray-500 text-sm">{fmt(fuelEfficiency.totalKm)} km asosida</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl p-4 border border-blue-100">
+              <p className="text-gray-500 text-sm mb-1">100 km ga</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {fuelEfficiency.per100km} {fuelEfficiency.isMetan ? 'kub' : 'L'}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100">
+              <p className="text-gray-500 text-sm mb-1">1 {fuelEfficiency.isMetan ? 'kub' : 'litr'} ga</p>
+              <p className="text-2xl font-bold text-emerald-600">
+                {fuelEfficiency.kmPerUnit} km
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Jami yoqilg'i" value={`${fmt(stats.totalLiters || 0)} L`} color="blue" />
         <StatCard label="Jami xarajat" value={`${fmt(stats.totalCost || 0)}`} color="emerald" />
@@ -27,7 +80,7 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, vehicleId, onVoice
         <StatCard label="Quyilishlar" value={refills.length} color="purple" />
       </div>
 
-      {/* Chart - Light Mode */}
+      {/* Chart */}
       {chartData.length > 1 && (
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -82,7 +135,7 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, vehicleId, onVoice
         />
       )}
 
-      {/* List - Light Mode */}
+      {/* List */}
       {refills.length > 0 ? (
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-900">Tarix</h3>
