@@ -42,9 +42,9 @@ router.post('/register', registerLimiter, asyncHandler(async (req, res) => {
         counter++;
     }
 
-    // Trial subscription - TEST: 1 daqiqa (production: 30 kun)
+    // Trial subscription - 30 kun
     const now = new Date();
-    const trialEndDate = new Date(now.getTime() + 1 * 60 * 1000); // 1 daqiqa
+    const trialEndDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 kun
 
     const user = await User.create({
         username,

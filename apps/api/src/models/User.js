@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema({
     },
     endDate: {
       type: Date,
-      default: () => new Date(Date.now() + 1 * 60 * 1000) // TEST: 1 daqiqa trial (production: 30 * 24 * 60 * 60 * 1000)
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 kun trial
     },
     isExpired: {
       type: Boolean,
@@ -69,15 +69,15 @@ userSchema.methods.checkSubscription = function() {
   
   // Agar subscription mavjud bo'lmasa - yangi user, trial boshlanadi
   if (!this.subscription || !this.subscription.endDate) {
-    // TEST: 1 daqiqa trial (production: 30 kun)
-    const endDate = new Date(now.getTime() + 1 * 60 * 1000);
+    // 30 kun trial
+    const endDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     return {
       plan: 'trial',
       startDate: now,
       endDate: endDate,
       isExpired: false,
-      daysLeft: 0,
-      msLeft: 1 * 60 * 1000
+      daysLeft: 30,
+      msLeft: 30 * 24 * 60 * 60 * 1000
     };
   }
   
