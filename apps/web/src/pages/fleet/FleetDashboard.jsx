@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAlert } from '../../components/ui'
 import api from '../../services/api'
-import { Plus, LogOut, Truck, Home, BarChart3, AlertTriangle, Crown, Sparkles, Mic } from 'lucide-react'
+import { Plus, Truck, Home, BarChart3, AlertTriangle, Crown, Sparkles, Mic } from 'lucide-react'
 import { HomeTab, StatsTab, ServiceTab, VehicleModal, UpgradeModal, ExpiredView } from '../../components/fleet'
 import VoiceVehicleCreator from '../../components/fleet/VoiceVehicleCreator'
 
@@ -247,9 +247,9 @@ export default function FleetDashboard() {
   }
 
   return (
-    <div className="h-screen bg-[#f8fafc] overflow-hidden flex">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
       {/* PRO Sidebar - Desktop - Fixed Height No Scroll */}
-      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0 h-screen overflow-hidden">
+      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0 h-screen overflow-hidden fixed left-0 top-0">
         {/* Logo Section */}
         <div className="p-5 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -358,22 +358,12 @@ export default function FleetDashboard() {
           </div>
         </div>
 
-        {/* Logout - Compact */}
-        <div className="p-3 border-t border-slate-100 flex-shrink-0">
-          <button
-            onClick={() => { logout(); navigate('/login') }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-          >
-            <LogOut size={16} />
-            <span className="text-sm font-medium">Chiqish</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 h-screen overflow-y-auto">
-        {/* PRO Header */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
+      <main className="flex-1 min-h-screen lg:ml-[280px] pb-20 lg:pb-0">
+        {/* PRO Header - Status bar safe area */}
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 pt-[env(safe-area-inset-top,24px)] lg:pt-0">
           <div className="px-4 lg:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -456,9 +446,9 @@ export default function FleetDashboard() {
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile - Instagram Style Fixed */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-2">
+      {/* Bottom Navigation - Mobile - FIXED position */}
+      <nav className="lg:hidden fixed-bottom-nav bg-white border-t border-slate-200/80" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 99999 }}>
+        <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom,0px)]">
           {navItems.map(item => (
             <button
               key={item.id}
@@ -488,15 +478,6 @@ export default function FleetDashboard() {
               )}
             </button>
           ))}
-          <button
-            onClick={() => { logout(); navigate('/login') }}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full"
-          >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-              <LogOut size={22} className="text-slate-400" strokeWidth={1.5} />
-            </div>
-            <span className="text-[10px] font-semibold text-slate-400">Chiqish</span>
-          </button>
         </div>
       </nav>
 

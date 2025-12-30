@@ -46,13 +46,13 @@
 ## 8. Huquqiy Masalalar
 - **Hozir:** Yakka tartibdagi tadbirkor
 - **2025:** MChJ + Delaware kompaniyasi (investorlar uchun)
-- **Intellektual mulk:** Savdo belgisi ro'yxatdan o'tkazish, kod mualliflik huquqi
+- **Intellektual mulk:** Savdo belgisi ro'yxatdan wo'tkazish, kod mualliflik huquqi
 - **Maxfiylik:** Shifrlash, foydalanuvchi roziligi
 
 ## 9. Moliya va Investitsiya
 - **Hozirgi:** $10K balans, $5K/oy xarajat, 2 oy zaxira
 - **Foydaga chiqish:** 4-oy
-- **Moliyalashtirish:** Oldindan $50K (2-chorak) → Urug'lik $500K (4-chorak) → A seriyasi $2M (2026)
+- **Moliyalashtirish:** Oldindan $50K (2-chorak) → Urug'lik $500K (4-chorak) → A sexriyasi $2M (2026)
 - **Mablag' ishlatish:** 50% jamoa, 30% marketing, 20% operatsiyalar
 
 ## 10. Marketing va O'sish
