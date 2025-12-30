@@ -1,6 +1,6 @@
 # 🚀 AVTOJON STARTUP PLAYBOOK
 
-## 1. Vizyon va Strategiya
+## 1. Maqsad va Strategiya
 - **Missiya:** O'zbekistondagi yuk tashish kompaniyalarini raqamlashtirish
 - **Vizyon:** 2027-yilga kelib O'zbekistonda №1 yuk tashish boshqaruv platformasi
 - **Qadriyatlar:** Oddiylik, Ishonchlilik, Mahalliylik, Hamkorlik
@@ -46,7 +46,7 @@
 ## 8. Huquqiy Masalalar
 - **Hozir:** Yakka tartibdagi tadbirkor
 - **2025:** MChJ + Delaware kompaniyasi (investorlar uchun)
-- **Intellektual mulk:** Savdo belgisi ro'yxatdan wo'tkazish, kod mualliflik huquqi
+- **Intellektual mulk:** Savdo belgisi ro'yxatdan o'tkazish, kod mualliflik huquqi
 - **Maxfiylik:** Shifrlash, foydalanuvchi roziligi
 
 ## 9. Moliya va Investitsiya

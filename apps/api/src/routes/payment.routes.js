@@ -65,7 +65,7 @@ router.post('/create', protect, async (req, res) => {
     
     // To'lov URL yaratish
     let paymentUrl = ''
-    const baseUrl = process.env.API_URL || 'https://api.avtojon.uz'
+    const baseUrl = process.env.API_URL || 'https://avtojon.uz'
     const frontendUrl = process.env.FRONTEND_URL || 'https://avtojon.uz'
     
     if (provider === 'payme') {
@@ -157,7 +157,7 @@ router.get('/history', protect, async (req, res) => {
 // ========================================================
 // PAYME MERCHANT API
 // Payme sizning serveringizga POST so'rov yuboradi
-// URL: https://api.avtojon.uz/api/payments/payme
+// URL: https://avtojon.uz/api/payments/payme
 // ========================================================
 router.post('/payme', async (req, res) => {
   try {

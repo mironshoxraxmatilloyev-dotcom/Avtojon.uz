@@ -4,7 +4,7 @@
   "webDir": "dist",
   "server": {
     "url": "https://avtojon.uz",
-    "cleartext": true
+    "cleartext": false
   },
   "plugins": {
     "Geolocation": {
@@ -17,6 +17,6 @@
     }
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": false
   }
 }

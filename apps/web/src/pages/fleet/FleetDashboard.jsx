@@ -33,7 +33,7 @@ const clearSubCache = () => {
 }
 
 export default function FleetDashboard() {
-  const { user, logout } = useAuthStore()
+  const { user } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
   const isMounted = useRef(true)
