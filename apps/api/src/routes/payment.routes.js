@@ -810,7 +810,8 @@ async function activateSubscription(payment) {
     // Agar mavjud obuna bo'lsa va hali tugamagan bo'lsa, unga qo'shish
     const currentEnd = user.subscription?.endDate ? new Date(user.subscription.endDate) : now
     const startDate = currentEnd > now ? currentEnd : now
-    const endDate = new Date(startDate.getTime() + payment.planDuration * 24 * 60 * 60 * 1000)
+    // TEST: 1 daqiqa (production da: payment.planDuration * 24 * 60 * 60 * 1000)
+    const endDate = new Date(startDate.getTime() + 1 * 60 * 1000)
     
     user.subscription = {
       plan: 'pro',
