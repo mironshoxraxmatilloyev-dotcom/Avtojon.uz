@@ -336,6 +336,20 @@ async function paymeCheckPerform(params) {
     }
   }
   
+  // Обрабатывается - boshqa tranzaksiya allaqachon mavjud
+  if (payment.status === 'processing' && payment.paymeTransactionId) {
+    return {
+      error: {
+        code: -31008,
+        message: {
+          uz: "Operatsiyani bajarib bo'lmaydi",
+          ru: 'Невозможно выполнить операцию',
+          en: 'Unable to perform operation'
+        }
+      }
+    }
+  }
+  
   // Summa tekshirish (tiyinda)
   if (payment.amount !== params.amount) {
     return {
@@ -357,6 +371,21 @@ async function paymeCheckPerform(params) {
 async function paymeCreate(params) {
   // order_id yoki id - ikkalasini ham qabul qilish
   const orderId = params.account?.order_id || params.account?.id
+  const transactionId = params.id // Payme tranzaksiya ID si
+  
+  if (!transactionId) {
+    return {
+      error: {
+        code: -31050,
+        message: {
+          uz: 'Tranzaksiya ID topilmadi',
+          ru: 'ID транзакции не найден',
+          en: 'Transaction ID not found'
+        }
+      }
+    }
+  }
+  
   const payment = await Payment.findOne({ orderId })
   
   if (!payment) {
@@ -375,15 +404,15 @@ async function paymeCreate(params) {
   
   // Agar bu tranzaksiya allaqachon mavjud bo'lsa
   if (payment.paymeTransactionId) {
-    // Boshqa tranzaksiya ID bilan kelsa - xato
-    if (payment.paymeTransactionId !== params.id) {
+    // Boshqa tranzaksiya ID bilan kelsa - xato -31008
+    if (payment.paymeTransactionId !== transactionId) {
       return {
         error: {
-          code: -31051,
+          code: -31008,
           message: {
-            uz: 'Boshqa tranzaksiya mavjud',
-            ru: 'Другая транзакция существует',
-            en: 'Another transaction exists'
+            uz: "Operatsiyani bajarib bo'lmaydi",
+            ru: 'Невозможно выполнить операцию',
+            en: 'Unable to perform operation'
           }
         }
       }
@@ -414,7 +443,7 @@ async function paymeCreate(params) {
   
   // Yangi tranzaksiya yaratish
   const createTime = Date.now()
-  payment.paymeTransactionId = params.id
+  payment.paymeTransactionId = transactionId
   payment.paymeCreateTime = createTime
   payment.paymeState = 1 // created
   payment.status = 'processing'
@@ -423,7 +452,7 @@ async function paymeCreate(params) {
   return {
     result: {
       create_time: createTime,
-      transaction: params.id,
+      transaction: transactionId,
       state: 1
     }
   }
