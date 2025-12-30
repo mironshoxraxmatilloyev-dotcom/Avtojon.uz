@@ -191,7 +191,14 @@ router.post('/payme', async (req, res) => {
     if (!authHeader || !authHeader.startsWith('Basic ')) {
       console.log('❌ Payme auth failed: no header')
       return res.json({
-        error: { code: -32504, message: { uz: 'Avtorizatsiya xatosi' } },
+        error: {
+          code: -32504,
+          message: {
+            uz: 'Avtorizatsiya yaroqsiz',
+            ru: 'Авторизация недействительна',
+            en: 'Authorization invalid'
+          }
+        },
         id
       })
     }
@@ -203,7 +210,14 @@ router.post('/payme', async (req, res) => {
     if (login !== 'Paycom' || password !== process.env.PAYME_KEY) {
       console.log('❌ Payme auth failed: wrong credentials')
       return res.json({
-        error: { code: -32504, message: { uz: 'Avtorizatsiya xatosi' } },
+        error: {
+          code: -32504,
+          message: {
+            uz: 'Avtorizatsiya yaroqsiz',
+            ru: 'Авторизация недействительна',
+            en: 'Authorization invalid'
+          }
+        },
         id
       })
     }
@@ -230,7 +244,16 @@ router.post('/payme', async (req, res) => {
         result = await paymeStatement(params)
         break
       default:
-        result = { error: { code: -32601, message: { uz: 'Metod topilmadi' } } }
+        result = {
+          error: {
+            code: -32601,
+            message: {
+              uz: 'Metod topilmadi',
+              ru: 'Метод не найден',
+              en: 'Method not found'
+            }
+          }
+        }
     }
     
     console.log('📤 Payme response:', JSON.stringify(result))
@@ -239,7 +262,14 @@ router.post('/payme', async (req, res) => {
   } catch (err) {
     console.error('❌ Payme error:', err)
     res.json({
-      error: { code: -32400, message: { uz: 'Tizim xatosi' } },
+      error: {
+        code: -32400,
+        message: {
+          uz: 'Tizim xatosi',
+          ru: 'Системная ошибка',
+          en: 'System error'
+        }
+      },
       id: req.body?.id
     })
   }
@@ -251,26 +281,73 @@ async function paymeCheckPerform(params) {
   const orderId = params.account?.order_id || params.account?.id
   
   if (!orderId) {
-    return { error: { code: -31050, message: { uz: 'Buyurtma raqami topilmadi' } } }
+    return {
+      error: {
+        code: -31050,
+        message: {
+          uz: 'Biz sizning hisobingizni topolmadik.',
+          ru: 'Мы не нашли вашу учетную запись',
+          en: "We couldn't find your account"
+        },
+        data: 'order_id'
+      }
+    }
   }
   
   const payment = await Payment.findOne({ orderId })
   
   if (!payment) {
-    return { error: { code: -31050, message: { uz: 'Buyurtma topilmadi' } } }
+    return {
+      error: {
+        code: -31050,
+        message: {
+          uz: 'Biz sizning hisobingizni topolmadik.',
+          ru: 'Мы не нашли вашу учетную запись',
+          en: "We couldn't find your account"
+        },
+        data: 'order_id'
+      }
+    }
   }
   
   if (payment.status === 'completed') {
-    return { error: { code: -31051, message: { uz: 'Buyurtma allaqachon to\'langan' } } }
+    return {
+      error: {
+        code: -31051,
+        message: {
+          uz: 'Buyurtma allaqachon to\'langan',
+          ru: 'Заказ уже оплачен',
+          en: 'Order already paid'
+        }
+      }
+    }
   }
   
   if (payment.status === 'cancelled') {
-    return { error: { code: -31052, message: { uz: 'Buyurtma bekor qilingan' } } }
+    return {
+      error: {
+        code: -31052,
+        message: {
+          uz: 'Buyurtma bekor qilingan',
+          ru: 'Заказ отменен',
+          en: 'Order cancelled'
+        }
+      }
+    }
   }
   
   // Summa tekshirish (tiyinda)
   if (payment.amount !== params.amount) {
-    return { error: { code: -31001, message: { uz: 'Noto\'g\'ri summa' } } }
+    return {
+      error: {
+        code: -31001,
+        message: {
+          uz: "Noto'g'ri summa",
+          ru: 'Недопустимая сумма',
+          en: 'Invalid amount'
+        }
+      }
+    }
   }
   
   return { result: { allow: true } }
@@ -283,14 +360,33 @@ async function paymeCreate(params) {
   const payment = await Payment.findOne({ orderId })
   
   if (!payment) {
-    return { error: { code: -31050, message: { uz: 'Buyurtma topilmadi' } } }
+    return {
+      error: {
+        code: -31050,
+        message: {
+          uz: 'Biz sizning hisobingizni topolmadik.',
+          ru: 'Мы не нашли вашу учетную запись',
+          en: "We couldn't find your account"
+        },
+        data: 'order_id'
+      }
+    }
   }
   
   // Agar bu tranzaksiya allaqachon mavjud bo'lsa
   if (payment.paymeTransactionId) {
     // Boshqa tranzaksiya ID bilan kelsa - xato
     if (payment.paymeTransactionId !== params.id) {
-      return { error: { code: -31051, message: { uz: 'Boshqa tranzaksiya mavjud' } } }
+      return {
+        error: {
+          code: -31051,
+          message: {
+            uz: 'Boshqa tranzaksiya mavjud',
+            ru: 'Другая транзакция существует',
+            en: 'Another transaction exists'
+          }
+        }
+      }
     }
     // Bir xil ID bilan kelsa - mavjud ma'lumotlarni qaytarish
     return {
@@ -304,7 +400,16 @@ async function paymeCreate(params) {
   
   // Summa tekshirish
   if (payment.amount !== params.amount) {
-    return { error: { code: -31001, message: { uz: 'Noto\'g\'ri summa' } } }
+    return {
+      error: {
+        code: -31001,
+        message: {
+          uz: "Noto'g'ri summa",
+          ru: 'Недопустимая сумма',
+          en: 'Invalid amount'
+        }
+      }
+    }
   }
   
   // Yangi tranzaksiya yaratish
@@ -329,7 +434,16 @@ async function paymePerform(params) {
   const payment = await Payment.findOne({ paymeTransactionId: params.id })
   
   if (!payment) {
-    return { error: { code: -31003, message: { uz: 'Tranzaksiya topilmadi' } } }
+    return {
+      error: {
+        code: -31003,
+        message: {
+          uz: 'Tranzaksiya topilmadi',
+          ru: 'Транзакция не найдена',
+          en: 'Transaction not found'
+        }
+      }
+    }
   }
   
   // Agar allaqachon bajarilgan bo'lsa
@@ -345,7 +459,16 @@ async function paymePerform(params) {
   
   // Faqat state=1 (created) bo'lganda bajarish mumkin
   if (payment.paymeState !== 1) {
-    return { error: { code: -31008, message: { uz: 'Tranzaksiyani bajarib bo\'lmaydi' } } }
+    return {
+      error: {
+        code: -31008,
+        message: {
+          uz: "Tranzaksiyani bajarib bo'lmaydi",
+          ru: 'Невозможно выполнить транзакцию',
+          en: 'Unable to perform transaction'
+        }
+      }
+    }
   }
   
   // To'lovni tasdiqlash
@@ -375,7 +498,16 @@ async function paymeCancel(params) {
   const payment = await Payment.findOne({ paymeTransactionId: params.id })
   
   if (!payment) {
-    return { error: { code: -31003, message: { uz: 'Tranzaksiya topilmadi' } } }
+    return {
+      error: {
+        code: -31003,
+        message: {
+          uz: 'Tranzaksiya topilmadi',
+          ru: 'Транзакция не найдена',
+          en: 'Transaction not found'
+        }
+      }
+    }
   }
   
   const cancelTime = Date.now()
@@ -413,7 +545,16 @@ async function paymeCheck(params) {
   const payment = await Payment.findOne({ paymeTransactionId: params.id })
   
   if (!payment) {
-    return { error: { code: -31003, message: { uz: 'Tranzaksiya topilmadi' } } }
+    return {
+      error: {
+        code: -31003,
+        message: {
+          uz: 'Tranzaksiya topilmadi',
+          ru: 'Транзакция не найдена',
+          en: 'Transaction not found'
+        }
+      }
+    }
   }
   
   return {
@@ -684,32 +825,6 @@ async function activateSubscription(payment) {
   } catch (err) {
     console.error('❌ Subscription activation error:', err)
   }
-}
-
-// ========================================================
-// WEBHOOK TEST (development uchun)
-// ========================================================
-if (process.env.NODE_ENV !== 'production') {
-  // Test: to'lovni qo'lda tasdiqlash
-  router.post('/test/complete/:orderId', protect, async (req, res) => {
-    try {
-      const payment = await Payment.findOne({ orderId: req.params.orderId })
-      
-      if (!payment) {
-        return res.status(404).json({ success: false, message: 'To\'lov topilmadi' })
-      }
-      
-      payment.status = 'completed'
-      payment.paidAt = new Date()
-      await payment.save()
-      
-      await activateSubscription(payment)
-      
-      res.json({ success: true, message: 'To\'lov tasdiqlandi' })
-    } catch (err) {
-      res.status(500).json({ success: false, message: err.message })
-    }
-  })
 }
 
 module.exports = router
