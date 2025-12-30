@@ -447,7 +447,7 @@ async function paymeCreate(params) {
   payment.paymeCreateTime = createTime
   payment.paymeState = 1 // created
   payment.status = 'processing'
-  await payment.save()
+  await payment.save({ validateBeforeSave: false })
   
   return {
     result: {
@@ -506,7 +506,7 @@ async function paymePerform(params) {
   payment.paymeState = 2 // completed
   payment.status = 'completed'
   payment.paidAt = new Date()
-  await payment.save()
+  await payment.save({ validateBeforeSave: false })
   
   // Obunani aktivlashtirish
   await activateSubscription(payment)
@@ -557,7 +557,7 @@ async function paymeCancel(params) {
     // TODO: Obunani bekor qilish logikasi
   }
   
-  await payment.save()
+  await payment.save({ validateBeforeSave: false })
   console.log('❌ Payment cancelled:', payment.orderId, 'reason:', params.reason)
   
   return {
@@ -702,7 +702,7 @@ router.post('/click/prepare', async (req, res) => {
     payment.clickMerchantTransId = merchant_trans_id
     payment.clickPrepareId = Date.now()
     payment.status = 'processing'
-    await payment.save()
+    await payment.save({ validateBeforeSave: false })
     
     console.log('✅ Click prepare success:', merchant_trans_id)
     
@@ -777,7 +777,7 @@ router.post('/click/complete', async (req, res) => {
     // Agar Click xato qaytarsa
     if (clickError && clickError < 0) {
       payment.status = 'failed'
-      await payment.save()
+      await payment.save({ validateBeforeSave: false })
       return res.json({
         error: -9,
         error_note: 'Transaction cancelled'
@@ -798,7 +798,7 @@ router.post('/click/complete', async (req, res) => {
     // To'lovni tasdiqlash
     payment.status = 'completed'
     payment.paidAt = new Date()
-    await payment.save()
+    await payment.save({ validateBeforeSave: false })
     
     // Obunani aktivlashtirish
     await activateSubscription(payment)
