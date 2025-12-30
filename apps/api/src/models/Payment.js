@@ -9,8 +9,12 @@ const PaymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true }, // tiyinda (so'm * 100)
   amountInSom: { type: Number, required: true }, // so'mda
   
+  // Mashina asosida narxlash
+  vehicleCount: { type: Number }, // nechta mashina uchun to'langan
+  pricePerVehicle: { type: Number }, // har bir mashina narxi
+  
   // Tarif
-  plan: { type: String, enum: ['pro_monthly', 'pro_yearly', 'enterprise'], required: true },
+  plan: { type: String, enum: ['pro_monthly', 'pro_yearly', 'enterprise', 'per_vehicle'], required: true },
   planDuration: { type: Number, default: 30 }, // kunlarda
   
   // To'lov tizimi

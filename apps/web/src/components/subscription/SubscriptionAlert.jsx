@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { AlertTriangle, Phone, X, Clock, Crown } from 'lucide-react'
+import { AlertTriangle, Phone, X, Clock, Crown, CreditCard } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../services/api'
 
 const SUPPORT_PHONE = '+998 88 019 91 19'
 
 export default function SubscriptionAlert() {
+  const navigate = useNavigate()
   const { user, updateUser } = useAuthStore()
   const [show, setShow] = useState(false)
   const [isExpired, setIsExpired] = useState(false)
@@ -120,11 +122,19 @@ export default function SubscriptionAlert() {
             </p>
             
             <button
-              onClick={handleCall}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-green-500/25 mb-4"
+              onClick={() => navigate('/payment')}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-indigo-500/25 mb-4"
             >
-              <Phone className="w-6 h-6" />
-              <span className="text-xl">{SUPPORT_PHONE}</span>
+              <CreditCard className="w-6 h-6" />
+              <span className="text-xl">To'lov qilish</span>
+            </button>
+            
+            <button
+              onClick={handleCall}
+              className="w-full flex items-center justify-center gap-3 bg-slate-700/50 hover:bg-slate-700 text-white font-semibold py-3 px-6 rounded-xl transition-all mb-4"
+            >
+              <Phone className="w-5 h-5" />
+              <span>{SUPPORT_PHONE}</span>
             </button>
 
             <div className="grid grid-cols-2 gap-3">
@@ -176,11 +186,11 @@ export default function SubscriptionAlert() {
             </div>
             
             <button
-              onClick={handleCall}
-              className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-green-500/20"
+              onClick={() => navigate('/payment')}
+              className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
             >
-              <Phone className="w-4 h-4" />
-              <span>Obunani uzaytirish</span>
+              <CreditCard className="w-4 h-4" />
+              <span>To'lov qilish</span>
             </button>
           </div>
         </div>

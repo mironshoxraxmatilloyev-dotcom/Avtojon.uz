@@ -4,92 +4,112 @@ const crypto = require('crypto')
 const Payment = require('../models/Payment')
 const User = require('../models/User')
 const Businessman = require('../models/Businessman')
+const Vehicle = require('../models/Vehicle')
 const { protect } = require('../middleware/auth')
 
-// ============ TARIFLAR ============
-const PLANS = {
-  pro_monthly: {
-    name: 'Pro (Oylik)',
-    price: 99000, // so'm
-    duration: 30, // kun
-    features: ['Cheksiz mashinalar', 'Moliyaviy hisobotlar', 'Smart alerts', 'Ovozli kiritish']
-  },
-  pro_yearly: {
-    name: 'Pro (Yillik)',
-    price: 990000, // so'm (2 oy tekin)
-    duration: 365,
-    features: ['Cheksiz mashinalar', 'Moliyaviy hisobotlar', 'Smart alerts', 'Ovozli kiritish', '2 oy tekin']
-  }
-}
+// ============ NARXLAR ============
+const PRICE_PER_VEHICLE = 50000 // 50,000 so'm / mashina / oy
+const FREE_TRIAL_DAYS = 30 // 1 oy bepul sinov
 
-// ============ TARIFLARNI OLISH ============
-router.get('/plans', (req, res) => {
-  res.json({ success: true, data: PLANS })
+// ============ NARX HISOBLASH ============
+router.get('/calculate', protect, async (req, res) => {
+  try {
+    const userId = req.user?._id || req.businessman?._id
+    
+    // Foydalanuvchi mashinalarini sanash
+    const vehicleCount = await Vehicle.countDocuments({ 
+      $or: [
+        { owner: userId },
+        { businessman: userId }
+      ]
+    })
+    
+    const totalPrice = vehicleCount * PRICE_PER_VEHICLE
+    
+    res.json({
+      success: true,
+      data: {
+        vehicleCount,
+        pricePerVehicle: PRICE_PER_VEHICLE,
+        totalPrice,
+        duration: 30, // kun
+        freeTrialDays: FREE_TRIAL_DAYS
+      }
+    })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
 })
 
 // ============ TO'LOV YARATISH ============
 router.post('/create', protect, async (req, res) => {
   try {
-    const { plan, provider } = req.body
+    const { provider } = req.body
     const userId = req.user?._id || req.businessman?._id
     
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Foydalanuvchi topilmadi' })
     }
     
-    if (!PLANS[plan]) {
-      return res.status(400).json({ success: false, message: 'Noto\'g\'ri tarif' })
-    }
-    
     if (!['payme', 'click'].includes(provider)) {
       return res.status(400).json({ success: false, message: 'Noto\'g\'ri to\'lov tizimi' })
     }
     
-    const planInfo = PLANS[plan]
+    // Mashina sonini hisoblash
+    const vehicleCount = await Vehicle.countDocuments({ 
+      $or: [
+        { owner: userId },
+        { businessman: userId }
+      ]
+    })
+    
+    if (vehicleCount === 0) {
+      return res.status(400).json({ success: false, message: 'Sizda hali mashina yo\'q' })
+    }
+    
+    const totalPrice = vehicleCount * PRICE_PER_VEHICLE
     const orderId = Payment.generateOrderId()
     
     // To'lov yaratish
     const payment = await Payment.create({
       user: userId,
       userType: req.businessman ? 'businessman' : 'user',
-      amount: planInfo.price * 100, // tiyinga o'tkazish (Payme uchun)
-      amountInSom: planInfo.price,
-      plan,
-      planDuration: planInfo.duration,
+      amount: totalPrice * 100, // tiyinga o'tkazish (Payme uchun)
+      amountInSom: totalPrice,
+      vehicleCount,
+      pricePerVehicle: PRICE_PER_VEHICLE,
+      plan: 'per_vehicle',
+      planDuration: 30,
       provider,
       orderId,
       status: 'pending',
-      description: `Avtojon ${planInfo.name} obunasi`,
+      description: `Avtojon obunasi - ${vehicleCount} ta mashina`,
       expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30 daqiqa
     })
     
     // To'lov URL yaratish
     let paymentUrl = ''
-    const baseUrl = process.env.API_URL || 'https://avtojon.uz'
     const frontendUrl = process.env.FRONTEND_URL || 'https://avtojon.uz'
     
     if (provider === 'payme') {
-      // Payme checkout URL
-      // Format: m=merchant_id;ac.order_id=ORDER_ID;a=AMOUNT;c=CALLBACK_URL
       const merchantId = process.env.PAYME_MERCHANT_ID
       
       const params = Buffer.from(
         `m=${merchantId};` +
-        `ac.order_id=${orderId};` +
+        `ac.id=${orderId};` +
         `a=${payment.amount};` +
         `c=${encodeURIComponent(frontendUrl + '/payment?status=success&order_id=' + orderId)}`
       ).toString('base64')
       
       paymentUrl = `https://checkout.paycom.uz/${params}`
     } else if (provider === 'click') {
-      // Click checkout URL
       const merchantId = process.env.CLICK_MERCHANT_ID
       const serviceId = process.env.CLICK_SERVICE_ID
       
       paymentUrl = `https://my.click.uz/services/pay?` +
         `service_id=${serviceId}&` +
         `merchant_id=${merchantId}&` +
-        `amount=${planInfo.price}&` +
+        `amount=${totalPrice}&` +
         `transaction_param=${orderId}&` +
         `return_url=${encodeURIComponent(frontendUrl + '/payment?status=success&order_id=' + orderId)}&` +
         `card_type=humo,uzcard,visa,mastercard`
@@ -99,8 +119,9 @@ router.post('/create', protect, async (req, res) => {
       success: true,
       data: {
         orderId,
-        amount: planInfo.price,
-        plan: planInfo.name,
+        vehicleCount,
+        pricePerVehicle: PRICE_PER_VEHICLE,
+        amount: totalPrice,
         provider,
         paymentUrl,
         expiresAt: payment.expiresAt
@@ -226,7 +247,8 @@ router.post('/payme', async (req, res) => {
 
 // Payme: CheckPerformTransaction - to'lov qilish mumkinmi tekshirish
 async function paymeCheckPerform(params) {
-  const orderId = params.account?.order_id
+  // order_id yoki id - ikkalasini ham qabul qilish
+  const orderId = params.account?.order_id || params.account?.id
   
   if (!orderId) {
     return { error: { code: -31050, message: { uz: 'Buyurtma raqami topilmadi' } } }
@@ -256,7 +278,8 @@ async function paymeCheckPerform(params) {
 
 // Payme: CreateTransaction - tranzaksiya yaratish
 async function paymeCreate(params) {
-  const orderId = params.account?.order_id
+  // order_id yoki id - ikkalasini ham qabul qilish
+  const orderId = params.account?.order_id || params.account?.id
   const payment = await Payment.findOne({ orderId })
   
   if (!payment) {
@@ -416,7 +439,7 @@ async function paymeStatement(params) {
     id: p.paymeTransactionId,
     time: p.paymeCreateTime,
     amount: p.amount,
-    account: { order_id: p.orderId },
+    account: { id: p.orderId },
     create_time: p.paymeCreateTime,
     perform_time: p.paymePerformTime || 0,
     cancel_time: p.paymeCancelTime || 0,
