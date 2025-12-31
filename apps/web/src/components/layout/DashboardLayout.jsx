@@ -95,34 +95,43 @@ export default function DashboardLayout() {
       })
       .catch(() => {})
 
-    // User dan subscription.endDate ni tekshirish
-    const endDate = user?.subscription?.endDate
-    if (endDate) {
-      const expiryDate = new Date(endDate)
-      if (expiryDate < new Date()) {
-        setSubscriptionExpired(true)
-        return
-      }
-    }
+    // Serverdan subscription tekshirish
+    api
+      .get('/auth/me')
+      .then((res) => {
+        if (!isMounted.current) return
+        const userData = res.data.data
+        
+        // User dan subscription.endDate ni tekshirish
+        const endDate = userData?.subscription?.endDate
+        if (endDate) {
+          const expiryDate = new Date(endDate)
+          if (expiryDate < new Date()) {
+            setSubscriptionExpired(true)
+            return
+          }
+        }
 
-    // Eski format - subscriptionExpiry
-    if (user?.subscriptionExpiry) {
-      const expiryDate = new Date(user.subscriptionExpiry)
-      if (expiryDate < new Date()) {
-        setSubscriptionExpired(true)
-        return
-      }
-    }
+        // Eski format - subscriptionExpiry
+        if (userData?.subscriptionExpiry) {
+          const expiryDate = new Date(userData.subscriptionExpiry)
+          if (expiryDate < new Date()) {
+            setSubscriptionExpired(true)
+            return
+          }
+        }
 
-    // Eski format - trialEndsAt
-    if (user?.trialEndsAt) {
-      const trialEnd = new Date(user.trialEndsAt)
-      if (trialEnd < new Date()) {
-        setSubscriptionExpired(true)
-        return
-      }
-    }
-  }, [isDemoMode, user?.subscription?.endDate, user?.subscriptionExpiry, user?.trialEndsAt])
+        // Eski format - trialEndsAt
+        if (userData?.trialEndsAt) {
+          const trialEnd = new Date(userData.trialEndsAt)
+          if (trialEnd < new Date()) {
+            setSubscriptionExpired(true)
+            return
+          }
+        }
+      })
+      .catch(() => {})
+  }, [isDemoMode])
 
   // 🔥 Obuna tugagan bo'lsa - blocker ko'rsatish (barcha sahifalar uchun)
   if (subscriptionExpired && !isDemoMode) {
@@ -157,7 +166,10 @@ export default function DashboardLayout() {
       )}
 
       {/* Sidebar - fixed height, no scroll */}
-      <aside className={`fixed top-0 bottom-0 left-0 z-40 w-72 h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 transform transition-all duration-300 ease-out lg:translate-x-0 flex flex-col overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside 
+        className={`fixed top-0 bottom-0 left-0 z-40 w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 transform transition-all duration-300 ease-out lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ height: '100vh', height: '100dvh', overflow: 'hidden' }}
+      >
         {/* Logo Section - fixed top */}
         <div className="flex-shrink-0 p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
@@ -192,8 +204,8 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 overflow-hidden">
+        {/* Navigation - no scroll */}
+        <nav className="flex-1 px-4 py-2" style={{ overflow: 'hidden' }}>
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">Asosiy</p>
           <div className="space-y-1">
             {navItems.map(({ path, icon: Icon, label, description }) => {

@@ -538,7 +538,24 @@ html[style*="overflow:hidden"] {
   -webkit-transform: translate3d(0, 0, 0) !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
-  will-change: transform;
+  will-change: auto;
+  contain: layout style;
+}
+
+/* 🚀 Sidebar - scroll yo'q */
+.sidebar-no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+}
+
+/* 🚀 Main content - faqat content scroll bo'lsin */
+.main-content-scroll {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* iOS Safari - address bar yashirilganda ham ishlashi uchun */

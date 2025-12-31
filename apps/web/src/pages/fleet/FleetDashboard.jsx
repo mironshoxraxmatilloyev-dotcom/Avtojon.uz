@@ -247,9 +247,9 @@ export default function FleetDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
+    <div className="h-screen overflow-hidden bg-[#f8fafc] flex flex-col lg:flex-row">
       {/* PRO Sidebar - Desktop - Fixed Height No Scroll */}
-      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0 h-screen overflow-hidden fixed left-0 top-0">
+      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0 h-screen fixed left-0 top-0" style={{ overflow: 'hidden' }}>
         {/* Logo Section */}
         <div className="p-5 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ export default function FleetDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen lg:ml-[280px] pb-20 lg:pb-0">
+      <main className="flex-1 h-screen overflow-y-auto lg:ml-[280px]" style={{ paddingBottom: '80px' }}>
         {/* PRO Header - Status bar safe area */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 pt-[env(safe-area-inset-top,24px)] lg:pt-0">
           <div className="px-4 lg:px-6 py-4">
@@ -424,7 +424,7 @@ export default function FleetDashboard() {
         </header>
 
         {/* Content Area - Bottom nav uchun padding */}
-        <div className="p-4 lg:p-6 pb-24 lg:pb-6">
+        <div className="p-4 lg:p-6 lg:pb-6">
           {activeTab === 'home' && (
             <HomeTab
               vehicles={filteredVehicles}
@@ -446,8 +446,21 @@ export default function FleetDashboard() {
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile - FIXED position */}
-      <nav className="lg:hidden fixed-bottom-nav bg-white border-t border-slate-200/80" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 99999 }}>
+      {/* Bottom Navigation - Mobile - FIXED position - NO SCROLL */}
+      <nav 
+        className="lg:hidden bg-white border-t border-slate-200/80" 
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 99999,
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden'
+        }}
+      >
         <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom,0px)]">
           {navItems.map(item => (
             <button
