@@ -626,8 +626,23 @@ export default function VehicleDetailPanel() {
       </main>
 
       {/* PRO Bottom Navigation - Mobile - Instagram Style Fixed */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-1">
+      <nav 
+        className="lg:hidden bg-white border-t border-slate-200/80"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 99999,
+          transform: 'translate3d(0, 0, 0)',
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          overflow: 'hidden',
+          touchAction: 'none'
+        }}
+      >
+        <div className="flex items-center justify-around h-16 px-1 pb-[env(safe-area-inset-bottom,0px)]">
           {NAV_ITEMS.map(item => (
             <button key={item.id} onClick={() => setActiveTab(item.id)}
               className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full">

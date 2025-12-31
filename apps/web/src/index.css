@@ -10,10 +10,7 @@ html, body {
   overscroll-behavior: none;
 }
 
-/* 🔥 GLOBAL - Sidebar va Bottom Nav HECH QACHON scroll bo'lmasin */
-aside,
-nav[style*="position: fixed"],
-.sidebar-no-scroll,
+/* 🔥 GLOBAL - Bottom Nav HECH QACHON scroll bo'lmasin */
 .fixed-bottom-nav {
   overflow: hidden !important;
   -webkit-overflow-scrolling: auto !important;
@@ -557,7 +554,6 @@ html[style*="overflow:hidden"] {
 }
 
 /* 🚀 Sidebar - scroll yo'q - BARCHA TELEFONLAR UCHUN */
-aside,
 .sidebar-no-scroll {
   overflow: hidden !important;
   -webkit-overflow-scrolling: auto !important;
@@ -568,18 +564,6 @@ aside,
   max-height: 100dvh !important;
   touch-action: none !important;
   overscroll-behavior: none !important;
-}
-
-/* Sidebar ichidagi elementlar ham scroll bo'lmasin */
-aside *,
-.sidebar-no-scroll * {
-  overflow: visible !important;
-  -webkit-overflow-scrolling: auto !important;
-}
-
-aside nav,
-.sidebar-no-scroll nav {
-  overflow: hidden !important;
 }
 
 /* 🚀 Main content - faqat content scroll bo'lsin */

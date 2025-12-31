@@ -188,31 +188,46 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
         });
     }
     
-    // User (admin/fleet yoki business) uchun - subscription info qo'shish
-    if (req.user) {
-        const userData = req.user.toObject ? req.user.toObject() : { ...req.user };
-        
-        // checkSubscription metodi orqali subscription info olish
-        if (typeof req.user.checkSubscription === 'function') {
-            userData.subscriptionInfo = req.user.checkSubscription();
-        } else if (req.user.subscription) {
-            // Manual hisoblash
-            const now = new Date();
-            const endDate = req.user.subscription.endDate ? new Date(req.user.subscription.endDate) : now;
-            const isExpired = now > endDate;
-            userData.subscriptionInfo = {
-                plan: req.user.subscription.plan || 'trial',
-                startDate: req.user.subscription.startDate,
-                endDate: req.user.subscription.endDate,
-                isExpired,
-                daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
-            };
+    // User (admin/fleet) uchun - subscription info qo'shish
+    if (req.userRole === 'admin' && req.user?._id) {
+        // Yangi so'rov bilan User ni olish (checkSubscription metodi ishlashi uchun)
+        const user = await User.findById(req.user._id).select('-password');
+        if (user) {
+            const userData = user.toObject();
+            userData.subscriptionInfo = user.checkSubscription();
+            console.log('[/auth/me] Admin subscription:', userData.subscriptionInfo);
+            return res.json({
+                success: true,
+                data: userData
+            });
         }
-        
-        return res.json({
-            success: true,
-            data: userData
-        });
+    }
+    
+    // Businessman uchun
+    if (req.userRole === 'business' && req.businessman?._id) {
+        const businessman = await Businessman.findById(req.businessman._id).select('-password');
+        if (businessman) {
+            const userData = businessman.toObject();
+            if (typeof businessman.checkSubscription === 'function') {
+                userData.subscriptionInfo = businessman.checkSubscription();
+            } else if (businessman.subscription) {
+                const now = new Date();
+                const endDate = businessman.subscription.endDate ? new Date(businessman.subscription.endDate) : now;
+                const isExpired = now > endDate;
+                userData.subscriptionInfo = {
+                    plan: businessman.subscription.plan || 'trial',
+                    startDate: businessman.subscription.startDate,
+                    endDate: businessman.subscription.endDate,
+                    isExpired,
+                    daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+                };
+            }
+            console.log('[/auth/me] Business subscription:', userData.subscriptionInfo);
+            return res.json({
+                success: true,
+                data: userData
+            });
+        }
     }
     
     res.json({
