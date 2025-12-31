@@ -529,9 +529,12 @@ export default function VehicleDetailPanel() {
   if (subscription?.isExpired) return <ExpiredView onUpgrade={() => setShowUpgradeModal(true)} />
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f8fafc]">
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#f8fafc' }}>
       {/* PRO Sidebar - Desktop - Fixed, NO scroll */}
-      <aside className="hidden lg:flex lg:flex-col fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-slate-200/60 z-40 overflow-hidden">
+      <aside 
+        className="hidden lg:flex lg:flex-col w-[260px] bg-white border-r border-slate-200/60 z-40"
+        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, overflow: 'hidden' }}
+      >
         {/* Back Button */}
         <div className="flex-shrink-0 p-4 border-b border-slate-100">
           <button onClick={() => navigate('/fleet')} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium transition-colors group">
@@ -582,7 +585,14 @@ export default function VehicleDetailPanel() {
 
 
       {/* Main Content - scrollable with bottom padding for nav */}
-      <main className="lg:ml-[260px] h-screen overflow-y-auto pb-24 lg:pb-8">
+      <main 
+        className="lg:ml-[260px] overflow-y-auto"
+        style={{ 
+          height: '100vh', 
+          paddingBottom: '80px',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
         {/* PRO Header - Full Width */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
           <div className="px-4 lg:px-6 xl:px-8 py-4">

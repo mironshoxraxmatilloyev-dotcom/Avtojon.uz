@@ -373,7 +373,14 @@ export default function FleetDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 h-screen overflow-y-auto lg:ml-[280px]" style={{ paddingBottom: '80px' }}>
+      <main 
+        className="flex-1 overflow-y-auto lg:ml-[280px]"
+        style={{ 
+          height: '100%',
+          paddingBottom: '80px',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
         {/* PRO Header - Status bar safe area */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 pt-[env(safe-area-inset-top,24px)] lg:pt-0">
           <div className="px-4 lg:px-6 py-4">
