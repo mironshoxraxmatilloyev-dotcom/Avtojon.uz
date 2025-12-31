@@ -180,6 +180,41 @@ router.post('/login', loginLimiter, validate(authSchemas.login), asyncHandler(as
 
 // Get current user
 router.get('/me', protect, asyncHandler(async (req, res) => {
+    // Driver uchun
+    if (req.driver) {
+        return res.json({
+            success: true,
+            data: req.driver
+        });
+    }
+    
+    // User (admin/fleet yoki business) uchun - subscription info qo'shish
+    if (req.user) {
+        const userData = req.user.toObject ? req.user.toObject() : { ...req.user };
+        
+        // checkSubscription metodi orqali subscription info olish
+        if (typeof req.user.checkSubscription === 'function') {
+            userData.subscriptionInfo = req.user.checkSubscription();
+        } else if (req.user.subscription) {
+            // Manual hisoblash
+            const now = new Date();
+            const endDate = req.user.subscription.endDate ? new Date(req.user.subscription.endDate) : now;
+            const isExpired = now > endDate;
+            userData.subscriptionInfo = {
+                plan: req.user.subscription.plan || 'trial',
+                startDate: req.user.subscription.startDate,
+                endDate: req.user.subscription.endDate,
+                isExpired,
+                daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+            };
+        }
+        
+        return res.json({
+            success: true,
+            data: userData
+        });
+    }
+    
     res.json({
         success: true,
         data: req.driver || req.user

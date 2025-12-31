@@ -7,6 +7,18 @@ html, body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+  overscroll-behavior: none;
+}
+
+/* 🔥 GLOBAL - Sidebar va Bottom Nav HECH QACHON scroll bo'lmasin */
+aside,
+nav[style*="position: fixed"],
+.sidebar-no-scroll,
+.fixed-bottom-nav {
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: auto !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
 }
 
 /* 📱 Status bar safe area - barcha sahifalar uchun */
@@ -540,14 +552,34 @@ html[style*="overflow:hidden"] {
   -webkit-backface-visibility: hidden !important;
   will-change: auto;
   contain: layout style;
+  overflow: hidden !important;
+  touch-action: none !important;
 }
 
-/* 🚀 Sidebar - scroll yo'q */
+/* 🚀 Sidebar - scroll yo'q - BARCHA TELEFONLAR UCHUN */
+aside,
 .sidebar-no-scroll {
   overflow: hidden !important;
+  -webkit-overflow-scrolling: auto !important;
   position: fixed !important;
   height: 100vh !important;
   height: 100dvh !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+/* Sidebar ichidagi elementlar ham scroll bo'lmasin */
+aside *,
+.sidebar-no-scroll * {
+  overflow: visible !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
+aside nav,
+.sidebar-no-scroll nav {
+  overflow: hidden !important;
 }
 
 /* 🚀 Main content - faqat content scroll bo'lsin */

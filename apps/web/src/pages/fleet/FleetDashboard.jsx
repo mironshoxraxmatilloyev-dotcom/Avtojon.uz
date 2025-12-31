@@ -247,9 +247,21 @@ export default function FleetDashboard() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f8fafc] flex flex-col lg:flex-row">
+    <div className="h-screen bg-[#f8fafc] flex flex-col lg:flex-row" style={{ overflow: 'hidden', position: 'fixed', inset: 0 }}>
       {/* PRO Sidebar - Desktop - Fixed Height No Scroll */}
-      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0 h-screen fixed left-0 top-0" style={{ overflow: 'hidden' }}>
+      <aside 
+        className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0"
+        style={{ 
+          position: 'fixed', 
+          left: 0, 
+          top: 0, 
+          bottom: 0,
+          height: '100vh',
+          overflow: 'hidden',
+          touchAction: 'none',
+          overscrollBehavior: 'none'
+        }}
+      >
         {/* Logo Section */}
         <div className="p-5 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -446,7 +458,7 @@ export default function FleetDashboard() {
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile - FIXED position - NO SCROLL */}
+      {/* Bottom Navigation - Mobile - FIXED - NO SCROLL */}
       <nav 
         className="lg:hidden bg-white border-t border-slate-200/80" 
         style={{ 
@@ -455,10 +467,12 @@ export default function FleetDashboard() {
           left: 0, 
           right: 0, 
           zIndex: 99999,
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
+          transform: 'translate3d(0, 0, 0)',
+          WebkitTransform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
+          WebkitBackfaceVisibility: 'hidden',
+          overflow: 'hidden',
+          touchAction: 'none'
         }}
       >
         <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom,0px)]">

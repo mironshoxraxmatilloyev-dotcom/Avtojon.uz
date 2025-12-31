@@ -102,11 +102,24 @@ export default function DashboardLayout() {
         if (!isMounted.current) return
         const userData = res.data.data
         
+        console.log('[DashboardLayout] User subscription data:', userData?.subscription)
+        
+        // checkSubscription metodidan kelgan ma'lumot
+        const subInfo = userData?.subscriptionInfo || userData?.subscription
+        
+        if (subInfo?.isExpired) {
+          console.log('[DashboardLayout] Subscription expired!')
+          setSubscriptionExpired(true)
+          return
+        }
+
         // User dan subscription.endDate ni tekshirish
-        const endDate = userData?.subscription?.endDate
+        const endDate = subInfo?.endDate || userData?.subscription?.endDate
         if (endDate) {
           const expiryDate = new Date(endDate)
-          if (expiryDate < new Date()) {
+          const now = new Date()
+          console.log('[DashboardLayout] Checking endDate:', endDate, 'expired:', expiryDate < now)
+          if (expiryDate < now) {
             setSubscriptionExpired(true)
             return
           }
@@ -130,7 +143,9 @@ export default function DashboardLayout() {
           }
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('[DashboardLayout] Error checking subscription:', err)
+      })
   }, [isDemoMode])
 
   // 🔥 Obuna tugagan bo'lsa - blocker ko'rsatish (barcha sahifalar uchun)
@@ -145,7 +160,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50">
+    <div className="bg-slate-50" style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
       {/* Mobile Header with menu button */}
       {!sidebarOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200">
@@ -168,7 +183,12 @@ export default function DashboardLayout() {
       {/* Sidebar - fixed height, no scroll */}
       <aside 
         className={`fixed top-0 bottom-0 left-0 z-40 w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 transform transition-all duration-300 ease-out lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ height: '100vh', height: '100dvh', overflow: 'hidden' }}
+        style={{ 
+          height: '100vh', 
+          overflow: 'hidden',
+          touchAction: 'none',
+          overscrollBehavior: 'none'
+        }}
       >
         {/* Logo Section - fixed top */}
         <div className="flex-shrink-0 p-6 border-b border-white/10">
@@ -205,7 +225,7 @@ export default function DashboardLayout() {
         </div>
 
         {/* Navigation - no scroll */}
-        <nav className="flex-1 px-4 py-2" style={{ overflow: 'hidden' }}>
+        <nav className="flex-1 px-4 py-2" style={{ overflow: 'hidden', touchAction: 'none' }}>
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">Asosiy</p>
           <div className="space-y-1">
             {navItems.map(({ path, icon: Icon, label, description }) => {
@@ -248,7 +268,7 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50">
+      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="p-4 sm:p-6 pt-16 lg:pt-6 animate-fadeIn">
           <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
             <Outlet />
