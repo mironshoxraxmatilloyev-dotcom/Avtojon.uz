@@ -103,10 +103,8 @@ router.post('/payme', async (req, res) => {
   const credentials = Buffer.from(authHeader.slice(6), 'base64').toString()
   const [login, password] = credentials.split(':')
   
-  // Test yoki production key
-  const validKey = process.env.NODE_ENV === 'production' 
-    ? process.env.PAYME_KEY 
-    : (process.env.PAYME_TEST_KEY || process.env.PAYME_KEY)
+  // Test yoki production key - faqat PAYME_KEY ishlatamiz
+  const validKey = process.env.PAYME_KEY
   
   if (login !== 'Paycom' || password !== validKey) {
     console.log('❌ Auth failed. Got:', login, password?.substring(0, 5) + '...')
