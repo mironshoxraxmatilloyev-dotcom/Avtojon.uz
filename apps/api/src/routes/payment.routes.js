@@ -1,9 +1,13 @@
 const express = require('express')
 const router = express.Router()
+const mongoose = require('mongoose')
 const Payment = require('../models/Payment')
 const User = require('../models/User')
 const Businessman = require('../models/Businessman')
 const { protect } = require('../middleware/auth')
+
+// ObjectId validatsiya
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
 
 // ============ NARXLAR ============
 const PRICE_PER_UNIT = 50000 // 50,000 so'm / mashina yoki haydovchi / oy
@@ -163,6 +167,10 @@ async function checkPerform(params) {
     return { error: { code: -31050, message: { uz: 'ID topilmadi', ru: 'ID не найден', en: 'ID not found' } } }
   }
   
+  if (!isValidObjectId(id)) {
+    return { error: { code: -31050, message: { uz: 'Noto\'g\'ri ID formati', ru: 'Неверный формат ID', en: 'Invalid ID format' } } }
+  }
+  
   const payment = await Payment.findById(id)
   if (!payment) {
     return { error: { code: -31050, message: { uz: 'To\'lov topilmadi', ru: 'Платеж не найден', en: 'Payment not found' } } }
@@ -188,6 +196,10 @@ async function createTransaction(params) {
   const id = params.account?.id
   const transactionId = params.id
   const time = params.time
+  
+  if (!isValidObjectId(id)) {
+    return { error: { code: -31050, message: { uz: 'Noto\'g\'ri ID formati', ru: 'Неверный формат ID', en: 'Invalid ID format' } } }
+  }
   
   const payment = await Payment.findById(id)
   if (!payment) {
@@ -251,7 +263,7 @@ async function performTransaction(params) {
   // Obunani aktivlashtirish
   await activateSubscription(payment)
   
-  console.log('✅ Payment performed:', payment.idd)
+  console.log('✅ Payment performed:', payment._id)
   
   return {
     transaction: params.id,
@@ -291,7 +303,7 @@ async function cancelTransaction(params) {
   payment.paymeCancelTime = cancelTime
   await payment.save()
   
-  console.log('❌ Payment cancelled:', payment.idd, 'reason:', params.reason)
+  console.log('❌ Payment cancelled:', payment._id, 'reason:', params.reason)
   
   return {
     transaction: params.id,
@@ -336,7 +348,7 @@ async function getStatement(params) {
       id: p.paymeTransactionId,
       time: p.paymeCreateTime,
       amount: p.amount,
-      account: { id: p.idd },
+      account: { id: p._id.toString() },
       create_time: p.paymeCreateTime,
       perform_time: p.paymePerformTime || 0,
       cancel_time: p.paymeCancelTime || 0,
