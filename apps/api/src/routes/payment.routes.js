@@ -49,7 +49,9 @@ router.post('/create', protect, async (req, res) => {
       `m=${merchantId};ac.id=${payment._id};a=${payment.amount};c=${encodeURIComponent(frontendUrl + '/payment/success')}`
     ).toString('base64')
     
-    const paymentUrl = `https://checkout.paycom.uz/${params}`
+    // Sandbox uchun test.paycom.uz, production uchun checkout.paycom.uz
+    const paymeHost = process.env.PAYME_SANDBOX === 'true' ? 'test.paycom.uz' : 'checkout.paycom.uz'
+    const paymentUrl = `https://${paymeHost}/${params}`
     
     res.json({
       success: true,
@@ -107,8 +109,10 @@ router.post('/payme', async (req, res) => {
   const credentials = Buffer.from(authHeader.slice(6), 'base64').toString()
   const [login, password] = credentials.split(':')
   
-  // Test yoki production key - faqat PAYME_KEY ishlatamiz
-  const validKey = process.env.PAYME_KEY
+  // Sandbox yoki production key
+  const validKey = process.env.PAYME_SANDBOX === 'true' 
+    ? process.env.PAYME_TEST_KEY 
+    : process.env.PAYME_KEY
   
   if (login !== 'Paycom' || password !== validKey) {
     console.log('❌ Auth failed. Got:', login, password?.substring(0, 5) + '...')
