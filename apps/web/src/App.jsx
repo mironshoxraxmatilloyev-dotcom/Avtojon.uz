@@ -3,7 +3,6 @@ import { lazy, Suspense, memo, useEffect, useState } from 'react'
 import { useAuthStore } from './store/authStore'
 import { AlertProvider } from './components/ui'
 import api from './services/api'
-import SubscriptionAlert from './components/subscription/SubscriptionAlert'
 import { connectSocket, joinBusinessRoom, joinDriverRoom } from './services/socket'
 
 // 🔌 Global Socket Connection Hook
@@ -29,7 +28,7 @@ function useGlobalSocket() {
 function useInitAuth() {
   const { initAuth, initialized, token, user } = useAuthStore()
   const [ready, setReady] = useState(false)
-  
+
   useEffect(() => {
     const init = async () => {
       if (!initialized) {
@@ -39,17 +38,17 @@ function useInitAuth() {
       }
       setReady(true)
     }
-    
+
     init()
   }, [initAuth, initialized])
-  
+
   // Debug log
   useEffect(() => {
     if (ready) {
       console.log('[App] Ready state:', { token: !!token, user: !!user, role: user?.role })
     }
   }, [ready, token, user])
-  
+
   return ready
 }
 
@@ -101,11 +100,11 @@ const AUTH_CACHE_TTL = 60000 // 1 daqiqa cache
 // 🔐 INSTANT Auth Hook - optimizatsiya qilingan
 function useAuthValidation() {
   const { token, user, logout } = useAuthStore()
-  
+
   // 🚀 INSTANT: User va token bor bo'lsa - darhol valid
   const [isValidating, setIsValidating] = useState(() => !user && !!token)
   const [isValid, setIsValid] = useState(() => !!user && !!token)
-  
+
   useEffect(() => {
     // Token yo'q - validatsiya kerak emas
     if (!token) {
@@ -113,7 +112,7 @@ function useAuthValidation() {
       setIsValid(false)
       return
     }
-    
+
     // 🚀 INSTANT: User bor - darhol valid, loading yo'q
     if (user) {
       setIsValid(true)
@@ -122,7 +121,7 @@ function useAuthValidation() {
       authValidationCache.timestamp = Date.now()
       return
     }
-    
+
     // Cache tekshirish
     const now = Date.now()
     if (authValidationCache.isValid && (now - authValidationCache.timestamp) < AUTH_CACHE_TTL) {
@@ -130,7 +129,7 @@ function useAuthValidation() {
       setIsValidating(false)
       return
     }
-    
+
     // Agar allaqachon tekshirilayotgan bo'lsa, kutish
     if (authValidationCache.promise) {
       authValidationCache.promise
@@ -139,11 +138,11 @@ function useAuthValidation() {
         .finally(() => setIsValidating(false))
       return
     }
-    
+
     // Faqat user yo'q bo'lganda serverdan tekshirish
     setIsValidating(true)
     authValidationCache.promise = api.get('/auth/me')
-    
+
     authValidationCache.promise
       .then(() => {
         authValidationCache.isValid = true
@@ -160,7 +159,7 @@ function useAuthValidation() {
         setIsValidating(false)
       })
   }, [token, user, logout])
-  
+
   return { isValidating, isValid, token, user }
 }
 
@@ -178,7 +177,7 @@ if (typeof window !== 'undefined') {
 const BusinessRoute = ({ children }) => {
   const { user } = useAuthStore()
   const { isValidating, isValid, token } = useAuthValidation()
-  
+
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
@@ -191,7 +190,7 @@ const BusinessRoute = ({ children }) => {
 const FleetRoute = ({ children }) => {
   const { user } = useAuthStore()
   const { isValidating, isValid, token } = useAuthValidation()
-  
+
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
@@ -204,7 +203,7 @@ const FleetRoute = ({ children }) => {
 const DriverRoute = ({ children }) => {
   const { user } = useAuthStore()
   const { isValidating, isValid, token } = useAuthValidation()
-  
+
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role === 'admin') return <Navigate to="/fleet" replace />
@@ -217,7 +216,7 @@ const DriverRoute = ({ children }) => {
 const SuperAdminRoute = ({ children }) => {
   const { user } = useAuthStore()
   const { isValidating, isValid, token } = useAuthValidation()
-  
+
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role !== 'super_admin') return <Navigate to="/login" replace />
@@ -227,23 +226,22 @@ const SuperAdminRoute = ({ children }) => {
 function App() {
   const authReady = useInitAuth()
   const location = useLocation()
-  
+
   // 🔌 Global socket ulanishi
   useGlobalSocket()
-  
+
   // Auth yuklangunga qadar kutish
   if (!authReady) {
     return <PageLoader />
   }
-  
+
   // Fleet, dashboard, super-admin, driver - o'zlarining layout'lari bor, safe-area-wrapper kerak emas
   const noWrapperPaths = ['/', '/fleet', '/dashboard', '/super-admin', '/driver']
   const needsWrapper = !noWrapperPaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
-  
+
   return (
     <AlertProvider>
       <ScrollToTop />
-      <SubscriptionAlert />
       <Suspense fallback={<PageLoader />}>
         {needsWrapper ? (
           <div className="safe-area-wrapper">

@@ -1,14 +1,6 @@
 const mongoose = require('mongoose')
 
 const PaymentSchema = new mongoose.Schema({
-  // Bizning ichki ID - Payme uchun account.id sifatida ishlatiladi
-  idd: { 
-    type: String, 
-    unique: true, 
-    required: true,
-    index: true
-  },
-  
   // Payme tranzaksiya ID si
   paymeTransactionId: { type: String, index: true },
   
@@ -39,22 +31,16 @@ const PaymentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, refPath: 'userType' },
   userType: { type: String, enum: ['User', 'Businessman'], default: 'User' },
   type: { type: String, enum: ['fleet', 'business'], default: 'fleet' },
-  unitCount: { type: Number, default: 1 }, // mashina yoki haydovchi soni
+  unitCount: { type: Number, default: 1 },
   description: { type: String }
   
 }, { 
-  timestamps: false, // O'zimiz boshqaramiz
+  timestamps: false,
   versionKey: false 
 })
 
 // Indexlar
 PaymentSchema.index({ state: 1 })
 PaymentSchema.index({ user: 1, state: 1 })
-
-// ID generatsiya - trip_XXXX formatida
-PaymentSchema.statics.generateId = function() {
-  const random = Math.floor(1000 + Math.random() * 9000)
-  return `trip_${random}`
-}
 
 module.exports = mongoose.model('Payment', PaymentSchema)

@@ -24,11 +24,9 @@ router.post('/create', protect, async (req, res) => {
     }
     
     const totalPrice = Math.max(1, unitCount) * PRICE_PER_UNIT
-    const idd = Payment.generateId()
     
     // To'lov yaratish
     const payment = await Payment.create({
-      idd,
       amount: totalPrice * 100, // tiyinga o'tkazish
       state: 'created',
       user: userId,
@@ -42,9 +40,9 @@ router.post('/create', protect, async (req, res) => {
     const merchantId = process.env.PAYME_MERCHANT_ID
     const frontendUrl = process.env.FRONTEND_URL || 'https://avtojon.uz'
     
-    // Payme checkout URL
+    // Payme checkout URL - _id ishlatamiz
     const params = Buffer.from(
-      `m=${merchantId};ac.id=${idd};a=${payment.amount};c=${encodeURIComponent(frontendUrl + '/payment/success')}`
+      `m=${merchantId};ac.id=${payment._id};a=${payment.amount};c=${encodeURIComponent(frontendUrl + '/payment/success')}`
     ).toString('base64')
     
     const paymentUrl = `https://checkout.paycom.uz/${params}`
@@ -52,7 +50,7 @@ router.post('/create', protect, async (req, res) => {
     res.json({
       success: true,
       data: {
-        idd,
+        id: payment._id,
         amount: totalPrice,
         unitCount,
         paymentUrl
@@ -65,9 +63,9 @@ router.post('/create', protect, async (req, res) => {
 })
 
 // ============ TO'LOV HOLATINI TEKSHIRISH ============
-router.get('/status/:idd', async (req, res) => {
+router.get('/status/:id', async (req, res) => {
   try {
-    const payment = await Payment.findOne({ idd: req.params.idd })
+    const payment = await Payment.findById(req.params.id)
     
     if (!payment) {
       return res.status(404).json({ success: false, message: 'To\'lov topilmadi' })
@@ -76,7 +74,7 @@ router.get('/status/:idd', async (req, res) => {
     res.json({
       success: true,
       data: {
-        idd: payment.idd,
+        id: payment._id,
         state: payment.state,
         amount: payment.amount / 100,
         performedAt: payment.performedAt
@@ -162,12 +160,12 @@ function sendPaymeError(res, id, code, message) {
 
 // CheckPerformTransaction
 async function checkPerform(params) {
-  const idd = params.account?.id
-  if (!idd) {
+  const id = params.account?.id
+  if (!id) {
     return { error: { code: -31050, message: { uz: 'ID topilmadi', ru: 'ID не найден', en: 'ID not found' } } }
   }
   
-  const payment = await Payment.findOne({ idd })
+  const payment = await Payment.findById(id)
   if (!payment) {
     return { error: { code: -31050, message: { uz: 'To\'lov topilmadi', ru: 'Платеж не найден', en: 'Payment not found' } } }
   }
@@ -189,11 +187,11 @@ async function checkPerform(params) {
 
 // CreateTransaction
 async function createTransaction(params) {
-  const idd = params.account?.id
+  const id = params.account?.id
   const transactionId = params.id
   const time = params.time
   
-  const payment = await Payment.findOne({ idd })
+  const payment = await Payment.findById(id)
   if (!payment) {
     return { error: { code: -31050, message: { uz: 'To\'lov topilmadi', ru: 'Платеж не найден', en: 'Payment not found' } } }
   }
