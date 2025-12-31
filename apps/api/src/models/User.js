@@ -42,7 +42,13 @@ const userSchema = new mongoose.Schema({
     },
     endDate: {
       type: Date,
-      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 kun trial
+      default: () => {
+        // Test rejimda 1 daqiqa, production da 30 kun
+        const trialMs = process.env.TRIAL_MINUTES 
+          ? parseInt(process.env.TRIAL_MINUTES) * 60 * 1000 
+          : 30 * 24 * 60 * 60 * 1000 // 30 kun default
+        return new Date(Date.now() + trialMs)
+      }
     },
     isExpired: {
       type: Boolean,

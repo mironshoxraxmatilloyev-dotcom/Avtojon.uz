@@ -1,10 +1,18 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import { 
-  LayoutDashboard, Users, LogOut, Menu, X, BarChart3, 
-  Truck, ChevronRight, Sparkles
+import {
+  LayoutDashboard,
+  Users,
+  LogOut,
+  Menu,
+  X,
+  BarChart3,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react'
-import { useState, createContext, useContext, useEffect, memo } from 'react'
+import { useState, createContext, useContext, useEffect, memo, useRef } from 'react'
+import { BusinessSubscriptionBlocker } from '../subscription/SubscriptionBlocker'
+import api from '../../services/api'
 
 // Sidebar context
 const SidebarContext = createContext()
@@ -50,21 +58,80 @@ const AnimatedNavItem = memo(function AnimatedNavItem({ path, icon: Icon, label,
 })
 
 export default function DashboardLayout() {
-  const { user, logout } = useAuthStore()
+  const { user, logout, isDemo } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [subscriptionExpired, setSubscriptionExpired] = useState(false)
+  const [driverCount, setDriverCount] = useState(1)
+  const isMounted = useRef(true)
+  const isDemoMode = isDemo()
+
+  // Unmount tracking
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   // Entrance animation
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  // 🔥 Subscription tekshirish - barcha sahifalar uchun
+  useEffect(() => {
+    if (isDemoMode) return
+
+    // Haydovchilar sonini olish
+    api
+      .get('/drivers')
+      .then((res) => {
+        if (isMounted.current) {
+          setDriverCount(res.data.data?.length || 1)
+        }
+      })
+      .catch(() => {})
+
+    // User dan subscription.endDate ni tekshirish
+    const endDate = user?.subscription?.endDate
+    if (endDate) {
+      const expiryDate = new Date(endDate)
+      if (expiryDate < new Date()) {
+        setSubscriptionExpired(true)
+        return
+      }
+    }
+
+    // Eski format - subscriptionExpiry
+    if (user?.subscriptionExpiry) {
+      const expiryDate = new Date(user.subscriptionExpiry)
+      if (expiryDate < new Date()) {
+        setSubscriptionExpired(true)
+        return
+      }
+    }
+
+    // Eski format - trialEndsAt
+    if (user?.trialEndsAt) {
+      const trialEnd = new Date(user.trialEndsAt)
+      if (trialEnd < new Date()) {
+        setSubscriptionExpired(true)
+        return
+      }
+    }
+  }, [isDemoMode, user?.subscription?.endDate, user?.subscriptionExpiry, user?.trialEndsAt])
+
+  // 🔥 Obuna tugagan bo'lsa - blocker ko'rsatish (barcha sahifalar uchun)
+  if (subscriptionExpired && !isDemoMode) {
+    return <BusinessSubscriptionBlocker driverCount={driverCount} />
+  }
+
   const handleLogout = () => {
     const isDemo = user?.username === 'demo'
     logout()
-    // Demo rejimda bosh sahifaga, aks holda login sahifasiga
     navigate(isDemo ? '/' : '/login')
   }
 

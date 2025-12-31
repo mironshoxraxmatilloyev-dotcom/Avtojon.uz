@@ -20,6 +20,11 @@ apps/api/.env
 apps/api/.env.production
 apps/web/.env
 
+# Secret files
+token
+*.key
+*.pem
+
 # Logs
 *.log
 npm-debug.log*
