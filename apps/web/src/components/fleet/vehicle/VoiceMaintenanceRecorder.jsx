@@ -102,21 +102,38 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
       source.connect(analyser)
       analyserRef.current = analyser
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-      })
+      // Qo'llab-quvvatlanadigan formatni aniqlash
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/mp4'
+      
+      console.log('🎙️ Using mimeType:', mimeType)
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = mediaRecorder
       
       mediaRecorder.ondataavailable = (e) => {
+        console.log('📦 Audio chunk:', e.data.size, 'bytes')
         if (e.data.size > 0) audioChunksRef.current.push(e.data)
       }
       
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType })
+        console.log('🛑 Recording stopped, chunks:', audioChunksRef.current.length)
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
+        console.log('📁 Total audio size:', audioBlob.size, 'bytes')
+        if (audioBlob.size < 5000) {
+          setError('Audio juda qisqa yoki bo\'sh. Qaytadan urinib ko\'ring.')
+          return
+        }
         await processAudio(audioBlob)
       }
       
-      mediaRecorder.start(100)
+      // timeslice'siz start - faqat stop'da chunk keladi
+      mediaRecorder.start()
+      console.log('🔴 Recording started')
+      
       setIsRecording(true)
       setRecordingTime(0)
       timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)

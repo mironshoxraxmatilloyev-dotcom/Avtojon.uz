@@ -200,15 +200,14 @@ const EmptyState = memo(({ onAdd }) => (
 
 export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-3">
       {/* Daromad turi */}
       <div>
-        <label className="block text-sm text-gray-600 mb-2">Daromad turi</label>
+        <label className="block text-sm text-gray-600 mb-1.5">Daromad turi</label>
         <div className="grid grid-cols-2 gap-2">
-          {Object.entries(INCOME_TYPES).map(([key, { label, icon: Icon, color, description }]) => {
+          {Object.entries(INCOME_TYPES).map(([key, { label, icon: Icon, color }]) => {
             const isSelected = form.type === key
             const bgColors = { blue: 'bg-blue-50 border-blue-300', purple: 'bg-purple-50 border-purple-300', emerald: 'bg-emerald-50 border-emerald-300', amber: 'bg-amber-50 border-amber-300' }
-            const iconBgColors = { blue: 'bg-blue-100', purple: 'bg-purple-100', emerald: 'bg-emerald-100', amber: 'bg-amber-100' }
             const iconColors = { blue: 'text-blue-500', purple: 'text-purple-500', emerald: 'text-emerald-500', amber: 'text-amber-500' }
 
             return (
@@ -216,19 +215,13 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 key={key}
                 type="button"
                 onClick={() => setForm({ ...form, type: key })}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isSelected
+                className={`flex items-center gap-2 p-2.5 rounded-lg border transition-all text-left ${isSelected
                   ? bgColors[color]
-                  : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                  : 'bg-gray-50 border-gray-200'
                   }`}
               >
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isSelected ? iconBgColors[color] : 'bg-gray-100'
-                  }`}>
-                  <Icon className={`w-5 h-5 ${isSelected ? iconColors[color] : 'text-gray-400'}`} />
-                </div>
-                <div>
-                  <p className={`font-medium ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>{label}</p>
-                  <p className="text-xs text-gray-400">{description}</p>
-                </div>
+                <Icon className={`w-4 h-4 ${isSelected ? iconColors[color] : 'text-gray-400'}`} />
+                <span className={`text-sm font-medium ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>{label}</span>
               </button>
             )
           })}
@@ -236,19 +229,19 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
       </div>
 
       {/* Sana va Summa */}
-      <div className={`grid gap-4 ${form.type === 'rental' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      <div className={`grid gap-3 ${form.type === 'rental' ? 'grid-cols-1' : 'grid-cols-2'}`}>
         <div>
-          <label className="block text-sm text-gray-600 mb-1.5">Sana</label>
+          <label className="block text-sm text-gray-600 mb-1">Sana</label>
           <input
             type="date"
             value={form.date || ''}
             onChange={e => setForm({ ...form, date: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none"
           />
         </div>
         {form.type !== 'rental' && (
           <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Summa (so'm) *</label>
+            <label className="block text-sm text-gray-600 mb-1">Summa *</label>
             <input
               type="text"
               inputMode="numeric"
@@ -258,58 +251,57 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
                 setForm({ ...form, amount: raw })
               }}
               placeholder="5 000 000"
-              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.amount ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'
-                }`}
+              className={`w-full px-3 py-2.5 bg-gray-50 border rounded-lg text-gray-900 focus:outline-none font-medium ${errors.amount ? 'border-red-500' : 'border-gray-200 focus:border-emerald-500'}`}
             />
             {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
           </div>
         )}
       </div>
 
-      {/* Marshrut uchun qo'shimcha maydonlar */}
+      {/* Marshrut uchun */}
       {form.type === 'trip' && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1.5">Qayerdan</label>
+              <label className="block text-sm text-gray-600 mb-1">Qayerdan</label>
               <input
                 type="text"
                 value={form.fromCity || ''}
                 onChange={e => setForm({ ...form, fromCity: e.target.value })}
                 placeholder="Toshkent"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1.5">Qayerga</label>
+              <label className="block text-sm text-gray-600 mb-1">Qayerga</label>
               <input
                 type="text"
                 value={form.toCity || ''}
                 onChange={e => setForm({ ...form, toCity: e.target.value })}
                 placeholder="Samarqand"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none"
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1.5">Yuk (tonna)</label>
+              <label className="block text-sm text-gray-600 mb-1">Yuk (t)</label>
               <input
                 type="number"
                 value={form.cargoWeight || ''}
                 onChange={e => setForm({ ...form, cargoWeight: e.target.value })}
                 placeholder="20"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1.5">Mijoz</label>
+              <label className="block text-sm text-gray-600 mb-1">Mijoz</label>
               <input
                 type="text"
                 value={form.clientName || ''}
                 onChange={e => setForm({ ...form, clientName: e.target.value })}
                 placeholder="Mijoz nomi"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none"
               />
             </div>
           </div>
@@ -318,84 +310,77 @@ export const IncomeForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => 
 
       {/* Ijara uchun */}
       {form.type === 'rental' && (
-        <div className="space-y-4">
-          {/* Kunlar soni */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Kunlar soni *</label>
-            <input
-              type="number"
-              value={form.rentalDays || ''}
-              onChange={e => {
-                const days = e.target.value
-                setForm(prev => {
-                  const newForm = { ...prev, rentalDays: days }
-                  // Agar kunlik narx kiritilgan bo'lsa, jami summani hisoblash
-                  if (prev.rentalRate && days && Number(days) > 0) {
-                    newForm.amount = String(Number(prev.rentalRate) * Number(days))
-                  }
-                  return newForm
-                })
-              }}
-              placeholder="7"
-              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.rentalDays ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'}`}
-            />
-            {errors.rentalDays && <p className="text-red-500 text-xs mt-1">{errors.rentalDays}</p>}
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Kunlar *</label>
+              <input
+                type="number"
+                value={form.rentalDays || ''}
+                onChange={e => {
+                  const days = e.target.value
+                  setForm(prev => {
+                    const newForm = { ...prev, rentalDays: days }
+                    if (prev.rentalRate && days && Number(days) > 0) {
+                      newForm.amount = String(Number(prev.rentalRate) * Number(days))
+                    }
+                    return newForm
+                  })
+                }}
+                placeholder="7"
+                className={`w-full px-3 py-2.5 bg-gray-50 border rounded-lg text-gray-900 focus:outline-none font-medium ${errors.rentalDays ? 'border-red-500' : 'border-gray-200 focus:border-emerald-500'}`}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Kunlik narx *</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.rentalRate ? fmt(form.rentalRate) : ''}
+                onChange={e => {
+                  const raw = e.target.value.replace(/\s/g, '').replace(/\D/g, '')
+                  setForm(prev => {
+                    const newForm = { ...prev, rentalRate: raw }
+                    if (prev.rentalDays && raw && Number(prev.rentalDays) > 0) {
+                      newForm.amount = String(Number(raw) * Number(prev.rentalDays))
+                    }
+                    return newForm
+                  })
+                }}
+                placeholder="500 000"
+                className={`w-full px-3 py-2.5 bg-gray-50 border rounded-lg text-gray-900 focus:outline-none font-medium ${errors.rentalRate ? 'border-red-500' : 'border-gray-200 focus:border-emerald-500'}`}
+              />
+            </div>
           </div>
 
-          {/* Kunlik narx */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Kunlik narx (so'm) *</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={form.rentalRate ? fmt(form.rentalRate) : ''}
-              onChange={e => {
-                const raw = e.target.value.replace(/\s/g, '').replace(/\D/g, '')
-                setForm(prev => {
-                  const newForm = { ...prev, rentalRate: raw }
-                  // Agar kunlar kiritilgan bo'lsa, jami summani hisoblash
-                  if (prev.rentalDays && raw && Number(prev.rentalDays) > 0) {
-                    newForm.amount = String(Number(raw) * Number(prev.rentalDays))
-                  }
-                  return newForm
-                })
-              }}
-              placeholder="500 000"
-              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-gray-900 focus:outline-none focus:ring-2 text-lg font-medium ${errors.rentalRate ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20'}`}
-            />
-            {errors.rentalRate && <p className="text-red-500 text-xs mt-1">{errors.rentalRate}</p>}
-          </div>
-
-          {/* Umumiy foyda - avtomatik hisoblanadi */}
           {form.rentalDays && form.rentalRate && Number(form.rentalDays) > 0 && Number(form.rentalRate) > 0 && (
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-5">
-              <p className="text-sm text-emerald-600 mb-1">Umumiy foyda</p>
-              <p className="text-emerald-700 font-bold text-2xl">
-                {fmt(Number(form.rentalDays) * Number(form.rentalRate))} so'm
-              </p>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-600 text-sm">Jami:</span>
+                <span className="text-emerald-700 font-bold">{fmt(Number(form.rentalDays) * Number(form.rentalRate))} so'm</span>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Izoh - barcha turlar uchun */}
+      {/* Izoh */}
       <div>
-        <label className="block text-sm text-gray-600 mb-1.5">Izoh</label>
+        <label className="block text-sm text-gray-600 mb-1">Izoh</label>
         <textarea
           value={form.description || ''}
           onChange={e => setForm({ ...form, description: e.target.value })}
-          placeholder="Qo'shimcha ma'lumot (ixtiyoriy)"
+          placeholder="Qo'shimcha ma'lumot"
           rows={2}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+          className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:border-emerald-500 focus:outline-none resize-none"
         />
       </div>
 
       <button
         type="submit"
-        className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
+        className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
       >
-        <DollarSign size={18} />
-        {isEdit ? 'Saqlash' : 'Daromad qo\'shish'}
+        {isEdit ? 'Saqlash' : 'Qo\'shish'}
       </button>
     </form>
   )

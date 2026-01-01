@@ -14,8 +14,161 @@ const getBusinessmanId = (req) => {
 
 // Helper: Mashina ownership tekshirish
 const checkVehicleOwnership = async (vehicleId, userId) => {
-  const vehicle = await Vehicle.findOne({ _id: vehicleId, user: userId, isActive: true }).select('_id currentOdometer').lean()
+  const vehicle = await Vehicle.findOne({ _id: vehicleId, user: userId, isActive: true })
+    .select('_id currentOdometer oilChangeIntervalKm serviceIntervalKm')
+    .lean()
   return vehicle
+}
+
+// Helper: Ogohlantirish yaratish/yangilash
+const checkAndCreateAlerts = async (vehicleId, businessmanId) => {
+  try {
+    const vehicle = await Vehicle.findById(vehicleId).lean()
+    if (!vehicle) return
+    
+    const currentOdo = vehicle.currentOdometer || 0
+    
+    // Oxirgi moy almashtirishni olish
+    const lastOilChange = await OilChange.findOne({ vehicle: vehicleId })
+      .sort({ date: -1 }).lean()
+    
+    // Moy almashtirish ogohlantirishi
+    if (lastOilChange) {
+      const nextOdo = lastOilChange.nextChangeOdometer || (lastOilChange.odometer + 10000)
+      const remainingKm = nextOdo - currentOdo
+      
+      // Eski alertni o'chirish
+      await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'oil', isResolved: false })
+      
+      if (remainingKm <= 0) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'oil',
+          severity: 'danger',
+          message: `Moy almashtirish vaqti o'tdi! ${Math.abs(remainingKm)} km ortiqcha yurildi`,
+          threshold: remainingKm
+        })
+      } else if (remainingKm <= 1000) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'oil',
+          severity: 'warning',
+          message: `Moy almashtirishga ${remainingKm} km qoldi`,
+          threshold: remainingKm
+        })
+      } else if (remainingKm <= 2000) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'oil',
+          severity: 'info',
+          message: `Moy almashtirishga ${remainingKm} km qoldi`,
+          threshold: remainingKm
+        })
+      }
+    }
+    
+    // Shina ogohlantirishi
+    const tires = await Tire.find({ vehicle: vehicleId, status: { $ne: 'replaced' } }).lean()
+    await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'tire', isResolved: false })
+    
+    for (const tire of tires) {
+      const usedKm = Math.max(0, currentOdo - (tire.installOdometer || 0))
+      const expectedLife = tire.expectedLifeKm || 80000
+      const remainingKm = expectedLife - usedKm
+      
+      if (remainingKm <= 0) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'tire',
+          severity: 'danger',
+          message: `${tire.position} shina almashtirish kerak! ${Math.abs(remainingKm)} km ortiqcha yurildi`,
+          threshold: remainingKm
+        })
+      } else if (remainingKm <= 5000) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'tire',
+          severity: 'warning',
+          message: `${tire.position} shinaga ${remainingKm} km qoldi`,
+          threshold: remainingKm
+        })
+      }
+    }
+    
+    // Texnik xizmat ogohlantirishi
+    const lastService = await ServiceLog.findOne({ vehicle: vehicleId })
+      .sort({ date: -1 }).lean()
+    
+    await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'service', isResolved: false })
+    
+    if (lastService) {
+      const nextServiceOdo = lastService.nextServiceOdometer || (lastService.odometer + 30000)
+      const remainingKm = nextServiceOdo - currentOdo
+      
+      if (remainingKm <= 0) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'service',
+          severity: 'warning',
+          message: `Texnik xizmat vaqti keldi! ${Math.abs(remainingKm)} km ortiqcha yurildi`,
+          threshold: remainingKm
+        })
+      } else if (remainingKm <= 3000) {
+        await VehicleAlert.create({
+          vehicle: vehicleId,
+          businessman: businessmanId,
+          type: 'service',
+          severity: 'info',
+          message: `Texnik xizmatga ${remainingKm} km qoldi`,
+          threshold: remainingKm
+        })
+      }
+    }
+    
+    console.log(`✅ Alerts checked for vehicle ${vehicleId}`)
+  } catch (err) {
+    console.error('❌ Alert check error:', err.message)
+  }
+}
+
+// Helper: Yoqilg'i sarfini hisoblash
+const calculateFuelConsumption = async (vehicleId, currentOdometer, currentLiters) => {
+  try {
+    // Oldingi yoqilg'i to'ldirishni topish
+    const lastRefill = await FuelRefill.findOne({ vehicle: vehicleId })
+      .sort({ odometer: -1 }).lean()
+    
+    if (!lastRefill || !lastRefill.odometer) {
+      return { distanceTraveled: null, fuelConsumption: null, previousOdometer: 0 }
+    }
+    
+    const distanceTraveled = currentOdometer - lastRefill.odometer
+    
+    if (distanceTraveled <= 0) {
+      return { distanceTraveled: 0, fuelConsumption: null, previousOdometer: lastRefill.odometer }
+    }
+    
+    // Sarflanish = (litr / km) * 100 = L/100km
+    // Yoki km/litr (metan uchun km/kub)
+    const fuelConsumption = Math.round((currentLiters / distanceTraveled) * 100 * 10) / 10
+    const kmPerUnit = Math.round((distanceTraveled / currentLiters) * 10) / 10
+    
+    return { 
+      distanceTraveled, 
+      fuelConsumption, // L/100km
+      kmPerUnit, // km/litr yoki km/kub
+      previousOdometer: lastRefill.odometer 
+    }
+  } catch (err) {
+    console.error('❌ Fuel consumption calc error:', err.message)
+    return { distanceTraveled: null, fuelConsumption: null, previousOdometer: 0 }
+  }
 }
 
 // Helper: Validatsiya
@@ -156,29 +309,54 @@ router.post('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: errors.join(', ') })
     }
     
-    // Oldingi to'ldirishni topish
-    const lastRefill = await FuelRefill.findOne({ vehicle: vehicleId })
-      .select('odometer')
-      .sort({ odometer: -1 })
-      .lean()
+    // Yoqilg'i sarfini hisoblash (agar odometer berilgan bo'lsa)
+    let consumptionData = { distanceTraveled: null, fuelConsumption: null, previousOdometer: 0 }
+    if (body.odometer && body.liters) {
+      consumptionData = await calculateFuelConsumption(vehicleId, body.odometer, body.liters)
+    }
     
     const refill = await FuelRefill.create({
       ...body,
       vehicle: vehicleId,
       businessman: businessmanId,
       pricePerLiter: body.liters ? Math.round(body.cost / body.liters) : 0,
-      previousOdometer: lastRefill?.odometer || 0
+      previousOdometer: consumptionData.previousOdometer,
+      distanceTraveled: consumptionData.distanceTraveled,
+      fuelConsumption: consumptionData.fuelConsumption
     })
 
     // Mashina odometrini yangilash (faqat kattaroq bo'lsa)
+    let maintenanceAlerts = []
     if (body.odometer && body.odometer > (vehicle.currentOdometer || 0)) {
       await Vehicle.findByIdAndUpdate(vehicleId, { 
         currentOdometer: body.odometer,
-        lastFuelDate: body.date || new Date()
+        lastFuelDate: body.date || new Date(),
+        // Hisoblangan yoqilg'i sarfini saqlash
+        calculatedFuelConsumption: consumptionData.fuelConsumption || vehicle.calculatedFuelConsumption,
+        lastCalculatedAt: new Date()
       })
+      
+      // Alertlarni tekshirish (odometer yangilanganda)
+      await checkAndCreateAlerts(vehicleId, businessmanId)
+      
+      // Yangi alertlarni olish va response da qaytarish
+      maintenanceAlerts = await VehicleAlert.find({ 
+        vehicle: vehicleId, 
+        isResolved: false,
+        severity: { $in: ['warning', 'danger'] }
+      }).select('type severity message threshold').lean()
     }
     
-    res.status(201).json({ success: true, data: refill })
+    // Javobga sarflanish ma'lumotlarini qo'shish
+    const responseData = {
+      ...refill.toObject(),
+      consumption: consumptionData.fuelConsumption 
+        ? `${consumptionData.fuelConsumption} L/100km (${consumptionData.kmPerUnit} km/L)`
+        : null,
+      alerts: maintenanceAlerts // Ogohlantirish xabarlari
+    }
+    
+    res.status(201).json({ success: true, data: responseData })
   } catch (err) {
     console.error('❌ Fuel POST error:', err.message)
     res.status(500).json({ success: false, message: err.message })
@@ -252,7 +430,7 @@ router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params
     const businessmanId = getBusinessmanId(req)
-    const { _id, ...body } = req.body
+    const { _id, nextChangeKm, ...body } = req.body
     
     // Ownership tekshirish
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
@@ -266,25 +444,50 @@ router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: errors.join(', ') })
     }
     
+    // Keyingi almashtirish odometrini hisoblash
+    const oilChangeInterval = vehicle.oilChangeIntervalKm || 10000
+    const currentOdo = Number(body.odometer) || vehicle.currentOdometer || 0
+    
+    // nextChangeKm yoki nextChangeOdometer dan foydalanish
+    let nextChangeOdometer = body.nextChangeOdometer
+    if (!nextChangeOdometer && nextChangeKm) {
+      nextChangeOdometer = currentOdo + Number(nextChangeKm)
+    }
+    if (!nextChangeOdometer) {
+      nextChangeOdometer = currentOdo + oilChangeInterval
+    }
+    
     const change = await OilChange.create({
       ...body,
       vehicle: vehicleId,
       businessman: businessmanId,
-      nextChangeOdometer: body.nextChangeOdometer || (Number(body.odometer) + 10000)
+      nextChangeOdometer
     })
     
-    // Mashina odometrini yangilash (faqat kattaroq bo'lsa)
-    if (body.odometer && body.odometer > (vehicle.currentOdometer || 0)) {
-      await Vehicle.findByIdAndUpdate(vehicleId, { 
-        currentOdometer: body.odometer,
-        lastOilChangeDate: body.date || new Date(),
-        lastOilChangeOdometer: body.odometer
-      })
+    // Mashina odometrini va moy ma'lumotlarini yangilash
+    const updateData = {
+      lastOilChangeDate: body.date || new Date(),
+      lastOilChangeOdometer: currentOdo
     }
     
-    res.status(201).json({ success: true, data: change })
+    if (currentOdo > (vehicle.currentOdometer || 0)) {
+      updateData.currentOdometer = currentOdo
+    }
+    
+    await Vehicle.findByIdAndUpdate(vehicleId, updateData)
+    
+    // Eski moy alertlarini o'chirish (moy almashtirildi)
+    await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'oil', isResolved: false })
+    
+    // Javobga keyingi almashtirish ma'lumotini qo'shish
+    const responseData = {
+      ...change.toObject(),
+      nextChangeInfo: `Keyingi almashtirish: ${nextChangeOdometer.toLocaleString()} km da`
+    }
+    
+    res.status(201).json({ success: true, data: responseData })
   } catch (err) {
-    console.error('❌ Oil POST error:', err.message)
+    console.error('❌ Oil POST error:', err.message, err.stack)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -383,6 +586,16 @@ router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
       businessman: businessmanId
     })
     
+    // Shu pozitsiyadagi eski shina alertini o'chirish
+    if (body.position) {
+      await VehicleAlert.deleteMany({ 
+        vehicle: vehicleId, 
+        type: 'tire', 
+        isResolved: false,
+        message: { $regex: body.position, $options: 'i' }
+      })
+    }
+    
     res.status(201).json({ success: true, data: tire })
   } catch (err) {
     console.error('❌ Tire POST error:', err.message)
@@ -474,6 +687,9 @@ router.post('/vehicles/:vehicleId/services', protect, async (req, res) => {
         lastServiceDate: body.date || new Date()
       })
     }
+    
+    // Texnik xizmat alertini o'chirish
+    await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'service', isResolved: false })
     
     res.status(201).json({ success: true, data: service })
   } catch (err) {
@@ -1131,21 +1347,25 @@ router.get('/fleet/alerts', protect, async (req, res) => {
     // Har bir mashina uchun alertlarni tekshirish
     for (const vehicle of vehicles) {
       const vId = vehicle._id.toString()
+      const currentOdo = vehicle.currentOdometer || 0
       
       // 1. Moy almashtirish tekshiruvi
       const lastOil = oilChanges.find(o => o.vehicle.toString() === vId)
       if (lastOil) {
-        const nextOilKm = (lastOil.odometer || 0) + (lastOil.nextChangeKm || 10000)
-        const kmLeft = nextOilKm - (vehicle.currentOdometer || 0)
+        const oilInterval = vehicle.oilChangeIntervalKm || 10000
+        const nextOilKm = lastOil.nextChangeOdometer || ((lastOil.odometer || 0) + oilInterval)
+        const kmLeft = nextOilKm - currentOdo
         
-        if (kmLeft <= 1000) {
+        if (kmLeft <= 2000) {
           alerts.push({
             type: 'oil',
             vehicleId: vehicle._id,
             plateNumber: vehicle.plateNumber,
-            message: kmLeft <= 0 ? 'Moy almashtirish vaqti o\'tdi!' : `${kmLeft} km qoldi`,
+            message: kmLeft <= 0 
+              ? `Moy almashtirish kerak! ${Math.abs(kmLeft).toLocaleString()} km o'tib ketdi` 
+              : `Moy almashtirishga ${kmLeft.toLocaleString()} km qoldi`,
             severity: kmLeft <= 0 ? 'danger' : 'warning',
-            kmLeft
+            threshold: kmLeft
           })
         }
       }
@@ -1153,18 +1373,21 @@ router.get('/fleet/alerts', protect, async (req, res) => {
       // 2. Shina tekshiruvi
       const vTires = tires.filter(t => t.vehicle.toString() === vId)
       for (const tire of vTires) {
-        const kmUsed = (vehicle.currentOdometer || 0) - (tire.installedAtKm || 0)
-        const maxKm = tire.maxKm || 50000
-        const kmLeft = maxKm - kmUsed
+        const installOdo = tire.installOdometer || 0
+        const expectedLife = tire.expectedLifeKm || 80000
+        const kmUsed = currentOdo - installOdo
+        const kmLeft = expectedLife - kmUsed
         
-        if (kmLeft <= 5000) {
+        if (kmLeft <= 10000) {
           alerts.push({
             type: 'tire',
             vehicleId: vehicle._id,
             plateNumber: vehicle.plateNumber,
-            message: `${tire.position || 'Shina'}: ${kmLeft <= 0 ? 'Almashtirish kerak!' : `${kmLeft} km qoldi`}`,
+            message: kmLeft <= 0 
+              ? `${tire.position} shina almashtirish kerak!` 
+              : `${tire.position} shinaga ${kmLeft.toLocaleString()} km qoldi`,
             severity: kmLeft <= 0 ? 'danger' : 'warning',
-            kmLeft
+            threshold: kmLeft
           })
         }
       }
@@ -1173,24 +1396,33 @@ router.get('/fleet/alerts', protect, async (req, res) => {
       const lastService = services.find(s => s.vehicle.toString() === vId)
       if (lastService) {
         const daysSinceService = Math.floor((today - new Date(lastService.date)) / (1000 * 60 * 60 * 24))
-        if (daysSinceService >= 180) {
+        const serviceInterval = vehicle.serviceIntervalKm || 30000
+        const nextServiceKm = (lastService.odometer || 0) + serviceInterval
+        const kmLeft = nextServiceKm - currentOdo
+        
+        if (daysSinceService >= 180 || kmLeft <= 3000) {
           alerts.push({
             type: 'service',
             vehicleId: vehicle._id,
             plateNumber: vehicle.plateNumber,
-            message: `Oxirgi xizmatdan ${daysSinceService} kun o'tdi`,
-            severity: daysSinceService >= 365 ? 'danger' : 'warning',
-            daysLeft: 0
+            message: kmLeft <= 0 
+              ? `Texnik xizmat kerak! ${Math.abs(kmLeft).toLocaleString()} km o'tib ketdi`
+              : daysSinceService >= 180 
+                ? `Texnik xizmat kerak! ${daysSinceService} kun o'tdi`
+                : `Texnik xizmatga ${kmLeft.toLocaleString()} km qoldi`,
+            severity: (kmLeft <= 0 || daysSinceService >= 365) ? 'danger' : 'warning',
+            threshold: kmLeft
           })
         }
-      } else if (vehicle.currentOdometer > 10000) {
-        // Hech qachon xizmat ko'rsatilmagan
+      } else if (currentOdo > 15000) {
+        // Hech qachon xizmat ko'rsatilmagan va 15000 km dan oshgan
         alerts.push({
           type: 'service',
           vehicleId: vehicle._id,
           plateNumber: vehicle.plateNumber,
-          message: 'Texnik xizmat tavsiya etiladi',
-          severity: 'warning'
+          message: `Texnik xizmat kerak! ${currentOdo.toLocaleString()} km yurildi`,
+          severity: currentOdo > 30000 ? 'danger' : 'warning',
+          threshold: 0
         })
       }
     }

@@ -13,7 +13,7 @@ const fmt = (n) => {
 export const HomeTab = memo(({ 
   vehicles, stats, search, setSearch, onVehicleClick, 
   onEdit, onDelete, showMenu, setShowMenu, loading, openModal,
-  fleetAnalytics
+  fleetAnalytics, onAlertClick
 }) => {
   const totalIncome = fleetAnalytics?.summary?.totalIncome || 0
   const totalExpenses = fleetAnalytics?.summary?.totalExpenses || 0
@@ -44,10 +44,12 @@ export const HomeTab = memo(({
         />
         <ProStatCard
           icon={Clock}
-          label="Muddati kelayotgan"
+          label="Diqqat talab"
           value={alertsCount}
           color="orange"
           pulse={alertsCount > 0}
+          onClick={onAlertClick}
+          clickable={alertsCount > 0}
         />
       </div>
 
@@ -107,7 +109,7 @@ export const HomeTab = memo(({
 })
 
 // PRO Stat Card Component
-const ProStatCard = memo(({ icon: Icon, label, value, suffix, color, trend, percent, pulse, subValue }) => {
+const ProStatCard = memo(({ icon: Icon, label, value, suffix, color, trend, percent, pulse, subValue, onClick, clickable }) => {
   const colors = {
     indigo: {
       bg: 'bg-gradient-to-br from-indigo-50 via-indigo-50/50 to-blue-50',
@@ -160,9 +162,14 @@ const ProStatCard = memo(({ icon: Icon, label, value, suffix, color, trend, perc
   }
 
   const c = colors[color]
+  
+  const CardWrapper = clickable ? 'button' : 'div'
 
   return (
-    <div className={`relative overflow-hidden ${c.bg} rounded-2xl p-5 lg:p-6 border-2 ${c.border} group hover:shadow-lg transition-all duration-300`}>
+    <CardWrapper 
+      onClick={clickable ? onClick : undefined}
+      className={`relative overflow-hidden ${c.bg} rounded-2xl p-5 lg:p-6 border-2 ${c.border} group hover:shadow-lg transition-all duration-300 text-left w-full ${clickable ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+    >
       {/* Decorative gradient */}
       <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/40 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
       
@@ -198,7 +205,7 @@ const ProStatCard = memo(({ icon: Icon, label, value, suffix, color, trend, perc
           <p className={`text-xs font-semibold ${c.text} mt-2`}>{trend}</p>
         )}
       </div>
-    </div>
+    </CardWrapper>
   )
 })
 

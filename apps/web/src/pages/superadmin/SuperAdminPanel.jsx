@@ -11,6 +11,7 @@ import {
   Sidebar, MobileHeader, DashboardTab, StatsTab, 
   CredentialsModal, PasswordModal, SubscriptionModal, BusinessmanModal 
 } from '../../components/superadmin'
+import SmsPanel from '../../components/admin/SmsPanel'
 
 export default function SuperAdminPanel() {
   const { logout } = useAuthStore()
@@ -42,6 +43,16 @@ export default function SuperAdminPanel() {
   const [subscriptionModal, setSubscriptionModal] = useState(null)
   const [subscriptionDays, setSubscriptionDays] = useState(30)
   const [subscriptionLoading, setSubscriptionLoading] = useState(false)
+
+  // Tab o'zgarganda modallarni yopish
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab)
+    setShowModal(false)
+    setShowCredentials(null)
+    setPasswordModal(null)
+    setSubscriptionModal(null)
+    setEditingBusinessman(null)
+  }
 
   useEffect(() => { fetchStats() }, [])
   useEffect(() => { if (activeTab === 'businessmen') fetchBusinessmen() }, [activeTab])
@@ -175,13 +186,14 @@ export default function SuperAdminPanel() {
   // Render content
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <DashboardTab stats={stats} setActiveTab={setActiveTab} />
-      case 'stats': return <StatsTab stats={stats} setActiveTab={setActiveTab} />
+      case 'dashboard': return <DashboardTab stats={stats} setActiveTab={handleTabChange} />
+      case 'stats': return <StatsTab stats={stats} setActiveTab={handleTabChange} />
+      case 'sms': return <SmsPanel />
       case 'businessmen': return renderBusinessmen()
       case 'users': return renderUsers()
       case 'drivers': return renderDrivers()
       case 'vehicles': return renderVehicles()
-      default: return <DashboardTab stats={stats} setActiveTab={setActiveTab} />
+      default: return <DashboardTab stats={stats} setActiveTab={handleTabChange} />
     }
   }
 
@@ -234,7 +246,7 @@ export default function SuperAdminPanel() {
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-lg truncate">{b.fullName}</p>
                   <p className="text-slate-400 text-sm">@{b.username}</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
                     <span className="text-xs text-slate-500 flex items-center gap-1">
                       <Building2 size={12} /> {b.businessType}
                     </span>
@@ -244,6 +256,10 @@ export default function SuperAdminPanel() {
                       </span>
                     )}
                   </div>
+                  {/* Ro'yxatdan o'tgan sana */}
+                  <p className="text-xs text-slate-500 mt-1">
+                    Ro'yxatdan o'tdi: {b.createdAt ? formatDate(b.createdAt) : 'Noma\'lum'}
+                  </p>
                 </div>
               </div>
               
@@ -314,6 +330,9 @@ export default function SuperAdminPanel() {
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-lg truncate">{u.fullName || 'Noma\'lum'}</p>
                   <p className="text-slate-400 text-sm">@{u.username}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Ro'yxatdan o'tdi: {u.createdAt ? formatDate(u.createdAt) : 'Noma\'lum'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
@@ -409,13 +428,13 @@ export default function SuperAdminPanel() {
       {/* Sidebar - fixed position */}
       <div className="hidden lg:block w-64 flex-shrink-0">
         <div className="fixed top-0 left-0 h-screen w-64 z-40 overflow-hidden">
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
+          <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
         </div>
       </div>
       
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
+        <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
       </div>
 
       {/* Main Content */}
@@ -437,6 +456,26 @@ export default function SuperAdminPanel() {
 }
 
 // Helper Components
+function formatDate(dateString) {
+  if (!dateString) return 'Noma\'lum'
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now - date
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) return 'Bugun'
+  if (diffDays === 1) return 'Kecha'
+  if (diffDays < 7) return `${diffDays} kun oldin`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta oldin`
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} oy oldin`
+  
+  return date.toLocaleDateString('uz-UZ', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  })
+}
+
 function ActionButton({ icon: Icon, color, onClick, title }) {
   const colors = {
     violet: 'text-violet-400 hover:bg-violet-500/20',

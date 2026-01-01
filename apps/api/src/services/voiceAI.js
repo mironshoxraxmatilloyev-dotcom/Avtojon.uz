@@ -31,17 +31,32 @@ const transcribeAudio = async (audioBuffer, language = 'uz', retries = 2) => {
 
   let lastError = null
   
+  // O'zbek tili uchun prompt - Whisper'ga kontekst berish
+  const languagePrompts = {
+    uz: "Bu o'zbek tilida yozilgan audio. Yuk tashish, mashina, haydovchi, benzin, ta'mirlash, pul, summa haqida gap ketmoqda.",
+    ru: "Это аудио на русском языке о грузоперевозках, машинах, водителях, бензине, ремонте, деньгах.",
+    en: "This is about trucking, vehicles, drivers, fuel, maintenance, and payments."
+  }
+  
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       // Buffer ni File ga o'tkazish
       const file = new File([audioBuffer], 'audio.webm', { type: 'audio/webm' })
 
+      console.log('🎤 Whisper ga yuborilmoqda:', {
+        fileSize: audioBuffer.length,
+        language: language
+      })
+
+      // O'zbek tili uchun language parametri bilan
       const transcription = await groq.audio.transcriptions.create({
         file: file,
         model: 'whisper-large-v3',
-        language: language,
+        language: 'uz',
         response_format: 'text',
       })
+
+      console.log('✅ Whisper javobi:', transcription)
 
       return transcription.trim()
     } catch (error) {

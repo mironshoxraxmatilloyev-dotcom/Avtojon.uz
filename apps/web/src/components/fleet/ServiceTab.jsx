@@ -1,10 +1,9 @@
 import { memo, useState, useEffect } from 'react'
 import { 
   AlertTriangle, CheckCircle, ChevronRight, Truck, Wrench, Zap, Shield,
-  Droplets, Circle, Calendar, Bell, Clock, Fuel
+  Droplets, Circle, Calendar, Bell, Clock, Fuel, Loader2
 } from 'lucide-react'
 import api from '../../services/api'
-import { FUEL } from './constants'
 
 export const ServiceTab = memo(({ vehicles, navigate }) => {
   const [alerts, setAlerts] = useState([])
@@ -12,6 +11,7 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
 
   useEffect(() => {
     const loadAlerts = async () => {
+      setLoading(true)
       try {
         const { data } = await api.get('/maintenance/fleet/alerts')
         setAlerts(data.data || [])
@@ -31,6 +31,25 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
   const tireAlerts = alerts.filter(a => a.type === 'tire')
   const serviceAlerts = alerts.filter(a => a.type === 'service')
   const otherAlerts = alerts.filter(a => !['oil', 'tire', 'service'].includes(a.type))
+
+  // Loading holati
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-32 bg-slate-100 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+          <span className="ml-3 text-slate-500">Yuklanmoqda...</span>
+        </div>
+      </div>
+    )
+  }
+
+  const hasAnyIssue = alerts.length > 0 || attentionVehicles.length > 0
 
   return (
     <div className="space-y-8">
@@ -62,6 +81,9 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
         />
       </div>
 
+      {/* Agar hech qanday muammo yo'q bo'lsa */}
+      {!hasAnyIssue && <AllGoodState />}
+
       {/* Smart Alerts Section */}
       {alerts.length > 0 && (
         <div className="space-y-4">
@@ -70,8 +92,8 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
               <Bell className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Smart Alerts</h3>
-              <p className="text-sm text-slate-500">Avtomatik ogohlantirishlar</p>
+              <h3 className="text-lg font-bold text-slate-900">Ogohlantirishlar</h3>
+              <p className="text-sm text-slate-500">{alerts.length} ta muammo aniqlandi</p>
             </div>
           </div>
 
@@ -124,7 +146,7 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
       )}
 
       {/* Attention Required List */}
-      {attentionVehicles.length > 0 ? (
+      {attentionVehicles.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
@@ -146,20 +168,18 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
             ))}
           </div>
         </div>
-      ) : alerts.length === 0 ? (
-        <AllGoodState />
-      ) : null}
+      )}
     </div>
   )
 })
 
-// Alert Group Component
+// Alert Group Component - Muammolarni aniq ko'rsatish
 const AlertGroup = memo(({ icon: Icon, title, color, alerts, navigate }) => {
   const colors = {
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', icon: 'bg-amber-500', text: 'text-amber-700' },
-    orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'bg-orange-500', text: 'text-orange-700' },
-    red: { bg: 'bg-red-50', border: 'border-red-200', icon: 'bg-red-500', text: 'text-red-700' },
-    slate: { bg: 'bg-slate-50', border: 'border-slate-200', icon: 'bg-slate-500', text: 'text-slate-700' }
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', icon: 'bg-amber-500', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-700' },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'bg-orange-500', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700' },
+    red: { bg: 'bg-red-50', border: 'border-red-200', icon: 'bg-red-500', text: 'text-red-700', badge: 'bg-red-100 text-red-700' },
+    slate: { bg: 'bg-slate-50', border: 'border-slate-200', icon: 'bg-slate-500', text: 'text-slate-700', badge: 'bg-slate-100 text-slate-700' }
   }
   const c = colors[color]
 
@@ -175,33 +195,35 @@ const AlertGroup = memo(({ icon: Icon, title, color, alerts, navigate }) => {
         </div>
       </div>
       <div className="space-y-2">
-        {alerts.slice(0, 3).map((alert, i) => (
+        {alerts.slice(0, 5).map((alert, i) => (
           <div
             key={i}
             onClick={() => navigate(`/fleet/vehicle/${alert.vehicleId}`)}
-            className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 cursor-pointer hover:border-slate-300 transition-colors"
+            className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all"
           >
-            <div>
-              <p className="font-semibold text-slate-900 text-sm">{alert.plateNumber}</p>
-              <p className="text-xs text-slate-500">{alert.message}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {alert.daysLeft !== undefined && (
-                <span className={`text-xs font-medium px-2 py-1 rounded-lg ${
-                  alert.daysLeft <= 0 ? 'bg-red-100 text-red-700' :
-                  alert.daysLeft <= 7 ? 'bg-amber-100 text-amber-700' :
-                  'bg-slate-100 text-slate-600'
-                }`}>
-                  {alert.daysLeft <= 0 ? 'Bugun!' : `${alert.daysLeft} kun`}
-                </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-bold text-slate-900">{alert.plateNumber}</p>
+                {alert.severity === 'danger' && (
+                  <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded">KRITIK</span>
+                )}
+              </div>
+              <p className="text-sm text-slate-600">{alert.message}</p>
+              {alert.threshold !== undefined && (
+                <p className={`text-xs font-medium mt-1 ${alert.threshold <= 0 ? 'text-red-600' : 'text-amber-600'}`}>
+                  {alert.threshold <= 0 
+                    ? `${Math.abs(alert.threshold).toLocaleString()} km o'tib ketdi` 
+                    : `${alert.threshold.toLocaleString()} km qoldi`
+                  }
+                </p>
               )}
-              <ChevronRight size={16} className="text-slate-400" />
             </div>
+            <ChevronRight size={18} className="text-slate-400 flex-shrink-0 ml-2" />
           </div>
         ))}
-        {alerts.length > 3 && (
+        {alerts.length > 5 && (
           <p className="text-xs text-center text-slate-500 pt-2">
-            +{alerts.length - 3} ta yana
+            +{alerts.length - 5} ta yana
           </p>
         )}
       </div>

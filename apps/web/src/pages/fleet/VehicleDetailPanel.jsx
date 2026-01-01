@@ -5,7 +5,8 @@ import api from '../../services/api'
 import { useAlert } from '../../components/ui'
 import {
   SummaryTab, FuelTab, OilTab, TiresTab, ServicesTab, IncomeTab,
-  initFuelForm, initOilForm, initTireForm, initServiceForm, initIncomeForm, today, TIRE_POSITIONS
+  initFuelForm, initOilForm, initTireForm, initServiceForm, initIncomeForm, today, TIRE_POSITIONS,
+  MaintenanceAlertModal
 } from '../../components/fleet/vehicle'
 import { Modal, FuelForm, OilForm, TireForm, BulkTireForm, ServiceForm } from '../../components/fleet/vehicle/VehicleForms'
 import { IncomeForm } from '../../components/fleet/vehicle/IncomeTab'
@@ -39,6 +40,7 @@ export default function VehicleDetailPanel() {
   const [modal, setModal] = useState(null)
   const [editId, setEditId] = useState(null)
   const [errors, setErrors] = useState({})
+  const [maintenanceAlerts, setMaintenanceAlerts] = useState([]) // Texnik xizmat ogohlantirishlari
 
   const [fuelForm, setFuelForm] = useState(() => initFuelForm())
   const [oilForm, setOilForm] = useState(() => initOilForm())
@@ -141,8 +143,14 @@ export default function VehicleDetailPanel() {
     else if (type === 'services') setServices(prev => ({ ...prev, services: prev.services.filter(s => s._id !== itemId) }))
     else if (type === 'income') setIncomeData(prev => ({ ...prev, incomes: prev.incomes.filter(i => i._id !== itemId) }))
     alert.success('O\'chirildi')
-    try { await api.delete(`/maintenance/${type}/${itemId}`) } catch { }
-  }, [alert])
+    try { 
+      await api.delete(`/maintenance/${type}/${itemId}`)
+      loadData()
+    } catch (err) {
+      console.error('O\'chirishda xatolik:', err)
+      loadData()
+    }
+  }, [alert, loadData])
 
   const validate = useCallback((type, data) => {
     const e = {}
@@ -211,6 +219,17 @@ export default function VehicleDetailPanel() {
   const handleSubmit = useCallback(async (type, form, endpoint, itemId = null) => {
     if (!validate(type, form)) return
     const body = { ...form }
+    
+    // Moy uchun nextChangeOdometer ni hisoblash
+    if (type === 'oil' && body.nextChangeKm && body.odometer) {
+      body.nextChangeOdometer = Number(body.odometer) + Number(body.nextChangeKm)
+      delete body.nextChangeKm
+    } else if (type === 'oil' && body.nextChangeKm && !body.odometer) {
+      // Agar odometer kiritilmagan bo'lsa, mashina hozirgi odometridan hisoblash
+      body.nextChangeOdometer = (vehicle?.currentOdometer || 0) + Number(body.nextChangeKm)
+      delete body.nextChangeKm
+    }
+    
     Object.keys(body).forEach(k => {
       if (body[k] === '') delete body[k]
       else if (!isNaN(body[k]) && !['date', 'oilType', 'oilBrand', 'brand', 'model', 'size', 'position', 'type', 'description', 'serviceName', 'fuelType', 'station', 'fromCity', 'toCity', 'clientName'].includes(k)) body[k] = +body[k]
@@ -229,10 +248,27 @@ export default function VehicleDetailPanel() {
     alert.success(itemId ? 'Yangilandi' : 'Saqlandi')
     const apiType = type === 'tire' ? 'tires' : type === 'service' ? 'services' : type
     try {
-      if (itemId) await api.put(`/maintenance/${apiType}/${itemId}`, body)
-      else await api.post(endpoint, body)
-    } catch { }
-  }, [validate, alert])
+      let response
+      if (itemId) {
+        response = await api.put(`/maintenance/${apiType}/${itemId}`, body)
+      } else {
+        response = await api.post(endpoint, body)
+      }
+      
+      // Yoqilg'i qo'shilganda alertlarni tekshirish
+      if (type === 'fuel' && response.data?.data?.alerts?.length > 0) {
+        setMaintenanceAlerts(response.data.data.alerts)
+      }
+      
+      // Ma'lumotlarni serverdan qayta yuklash
+      loadData()
+    } catch (err) {
+      console.error('Saqlashda xatolik:', err)
+      alert.error('Xatolik', 'Ma\'lumot saqlanmadi')
+      // Xatolik bo'lsa ma'lumotlarni qayta yuklash
+      loadData()
+    }
+  }, [validate, alert, loadData, vehicle?.currentOdometer])
 
 
   const handleAddFuel = useCallback((e) => { e.preventDefault(); handleSubmit('fuel', fuelForm, `/maintenance/vehicles/${id}/fuel`, editId) }, [fuelForm, id, handleSubmit, editId])
@@ -252,8 +288,12 @@ export default function VehicleDetailPanel() {
     alert.success(`${count} ta shina qo'shildi`)
     try {
       await Promise.all(positions.map(position => api.post(`/maintenance/vehicles/${id}/tires`, { position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', installDate: today(), installOdometer: bulkTireForm.installOdometer ? +bulkTireForm.installOdometer : 0, expectedLifeKm: 50000, cost: bulkTireForm.cost ? Math.round(+bulkTireForm.cost / count) : 0 })))
-    } catch { }
-  }, [bulkTireForm, id, alert])
+      loadData()
+    } catch (err) {
+      console.error('Shinalar saqlashda xatolik:', err)
+      loadData()
+    }
+  }, [bulkTireForm, id, alert, loadData])
 
   // Ovozli yoqilg'i qo'shish
   const handleVoiceFuel = useCallback(async (voiceData) => {
@@ -297,7 +337,7 @@ export default function VehicleDetailPanel() {
     
     // Serverga yuborish
     try {
-      await api.post(`/maintenance/vehicles/${id}/fuel`, {
+      const response = await api.post(`/maintenance/vehicles/${id}/fuel`, {
         date: new Date().toISOString().split('T')[0],
         liters,
         cost,
@@ -305,6 +345,12 @@ export default function VehicleDetailPanel() {
         fuelType,
         station: voiceData.description || 'Ovoz orqali kiritildi'
       })
+      
+      // Alertlarni tekshirish
+      if (response.data?.data?.alerts?.length > 0) {
+        setMaintenanceAlerts(response.data.data.alerts)
+      }
+      
       loadData() // Ma'lumotlarni yangilash
     } catch (err) {
       console.error('Yoqilg\'i saqlashda xatolik:', err)
@@ -559,7 +605,7 @@ export default function VehicleDetailPanel() {
         {/* Navigation - NO scroll */}
         <nav className="flex-1 p-3 space-y-1 overflow-hidden">
           {NAV_ITEMS.map(item => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)}
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setModal(null); setEditId(null) }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === item.id
                 ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -654,7 +700,7 @@ export default function VehicleDetailPanel() {
       >
         <div className="flex items-center justify-around h-16 px-1 pb-[env(safe-area-inset-bottom,0px)]">
           {NAV_ITEMS.map(item => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)}
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setModal(null); setEditId(null) }}
               className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeTab === item.id
                 ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/25'
@@ -673,15 +719,23 @@ export default function VehicleDetailPanel() {
       {/* Modals */}
       {modal && (
         <Modal title={modal === 'tire-bulk' ? 'To\'liq shina almashtirish' : `${modal === 'fuel' ? 'Yoqilg\'i' : modal === 'oil' ? 'Moy' : modal === 'tire' ? 'Shina' : modal === 'income' ? 'Daromad' : 'Xizmat'} ${editId ? 'tahrirlash' : 'qo\'shish'}`} onClose={() => { setModal(null); setEditId(null) }}>
-          {modal === 'fuel' && <FuelForm form={fuelForm} setForm={setFuelForm} errors={errors} onSubmit={handleAddFuel} isEdit={!!editId} />}
+          {modal === 'fuel' && <FuelForm form={fuelForm} setForm={setFuelForm} errors={errors} onSubmit={handleAddFuel} isEdit={!!editId} vehicle={vehicle} oilData={oilData} tires={tires} />}
           {modal === 'oil' && <OilForm form={oilForm} setForm={setOilForm} errors={errors} onSubmit={handleAddOil} isEdit={!!editId} />}
-          {modal === 'tire' && <TireForm form={tireForm} setForm={setTireForm} errors={errors} onSubmit={handleAddTire} isEdit={!!editId} />}
-          {modal === 'tire-bulk' && <BulkTireForm form={bulkTireForm} setForm={setBulkTireForm} errors={errors} onSubmit={handleAddBulkTires} />}
+          {modal === 'tire' && <TireForm form={tireForm} setForm={setTireForm} errors={errors} onSubmit={handleAddTire} isEdit={!!editId} vehicleOdometer={vehicle?.currentOdometer} />}
+          {modal === 'tire-bulk' && <BulkTireForm form={bulkTireForm} setForm={setBulkTireForm} errors={errors} onSubmit={handleAddBulkTires} vehicleOdometer={vehicle?.currentOdometer} />}
           {modal === 'service' && <ServiceForm form={serviceForm} setForm={setServiceForm} errors={errors} onSubmit={handleAddService} isEdit={!!editId} />}
           {modal === 'income' && <IncomeForm form={incomeForm} setForm={setIncomeForm} errors={errors} onSubmit={handleAddIncome} isEdit={!!editId} />}
         </Modal>
       )}
       {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
+      
+      {/* Texnik xizmat ogohlantirishlari */}
+      {maintenanceAlerts.length > 0 && (
+        <MaintenanceAlertModal 
+          alerts={maintenanceAlerts} 
+          onClose={() => setMaintenanceAlerts([])} 
+        />
+      )}
     </div>
   )
 }

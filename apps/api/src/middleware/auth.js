@@ -79,3 +79,23 @@ exports.driverOnly = (req, res, next) => {
   }
   next();
 };
+
+// Role bo'yicha ruxsat berish
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    // SuperAdmin har doim ruxsat
+    if (req.isSuperAdmin || req.userRole === 'super_admin') {
+      return next();
+    }
+    
+    // Berilgan role'lardan biri bo'lsa ruxsat
+    if (roles.includes(req.userRole)) {
+      return next();
+    }
+    
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Bu amalni bajarish uchun ruxsat yo\'q' 
+    });
+  };
+};

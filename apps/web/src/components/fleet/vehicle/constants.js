@@ -40,20 +40,20 @@ export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('uz-UZ') : '-'
 export const today = () => new Date().toISOString().split('T')[0]
 
 export const initFuelForm = (odo = '', ft = 'diesel') => ({ 
-  date: today(), liters: '', cost: '', odometer: odo, fuelType: ft, station: '' 
+  date: today(), liters: '', cost: '', odometer: '', fuelType: ft, station: '' 
 })
 export const initOilForm = (odo = '') => ({ 
-  date: today(), odometer: odo, oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '',
+  date: today(), odometer: '', oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '',
   filterChanged: false, filterCost: '',
   airFilterChanged: false, airFilterCost: '',
   fuelFilterChanged: false, fuelFilterCost: ''
 })
 export const initTireForm = (odo = '') => ({ 
   position: TIRE_POSITIONS[0], brand: '', model: '', size: '', serialNumber: '', installDate: today(), 
-  installOdometer: odo, expectedLifeKm: 80000, cost: '' 
+  installOdometer: '', expectedLifeKm: '', cost: '' 
 })
 export const initServiceForm = (odo = '') => ({ 
-  type: SERVICE_TYPES[0], date: today(), odometer: odo, cost: '', description: '', serviceName: '' 
+  type: SERVICE_TYPES[0], date: today(), odometer: '', cost: '', description: '', serviceName: '' 
 })
 export const initIncomeForm = () => ({
   type: 'trip', date: today(), amount: '', fromCity: '', toCity: '', 

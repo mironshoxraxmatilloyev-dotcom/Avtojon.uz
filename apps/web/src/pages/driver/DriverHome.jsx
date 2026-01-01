@@ -157,7 +157,7 @@ export default function DriverHome() {
       <NewTripNotification trip={newTripNotification} onClose={() => setNewTripNotification(null)} />
       <DriverHeader user={user} onLogout={handleLogout} />
       <div className="max-w-2xl mx-auto">
-        <DriverTabs activeTab={tab} onTabChange={setTab} />
+        <DriverTabs activeTab={tab} onTabChange={(newTab) => { setTab(newTab); setSelectedFlight(null) }} />
         <main className="p-4 space-y-4 pb-8">
           {tab === 'home' && (
             <div className="grid gap-4 md:grid-cols-2">

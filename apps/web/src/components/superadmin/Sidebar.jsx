@@ -1,8 +1,9 @@
-import { LayoutDashboard, BarChart3, Users, UserCircle, Truck, Car, LogOut, X, Menu, Zap } from "lucide-react"
+import { LayoutDashboard, BarChart3, Users, UserCircle, Truck, Car, LogOut, X, Menu, Zap, MessageSquare } from "lucide-react"
 
 const MENU_ITEMS = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
   { id: "stats", label: "Statistika", icon: BarChart3 },
+  { id: "sms", label: "SMS Gateway", icon: MessageSquare },
 ]
 
 const MANAGEMENT_ITEMS = [

@@ -5,28 +5,27 @@ import { X, Crown, Zap, AlertTriangle, Phone, Truck, Fuel, Wrench, BarChart3, He
 const SUPPORT_PHONE = '+998 88 019 19 09'
 
 export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) => (
-  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border-2 border-slate-200 overflow-hidden">
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+    <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl border-t-2 sm:border-2 border-slate-200 overflow-hidden max-h-[90vh]">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
-            <Truck className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <Truck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              {isEdit ? '✏️ Mashinani tahrirlash' : '🚛 Yangi mashina qo\'shish'}
+            <h2 className="text-base font-bold text-slate-900">
+              {isEdit ? 'Mashinani tahrirlash' : 'Yangi mashina'}
             </h2>
-            <p className="text-sm text-slate-500">Ma'lumotlarni kiriting</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-          <X size={22} />
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+          <X size={20} />
         </button>
       </div>
 
       {/* Form */}
-      <form onSubmit={onSubmit} className="p-6 space-y-6">
+      <form onSubmit={onSubmit} className="p-4 space-y-3 overflow-y-auto max-h-[calc(90vh-70px)]">
         <ProInput
           label="Davlat raqami"
           value={form.plateNumber}
@@ -34,7 +33,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
           placeholder="01A123BC"
           required
         />
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-3">
           <ProInput
             label="Marka"
             value={form.brand}
@@ -49,7 +48,7 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
             onChange={v => setForm(f => ({ ...f, year: v }))}
           />
         </div>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-3">
           <ProSelect
             label="Yoqilg'i"
             value={form.fuelType}
@@ -79,9 +78,9 @@ export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) 
 
         <button
           type="submit"
-          className="w-full py-5 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-xl text-white font-bold text-lg transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-lg text-white font-bold text-base transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
         >
-          {isEdit ? '✏️ Yangilash' : '➕ Mashina qo\'shish'}
+          {isEdit ? 'Yangilash' : 'Qo\'shish'}
         </button>
       </form>
     </div>
@@ -257,7 +256,7 @@ const ProFeature = ({ icon: Icon, text }) => (
 
 const ProInput = memo(({ label, type = 'text', value, onChange, placeholder, required }) => (
   <div>
-    <label className="block text-base font-semibold text-slate-700 mb-3">
+    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <input
@@ -265,18 +264,18 @@ const ProInput = memo(({ label, type = 'text', value, onChange, placeholder, req
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full px-5 py-4 text-lg bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+      className="w-full px-3 py-2.5 text-base bg-slate-50 border-2 border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
     />
   </div>
 ))
 
 const ProSelect = memo(({ label, value, onChange, options }) => (
   <div>
-    <label className="block text-base font-semibold text-slate-700 mb-3">{label}</label>
+    <label className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-5 py-4 text-lg bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+      className="w-full px-3 py-2.5 text-base bg-slate-50 border-2 border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>

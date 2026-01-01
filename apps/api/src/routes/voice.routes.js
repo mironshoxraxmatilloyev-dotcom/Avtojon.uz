@@ -60,6 +60,13 @@ router.post(
       throw new ApiError(400, 'Audio fayl yuborilmadi')
     }
 
+    // Debug log
+    console.log('📢 Audio keldi:', {
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      bufferLength: req.file.buffer?.length
+    })
+
     const language = req.body.language || 'uz'
     const context = req.body.context || 'expense'
 

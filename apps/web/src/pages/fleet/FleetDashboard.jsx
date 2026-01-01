@@ -306,7 +306,7 @@ export default function FleetDashboard() {
             {navItems.map(item => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all duration-200 group ${
                   activeTab === item.id
                     ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/30'
@@ -458,6 +458,7 @@ export default function FleetDashboard() {
               loading={loading}
               openModal={openModal}
               fleetAnalytics={fleetAnalytics}
+              onAlertClick={() => setActiveTab('service')}
             />
           )}
           {activeTab === 'stats' && <StatsTab vehicles={vehicles} stats={stats} />}
@@ -486,7 +487,7 @@ export default function FleetDashboard() {
           {navItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { setActiveTab(item.id); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
               className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${

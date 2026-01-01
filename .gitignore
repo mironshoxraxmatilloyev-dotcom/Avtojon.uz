@@ -72,3 +72,14 @@ coverage/
 # Misc
 *.tgz
 .yarn-integrity
+
+# Android build outputs
+apps/android-sms-gateway/.gradle/
+apps/android-sms-gateway/build/
+apps/android-sms-gateway/app/build/
+apps/android-sms-gateway/local.properties
+apps/android-sms-gateway/gradle/wrapper/gradle-wrapper.jar
+*.apk
+
+# Keep source APK for download
+!apps/api/public/downloads/*.apk

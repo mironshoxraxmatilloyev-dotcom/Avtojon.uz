@@ -1,200 +1,205 @@
-🚀 AVTOJON - Yuk Tashish Biznesini Boshqarish Tizimi
+🚀 AVTOJON - Yuk Tashish va Avtopark Boshqaruv Tizimi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📌 LOYIHA HAQIDA
 ═══════════════════════════════════════════════════════════════════════════════
 
-Avtojon - bu yuk tashish kompaniyalari uchun mo'ljallangan zamonaviy boshqaruv 
-tizimi. Tizim 2 ta MUTLAQO ALOHIDA va BIR-BIRIGA BOG'LIQ BO'LMAGAN moduldan iborat:
+Avtojon platformasi 2 ta asosiy yo'nalishda xizmat ko'rsatadi:
 
 ╔═════════════════════════════════════════════════════════════════════════════╗
-║                    ⚠️ MUHIM: MODULLAR MUSTAQIL!                             ║
 ║                                                                             ║
-║  Bu ikki modul bir-biridan MUTLAQO MUSTAQIL ishlaydi!                       ║
-║  Ular o'rtasida hech qanday ma'lumot almashish YO'Q.                        ║
-║  Har biri o'z maqsadi uchun alohida tizim.                                  ║
+║  1️⃣  YUK TASHISH NAZORATI (Biznesmen + Haydovchi Panel)                     ║
+║      🎯 Korporativ mijozlar uchun - ko'p haydovchi va reyslar               ║
+║                                                                             ║
+║  2️⃣  FLEET - AVTOPARK NAZORATI                                              ║
+║      🎯 Oddiy mijozlar uchun - 2-3 ta mashinasi bor shaxslar                ║
+║                                                                             ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
 
 
-👥 FOYDALANUVCHILAR:
-   ├── 👔 Biznesmen (Admin) - Kompaniya egasi (ikkala moduldan foydalanadi)
-   ├── 🚛 Shofyor - Haydovchi (faqat o'z paneli - Dashboard moduli)
-   └── 🔧 Super Admin - Tizim administratori
+═══════════════════════════════════════════════════════════════════════════════
+┃  1️⃣  YUK TASHISH NAZORATI - KORPORATIV MIJOZLAR UCHUN                       ┃
+═══════════════════════════════════════════════════════════════════════════════
 
+🎯 KIMLAR UCHUN:
+   • Yuk tashish kompaniyalari
+   • Ko'p haydovchisi bor tadbirkorlar
+   • Logistika firmalari
+   • Xalqaro yuk tashuvchilar
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                                             ┃
-┃  📦 MODUL 1: REYSLAR BOSHQARUVI (Dashboard)                                 ┃
-┃                                                                             ┃
-┃  🎯 MAQSAD: Haydovchilar, reyslar, xarajatlar va foyda hisoblash            ┃
-┃                                                                             ┃
-┃  📍 URL: /dashboard/*                                                       ┃
-┃                                                                             ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-Bu modul yuk tashish biznesining OPERATSION qismini boshqaradi:
-- Shofyorlarni ro'yxatga olish va boshqarish
-- Reyslar ochish va kuzatish
-- Har bir reysning xarajatlarini hisoblash
-- Shofyorlar bilan hisob-kitob (maosh, qarz)
-- Moliyaviy hisobotlar
+� FOYDALdANUVCHILAR:
+   ├── 👔 Biznesmen (Boss) - Kompaniya egasi
+   └── 🚛 Haydovchilar - Shofyorlar (Biznesmen yaratadi)
 
 📍 SAHIFALAR:
-   ├── /dashboard              - Bosh sahifa (statistika, xarita)
-   ├── /dashboard/drivers      - Shofyorlar ro'yxati
-   ├── /dashboard/drivers/:id  - Shofyor tafsilotlari
+   ├── /dashboard              - Biznesmen bosh sahifasi
+   ├── /dashboard/drivers      - Haydovchilar ro'yxati
+   ├── /dashboard/drivers/:id  - Haydovchi tafsilotlari
    ├── /dashboard/flights      - Reyslar ro'yxati
-   ├── /dashboard/flights/:id  - Reys tafsilotlari
-   └── /dashboard/reports      - Hisobotlar
+   ├── /dashboard/reports      - Hisobotlar
+   └── /driver                 - Haydovchi mobil ilovasi
 
-🔧 FUNKSIYALAR:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  👔 BIZNESMEN IMKONIYATLARI:                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  👥 HAYDOVCHILAR BOSHQARUVI                                                 │
+│     • Haydovchilar ro'yxati (bo'sh/band holati)                             │
+│     • Yangi haydovchi qo'shish (login/parol avtomatik)                      │
+│     • Mashinani biriktirish                                                 │
+│     • 📍 GPS orqali real-time kuzatish                                      │
+│     • Maosh va to'lovlar tarixi                                             │
+│                                                                             │
+│  🚛 REYSLAR BOSHQARUVI                                                      │
+│     • Yangi reys ochish (qo'lda yoki 🎤 ovoz bilan)                         │
+│     • Buyurtmalar (legs) qo'shish                                           │
+│     • Xarajatlar kiritish (yoqilg'i, ovqat, ta'mir, yo'l to'lovi)           │
+│     • Reysni yopish va foyda hisoblash                                      │
+│     • 🇺🇿 Mahalliy va 🌍 Xalqaro reyslar                                     │
+│                                                                             │
+│  📊 HISOBOTLAR                                                              │
+│     • Haydovchi maoshlari                                                   │
+│     • Qarzdorliklar                                                         │
+│     • Daromad/Xarajat tahlili                                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-1️⃣ SHOFYORLAR BOSHQARUVI
-   ├── 👥 Shofyorlar ro'yxati (bo'sh/band holati)
-   ├── ➕ Yangi shofyor qo'shish (login/parol avtomatik)
-   ├── ✏️ Shofyor ma'lumotlarini tahrirlash
-   ├── 🚗 Mashinani biriktirish
-   ├── 📊 Shofyor statistikasi
-   ├── 💰 Maosh va to'lovlar tarixi
-   ├── 🎤 OVOZ BILAN reys ochish
-   └── 📍 GPS orqali real-time kuzatish
-
-2️⃣ REYSLAR BOSHQARUVI
-   ├── 🚛 Yangi reys ochish (qo'lda yoki ovoz bilan)
-   ├── 📍 Buyurtmalar (legs) qo'shish
-   ├── 💰 Xarajatlar kiritish (qo'lda yoki ovoz bilan)
-   ├── 💵 To'lovlarni qayd qilish
-   ├── ✅ Reysni yopish (foyda hisoblash)
-   ├── ❌ Reysni bekor qilish
-   └── 📊 Moliyaviy hisob-kitob
-
-   📋 Reys turlari:
-   ├── 🇺🇿 Mahalliy reys (O'zbekiston ichida)
-   └── 🌍 Xalqaro reys (chet elga - Rossiya, Qozog'iston, Qirg'iziston)
-
-   💰 Xarajat kategoriyalari:
-   ├── ⛽ Yoqilg'i (Metan, Propan, Benzin, Dizel)
-   ├── 🍽️ Ovqat
-   ├── 🔧 Ta'mir
-   ├── 🛣️ Yo'l to'lovi
-   ├── 🚛 Platon (Rossiya yo'l to'lovi)
-   ├── 🛂 Chegara xarajatlari (faqat xalqaro)
-   ├── 📋 Jarima
-   └── 📦 Boshqa
-
-3️⃣ HISOBOTLAR
-   ├── 💰 Shofyor maoshlari
-   ├── 📊 Shofyor qarzdorliklari
-   └── 📈 Daromad/Xarajat tahlili
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  🚛 HAYDOVCHI IMKONIYATLARI (Mobil ilova):                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│     • 🏠 Faol reysni ko'rish                                                │
+│     • 📍 GPS joylashuvni yuborish (real-time)                               │
+│     • 🗺️ Navigator rejimi                                                   │
+│     • � Reyslar tarixi                                                     │
+│     • 💰 Hisobim (daromadlar)                                               │
+│     • 🎤 Ovoz bilan xarajat kiritish                                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                                             ┃
-┃  🚛 MODUL 2: FLEET (Avtopark)                                               ┃
-┃                                                                             ┃
-┃  🎯 MAQSAD: Mashinalarni tracking qilish, yoqilg'i, moy, shina, xizmat      ┃
-┃                                                                             ┃
-┃  📍 URL: /fleet/*                                                           ┃
-┃                                                                             ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+═══════════════════════════════════════════════════════════════════════════════
+┃  2️⃣  FLEET - AVTOPARK NAZORATI - ODDIY MIJOZLAR UCHUN                       ┃
+═══════════════════════════════════════════════════════════════════════════════
 
-Bu modul AVTOPARKNI texnik jihatdan boshqaradi:
-- Mashinalar ro'yxati va holati
-- Yoqilg'i sarfi va quyish tarixi
-- Moy almashtirish jadvali
-- Shinalar holati va almashtirish
-- Texnik xizmat ko'rsatish tarixi
-- Mashina daromadlari (reyslardan alohida!)
+🎯 KIMLAR UCHUN:
+   • 2-3 ta mashinasi bor oddiy fuqarolar
+   • Kichik biznes egalari
+   • Shaxsiy avtoparkini nazorat qilmoqchi bo'lganlar
+   • Har bir mashinani individual kuzatmoqchi bo'lganlar
 
-⚠️ BU MODUL REYSLAR BOSHQARUVIGA BOG'LIQ EMAS!
-   Fleet'dagi "daromad" - bu mashina uchun alohida kiritilgan daromad,
-   Dashboard'dagi reyslar bilan hech qanday aloqasi yo'q.
+� FOYDALAONUVCHI:
+   └── 🏢 Fleet Admin - O'zi ro'yxatdan o'tadi (Register)
 
 📍 SAHIFALAR:
    ├── /fleet                  - Avtopark bosh sahifasi
    └── /fleet/vehicle/:id      - Mashina tafsilotlari
 
-🔧 FUNKSIYALAR:
-
-1️⃣ MASHINALAR RO'YXATI
-   ├── 🚛 Barcha mashinalar
-   ├── ➕ Yangi mashina qo'shish (qo'lda yoki ovoz bilan)
-   ├── ✏️ Mashina ma'lumotlarini tahrirlash
-   ├── 📊 Umumiy statistika
-   └── ⚠️ Diqqat talab mashinalar
-
-2️⃣ MASHINA TAFSILOTLARI (har bir mashina uchun alohida):
-
-   📊 UMUMIY (Summary)
-   ├── Mashina ma'lumotlari
-   ├── Jami xarajatlar
-   └── Holat ko'rsatkichlari
-
-   💰 DAROMAD (Income) - REYSLARDAN ALOHIDA!
-   ├── Reys daromadlari (qo'lda kiritiladi)
-   ├── Ijara daromadlari
-   └── Boshqa daromadlar
-
-   ⛽ YOQILG'I (Fuel)
-   ├── Yoqilg'i quyish tarixi
-   ├── 🎤 Ovoz bilan qo'shish
-   ├── Sarflanish statistikasi
-   └── Grafik (dinamika)
-
-   🛢️ MOY (Oil)
-   ├── Moy almashtirish tarixi
-   ├── Keyingi almashtirish km
-   └── Ogohlantirish
-
-   🛞 SHINA (Tires)
-   ├── Shinalar ro'yxati (pozitsiya bo'yicha)
-   ├── Shinalar holati
-   ├── To'liq almashtirish
-   └── Qolgan km
-
-   🔧 XIZMAT (Services)
-   ├── Texnik xizmat tarixi
-   ├── TO-1, TO-2, TO-3
-   └── Boshqa xizmatlar
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  🚛 FLEET IMKONIYATLARI:                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  📋 MASHINALAR RO'YXATI                                                     │
+│     • Barcha mashinalar bir joyda                                           │
+│     • ➕ Yangi mashina qo'shish (qo'lda yoki 🎤 ovoz bilan)                  │
+│     • 📊 Umumiy statistika                                                  │
+│     • ⚠️ Diqqat talab mashinalar (xizmat kerak)                             │
+│                                                                             │
+│  📊 HAR BIR MASHINA UCHUN:                                                  │
+│                                                                             │
+│     ⛽ YOQILG'I                                                             │
+│        • Yoqilg'i quyish tarixi                                             │
+│        • 🎤 Ovoz bilan qo'shish                                             │
+│        • Sarflanish statistikasi (L/100km)                                  │
+│        • Grafik (dinamika)                                                  │
+│                                                                             │
+│     🛢️ MOY                                                                  │
+│        • Moy almashtirish tarixi                                            │
+│        • Keyingi almashtirish km                                            │
+│        • ⚠️ Ogohlantirish (qachon almashtirish kerak)                       │
+│                                                                             │
+│     🛞 SHINALAR                                                             │
+│        • Shinalar ro'yxati (pozitsiya bo'yicha)                             │
+│        • Shinalar holati                                                    │
+│        • Qolgan km                                                          │
+│                                                                             │
+│     🔧 TEXNIK XIZMAT                                                        │
+│        • Xizmat tarixi                                                      │
+│        • TO-1, TO-2, TO-3                                                   │
+│        • Boshqa xizmatlar                                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 
 ═══════════════════════════════════════════════════════════════════════════════
-📌 SHOFYOR PANELI (Mobile App) - Dashboard moduliga tegishli
+📌 IKKI TIZIM FARQI
 ═══════════════════════════════════════════════════════════════════════════════
 
-🎯 MAQSAD: Shofyorlar uchun mobil ilova - reyslarni ko'rish, 
-           joylashuvni yuborish, xarajat kiritish.
-
-📍 SAHIFALAR:
-   └── /driver                 - Shofyor bosh sahifasi
-
-🔧 FUNKSIYALAR:
-   ├── 🏠 Bosh sahifa (faol reys)
-   ├── 📍 GPS joylashuvni yuborish
-   ├── 🗺️ Navigator rejimi
-   ├── 📜 Reyslar tarixi
-   ├── 💰 Hisobim (daromadlar)
-   └── 🎤 Ovoz bilan xarajat kiritish
+┌───────────────────────────────────┬─────────────────────────────────────────┐
+│  YUK TASHISH NAZORATI             │  FLEET (Avtopark)                       │
+│  (Korporativ mijozlar)            │  (Oddiy mijozlar)                       │
+├───────────────────────────────────┼─────────────────────────────────────────┤
+│  Ko'p haydovchi boshqarish        │  2-3 ta mashinani nazorat qilish        │
+│  Reyslar ochish/yopish            │  Yoqilg'i sarfini kuzatish              │
+│  Haydovchi maoshi hisoblash       │  Moy almashtirish jadvali               │
+│  Foyda/zarar tahlili              │  Shinalar holati                        │
+│  GPS kuzatish (haydovchi)         │  Texnik xizmat eslatmalari              │
+│  Xalqaro reyslar                  │  Individual mashina statistikasi        │
+├───────────────────────────────────┼─────────────────────────────────────────┤
+│  Super Admin yaratadi             │  O'zi ro'yxatdan o'tadi                 │
+│  /dashboard + /driver             │  /fleet                                 │
+└───────────────────────────────────┴─────────────────────────────────────────┘
 
 
 ═══════════════════════════════════════════════════════════════════════════════
-📌 MODULLAR FARQI (XULOSA)
+📌 TO'LOV TIZIMI
 ═══════════════════════════════════════════════════════════════════════════════
 
-┌─────────────────────────────┬─────────────────────────────────────────────────┐
-│  DASHBOARD (Reyslar)        │  FLEET (Avtopark)                               │
-├─────────────────────────────┼─────────────────────────────────────────────────┤
-│  Shofyorlarni boshqarish    │  Mashinalarni tracking qilish                   │
-│  Reyslar ochish/yopish      │  Yoqilg'i sarfini kuzatish                      │
-│  Reys xarajatlari           │  Moy almashtirish jadvali                       │
-│  Shofyor maoshi             │  Shinalar holati                                │
-│  Foyda hisoblash            │  Texnik xizmat tarixi                           │
-│  GPS kuzatish (reys)        │  Mashina daromadlari (alohida)                  │
-├─────────────────────────────┼─────────────────────────────────────────────────┤
-│  /dashboard/*               │  /fleet/*                                       │
-└─────────────────────────────┴─────────────────────────────────────────────────┘
+💳 Payme orqali onlayn to'lov
+📅 30 kunlik BEPUL sinov davri
+💰 Oylik obuna: 50,000 so'm / mashina yoki haydovchi
 
-🔴 MUHIM: Bu ikki modul o'rtasida ma'lumot almashish YO'Q!
-   - Dashboard'da reys ochsangiz, Fleet'ga ta'sir qilmaydi
-   - Fleet'da yoqilg'i qo'shsangiz, Dashboard'ga ta'sir qilmaydi
-   - Har biri o'z maqsadi uchun alohida tizim
+
+═══════════════════════════════════════════════════════════════════════════════
+📌 AUDIO UCHUN MATN
+═══════════════════════════════════════════════════════════════════════════════
+
+🎙️ TO'LIQ VERSIYA (1 daqiqa):
+
+Assalomu alaykum!
+
+Yuk tashish kompaniyangiz bormi yoki shunchaki bir nechta mashinangizni 
+nazorat qilmoqchimisiz?
+
+Avtojon - har ikkisi uchun yechim!
+
+Korporativ mijozlar uchun - yuk tashish nazorati:
+Haydovchilaringizni real vaqtda kuzating, reyslar oching, 
+xarajatlarni hisoblang, maosh to'lang - hammasi bir joyda!
+
+Oddiy mijozlar uchun - avtopark nazorati:
+2-3 ta mashinangiz bormi? Yoqilg'i sarfi, moy almashtirish, 
+shinalar holati - har bir mashinani individual kuzating!
+
+Ovoz bilan boshqaring - qo'l bilan yozish shart emas!
+
+Birinchi 30 kun mutlaqo bepul!
+
+avtojon.uz - hoziroq sinab ko'ring!
+
+───────────────────────────────────────────────────────────────────────────────
+
+🎙️ QISQA VERSIYA (30 soniya):
+
+Yuk tashish kompaniyangiz bormi? Yoki shunchaki mashinalaringizni 
+nazorat qilmoqchimisiz?
+
+Avtojon - ikkalasi uchun ham yechim!
+
+Haydovchilar, reyslar, yoqilg'i, texnik xizmat - 
+hammasi bitta platformada!
+
+30 kun bepul sinov!
+
+avtojon.uz
+
