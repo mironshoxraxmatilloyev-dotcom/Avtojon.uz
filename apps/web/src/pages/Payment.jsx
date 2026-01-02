@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Truck, CreditCard, ArrowLeft, Loader2, CheckCircle, XCircle, RefreshCw, Calendar, Shield } from 'lucide-react'
 import api from '../services/api'
 
-const PRICE_PER_VEHICLE = 50000 // 50,000 so'm
+// Fleet users uchun: 10,000 so'm / mashina / oy
+const PRICE_PER_VEHICLE = 10000
 
 export default function Payment() {
   const navigate = useNavigate()
@@ -273,7 +274,7 @@ export default function Payment() {
         {/* Info */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
           <p className="text-sm text-amber-800">
-            <strong>Eslatma:</strong> Birinchi 30 kun bepul! Sinov muddati tugagandan so'ng to'lov talab qilinadi.
+            <strong>Eslatma:</strong> Birinchi 7 kun bepul! Sinov muddati tugagandan so'ng to'lov talab qilinadi.
           </p>
         </div>
 

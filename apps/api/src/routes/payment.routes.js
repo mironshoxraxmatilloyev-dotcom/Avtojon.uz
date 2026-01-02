@@ -4,13 +4,47 @@ const mongoose = require('mongoose')
 const Payment = require('../models/Payment')
 const User = require('../models/User')
 const Businessman = require('../models/Businessman')
+const Vehicle = require('../models/Vehicle')
 const { protect } = require('../middleware/auth')
 
 // ObjectId validatsiya
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
 
 // ============ NARXLAR ============
-const PRICE_PER_UNIT = 50000 // 50,000 so'm / mashina yoki haydovchi / oy
+// Fleet users (admin): 10,000 so'm / mashina / oy
+// Biznesmenlar (business): 20,000 so'm / mashina / oy
+const PRICE_FLEET = 10000
+const PRICE_BUSINESS = 20000
+
+// ============ NARXNI HISOBLASH ============
+router.get('/calculate', protect, async (req, res) => {
+  try {
+    const userId = req.user?._id || req.businessman?._id
+    const userType = req.businessman ? 'Businessman' : 'User'
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi topilmadi' })
+    }
+    
+    // Ikkala user turi uchun ham mashina soniga qarab hisoblash
+    const vehicleCount = await Vehicle.countDocuments({ user: userId, isActive: true })
+    const pricePerVehicle = userType === 'Businessman' ? PRICE_BUSINESS : PRICE_FLEET
+    const totalPrice = Math.max(1, vehicleCount) * pricePerVehicle
+    
+    res.json({
+      success: true,
+      data: {
+        vehicleCount,
+        pricePerVehicle,
+        totalPrice,
+        userType
+      }
+    })
+  } catch (err) {
+    console.error('Calculate error:', err)
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
 
 // ============ TO'LOV YARATISH ============
 router.post('/create', protect, async (req, res) => {
@@ -27,7 +61,9 @@ router.post('/create', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Faqat Payme qo\'llab-quvvatlanadi' })
     }
     
-    const totalPrice = Math.max(1, unitCount) * PRICE_PER_UNIT
+    // Narxni user turiga qarab belgilash (ikkala turi uchun mashina soniga qarab)
+    const pricePerUnit = userType === 'Businessman' ? PRICE_BUSINESS : PRICE_FLEET
+    const totalPrice = Math.max(1, unitCount) * pricePerUnit
     
     // To'lov yaratish
     const payment = await Payment.create({
@@ -37,7 +73,7 @@ router.post('/create', protect, async (req, res) => {
       userType,
       type: type || 'fleet',
       unitCount,
-      description: `Avtojon obunasi - ${unitCount} ta ${type === 'business' ? 'haydovchi' : 'mashina'}`
+      description: `Avtojon obunasi - ${unitCount} ta mashina`
     })
     
     // Payme URL yaratish

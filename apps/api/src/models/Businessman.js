@@ -51,10 +51,10 @@ const businessmanSchema = new mongoose.Schema({
     endDate: {
       type: Date,
       default: () => {
-        // Test rejimda 1 daqiqa, production da 30 kun
+        // Test rejimda TRIAL_MINUTES, production da 7 kun (1 hafta)
         const trialMs = process.env.TRIAL_MINUTES 
           ? parseInt(process.env.TRIAL_MINUTES) * 60 * 1000 
-          : 30 * 24 * 60 * 60 * 1000 // 30 kun default
+          : 7 * 24 * 60 * 60 * 1000 // 7 kun (1 hafta) default
         return new Date(Date.now() + trialMs)
       }
     },
@@ -108,11 +108,14 @@ businessmanSchema.methods.upgradeToPro = async function(months = 1) {
 // Statik metodlar
 businessmanSchema.statics.getPlans = function() {
   return {
-    trial: { name: 'Sinov', duration: '1 daqiqa', price: 0 },
-    basic: { name: 'Asosiy', duration: '1 oy', price: 30000 },
-    pro: { name: 'Pro', duration: '1 oy', price: 50000 }
+    trial: { name: 'Sinov', duration: '7 kun', price: 0 },
+    basic: { name: 'Asosiy', duration: '1 oy', price: 20000 },
+    pro: { name: 'Pro', duration: '1 oy', price: 20000 }
   };
 };
+
+// Biznesmen uchun narx - 20,000 so'm / mashina / oy
+businessmanSchema.statics.PRICE_PER_VEHICLE = 20000;
 
 // Index yaratish - tez qidiruv uchun (username allaqachon unique: true orqali indexed)
 businessmanSchema.index({ isActive: 1 });

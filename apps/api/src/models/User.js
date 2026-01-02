@@ -43,10 +43,10 @@ const userSchema = new mongoose.Schema({
     endDate: {
       type: Date,
       default: () => {
-        // Test rejimda 1 daqiqa, production da 30 kun
+        // Test rejimda TRIAL_MINUTES, production da 7 kun (1 hafta)
         const trialMs = process.env.TRIAL_MINUTES 
           ? parseInt(process.env.TRIAL_MINUTES) * 60 * 1000 
-          : 30 * 24 * 60 * 60 * 1000 // 30 kun default
+          : 7 * 24 * 60 * 60 * 1000 // 7 kun (1 hafta) default
         return new Date(Date.now() + trialMs)
       }
     },
@@ -75,15 +75,15 @@ userSchema.methods.checkSubscription = function() {
   
   // Agar subscription mavjud bo'lmasa - yangi user, trial boshlanadi
   if (!this.subscription || !this.subscription.endDate) {
-    // 30 kun trial
-    const endDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    // 7 kun trial (1 hafta)
+    const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     return {
       plan: 'trial',
       startDate: now,
       endDate: endDate,
       isExpired: false,
-      daysLeft: 30,
-      msLeft: 30 * 24 * 60 * 60 * 1000
+      daysLeft: 7,
+      msLeft: 7 * 24 * 60 * 60 * 1000
     };
   }
   
@@ -116,10 +116,13 @@ userSchema.methods.upgradeToPro = async function(months = 1) {
 userSchema.statics.getPlans = function() {
   return {
     trial: { name: 'Sinov', duration: '7 kun', price: 0 },
-    basic: { name: 'Asosiy', duration: '1 oy', price: 30000 },
-    pro: { name: 'Pro', duration: '1 oy', price: 50000 }
+    basic: { name: 'Asosiy', duration: '1 oy', price: 10000 },
+    pro: { name: 'Pro', duration: '1 oy', price: 10000 }
   };
 };
+
+// Fleet user uchun narx - 10,000 so'm / mashina / oy
+userSchema.statics.PRICE_PER_VEHICLE = 10000;
 
 // Index yaratish - tez qidiruv uchun (username allaqachon unique: true orqali indexed)
 userSchema.index({ isActive: 1 });
