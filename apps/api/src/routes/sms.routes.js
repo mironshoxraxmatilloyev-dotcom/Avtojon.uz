@@ -22,10 +22,10 @@ router.post('/send', protect, authorize('superadmin'), async (req, res) => {
   try {
     const { phone, phones, message, type = 'notification' } = req.body
     
-    if (!message || message.length > 160) {
+    if (!message || message.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: 'SMS matni 1-160 belgi bo\'lishi kerak' 
+        message: 'SMS matni kiritilmagan' 
       })
     }
     
@@ -76,10 +76,10 @@ router.post('/send-all', protect, authorize('superadmin'), async (req, res) => {
   try {
     const { message, userFilter = {} } = req.body
     
-    if (!message || message.length > 160) {
+    if (!message || message.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: 'SMS matni 1-160 belgi bo\'lishi kerak' 
+        message: 'SMS matni kiritilmagan' 
       })
     }
     

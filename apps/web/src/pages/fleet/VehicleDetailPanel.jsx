@@ -358,15 +358,22 @@ export default function VehicleDetailPanel() {
     const positions = count === 6 ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)'] : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng']
     setModal(null)
     
-    // Barcha shina alertlarini tozalash (to'liq almashtirish)
     setMaintenanceAlerts(prev => prev.filter(a => a.type !== 'tire'))
     
-    const newTires = positions.map((position, i) => ({ _id: `temp_${Date.now()}_${i}`, position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', remainingKm: 50000, status: 'new' }))
+    const tempIds = positions.map((_, i) => `temp_${Date.now()}_${i}`)
+    const newTires = positions.map((position, i) => ({ _id: tempIds[i], position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', remainingKm: 50000, status: 'new' }))
     setTires(prev => [...prev, ...newTires])
     alert.success(`${count} ta shina qo'shildi`)
+    
     try {
-      await Promise.all(positions.map(position => api.post(`/maintenance/vehicles/${id}/tires`, { position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', installDate: today(), installOdometer: bulkTireForm.installOdometer ? +bulkTireForm.installOdometer : 0, expectedLifeKm: 50000, cost: bulkTireForm.cost ? Math.round(+bulkTireForm.cost / count) : 0 })))
-      loadData()
+      const responses = await Promise.all(positions.map(position => api.post(`/maintenance/vehicles/${id}/tires`, { position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', installDate: today(), installOdometer: bulkTireForm.installOdometer ? +bulkTireForm.installOdometer : 0, expectedLifeKm: 50000, cost: bulkTireForm.cost ? Math.round(+bulkTireForm.cost / count) : 0 })))
+      const savedTires = responses.map(r => r.data?.data).filter(Boolean)
+      if (savedTires.length > 0) {
+        setTires(prev => {
+          const withoutTemp = prev.filter(t => !tempIds.includes(t._id))
+          return [...withoutTemp, ...savedTires]
+        })
+      }
     } catch (err) {
       console.error('Shinalar saqlashda xatolik:', err)
       loadData()
@@ -375,7 +382,6 @@ export default function VehicleDetailPanel() {
 
   // Ovozli yoqilg'i qo'shish
   const handleVoiceFuel = useCallback(async (voiceData) => {
-    // Yoqilg'i turi mapping
     const fuelTypeMap = {
       'fuel_metan': 'metan',
       'fuel_benzin': 'benzin',
@@ -389,7 +395,6 @@ export default function VehicleDetailPanel() {
     const cost = voiceData.amount || 0
     const odometer = vehicle?.currentOdometer || 0
     
-    // Optimistic update
     const tempId = `temp_${Date.now()}`
     const newRefill = {
       _id: tempId,
@@ -413,7 +418,6 @@ export default function VehicleDetailPanel() {
     
     alert.success('🎤 Yoqilg\'i qo\'shildi!')
     
-    // Serverga yuborish
     try {
       const response = await api.post(`/maintenance/vehicles/${id}/fuel`, {
         date: new Date().toISOString().split('T')[0],
@@ -424,14 +428,19 @@ export default function VehicleDetailPanel() {
         station: voiceData.description || 'Ovoz orqali kiritildi'
       })
       
-      // Alertlarni tekshirish
       if (response.data?.data?.alerts?.length > 0) {
         setMaintenanceAlerts(response.data.data.alerts)
       }
       
-      loadData() // Ma'lumotlarni yangilash
+      if (response.data?.data) {
+        setFuelData(prev => ({
+          ...prev,
+          refills: prev.refills.map(r => r._id === tempId ? response.data.data : r)
+        }))
+      }
     } catch (err) {
       console.error('Yoqilg\'i saqlashda xatolik:', err)
+      loadData()
     }
   }, [id, vehicle?.fuelType, vehicle?.currentOdometer, alert, loadData])
 
@@ -455,17 +464,15 @@ export default function VehicleDetailPanel() {
     setOilData(prev => ({
       ...prev,
       changes: [newChange, ...prev.changes],
-      status: 'ok', // Moy almashtirildi - status yaxshi
-      remainingKm: 10000 // Yangi interval
+      status: 'ok',
+      remainingKm: 10000
     }))
     
-    // Moy alertlarini darhol tozalash (optimistic)
     setMaintenanceAlerts(prev => prev.filter(a => a.type !== 'oil'))
-    
     alert.success('🎤 Moy almashtirish qo\'shildi!')
     
     try {
-      await api.post(`/maintenance/vehicles/${id}/oil`, {
+      const response = await api.post(`/maintenance/vehicles/${id}/oil`, {
         date: new Date().toISOString().split('T')[0],
         oilType: voiceData.oilType || '',
         oilBrand: voiceData.oilBrand || '',
@@ -474,9 +481,19 @@ export default function VehicleDetailPanel() {
         odometer,
         nextChangeOdometer: Number(voiceData.nextChangeOdometer) || odometer + 10000
       })
-      loadData()
+      // Serverdan kelgan ma'lumot bilan yangilash
+      if (response.data?.data) {
+        const savedItem = response.data.data
+        setOilData(prev => ({
+          ...prev,
+          changes: prev.changes.map(c => c._id === tempId ? savedItem : c),
+          status: 'ok',
+          remainingKm: savedItem.nextChangeOdometer ? savedItem.nextChangeOdometer - (savedItem.odometer || 0) : 10000
+        }))
+      }
     } catch (err) {
       console.error('Moy saqlashda xatolik:', err)
+      loadData() // Faqat xatolikda qayta yuklash
     }
   }, [id, vehicle?.currentOdometer, alert, loadData])
 
@@ -487,23 +504,20 @@ export default function VehicleDetailPanel() {
     const installOdometer = Number(voiceData.installOdometer) || Number(voiceData.odometer) || vehicle?.currentOdometer || 0
     const tirePosition = voiceData.position || 'Old chap'
     
-    // Shina alertlarini darhol tozalash (optimistic) - tegishli pozitsiya uchun
     setMaintenanceAlerts(prev => prev.filter(a => {
       if (a.type !== 'tire') return true
-      // Agar bir nechta shina qo'shilsa, barcha shina alertlarini o'chirish
       if (count > 1) return false
-      // Bitta shina uchun faqat shu pozitsiya alertini o'chirish
       return !a.message?.toLowerCase().includes(tirePosition.toLowerCase())
     }))
     
-    // Agar count > 1 bo'lsa, bir nechta shina qo'shish
     if (count > 1) {
       const positions = count === 6 
         ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)']
         : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng'].slice(0, count)
       
+      const tempIds = positions.map((_, i) => `temp_${Date.now()}_${i}`)
       const newTires = positions.map((position, i) => ({
-        _id: `temp_${Date.now()}_${i}`,
+        _id: tempIds[i],
         position,
         brand: voiceData.brand || '',
         size: voiceData.size || '',
@@ -519,7 +533,7 @@ export default function VehicleDetailPanel() {
       alert.success(`🎤 ${count} ta shina qo'shildi!`)
       
       try {
-        await Promise.all(positions.map(position => 
+        const responses = await Promise.all(positions.map(position => 
           api.post(`/maintenance/vehicles/${id}/tires`, {
             position,
             brand: voiceData.brand || '',
@@ -530,12 +544,19 @@ export default function VehicleDetailPanel() {
             cost: Math.round(cost / count)
           })
         ))
-        loadData()
+        // Serverdan kelgan ma'lumotlar bilan yangilash
+        const savedTires = responses.map(r => r.data?.data).filter(Boolean)
+        if (savedTires.length > 0) {
+          setTires(prev => {
+            const withoutTemp = prev.filter(t => !tempIds.includes(t._id))
+            return [...withoutTemp, ...savedTires]
+          })
+        }
       } catch (err) {
         console.error('Shinalar saqlashda xatolik:', err)
+        loadData()
       }
     } else {
-      // Bitta shina
       const tempId = `temp_${Date.now()}`
       const newTire = {
         _id: tempId,
@@ -554,7 +575,7 @@ export default function VehicleDetailPanel() {
       alert.success('🎤 Shina qo\'shildi!')
       
       try {
-        await api.post(`/maintenance/vehicles/${id}/tires`, {
+        const response = await api.post(`/maintenance/vehicles/${id}/tires`, {
           position: tirePosition,
           brand: voiceData.brand || '',
           size: voiceData.size || '',
@@ -563,9 +584,12 @@ export default function VehicleDetailPanel() {
           expectedLifeKm: 50000,
           cost
         })
-        loadData()
+        if (response.data?.data) {
+          setTires(prev => prev.map(t => t._id === tempId ? response.data.data : t))
+        }
       } catch (err) {
         console.error('Shina saqlashda xatolik:', err)
+        loadData()
       }
     }
   }, [id, vehicle?.currentOdometer, alert, loadData])
@@ -598,7 +622,7 @@ export default function VehicleDetailPanel() {
     alert.success('🎤 Xizmat qo\'shildi!')
     
     try {
-      await api.post(`/maintenance/vehicles/${id}/services`, {
+      const response = await api.post(`/maintenance/vehicles/${id}/services`, {
         type: voiceData.type || 'TO-1',
         date: new Date().toISOString().split('T')[0],
         odometer,
@@ -606,9 +630,15 @@ export default function VehicleDetailPanel() {
         description: voiceData.description || '',
         serviceName: voiceData.serviceName || ''
       })
-      loadData()
+      if (response.data?.data) {
+        setServices(prev => ({
+          ...prev,
+          services: prev.services.map(s => s._id === tempId ? response.data.data : s)
+        }))
+      }
     } catch (err) {
       console.error('Xizmat saqlashda xatolik:', err)
+      loadData()
     }
   }, [id, vehicle?.currentOdometer, alert, loadData])
 
@@ -644,7 +674,7 @@ export default function VehicleDetailPanel() {
     alert.success('🎤 Daromad qo\'shildi!')
     
     try {
-      await api.post(`/maintenance/vehicles/${id}/income`, {
+      const response = await api.post(`/maintenance/vehicles/${id}/income`, {
         type: voiceData.type || 'trip',
         date: new Date().toISOString().split('T')[0],
         amount,
@@ -657,9 +687,15 @@ export default function VehicleDetailPanel() {
         rentalRate: Number(voiceData.rentalRate) || 0,
         description: voiceData.description || ''
       })
-      loadData()
+      if (response.data?.data) {
+        setIncomeData(prev => ({
+          ...prev,
+          incomes: prev.incomes.map(i => i._id === tempId ? response.data.data : i)
+        }))
+      }
     } catch (err) {
       console.error('Daromad saqlashda xatolik:', err)
+      loadData()
     }
   }, [id, alert, loadData])
 

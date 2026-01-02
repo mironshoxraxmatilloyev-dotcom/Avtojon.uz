@@ -396,16 +396,20 @@ export default function SmsPanel() {
             {/* Message */}
             <div>
               <label className="block text-sm text-slate-400 mb-2">
-                SMS matni ({smsForm.message.length}/160)
+                SMS matni ({smsForm.message.length} belgi)
               </label>
               <textarea
                 value={smsForm.message}
-                onChange={e => setSmsForm({ ...smsForm, message: e.target.value.slice(0, 160) })}
+                onChange={e => setSmsForm({ ...smsForm, message: e.target.value })}
                 placeholder="SMS matnini kiriting..."
-                rows={3}
-                maxLength={160}
+                rows={4}
                 className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
               />
+              {smsForm.message.length > 160 && (
+                <p className="text-xs text-amber-400 mt-1">
+                  ⚠️ {Math.ceil(smsForm.message.length / 160)} ta SMS sifatida yuboriladi
+                </p>
+              )}
             </div>
 
             {/* Buttons */}
