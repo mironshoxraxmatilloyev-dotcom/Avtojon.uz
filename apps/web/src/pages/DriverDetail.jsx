@@ -304,7 +304,7 @@ export default function DriverDetail() {
               <div className={`mt-4 p-4 rounded-xl ${driver.currentBalance > 0 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'bg-slate-100 border border-slate-200'}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">💰</span>
+                    <Wallet className="w-6 h-6" />
                     <div>
                       <p className={`text-sm ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-500'}`}>Haydovchidagi pul</p>
                       <p className={`text-2xl font-bold ${driver.currentBalance > 0 ? 'text-white' : 'text-slate-600'}`}>{formatMoney(driver.currentBalance || 0)} so'm</p>
@@ -389,7 +389,7 @@ export default function DriverDetail() {
                         flight.status === 'active' ? 'text-orange-600' : 
                         flight.status === 'completed' ? 'text-emerald-600' : 'text-gray-500'
                       }`}>
-                        {flight.status === 'active' ? '🚛 Faol' : flight.status === 'completed' ? '✅ Yopilgan' : '❌ Bekor'}
+                        {flight.status === 'active' ? 'Faol' : flight.status === 'completed' ? 'Yopilgan' : 'Bekor'}
                       </span>
                       {flight.driverProfitAmount > 0 && (
                         <p className="text-sm font-bold text-purple-600">Ulush: +{formatMoney(flight.driverProfitAmount)}</p>
@@ -497,7 +497,7 @@ export default function DriverDetail() {
                   <div className="p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl border border-purple-500/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">💰</span>
+                        <Wallet className="w-6 h-6 text-purple-400" />
                         <div>
                           <p className="text-purple-300 text-sm">Avvalgi marshrutdan qolgan</p>
                           <p className="text-white font-bold text-xl">{formatMoney(driver.currentBalance)} so'm</p>

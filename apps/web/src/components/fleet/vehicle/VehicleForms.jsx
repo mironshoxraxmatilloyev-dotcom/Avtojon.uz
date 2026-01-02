@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { X } from 'lucide-react'
+import { X, Droplet, AlertCircle } from 'lucide-react'
 import { FUEL_TYPES, TIRE_POSITIONS, SERVICE_TYPES } from './constants'
 
 // Raqamni formatlash (1000000 -> 1 000 000)
@@ -120,11 +120,11 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
       const remainingKm = nextOilOdo - currentOdo
       
       if (remainingKm <= 0) {
-        warnings.push({ type: 'danger', icon: '🛢️', message: `Moy almashtirish vaqti o'tdi! ${Math.abs(remainingKm)} km ortiqcha yurildi` })
+        warnings.push({ type: 'danger', iconType: 'oil', message: `Moy almashtirish vaqti o'tdi! ${Math.abs(remainingKm)} km ortiqcha yurildi` })
       } else if (remainingKm <= 1000) {
-        warnings.push({ type: 'warning', icon: '🛢️', message: `Moy almashtirishga ${remainingKm} km qoldi` })
+        warnings.push({ type: 'warning', iconType: 'oil', message: `Moy almashtirishga ${remainingKm} km qoldi` })
       } else if (remainingKm <= 2000) {
-        warnings.push({ type: 'info', icon: '🛢️', message: `Moy almashtirishga ${remainingKm} km qoldi` })
+        warnings.push({ type: 'info', iconType: 'oil', message: `Moy almashtirishga ${remainingKm} km qoldi` })
       }
     }
 
@@ -137,9 +137,9 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
         const remainingKm = expectedLife - usedKm
         
         if (remainingKm <= 0) {
-          warnings.push({ type: 'danger', icon: '🔴', message: `${tire.position} shina almashtirish kerak!` })
+          warnings.push({ type: 'danger', iconType: 'tire', message: `${tire.position} shina almashtirish kerak!` })
         } else if (remainingKm <= 5000) {
-          warnings.push({ type: 'warning', icon: '🟡', message: `${tire.position} shinaga ${remainingKm} km qoldi` })
+          warnings.push({ type: 'warning', iconType: 'tire', message: `${tire.position} shinaga ${remainingKm} km qoldi` })
         }
       }
     }
@@ -173,7 +173,7 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
                 'bg-blue-50 border-blue-200 text-blue-700'
               }`}
             >
-              <span>{w.icon}</span>
+              {w.iconType === 'oil' ? <Droplet size={16} /> : <AlertCircle size={16} />}
               <span className="text-sm font-medium">{w.message}</span>
             </div>
           ))}

@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { X, Route, Gauge, Fuel, Truck } from 'lucide-react'
+import { X, Route, Gauge, Fuel, Truck, MapPin, Globe, Circle, Droplet, Play } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
 
 const formatNumber = (value) => {
@@ -53,11 +53,11 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
                         <div className="grid grid-cols-2 gap-2">
                             <button type="button" onClick={() => setForm({ ...form, flightType: 'domestic' })}
                                 className={`p-2.5 sm:p-3 rounded-xl border-2 flex items-center justify-center gap-1.5 sm:gap-2 ${isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                                <span className="text-base sm:text-lg">🇺🇿</span><span className="font-medium text-xs sm:text-sm">Mahalliy</span>
+                                <MapPin size={18} className="sm:w-5 sm:h-5" /><span className="font-medium text-xs sm:text-sm">Mahalliy</span>
                             </button>
                             <button type="button" onClick={() => setForm({ ...form, flightType: 'international' })}
                                 className={`p-2.5 sm:p-3 rounded-xl border-2 flex items-center justify-center gap-1.5 sm:gap-2 ${!isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                                <span className="text-base sm:text-lg">🌍</span><span className="font-medium text-xs sm:text-sm">Xalqaro</span>
+                                <Globe size={18} className="sm:w-5 sm:h-5" /><span className="font-medium text-xs sm:text-sm">Xalqaro</span>
                             </button>
                         </div>
                     </div>
@@ -87,15 +87,19 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
                         <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">Yoqilgi turi</label>
                         <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                             {[
-                                { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-                                { value: 'propan', label: 'Propan', icon: '🟡', unit: 'kub' },
-                                { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-                                { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
+                                { value: 'metan', label: 'Metan', color: 'text-green-400', unit: 'kub' },
+                                { value: 'propan', label: 'Propan', color: 'text-yellow-400', unit: 'kub' },
+                                { value: 'benzin', label: 'Benzin', color: 'text-red-400', unit: 'litr' },
+                                { value: 'diesel', label: 'Dizel', color: 'text-orange-400', unit: 'litr' }
                             ].map(fuel => (
                                 <button key={fuel.value} type="button"
                                     onClick={() => setForm({ ...form, fuelType: fuel.value, fuelUnit: fuel.unit })}
                                     className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border text-center ${form.fuelType === fuel.value ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                                    <span className="text-base sm:text-xl">{fuel.icon}</span>
+                                    {fuel.value === 'benzin' || fuel.value === 'diesel' ? (
+                                        <Droplet size={20} className={`sm:w-6 sm:h-6 mx-auto ${fuel.color}`} />
+                                    ) : (
+                                        <Circle size={20} className={`sm:w-6 sm:h-6 mx-auto ${fuel.color}`} fill="currentColor" />
+                                    )}
                                     <p className="text-[9px] sm:text-[10px] mt-0.5">{fuel.label}</p>
                                 </button>
                             ))}
@@ -127,8 +131,9 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold text-sm sm:text-base hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 active:scale-[0.98] transition-transform">
-                        🚀 Mashrutni boshlash
+                    <button type="submit" className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold text-sm sm:text-base hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                        <Play size={18} className="sm:w-5 sm:h-5" />
+                        Mashrutni boshlash
                     </button>
                 </form>
             </div>

@@ -1,48 +1,48 @@
-// Davlatlar
+// Davlatlar - iconName Lucide icon nomi
 export const COUNTRIES = {
-  UZB: { name: "O'zbekiston", flag: '🇺🇿', currency: 'UZS' },
-  KZ: { name: "Qozog'iston", flag: '🇰🇿', currency: 'KZT' },
-  RU: { name: 'Rossiya', flag: '🇷🇺', currency: 'RUB' },
-  TJ: { name: 'Tojikiston', flag: '🇹🇯', currency: 'TJS' },
-  KG: { name: "Qirg'iziston", flag: '🇰🇬', currency: 'KGS' },
-  TM: { name: 'Turkmaniston', flag: '🇹🇲', currency: 'TMT' },
-  AF: { name: "Afg'oniston", flag: '🇦🇫', currency: 'AFN' },
-  CN: { name: 'Xitoy', flag: '🇨🇳', currency: 'CNY' },
-  TR: { name: 'Turkiya', flag: '🇹🇷', currency: 'TRY' },
-  IR: { name: 'Eron', flag: '🇮🇷', currency: 'IRR' },
-  AZ: { name: 'Ozarbayjon', flag: '🇦🇿', currency: 'AZN' },
-  GE: { name: 'Gruziya', flag: '🇬🇪', currency: 'GEL' },
-  BY: { name: 'Belarus', flag: '🇧🇾', currency: 'BYN' },
-  UA: { name: 'Ukraina', flag: '🇺🇦', currency: 'UAH' },
-  PL: { name: 'Polsha', flag: '🇵🇱', currency: 'PLN' },
-  DE: { name: 'Germaniya', flag: '🇩🇪', currency: 'EUR' },
-  LT: { name: 'Litva', flag: '🇱🇹', currency: 'EUR' },
-  LV: { name: 'Latviya', flag: '🇱🇻', currency: 'EUR' },
-  EE: { name: 'Estoniya', flag: '🇪🇪', currency: 'EUR' },
-  FI: { name: 'Finlandiya', flag: '🇫🇮', currency: 'EUR' },
-  AE: { name: 'BAA', flag: '🇦🇪', currency: 'AED' }
+  UZB: { name: "O'zbekiston", iconName: 'Flag', code: 'UZ', currency: 'UZS' },
+  KZ: { name: "Qozog'iston", iconName: 'Flag', code: 'KZ', currency: 'KZT' },
+  RU: { name: 'Rossiya', iconName: 'Flag', code: 'RU', currency: 'RUB' },
+  TJ: { name: 'Tojikiston', iconName: 'Flag', code: 'TJ', currency: 'TJS' },
+  KG: { name: "Qirg'iziston", iconName: 'Flag', code: 'KG', currency: 'KGS' },
+  TM: { name: 'Turkmaniston', iconName: 'Flag', code: 'TM', currency: 'TMT' },
+  AF: { name: "Afg'oniston", iconName: 'Flag', code: 'AF', currency: 'AFN' },
+  CN: { name: 'Xitoy', iconName: 'Flag', code: 'CN', currency: 'CNY' },
+  TR: { name: 'Turkiya', iconName: 'Flag', code: 'TR', currency: 'TRY' },
+  IR: { name: 'Eron', iconName: 'Flag', code: 'IR', currency: 'IRR' },
+  AZ: { name: 'Ozarbayjon', iconName: 'Flag', code: 'AZ', currency: 'AZN' },
+  GE: { name: 'Gruziya', iconName: 'Flag', code: 'GE', currency: 'GEL' },
+  BY: { name: 'Belarus', iconName: 'Flag', code: 'BY', currency: 'BYN' },
+  UA: { name: 'Ukraina', iconName: 'Flag', code: 'UA', currency: 'UAH' },
+  PL: { name: 'Polsha', iconName: 'Flag', code: 'PL', currency: 'PLN' },
+  DE: { name: 'Germaniya', iconName: 'Flag', code: 'DE', currency: 'EUR' },
+  LT: { name: 'Litva', iconName: 'Flag', code: 'LT', currency: 'EUR' },
+  LV: { name: 'Latviya', iconName: 'Flag', code: 'LV', currency: 'EUR' },
+  EE: { name: 'Estoniya', iconName: 'Flag', code: 'EE', currency: 'EUR' },
+  FI: { name: 'Finlandiya', iconName: 'Flag', code: 'FI', currency: 'EUR' },
+  AE: { name: 'BAA', iconName: 'Flag', code: 'AE', currency: 'AED' }
 }
 
-// Valyutalar
+// Valyutalar - iconName Lucide icon nomi
 export const CURRENCIES = {
-  UZS: { symbol: "so'm", name: "O'zbek so'mi", flag: '🇺🇿' },
-  USD: { symbol: '$', name: 'AQSH dollari', flag: '🇺🇸' },
-  RUB: { symbol: '₽', name: 'Rossiya rubli', flag: '🇷🇺' },
-  KZT: { symbol: '₸', name: 'Qozog\'iston tengesi', flag: '🇰🇿' },
-  EUR: { symbol: '€', name: 'Yevro', flag: '🇪🇺' },
-  TRY: { symbol: '₺', name: 'Turkiya lirasi', flag: '🇹🇷' },
-  CNY: { symbol: '¥', name: 'Xitoy yuani', flag: '🇨🇳' },
-  TJS: { symbol: 'SM', name: 'Tojikiston somonisi', flag: '🇹🇯' },
-  KGS: { symbol: 'сом', name: 'Qirg\'iziston somi', flag: '🇰🇬' },
-  TMT: { symbol: 'm', name: 'Turkmaniston manati', flag: '🇹🇲' },
-  AZN: { symbol: '₼', name: 'Ozarbayjon manati', flag: '🇦🇿' },
-  GEL: { symbol: '₾', name: 'Gruziya larisi', flag: '🇬🇪' },
-  BYN: { symbol: 'Br', name: 'Belarus rubli', flag: '🇧🇾' },
-  UAH: { symbol: '₴', name: 'Ukraina grivnasi', flag: '🇺🇦' },
-  PLN: { symbol: 'zł', name: 'Polsha zlotisi', flag: '🇵🇱' },
-  AED: { symbol: 'د.إ', name: 'BAA dirhami', flag: '🇦🇪' },
-  AFN: { symbol: '؋', name: 'Afg\'oniston afg\'onisi', flag: '🇦🇫' },
-  IRR: { symbol: '﷼', name: 'Eron riyoli', flag: '🇮🇷' }
+  UZS: { symbol: "so'm", name: "O'zbek so'mi", code: 'UZ' },
+  USD: { symbol: '$', name: 'AQSH dollari', code: 'US' },
+  RUB: { symbol: '₽', name: 'Rossiya rubli', code: 'RU' },
+  KZT: { symbol: '₸', name: 'Qozog\'iston tengesi', code: 'KZ' },
+  EUR: { symbol: '€', name: 'Yevro', code: 'EU' },
+  TRY: { symbol: '₺', name: 'Turkiya lirasi', code: 'TR' },
+  CNY: { symbol: '¥', name: 'Xitoy yuani', code: 'CN' },
+  TJS: { symbol: 'SM', name: 'Tojikiston somonisi', code: 'TJ' },
+  KGS: { symbol: 'сом', name: 'Qirg\'iziston somi', code: 'KG' },
+  TMT: { symbol: 'm', name: 'Turkmaniston manati', code: 'TM' },
+  AZN: { symbol: '₼', name: 'Ozarbayjon manati', code: 'AZ' },
+  GEL: { symbol: '₾', name: 'Gruziya larisi', code: 'GE' },
+  BYN: { symbol: 'Br', name: 'Belarus rubli', code: 'BY' },
+  UAH: { symbol: '₴', name: 'Ukraina grivnasi', code: 'UA' },
+  PLN: { symbol: 'zł', name: 'Polsha zlotisi', code: 'PL' },
+  AED: { symbol: 'د.إ', name: 'BAA dirhami', code: 'AE' },
+  AFN: { symbol: '؋', name: 'Afg\'oniston afg\'onisi', code: 'AF' },
+  IRR: { symbol: '﷼', name: 'Eron riyoli', code: 'IR' }
 }
 
 // Tez-tez ishlatiladigan valyutalar
@@ -93,10 +93,10 @@ export const BORDER_TYPES = [
 
 // Yoqilg'i turlari
 export const FUEL_TYPES = [
-  { value: 'fuel_metan', label: 'Metan', icon: '🟢', iconName: 'CircleDot', iconColor: 'text-green-500', unit: 'kub' },
-  { value: 'fuel_propan', label: 'Propan', icon: '🟡', iconName: 'Circle', iconColor: 'text-yellow-500', unit: 'kub' },
-  { value: 'fuel_benzin', label: 'Benzin', icon: '🔴', iconName: 'Fuel', iconColor: 'text-red-500', unit: 'litr' },
-  { value: 'fuel_diesel', label: 'Dizel', icon: '🔵', iconName: 'Droplet', iconColor: 'text-blue-500', unit: 'litr' }
+  { value: 'fuel_metan', label: 'Metan', iconName: 'CircleDot', iconColor: 'text-green-500', unit: 'kub' },
+  { value: 'fuel_propan', label: 'Propan', iconName: 'Circle', iconColor: 'text-yellow-500', unit: 'kub' },
+  { value: 'fuel_benzin', label: 'Benzin', iconName: 'Fuel', iconColor: 'text-red-500', unit: 'litr' },
+  { value: 'fuel_diesel', label: 'Dizel', iconName: 'Droplet', iconColor: 'text-blue-500', unit: 'litr' }
 ]
 
 // Display uchun barcha turlar

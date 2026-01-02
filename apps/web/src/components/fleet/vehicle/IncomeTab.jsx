@@ -1,5 +1,5 @@
 import { memo, useState } from 'react'
-import { Plus, DollarSign, Truck, Home, Briefcase, Gift, Edit2, Trash2, TrendingUp, Calendar, Mic } from 'lucide-react'
+import { Plus, DollarSign, Truck, Home, Briefcase, Gift, Edit2, Trash2, TrendingUp, Calendar, Mic, User, Package } from 'lucide-react'
 import { fmt, fmtDate } from './constants'
 import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
@@ -36,7 +36,7 @@ export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) =>
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-violet-500/25"
           >
             <Mic size={18} />
-            <span className="hidden sm:inline">🎤 Ovoz</span>
+            <span className="hidden sm:inline">Ovoz</span>
           </button>
           <button
             onClick={onAdd}
@@ -151,8 +151,8 @@ const IncomeCard = memo(({ income, onEdit, onDelete }) => {
             {/* Qo'shimcha ma'lumotlar */}
             {(income.clientName || income.cargoWeight > 0) && (
               <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                {income.clientName && <span>👤 {income.clientName}</span>}
-                {income.cargoWeight > 0 && <span>📦 {income.cargoWeight} t</span>}
+                {income.clientName && <span className="flex items-center gap-1"><User size={12} /> {income.clientName}</span>}
+                {income.cargoWeight > 0 && <span className="flex items-center gap-1"><Package size={12} /> {income.cargoWeight} t</span>}
               </div>
             )}
           </div>

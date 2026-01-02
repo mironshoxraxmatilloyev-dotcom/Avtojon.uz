@@ -165,7 +165,7 @@ export default function DriversNew() {
                 // Deep copy qilish - React state yangilanishini ta'minlash
                 const newFlight = JSON.parse(JSON.stringify(data.flight))
                 dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: newFlight })
-                showToast.success(data.message || '✅ Haydovchi xarajatni tasdiqladi')
+                showToast.success(data.message || 'Haydovchi xarajatni tasdiqladi')
             }
         })
 

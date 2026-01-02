@@ -33,7 +33,7 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
           className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/25"
         >
           <Mic size={18} />
-          <span className="sm:inline">🎤 Ovoz</span>
+          <span className="sm:inline">Ovoz</span>
         </button>
         <button
           onClick={onAddBulk}

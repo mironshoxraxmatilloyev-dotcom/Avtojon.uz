@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, CheckCircle, X,
-  Truck, User, Calendar, Sparkles, Zap
+  Truck, User, Calendar, Sparkles, Zap, Wallet
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -85,14 +85,6 @@ export default function FlightDetail() {
     // Biznesmen ID ni flight dan olamiz (user authStore dan kelmasa ham ishlaydi)
     const businessId = flight.user._id || flight.user
 
-    console.log('═══════════════════════════════════════════')
-    console.log('🔌 SOCKET SETUP - FlightDetail')
-    console.log('═══════════════════════════════════════════')
-    console.log('🔌 Business ID (from flight):', businessId)
-    console.log('🔌 User ID (from authStore):', user?._id)
-    console.log('🔌 Flight ID:', id)
-    console.log('═══════════════════════════════════════════')
-
     // Socket ni olish yoki yaratish
     const socket = connectSocket()
 
@@ -112,38 +104,41 @@ export default function FlightDetail() {
       }
     }
 
-    const handleExpenseConfirmed = (data) => {
-      console.log('📥 expense-confirmed event received!')
-      console.log('📥 Data:', JSON.stringify(data, null, 2))
-      console.log('📥 Current flight ID:', id)
-      console.log('📥 Event flight ID:', data.flight?._id)
+    // flight-completed uchun alohida handler - toast ko'rsatmaslik
+    // chunki CompleteModal da allaqachon toast ko'rsatilgan
+    const handleCompleted = (data) => {
+      const eventFlightId = data.flight?._id?.toString()
+      const currentFlightId = id?.toString()
       
+      if (eventFlightId && eventFlightId === currentFlightId) {
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        setFlight(newFlight)
+        // Toast ko'rsatmaslik - allaqachon CompleteModal da ko'rsatilgan
+      }
+    }
+
+    const handleExpenseConfirmed = (data) => {
       // ID larni string ga o'girish va solishtirish
       const eventFlightId = data.flight?._id?.toString()
       const currentFlightId = id?.toString()
       
-      console.log('📥 Comparing IDs:', eventFlightId, '===', currentFlightId, ':', eventFlightId === currentFlightId)
-      
       if (eventFlightId && eventFlightId === currentFlightId) {
-        console.log('📥 IDs match! Updating flight state...')
         // Deep copy qilish - React state yangilanishini ta'minlash
         const newFlight = JSON.parse(JSON.stringify(data.flight))
         setFlight(newFlight)
-        showToast.success('✅ Haydovchi xarajatni tasdiqladi')
-      } else {
-        console.log('📥 IDs do not match, ignoring event')
+        showToast.success('Haydovchi xarajatni tasdiqladi')
       }
     }
     
     // Barcha kerakli eventlarni tinglash
     socket.on('flight-updated', handleUpdate)
-    socket.on('flight-completed', handleUpdate)
+    socket.on('flight-completed', handleCompleted) // Alohida handler
     socket.on('flight-confirmed', handleUpdate)
     socket.on('expense-confirmed', handleExpenseConfirmed)
     
     return () => {
       socket.off('flight-updated', handleUpdate)
-      socket.off('flight-completed', handleUpdate)
+      socket.off('flight-completed', handleCompleted)
       socket.off('flight-confirmed', handleUpdate)
       socket.off('expense-confirmed', handleExpenseConfirmed)
     }
@@ -326,7 +321,7 @@ export default function FlightDetail() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">💰</span>
+                  <Wallet className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="text-purple-200 text-sm">Avvalgi marshrutdan qolgan</p>

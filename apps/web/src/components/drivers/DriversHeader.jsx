@@ -1,4 +1,4 @@
-import { Plus, Calendar, ArrowUpRight, Users, Activity, User, Truck, Mic } from 'lucide-react'
+import { Plus, Calendar, ArrowUpRight, Users, Activity, User, Truck, Mic, Hand } from 'lucide-react'
 
 export default function DriversHeader({ user, drivers, vehicles, onAddDriver, onVoiceFlight }) {
   const getGreeting = () => {
@@ -31,8 +31,9 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver, on
               return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
             })()}</span>
           </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
-            {getGreeting()}, {user?.companyName || 'Admin'}! 👋
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 flex items-center gap-2">
+            {getGreeting()}, {user?.companyName || 'Admin'}!
+            <Hand size={24} className="text-amber-400 sm:w-7 sm:h-7" />
           </h1>
           <p className="text-blue-200 text-sm sm:text-base">Haydovchilarni boshqaring va kuzating</p>
         </div>
@@ -43,8 +44,7 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver, on
             className="group px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-violet-500/25 text-sm sm:text-base"
           >
             <Mic size={16} className="sm:w-[18px] sm:h-[18px]" />
-            <span className="hidden sm:inline">🎤 Ovoz bilan</span>
-            <span className="sm:hidden">🎤</span>
+            <span className="hidden sm:inline">Ovoz bilan</span>
           </button>
           {/* Yangi haydovchi */}
           <button 

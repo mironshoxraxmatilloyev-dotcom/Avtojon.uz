@@ -195,6 +195,7 @@ export default function Dashboard() {
     })
 
     // Xarajat tasdiqlanganda (haydovchi tomonidan) - real-time yangilash
+    // Alert ko'rsatilmaydi - ko'p kishi bir vaqtda tasdiqlasa biznesmenga muammo bo'ladi
     socket.on('expense-confirmed', (data) => {
       if (data.flight) {
         // Deep copy qilish - React state yangilanishini ta'minlash
@@ -203,9 +204,7 @@ export default function Dashboard() {
         setActiveFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
         setRecentFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
       }
-      if (data.message) {
-        showToast.success(data.message)
-      }
+      // Alert olib tashlandi - ko'p haydovchi bir vaqtda tasdiqlasa bezovta qilmasligi uchun
     })
 
     // Flight o'chirilganda - real-time yangilash
@@ -427,7 +426,7 @@ export default function Dashboard() {
               })()}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
-              {getGreeting()}, {user?.companyName || 'Admin'}! 👋
+              {getGreeting()}, {user?.companyName || 'Admin'}!
             </h1>
             <p className="text-blue-200 text-sm sm:text-base">Bugungi biznes holatini korib chiqing</p>
           </div>
@@ -546,10 +545,10 @@ export default function Dashboard() {
                         <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
                         <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                           }`}>
-                          {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
+                          {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
                         </span>
                         {driver.lastLocation?.accuracy && (
-                          <p className="text-xs text-gray-400 mt-1">📍 ±{Math.round(driver.lastLocation.accuracy)}m</p>
+                          <p className="text-xs text-gray-400 mt-1">±{Math.round(driver.lastLocation.accuracy)}m</p>
                         )}
                       </div>
                     </Popup>
@@ -662,18 +661,18 @@ export default function Dashboard() {
                       <p className="text-gray-500">{driver.phone || 'Telefon yo\'q'}</p>
                       <span className={`inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                         }`}>
-                        {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
+                        {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
                       </span>
                       {driver.lastLocation?.accuracy && (
                         <p className={`mt-3 text-sm font-medium ${driver.lastLocation.accuracy < 50 ? 'text-emerald-600' :
                           driver.lastLocation.accuracy < 100 ? 'text-amber-600' : 'text-red-600'
                           }`}>
-                          📍 Aniqlik: ±{Math.round(driver.lastLocation.accuracy)}m
+                          Aniqlik: ±{Math.round(driver.lastLocation.accuracy)}m
                         </p>
                       )}
                       {driver.lastLocation?.speed > 0 && (
                         <p className="text-sm text-blue-600 mt-1">
-                          🚗 Tezlik: {Math.round(driver.lastLocation.speed * 3.6)} km/h
+                          Tezlik: {Math.round(driver.lastLocation.speed * 3.6)} km/h
                         </p>
                       )}
                     </div>

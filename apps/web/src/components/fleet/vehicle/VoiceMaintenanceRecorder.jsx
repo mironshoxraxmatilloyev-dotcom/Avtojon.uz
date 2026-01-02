@@ -4,15 +4,23 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Mic, MicOff, Loader2, X, Check, AlertCircle, Volume2 } from 'lucide-react'
+import { Mic, MicOff, Loader2, X, Check, AlertCircle, Volume2, Droplet, Circle, Wrench, DollarSign, Truck, Home, FileText, Package } from 'lucide-react'
 import api from '../../../services/api'
+
+// Icon komponentlari
+const CONTEXT_ICONS = {
+  oil: Droplet,
+  tire: Circle,
+  service: Wrench,
+  income: DollarSign
+}
 
 // Context turlari
 const CONTEXT_CONFIG = {
   oil: {
     title: 'Moy almashtirish',
     subtitle: 'Moy ma\'lumotlarini ovoz bilan kiriting',
-    icon: '🛢️',
+    iconName: 'oil',
     examples: [
       '"8 litr Mobil 10W-40 moyga 400 ming"',
       '"Shell sintetik moy 500 mingga"',
@@ -22,7 +30,7 @@ const CONTEXT_CONFIG = {
   tire: {
     title: 'Shina qo\'shish',
     subtitle: 'Shina ma\'lumotlarini ovoz bilan kiriting',
-    icon: '🛞',
+    iconName: 'tire',
     examples: [
       '"Michelin 315/80 shina old chapga 1.5 million"',
       '"4 ta Triangle shina 6 millionga"',
@@ -32,7 +40,7 @@ const CONTEXT_CONFIG = {
   service: {
     title: 'Xizmat qo\'shish',
     subtitle: 'Texnik xizmat ma\'lumotlarini kiriting',
-    icon: '🔧',
+    iconName: 'service',
     examples: [
       '"TO-2 ga 800 ming ketdi"',
       '"Tormoz kolodkalarini almashtirishga 400 ming"',
@@ -42,7 +50,7 @@ const CONTEXT_CONFIG = {
   income: {
     title: 'Daromad qo\'shish',
     subtitle: 'Daromad ma\'lumotlarini ovoz bilan kiriting',
-    icon: '💰',
+    iconName: 'income',
     examples: [
       '"Toshkentdan Samarqandga yuk tashib 5 million oldim"',
       '"Mashinani 7 kunga ijaraga berdim kuniga 500 ming"',
@@ -209,8 +217,11 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/10 flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl">
-              {config.icon}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+              {(() => {
+                const IconComp = CONTEXT_ICONS[config.iconName]
+                return IconComp ? <IconComp className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : null
+              })()}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white">{config.title}</h2>
@@ -425,10 +436,10 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
                           onChange={(e) => setEditedData(prev => ({ ...prev, type: e.target.value }))}
                           className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none"
                         >
-                          <option value="trip">🚛 Marshrut</option>
-                          <option value="rental">🏠 Ijara</option>
-                          <option value="contract">📋 Shartnoma</option>
-                          <option value="other">📦 Boshqa</option>
+                          <option value="trip">Marshrut</option>
+                          <option value="rental">Ijara</option>
+                          <option value="contract">Shartnoma</option>
+                          <option value="other">Boshqa</option>
                         </select>
                       </div>
                       

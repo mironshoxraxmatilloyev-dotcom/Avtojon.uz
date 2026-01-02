@@ -5,7 +5,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Mic, MicOff, Loader2, X, Route, User, Truck, Gauge, Fuel } from 'lucide-react'
+import { Mic, MicOff, Loader2, X, Route, User, Truck, Gauge, Fuel, Flag, Globe, CircleDot, Circle, Droplet, Rocket } from 'lucide-react'
 import api from '../services/api'
 import AddressAutocomplete from './AddressAutocomplete'
 
@@ -247,7 +247,10 @@ export default function VoiceFlightCreator({ onResult, onClose, drivers = [], ve
                 <Route className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-white">🎤 Ovoz bilan reys</h2>
+                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Mic size={18} className="text-violet-400" />
+                  Ovoz bilan reys
+                </h2>
                 <p className="text-green-300 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">{selectedDriver?.fullName || 'Haydovchini tanlang'}</p>
               </div>
             </div>
@@ -342,11 +345,11 @@ export default function VoiceFlightCreator({ onResult, onClose, drivers = [], ve
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setForm(prev => ({ ...prev, flightType: 'domestic' }))}
                 className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 ${isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                <span>🇺🇿</span><span className="font-medium text-sm">Mahalliy</span>
+                <Flag size={16} className="text-blue-400" /><span className="font-medium text-sm">Mahalliy</span>
               </button>
               <button type="button" onClick={() => setForm(prev => ({ ...prev, flightType: 'international' }))}
                 className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 ${!isDomestic ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                <span>🌍</span><span className="font-medium text-sm">Xalqaro</span>
+                <Globe size={16} className="text-amber-400" /><span className="font-medium text-sm">Xalqaro</span>
               </button>
             </div>
           </div>
@@ -378,15 +381,15 @@ export default function VoiceFlightCreator({ onResult, onClose, drivers = [], ve
             <label className="block text-sm font-medium text-slate-400 mb-2">Yoqilgi turi</label>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-                { value: 'propan', label: 'Propan', icon: '🟡', unit: 'kub' },
-                { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-                { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
+                { value: 'metan', label: 'Metan', Icon: CircleDot, iconColor: 'text-green-500', unit: 'kub' },
+                { value: 'propan', label: 'Propan', Icon: Circle, iconColor: 'text-yellow-500', unit: 'kub' },
+                { value: 'benzin', label: 'Benzin', Icon: Fuel, iconColor: 'text-red-500', unit: 'litr' },
+                { value: 'diesel', label: 'Dizel', Icon: Droplet, iconColor: 'text-blue-500', unit: 'litr' }
               ].map(fuel => (
                 <button key={fuel.value} type="button"
                   onClick={() => setForm(prev => ({ ...prev, fuelType: fuel.value }))}
                   className={`p-2 rounded-xl border text-center ${form.fuelType === fuel.value ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-                  <span className="text-xl">{fuel.icon}</span>
+                  <fuel.Icon size={20} className={`mx-auto ${fuel.iconColor}`} />
                   <p className="text-[10px] mt-0.5">{fuel.label}</p>
                 </button>
               ))}
@@ -433,9 +436,10 @@ export default function VoiceFlightCreator({ onResult, onClose, drivers = [], ve
           <button 
             type="submit" 
             disabled={!form.driverId || !form.fromCity || !form.toCity}
-            className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
           >
-            🚀 Mashrutni boshlash
+            <Rocket size={18} />
+            Mashrutni boshlash
           </button>
         </form>
       </div>

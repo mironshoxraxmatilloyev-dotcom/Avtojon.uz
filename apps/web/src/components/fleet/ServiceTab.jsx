@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react'
 import { 
   AlertTriangle, CheckCircle, ChevronRight, Truck, Wrench, Zap, Shield,
-  Droplets, Circle, Calendar, Bell, Clock, Fuel, Loader2
+  Droplets, Circle, Calendar, Bell, Loader2
 } from 'lucide-react'
 import api from '../../services/api'
 
@@ -21,9 +21,27 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
     loadAlerts()
   }, [])
 
-  const attentionVehicles = vehicles.filter(v => v.status === 'attention' || v.status === 'critical')
-  const criticalVehicles = vehicles.filter(v => v.status === 'critical')
-  const warningVehicles = vehicles.filter(v => v.status === 'attention')
+  // Alertlardan vehicleId larni olish va ularni kritik/warning ga ajratish
+  const dangerVehicleIds = new Set(alerts.filter(a => a.severity === 'danger').map(a => a.vehicleId?.toString()))
+  const warningVehicleIds = new Set(alerts.filter(a => a.severity === 'warning').map(a => a.vehicleId?.toString()))
+  
+  // Vehicles statuslarini alertlar bilan birlashtirish
+  const attentionVehicles = vehicles.filter(v => {
+    const vId = v._id?.toString()
+    return v.status === 'attention' || v.status === 'critical' || dangerVehicleIds.has(vId) || warningVehicleIds.has(vId)
+  })
+  
+  const criticalVehicles = vehicles.filter(v => {
+    const vId = v._id?.toString()
+    return v.status === 'critical' || dangerVehicleIds.has(vId)
+  })
+  
+  const warningVehicles = vehicles.filter(v => {
+    const vId = v._id?.toString()
+    const isCritical = v.status === 'critical' || dangerVehicleIds.has(vId)
+    return !isCritical && (v.status === 'attention' || warningVehicleIds.has(vId))
+  })
+  
   const healthyVehicles = vehicles.length - attentionVehicles.length
 
   // Alertlarni turlarga ajratish
@@ -159,13 +177,18 @@ export const ServiceTab = memo(({ vehicles, navigate }) => {
           </div>
 
           <div className="space-y-3">
-            {attentionVehicles.map(v => (
-              <AttentionCard
-                key={v._id}
-                vehicle={v}
-                onClick={() => navigate(`/fleet/vehicle/${v._id}`)}
-              />
-            ))}
+            {attentionVehicles.map(v => {
+              const vId = v._id?.toString()
+              const isCritical = v.status === 'critical' || dangerVehicleIds.has(vId)
+              return (
+                <AttentionCard
+                  key={v._id}
+                  vehicle={v}
+                  isCritical={isCritical}
+                  onClick={() => navigate(`/fleet/vehicle/${v._id}`)}
+                />
+              )
+            })}
           </div>
         </div>
       )}
@@ -253,9 +276,7 @@ const SummaryCard = memo(({ icon: Icon, label, value, color }) => {
   )
 })
 
-const AttentionCard = memo(({ vehicle, onClick }) => {
-  const isCritical = vehicle.status === 'critical'
-
+const AttentionCard = memo(({ vehicle, isCritical, onClick }) => {
   return (
     <div
       onClick={onClick}

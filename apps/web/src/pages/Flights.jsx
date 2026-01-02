@@ -149,7 +149,7 @@ export default function Flights() {
         const newFlight = JSON.parse(JSON.stringify(data.flight))
         const newFlightId = newFlight._id?.toString()
         setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
-        showToast.success(data.message || '✅ Haydovchi xarajatni tasdiqladi')
+        showToast.success(data.message || 'Haydovchi xarajatni tasdiqladi')
       }
     })
 
@@ -590,7 +590,7 @@ export default function Flights() {
               return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
             })()}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Reyslar 🚛</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Reyslar</h1>
           <p className="text-green-200">Faol va tugatilgan marshrutlar</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">

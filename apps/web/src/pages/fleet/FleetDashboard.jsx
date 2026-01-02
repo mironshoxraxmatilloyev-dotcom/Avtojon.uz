@@ -228,7 +228,7 @@ export default function FleetDashboard() {
           setCache(CACHE_KEY, updated)
           return updated
         })
-        alert.success('🎤 Mashina qo\'shildi!')
+        alert.success('Mashina qo\'shildi!')
       }
     } catch (err) {
       alert.error('Xatolik', err.response?.data?.message || 'Mashina qo\'shishda xatolik')
@@ -426,7 +426,6 @@ export default function FleetDashboard() {
                       className="flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-violet-500/30 active:scale-[0.98]"
                     >
                       <Mic size={16} strokeWidth={2.5} />
-                      <span className="hidden sm:inline">🎤</span>
                     </button>
                     <button
                       onClick={() => openModal()}

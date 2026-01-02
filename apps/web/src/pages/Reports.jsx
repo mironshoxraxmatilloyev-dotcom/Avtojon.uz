@@ -233,14 +233,14 @@ const ProDonutChart = ({ data, title, total }) => {
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6">
-      <div className="relative w-36 h-36 sm:w-44 sm:h-44">
+    <div className="flex flex-col items-center justify-center gap-5 py-2">
+      <div className="relative w-44 h-44 sm:w-48 sm:h-48">
         {/* Glow effect */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-xl" />
 
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90 relative z-10">
           {/* Background circle */}
-          <circle cx="18" cy="18" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="3.5" />
+          <circle cx="18" cy="18" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="4" />
 
           {/* Data segments */}
           {data.map((item, i) => {
@@ -255,12 +255,12 @@ const ProDonutChart = ({ data, title, total }) => {
                 cx="18" cy="18" r={radius}
                 fill="none"
                 stroke={item.color}
-                strokeWidth="3.5"
+                strokeWidth="4"
                 strokeDasharray={strokeDasharray}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-out"
-                style={{ filter: `drop-shadow(0 0 6px ${item.color}60)` }}
+                style={{ filter: `drop-shadow(0 0 8px ${item.color}60)` }}
               />
             )
           })}
@@ -268,23 +268,23 @@ const ProDonutChart = ({ data, title, total }) => {
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-          <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          <span className="text-4xl sm:text-5xl font-bold bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent">
             {total}
           </span>
-          <span className="text-xs sm:text-sm text-gray-500 font-medium">{title}</span>
+          <span className="text-sm text-gray-500 font-medium">{title}</span>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex sm:flex-col gap-4 sm:gap-3">
+      {/* Legend - horizontal with better styling */}
+      <div className="flex flex-row justify-center gap-8">
         {data.map((item, i) => (
-          <div key={i} className="flex items-center gap-3 group cursor-default">
+          <div key={i} className="flex items-center gap-2.5 group cursor-default">
             <div
               className="w-4 h-4 rounded-lg transition-transform group-hover:scale-110"
-              style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}50` }}
+              style={{ backgroundColor: item.color, boxShadow: `0 0 12px ${item.color}50` }}
             />
-            <div>
-              <p className="text-sm text-gray-600">{item.label}</p>
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500">{item.label}</p>
               <p className="text-lg font-bold text-gray-900">{item.value}</p>
             </div>
           </div>

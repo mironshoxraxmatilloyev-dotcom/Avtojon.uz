@@ -1,4 +1,4 @@
-import { Phone, Truck, Edit, Trash2, Play, Route } from 'lucide-react'
+import { Phone, Truck, Edit, Trash2, Play, Route, Banknote, Wallet, Coins } from 'lucide-react'
 
 export default function DriverCard({ 
   driver, 
@@ -92,8 +92,12 @@ export default function DriverCard({
       {/* Footer */}
       <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-gray-100">
         <div className="min-w-0">
-          <p className="text-[10px] sm:text-xs text-gray-400">
-            {driver.paymentType === 'per_trip' ? '💰 Marshrut uchun' : '💵 Oylik'}
+          <p className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-1">
+            {driver.paymentType === 'per_trip' ? (
+              <><Coins size={10} className="sm:w-3 sm:h-3" /> Marshrut uchun</>
+            ) : (
+              <><Banknote size={10} className="sm:w-3 sm:h-3" /> Oylik</>
+            )}
           </p>
           <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">
             {driver.paymentType === 'per_trip' 
@@ -102,8 +106,8 @@ export default function DriverCard({
           </p>
           {/* To'lanmagan daromad */}
           {driver.pendingEarnings > 0 && (
-            <p className="text-[10px] text-amber-600 font-medium mt-0.5">
-              💰 {formatMoney(driver.pendingEarnings)} (kutilmoqda)
+            <p className="text-[10px] text-amber-600 font-medium mt-0.5 flex items-center gap-1">
+              <Wallet size={10} className="sm:w-3 sm:h-3" /> {formatMoney(driver.pendingEarnings)} (kutilmoqda)
             </p>
           )}
         </div>

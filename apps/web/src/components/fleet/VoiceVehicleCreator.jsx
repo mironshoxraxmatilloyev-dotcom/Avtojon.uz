@@ -181,7 +181,7 @@ export default function VoiceVehicleCreator({ onResult, onClose }) {
               <Truck className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">🎤 Ovoz bilan mashina</h2>
+              <h2 className="text-xl font-bold text-slate-900">Ovoz bilan mashina</h2>
               <p className="text-sm text-slate-500">Gapiring yoki qo'lda to'ldiring</p>
             </div>
           </div>
@@ -325,7 +325,8 @@ export default function VoiceVehicleCreator({ onResult, onClose }) {
             disabled={!form.plateNumber || !form.brand}
             className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 rounded-xl text-white font-bold text-lg transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            🚛 Mashina qo'shish
+            <Truck size={20} />
+            Mashina qo'shish
           </button>
         </form>
       </div>

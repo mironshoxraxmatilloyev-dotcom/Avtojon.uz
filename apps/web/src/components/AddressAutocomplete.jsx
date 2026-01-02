@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { MapPin, Loader2, AlertTriangle } from 'lucide-react'
+import { MapPin, Loader2, AlertTriangle, Flag, Map, Globe } from 'lucide-react'
 import { searchUzbekistanCities } from '../data/uzbekistanCities'
 
 // Nominatim API orqali manzil qidirish (xalqaro reyslar uchun)
@@ -197,18 +197,18 @@ export default function AddressAutocomplete({
                                 <div className="flex items-center gap-2">
                                     <p className="text-white text-sm font-medium truncate">{suggestion.name}</p>
                                     {suggestion.source === 'offline' && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded shrink-0">
-                                            🇺🇿 Tezkor
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded shrink-0 flex items-center gap-1">
+                                            <Flag size={10} /> Tezkor
                                         </span>
                                     )}
                                     {suggestion.source === 'api' && suggestion.isUzbekistan && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded shrink-0">
-                                            🗺️ Xarita
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded shrink-0 flex items-center gap-1">
+                                            <Map size={10} /> Xarita
                                         </span>
                                     )}
                                     {suggestion.source === 'api' && !suggestion.isUzbekistan && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded shrink-0">
-                                            🌍 Xalqaro
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded shrink-0 flex items-center gap-1">
+                                            <Globe size={10} /> Xalqaro
                                         </span>
                                     )}
                                 </div>

@@ -1,54 +1,134 @@
-# Avtojon.uz
+# 🚛 Avtojon.uz
 
-Yuk tashish kompaniyalari uchun shofyorlar va mashrutlarni boshqarish tizimi.
+Yuk tashish kompaniyalari uchun to'liq boshqaruv tizimi.
 
-## 🚀 Texnologiyalar
+## 📋 Tizim Imkoniyatlari
 
-### Backend (apps/api)
-- Node.js + Express
-- MongoDB + Mongoose
-- JWT (Access + Refresh tokens)
-- Redis (token storage, optional)
-- Socket.io (real-time updates)
+### 👨‍💼 SuperAdmin Panel
+- Biznesmenlar va foydalanuvchilarni boshqarish
+- Obuna tizimi (trial, pro)
+- SMS Gateway orqali xabar yuborish
+- Umumiy statistika
 
-### Frontend (apps/web)
-- React 18 + Vite
-- Tailwind CSS
-- Zustand (state management)
-- React Router v6
-- Leaflet (xaritalar)
+### 🏢 Biznesmen Panel (Dashboard)
+- Shofyorlarni boshqarish
+- Mashrutlarni ochish/yopish
+- Xarajatlarni kuzatish
+- Real-time yangilanishlar
 
-## 📦 O'rnatish
+### 🚗 Fleet Panel (Avtopark)
+- Mashinalarni boshqarish
+- Yoqilg'i hisobi
+- Moy almashtirish tarixi
+- Shina nazorati
+- Texnik xizmat
+- Daromad/xarajat hisoboti
+- Ovozli kiritish (AI)
 
-```bash
-# Barcha dependencylarni o'rnatish
-npm install
+### 📱 Haydovchi Panel
+- Faol marshrutni ko'rish
+- Xarajat qo'shish
+- GPS tracking
 
-# Environment fayllarini yaratish
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
+## 🛠️ Texnologiyalar
+
+| Qism | Texnologiya |
+|------|-------------|
+| Backend | Node.js, Express, MongoDB, Socket.io |
+| Frontend | React 18, Vite, Tailwind CSS, Zustand |
+| Android | Kotlin, Jetpack Compose |
+| AI | Groq (Whisper + LLM) |
+| To'lov | Payme |
+
+## 📁 Loyiha Strukturasi
+
+```
+avtojon/
+├── apps/
+│   ├── api/                    # Backend API
+│   │   ├── src/
+│   │   │   ├── config/         # DB, Redis config
+│   │   │   ├── middleware/     # Auth, rate limiter
+│   │   │   ├── models/         # Mongoose models
+│   │   │   ├── routes/         # API endpoints
+│   │   │   ├── services/       # Business logic (voiceAI)
+│   │   │   └── utils/          # Helpers
+│   │   └── package.json
+│   │
+│   ├── web/                    # Frontend (React)
+│   │   ├── src/
+│   │   │   ├── components/     # UI komponentlar
+│   │   │   │   ├── admin/      # Admin panel
+│   │   │   │   ├── drivers/    # Shofyor
+│   │   │   │   ├── driverPanel/# Haydovchi panel
+│   │   │   │   ├── fleet/      # Avtopark
+│   │   │   │   ├── layout/     # Layout
+│   │   │   │   ├── superadmin/ # SuperAdmin
+│   │   │   │   └── ui/         # Umumiy UI
+│   │   │   ├── pages/          # Sahifalar
+│   │   │   ├── services/       # API, Socket
+│   │   │   └── store/          # Zustand
+│   │   └── package.json
+│   │
+│   └── android-sms-gateway/    # SMS Gateway App
+│       └── app/src/main/
+│           └── java/.../
+│               ├── MainActivity.kt
+│               ├── SmsGatewayService.kt
+│               └── BootReceiver.kt
+│
+├── deploy/                     # Deploy skriptlari
+│   ├── deploy.sh
+│   ├── nginx.conf
+│   └── ecosystem.config.js
+│
+├── docs/                       # Hujjatlar
+│   ├── SMS_GATEWAY_GUIDE.md
+│   └── ...
+│
+├── scripts/                    # Utility skriptlar
+│
+├── .env                        # Environment (root)
+├── .env.example
+├── package.json                # Monorepo root
+└── README.md
 ```
 
-## 🔧 Environment Variables
+## 🚀 O'rnatish
 
-### API (.env)
+### 1. Dependencylar
+
+```bash
+npm install
+```
+
+### 2. Environment
+
+```bash
+# Root .env
+cp .env.example .env
+
+# API .env
+cp apps/api/.env.example apps/api/.env
+```
+
+### 3. Environment Variables
+
 ```env
+# apps/api/.env
 NODE_ENV=development
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/avtojon
 JWT_SECRET=your-secret-key
 JWT_REFRESH_SECRET=your-refresh-secret
-REDIS_HOST=localhost
-REDIS_PORT=6379
+GROQ_API_KEY=your-groq-key
+PAYME_MERCHANT_ID=your-merchant-id
+PAYME_KEY=your-payme-key
+SUPER_ADMIN_LOGIN=super_admin
+SUPER_ADMIN_PASSWORD=YourPassword123
 ```
 
-### Web (.env)
-```env
-VITE_API_URL=http://localhost:3000
-VITE_SOCKET_URL=http://localhost:3000
-```
-
-## 🏃 Ishga tushirish
+## 🏃 Ishga Tushirish
 
 ```bash
 # Development (API + Web)
@@ -61,62 +141,35 @@ npm run api:dev
 npm run web:dev
 ```
 
-## 🧪 Testlar
+## 🌐 Deploy
 
 ```bash
-# API testlarini ishga tushirish
-npm test --workspace=apps/api
-
-# Coverage bilan
-npm run test:coverage --workspace=apps/api
+# Serverga deploy
+./deploy/deploy.sh
 ```
 
-## 📁 Loyiha strukturasi
+## 📱 Android SMS Gateway
 
-```
-avtojon/
-├── apps/
-│   ├── api/                 # Backend
-│   │   ├── src/
-│   │   │   ├── config/      # Database, Redis config
-│   │   │   ├── middleware/  # Auth, rate limiter, error handler
-│   │   │   ├── models/      # Mongoose models
-│   │   │   ├── routes/      # API routes
-│   │   │   ├── utils/       # JWT, validators, token manager
-│   │   │   └── __tests__/   # Jest tests
-│   │   └── package.json
-│   └── web/                 # Frontend
-│       ├── src/
-│       │   ├── components/  # React components
-│       │   │   ├── drivers/ # Driver-related components
-│       │   │   ├── flights/ # Flight-related components
-│       │   │   └── ui/      # Shared UI components
-│       │   ├── pages/       # Page components
-│       │   ├── services/    # API service
-│       │   ├── store/       # Zustand stores
-│       │   └── contexts/    # React contexts
-│       └── package.json
-└── package.json             # Root package.json (workspaces)
+SMS Gateway app haqida to'liq ma'lumot: [docs/SMS_GATEWAY_GUIDE.md](docs/SMS_GATEWAY_GUIDE.md)
+
+```bash
+# APK build
+cd apps/android-sms-gateway
+./gradlew assembleDebug
 ```
 
 ## 🔐 Xavfsizlik
 
-- JWT Access token (15 daqiqa)
-- JWT Refresh token (7 kun, Redis'da saqlanadi)
-- Rate limiting (brute force himoyasi)
+- JWT Access/Refresh token
+- Rate limiting
 - Input validation (Joi)
-- NoSQL injection himoyasi
-- XSS himoyasi
+- HTTPS (production)
+- Helmet (security headers)
 
-## 📱 Asosiy funksiyalar
+## 📞 Aloqa
 
-- ✅ Shofyorlarni boshqarish
-- ✅ Mashinalarni boshqarish
-- ✅ Mashrutlarni ochish va yopish
-- ✅ Xarajatlarni kuzatish
-- ✅ Real-time yangilanishlar (Socket.io)
-- ✅ Jonli xarita
-- ✅ Demo rejim
+- Website: https://avtojon.uz
+- Telegram: @avtojon_support
 
 ## 📄 Litsenziya
 

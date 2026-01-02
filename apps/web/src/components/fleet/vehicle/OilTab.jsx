@@ -58,7 +58,7 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
           className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
         >
           <Mic size={18} />
-          🎤 Ovoz bilan
+          Ovoz bilan
         </button>
         <button
           onClick={onAdd}
