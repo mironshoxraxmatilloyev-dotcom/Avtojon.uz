@@ -764,7 +764,7 @@ export default function VehicleDetailPanel() {
         className="lg:ml-[260px] overflow-y-auto"
         style={{ 
           height: '100vh', 
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           WebkitOverflowScrolling: 'touch'
         }}
       >

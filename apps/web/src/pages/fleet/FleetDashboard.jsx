@@ -378,7 +378,7 @@ export default function FleetDashboard() {
         className="flex-1 overflow-y-auto lg:ml-[280px]"
         style={{ 
           height: '100%',
-          paddingBottom: '80px',
+          paddingBottom: '100px',
           WebkitOverflowScrolling: 'touch'
         }}
       >
