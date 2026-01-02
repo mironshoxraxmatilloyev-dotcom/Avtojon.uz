@@ -104,8 +104,10 @@ export const Modal = memo(({ title, onClose, children }) => (
 ))
 
 export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle, oilData, tires }) => {
-  // Yoqilg'i turiga qarab birlik
-  const unit = form.fuelType === 'metan' ? 'kub' : 'litr'
+  // Yoqilg'i turiga qarab birlik - metan, gas, propan = kub, boshqalar = litr
+  const fuelType = form.fuelType?.toLowerCase() || ''
+  const isGas = fuelType === 'metan' || fuelType === 'gas' || fuelType === 'propan' || fuelType.includes('metan') || fuelType.includes('gaz')
+  const unit = isGas ? 'kub' : 'litr'
 
   // Real-time ogohlantirish tekshirish
   const getMaintenanceWarnings = () => {

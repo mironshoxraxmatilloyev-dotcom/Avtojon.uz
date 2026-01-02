@@ -1,5 +1,5 @@
 import { memo, useState } from 'react'
-import { Plus, DollarSign, Truck, Home, Briefcase, Gift, Edit2, Trash2, TrendingUp, Calendar, Mic, User, Package } from 'lucide-react'
+import { Plus, DollarSign, Truck, Home, Gift, Edit2, Trash2, TrendingUp, Calendar, Mic, User, Package } from 'lucide-react'
 import { fmt, fmtDate } from './constants'
 import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
@@ -7,7 +7,6 @@ import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 const INCOME_TYPES = {
   trip: { label: 'Marshrut', icon: Truck, color: 'blue', description: 'Yuk tashish' },
   rental: { label: 'Ijara', icon: Home, color: 'purple', description: 'Mashinani ijaraga berish' },
-  contract: { label: 'Shartnoma', icon: Briefcase, color: 'emerald', description: 'Doimiy shartnoma' },
   other: { label: 'Boshqa', icon: Gift, color: 'amber', description: 'Boshqa daromad' }
 }
 

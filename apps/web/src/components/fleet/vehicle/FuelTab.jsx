@@ -7,9 +7,10 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
   const { refills = [], stats = {} } = data
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
-  // Yoqilg'i turi
-  const isMetan = vehicle?.fuelType === 'metan' || vehicle?.fuelType === 'gas'
-  const unit = isMetan ? 'kub' : 'litr'
+  // Yoqilg'i turi - metan, gas, propan = kub, boshqalar = litr
+  const fuelType = vehicle?.fuelType?.toLowerCase() || ''
+  const isGas = fuelType === 'metan' || fuelType === 'gas' || fuelType === 'propan' || fuelType.includes('metan') || fuelType.includes('gaz')
+  const unit = isGas ? 'kub' : 'litr'
 
   // Yoqilg'i sarfini hisoblash (1 km ga qancha sarf)
   const fuelEfficiency = (() => {
@@ -125,30 +126,37 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
       {refills.length > 0 ? (
         <div className="space-y-3">
           <h3 className="text-lg font-bold text-gray-900">Tarix</h3>
-          {refills.map(r => (
-            <div key={r._id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
-                    <Fuel className="w-5 h-5 text-blue-500" />
+          {refills.map(r => {
+            // Har bir yozuv uchun o'z birligini aniqlash
+            const itemFuelType = (r.fuelType || vehicle?.fuelType || '').toLowerCase()
+            const itemIsGas = itemFuelType === 'metan' || itemFuelType === 'gas' || itemFuelType === 'propan' || itemFuelType.includes('metan') || itemFuelType.includes('gaz')
+            const itemUnit = itemIsGas ? 'kub' : 'litr'
+            
+            return (
+              <div key={r._id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
+                      <Fuel className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-gray-900 font-semibold">{r.liters} {itemUnit}</p>
+                      <p className="text-gray-500 text-sm">{fmtDate(r.date)} {r.odometer ? `• ${fmt(r.odometer)} km` : ''}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-900 font-semibold">{r.liters} {unit}</p>
-                    <p className="text-gray-500 text-sm">{fmtDate(r.date)} {r.odometer ? `• ${fmt(r.odometer)} km` : ''}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-emerald-600 font-bold">{fmt(r.cost)}</p>
+                    <button onClick={() => onEdit(r)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-500">
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => onDelete(r._id)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-emerald-600 font-bold">{fmt(r.cost)}</p>
-                  <button onClick={() => onEdit(r)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-500">
-                    <Edit2 size={16} />
-                  </button>
-                  <button onClick={() => onDelete(r._id)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500">
-                    <Trash2 size={16} />
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <EmptyState icon={Fuel} text="Yoqilg'i ma'lumotlari yo'q" />

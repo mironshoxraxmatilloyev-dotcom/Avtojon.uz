@@ -396,7 +396,8 @@ export default function FleetDashboard() {
                 </div>
                 <div>
                   <h2 className="text-lg lg:text-xl font-bold text-slate-900">
-                    {navItems.find(n => n.id === activeTab)?.label}
+                    <span className="lg:hidden">Avtojon</span>
+                    <span className="hidden lg:inline">{navItems.find(n => n.id === activeTab)?.label}</span>
                   </h2>
                   <p className="text-xs lg:text-sm text-slate-500">
                     {stats.total} ta mashina
@@ -418,12 +419,12 @@ export default function FleetDashboard() {
                   {timeLeft}
                 </button>
                 
-                {/* Add Button */}
+                {/* Add Button - faqat desktop da ovoz tugmasi */}
                 {activeTab === 'home' && (
                   <>
                     <button
                       onClick={() => setShowVoiceModal(true)}
-                      className="flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-violet-500/30 active:scale-[0.98]"
+                      className="hidden lg:flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-violet-500/30 active:scale-[0.98]"
                     >
                       <Mic size={16} strokeWidth={2.5} />
                     </button>
@@ -478,40 +479,95 @@ export default function FleetDashboard() {
           WebkitTransform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
-          overflow: 'hidden',
+          overflow: 'visible',
           touchAction: 'none'
         }}
       >
-        <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom,0px)]">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => { setActiveTab(item.id); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
-              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative"
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                activeTab === item.id 
-                  ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
-                  : ''
-              }`}>
-                <item.icon 
-                  size={22} 
-                  className={activeTab === item.id ? 'text-white' : 'text-slate-500'}
-                  strokeWidth={activeTab === item.id ? 2.5 : 1.5}
-                />
-              </div>
-              <span className={`text-[10px] font-semibold ${
-                activeTab === item.id ? 'text-indigo-600' : 'text-slate-400'
-              }`}>
-                {item.label}
+        <div className="grid grid-cols-4 h-16 pb-[env(safe-area-inset-bottom,0px)]">
+          {/* Avtopark */}
+          <button
+            onClick={() => { setActiveTab('home'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
+            className="flex flex-col items-center justify-center gap-0.5"
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+              activeTab === 'home' 
+                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
+                : ''
+            }`}>
+              <Home 
+                size={22} 
+                className={activeTab === 'home' ? 'text-white' : 'text-slate-500'}
+                strokeWidth={activeTab === 'home' ? 2.5 : 1.5}
+              />
+            </div>
+            <span className={`text-[10px] font-semibold ${
+              activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400'
+            }`}>
+              Avtopark
+            </span>
+          </button>
+
+          {/* Statistika */}
+          <button
+            onClick={() => { setActiveTab('stats'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
+            className="flex flex-col items-center justify-center gap-0.5"
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+              activeTab === 'stats' 
+                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
+                : ''
+            }`}>
+              <BarChart3 
+                size={22} 
+                className={activeTab === 'stats' ? 'text-white' : 'text-slate-500'}
+                strokeWidth={activeTab === 'stats' ? 2.5 : 1.5}
+              />
+            </div>
+            <span className={`text-[10px] font-semibold ${
+              activeTab === 'stats' ? 'text-indigo-600' : 'text-slate-400'
+            }`}>
+              Statistika
+            </span>
+          </button>
+
+          {/* Ovoz */}
+          <button
+            onClick={() => setShowVoiceModal(true)}
+            className="flex flex-col items-center justify-center gap-0.5"
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30">
+              <Mic size={22} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-[10px] font-semibold text-violet-600">Ovoz</span>
+          </button>
+
+          {/* Diqqat */}
+          <button
+            onClick={() => { setActiveTab('service'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
+            className="flex flex-col items-center justify-center gap-0.5 relative"
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+              activeTab === 'service' 
+                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
+                : ''
+            }`}>
+              <AlertTriangle 
+                size={22} 
+                className={activeTab === 'service' ? 'text-white' : 'text-slate-500'}
+                strokeWidth={activeTab === 'service' ? 2.5 : 1.5}
+              />
+            </div>
+            <span className={`text-[10px] font-semibold ${
+              activeTab === 'service' ? 'text-indigo-600' : 'text-slate-400'
+            }`}>
+              Diqqat
+            </span>
+            {stats.attention > 0 && (
+              <span className="absolute top-2 right-4 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">
+                {stats.attention}
               </span>
-              {item.id === 'service' && stats.attention > 0 && (
-                <span className="absolute top-1 right-1/4 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">
-                  {stats.attention}
-                </span>
-              )}
-            </button>
-          ))}
+            )}
+          </button>
         </div>
       </nav>
 

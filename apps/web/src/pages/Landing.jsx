@@ -38,10 +38,13 @@ const FixedHeader = memo(() => (
   <header className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 pointer-events-auto pt-[env(safe-area-inset-top)]">
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
       <div className="flex justify-between items-center gap-2">
-        {/* Logo - mobilda kichikroq */}
-        <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-          <img src="/logo.jpg" alt="Avtojon" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover" />
-          <span className="text-base sm:text-xl font-bold text-white whitespace-nowrap">Avtojon ✨</span>
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <img src="/logo.jpg" alt="Avtojon" className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md" />
+          <div className="flex items-baseline tracking-tight">
+            <span className="text-xl sm:text-2xl font-extrabold text-white">avto</span>
+            <span className="text-xl sm:text-2xl font-extrabold text-amber-300">JON</span>
+          </div>
         </Link>
         {/* Buttons - mobilda kichikroq */}
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
@@ -106,9 +109,10 @@ export default function Landing() {
 
               {/* Title */}
               <AnimatedText delay={0.2}>
-                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white">
-                  Yuk tashishni{' '}
-                  <span className="text-amber-300">osonlashtiring</span>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-[1.15] tracking-tight text-white">
+                  Mashinangiz <span className="text-amber-300">100%</span>
+                  <br />
+                  nazorat va hisob-kitobda
                 </h2>
               </AnimatedText>
 
