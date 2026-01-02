@@ -6,6 +6,14 @@ const Vehicle = require('../models/Vehicle')
 
 // Helper: businessman ID olish
 const getBusinessmanId = (req) => {
+  console.log('🔍 getBusinessmanId called:', {
+    hasBusinessman: !!req.businessman,
+    hasDriver: !!req.driver,
+    hasUser: !!req.user,
+    userRole: req.userRole,
+    userId: req.user?._id
+  })
+  
   if (req.businessman) return req.businessman._id
   if (req.driver) return req.driver.user
   if (req.user) return req.user._id
@@ -176,12 +184,12 @@ const validateMaintenanceData = (type, data, currentOdometer = 0) => {
   const errors = []
   
   // Umumiy validatsiyalar
-  if (data.odometer !== undefined) {
+  if (data.odometer !== undefined && data.odometer !== null && data.odometer !== '') {
     const odo = Number(data.odometer)
     if (isNaN(odo) || odo < 0) errors.push('Odometer noto\'g\'ri')
-    // Odometer juda katta farq bo'lmasligi kerak (100,000 km dan ko'p farq - xato)
-    if (currentOdometer > 0 && Math.abs(odo - currentOdometer) > 100000) {
-      errors.push('Odometer qiymati juda katta farq qiladi')
+    // Juda katta qiymat tekshirish (10 million km dan katta)
+    if (odo > 10000000) {
+      errors.push('Odometer qiymati juda katta')
     }
   }
   
@@ -304,8 +312,17 @@ router.post('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
     const businessmanId = getBusinessmanId(req)
     const { _id, ...body } = req.body
     
+    console.log('📤 Fuel POST request:', { vehicleId, businessmanId, body })
+    
+    if (!businessmanId) {
+      console.error('❌ BusinessmanId not found in request')
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi aniqlanmadi' })
+    }
+    
     // Ownership tekshirish
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    console.log('📤 Vehicle ownership check:', { vehicleId, businessmanId, found: !!vehicle })
+    
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
     }
@@ -365,7 +382,7 @@ router.post('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
     
     res.status(201).json({ success: true, data: responseData })
   } catch (err) {
-    console.error('❌ Fuel POST error:', err.message)
+    console.error('❌ Fuel POST error:', err.message, err.stack)
     res.status(500).json({ success: false, message: err.message })
   }
 })
@@ -439,8 +456,17 @@ router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
     const businessmanId = getBusinessmanId(req)
     const { _id, nextChangeKm, ...body } = req.body
     
+    console.log('📤 Oil POST request:', { vehicleId, businessmanId, body, nextChangeKm })
+    
+    if (!businessmanId) {
+      console.error('❌ BusinessmanId not found in request')
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi aniqlanmadi' })
+    }
+    
     // Ownership tekshirish
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    console.log('📤 Vehicle ownership check:', { vehicleId, businessmanId, found: !!vehicle })
+    
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
     }
@@ -448,6 +474,7 @@ router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
     // Validatsiya
     const errors = validateMaintenanceData('oil', body, vehicle.currentOdometer)
     if (errors.length > 0) {
+      console.log('📤 Validation errors:', errors)
       return res.status(400).json({ success: false, message: errors.join(', ') })
     }
     
@@ -464,12 +491,16 @@ router.post('/vehicles/:vehicleId/oil', protect, async (req, res) => {
       nextChangeOdometer = currentOdo + oilChangeInterval
     }
     
+    console.log('📤 Creating oil change:', { currentOdo, nextChangeOdometer })
+    
     const change = await OilChange.create({
       ...body,
       vehicle: vehicleId,
       businessman: businessmanId,
       nextChangeOdometer
     })
+    
+    console.log('📤 Oil change created:', change._id)
     
     // Mashina odometrini va moy ma'lumotlarini yangilash
     const updateData = {
@@ -1100,9 +1131,14 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
       newAlerts.push({ type: 'oil', severity: 'warning', message: `Moy almashtirishga ${oilStatus.remainingKm} km qoldi` })
     }
     
-    if (worstTire && worstTire.wearPercent >= 90) {
-      newAlerts.push({ type: 'tire', severity: 'danger', message: `${worstTire.position} shina ${worstTire.wearPercent}% eskirgan` })
-    }
+    // Barcha eskirgan shinalar uchun alert
+    tiresStatus.forEach(tire => {
+      if (tire.wearPercent >= 90) {
+        newAlerts.push({ type: 'tire', severity: 'danger', message: `${tire.position} shina ${tire.wearPercent}% eskirgan - almashtirish kerak!` })
+      } else if (tire.wearPercent >= 75) {
+        newAlerts.push({ type: 'tire', severity: 'warning', message: `${tire.position} shinaga ${tire.remainingKm} km qoldi` })
+      }
+    })
     
     const expectedConsumption = vehicle.expectedFuelConsumption || 25
     if (fuelEfficiency.avgConsumption > 0 && fuelEfficiency.avgConsumption > expectedConsumption * 1.2) {

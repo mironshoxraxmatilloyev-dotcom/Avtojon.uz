@@ -174,9 +174,8 @@ export default function VehicleDetailPanel() {
     if (data.odometer) {
       const odo = +data.odometer
       if (odo < 0) e.odometer = 'Salbiy bo\'lishi mumkin emas'
-      if (currentOdo > 0 && Math.abs(odo - currentOdo) > 100000) {
-        e.odometer = 'Juda katta farq (max 100,000 km)'
-      }
+      // Juda katta qiymat
+      if (odo > 10000000) e.odometer = 'Juda katta qiymat'
     }
 
     // Tur bo'yicha validatsiya
@@ -219,11 +218,17 @@ export default function VehicleDetailPanel() {
     }
 
     setErrors(e)
+    console.log('🔍 Validation:', { type, data, errors: e, isValid: !Object.keys(e).length })
     return !Object.keys(e).length
   }, [vehicle?.currentOdometer])
 
   const handleSubmit = useCallback(async (type, form, endpoint, itemId = null) => {
-    if (!validate(type, form)) return
+    console.log('📤 handleSubmit called:', { type, form, endpoint, itemId })
+    if (!validate(type, form)) {
+      console.log('❌ Validation failed')
+      return
+    }
+    console.log('✅ Validation passed')
     const body = { ...form }
     
     // Moy uchun nextChangeOdometer ni hisoblash
@@ -258,6 +263,25 @@ export default function VehicleDetailPanel() {
         setMaintenanceAlerts(response.data.data.alerts)
       }
       
+      // Moy almashtirilganda - moy alertlarini tozalash
+      if (type === 'oil' && !itemId) {
+        setMaintenanceAlerts(prev => prev.filter(a => a.type !== 'oil'))
+        setOilData(prev => ({
+          ...prev,
+          status: 'ok',
+          remainingKm: body.nextChangeOdometer ? body.nextChangeOdometer - (body.odometer || vehicle?.currentOdometer || 0) : 10000
+        }))
+      }
+      
+      // Shina almashtirilganda - tegishli shina alertlarini tozalash
+      if (type === 'tire' && !itemId) {
+        const tirePosition = form.position || ''
+        setMaintenanceAlerts(prev => prev.filter(a => {
+          if (a.type !== 'tire') return true
+          return !a.message?.toLowerCase().includes(tirePosition.toLowerCase())
+        }))
+      }
+      
       // API dan kelgan yangi ma'lumotni state ga qo'shish
       if (response.data?.data) {
         const savedItem = response.data.data
@@ -278,7 +302,9 @@ export default function VehicleDetailPanel() {
             ...prev,
             changes: itemId 
               ? prev.changes.map(c => c._id === itemId ? savedItem : c)
-              : [savedItem, ...prev.changes]
+              : [savedItem, ...prev.changes],
+            status: 'ok', // Moy almashtirildi
+            remainingKm: savedItem.nextChangeOdometer ? savedItem.nextChangeOdometer - (savedItem.odometer || vehicle?.currentOdometer || 0) : 10000
           }))
         } else if (type === 'tire') {
           setTires(prev => itemId 
@@ -331,6 +357,10 @@ export default function VehicleDetailPanel() {
     const count = parseInt(bulkTireForm.count) || 4
     const positions = count === 6 ? ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng', 'Orqa chap (ichki)', 'Orqa o\'ng (ichki)'] : ['Old chap', 'Old o\'ng', 'Orqa chap', 'Orqa o\'ng']
     setModal(null)
+    
+    // Barcha shina alertlarini tozalash (to'liq almashtirish)
+    setMaintenanceAlerts(prev => prev.filter(a => a.type !== 'tire'))
+    
     const newTires = positions.map((position, i) => ({ _id: `temp_${Date.now()}_${i}`, position, brand: bulkTireForm.brand, size: bulkTireForm.size || '', remainingKm: 50000, status: 'new' }))
     setTires(prev => [...prev, ...newTires])
     alert.success(`${count} ta shina qo'shildi`)
@@ -424,8 +454,13 @@ export default function VehicleDetailPanel() {
     
     setOilData(prev => ({
       ...prev,
-      changes: [newChange, ...prev.changes]
+      changes: [newChange, ...prev.changes],
+      status: 'ok', // Moy almashtirildi - status yaxshi
+      remainingKm: 10000 // Yangi interval
     }))
+    
+    // Moy alertlarini darhol tozalash (optimistic)
+    setMaintenanceAlerts(prev => prev.filter(a => a.type !== 'oil'))
     
     alert.success('🎤 Moy almashtirish qo\'shildi!')
     
@@ -450,6 +485,16 @@ export default function VehicleDetailPanel() {
     const cost = Number(voiceData.cost) || 0
     const count = Number(voiceData.count) || 1
     const installOdometer = Number(voiceData.installOdometer) || Number(voiceData.odometer) || vehicle?.currentOdometer || 0
+    const tirePosition = voiceData.position || 'Old chap'
+    
+    // Shina alertlarini darhol tozalash (optimistic) - tegishli pozitsiya uchun
+    setMaintenanceAlerts(prev => prev.filter(a => {
+      if (a.type !== 'tire') return true
+      // Agar bir nechta shina qo'shilsa, barcha shina alertlarini o'chirish
+      if (count > 1) return false
+      // Bitta shina uchun faqat shu pozitsiya alertini o'chirish
+      return !a.message?.toLowerCase().includes(tirePosition.toLowerCase())
+    }))
     
     // Agar count > 1 bo'lsa, bir nechta shina qo'shish
     if (count > 1) {
@@ -494,7 +539,7 @@ export default function VehicleDetailPanel() {
       const tempId = `temp_${Date.now()}`
       const newTire = {
         _id: tempId,
-        position: voiceData.position || 'Old chap',
+        position: tirePosition,
         brand: voiceData.brand || '',
         size: voiceData.size || '',
         installDate: new Date().toISOString(),
@@ -510,7 +555,7 @@ export default function VehicleDetailPanel() {
       
       try {
         await api.post(`/maintenance/vehicles/${id}/tires`, {
-          position: voiceData.position || 'Old chap',
+          position: tirePosition,
           brand: voiceData.brand || '',
           size: voiceData.size || '',
           installDate: new Date().toISOString().split('T')[0],

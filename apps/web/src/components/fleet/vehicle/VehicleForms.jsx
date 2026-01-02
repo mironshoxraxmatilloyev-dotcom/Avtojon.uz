@@ -2,23 +2,100 @@ import { memo } from 'react'
 import { X } from 'lucide-react'
 import { FUEL_TYPES, TIRE_POSITIONS, SERVICE_TYPES } from './constants'
 
+// Raqamni formatlash (1000000 -> 1 000 000)
+const formatNumber = (value) => {
+  if (!value) return ''
+  const num = value.toString().replace(/\s/g, '')
+  if (isNaN(num)) return value
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+
+// Formatdan tozalash
+const unformatNumber = (value) => {
+  return value.toString().replace(/\s/g, '')
+}
+
+const Input = memo(({ label, type = 'text', value, onChange, placeholder, error }) => {
+  const isNumber = type === 'number'
+
+  const handleChange = (e) => {
+    if (isNumber) {
+      const raw = unformatNumber(e.target.value)
+      if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+        onChange(raw)
+      }
+    } else {
+      onChange(e.target.value)
+    }
+  }
+
+  const displayValue = isNumber ? formatNumber(value) : value
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}
+      </label>
+      <input
+        type={isNumber ? 'text' : type}
+        inputMode={isNumber ? 'numeric' : undefined}
+        value={displayValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={`w-full px-3 py-2.5 text-base bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${error ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-blue-400'}`}
+      />
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  )
+})
+
+const Select = memo(({ label, value, onChange, options }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+    >
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  </div>
+))
+
+const Textarea = memo(({ label, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={2}
+      className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
+    />
+  </div>
+))
+
+const SubmitButton = memo(({ isEdit }) => (
+  <button type="submit" className="w-full py-3 text-base bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg text-white font-semibold transition-all shadow-lg shadow-blue-500/25">
+    {isEdit ? 'Yangilash' : 'Saqlash'}
+  </button>
+))
+
 export const Modal = memo(({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
     <div 
-      className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl overflow-hidden"
+      className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl overflow-hidden flex flex-col"
       style={{
         maxHeight: 'calc(100vh - 100px)'
       }}
     >
-      <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 bg-white flex-shrink-0">
         <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
         <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
           <X size={20} />
         </button>
       </div>
       <div 
-        className="p-4 sm:p-5 overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 180px)' }}
+        className="p-4 sm:p-5 overflow-y-auto flex-1"
       >
         {children}
       </div>
@@ -109,7 +186,7 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
   )
 })
 
-export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
+export const OilForm = ({ form, setForm, errors, onSubmit, isEdit }) => {
   // Jami xarajatni hisoblash (moy + filtrlar)
   const totalCost = (Number(form.cost) || 0) + 
     (form.filterChanged ? (Number(form.filterCost) || 0) : 0) +
@@ -121,20 +198,21 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
       <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40, 10W-40..." />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} placeholder="8" />
-        <Input label="Jami summa (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="400 000" />
+        <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="400 000" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
-        <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} placeholder="100 000" />
+        <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} error={errors.date} />
+        <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} placeholder="100 000" />
       </div>
 
-      {/* Filtrlar bo'limi */}
-      <div className="border-t border-gray-200 pt-3">
-        <p className="text-sm font-medium text-gray-700 mb-2">Filtrlar</p>
-        
-        {/* Moy filtri */}
-        <div className="space-y-2">
+      {/* Filtrlar bo'limi - collapsed by default */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="p-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Filtrlar (ixtiyoriy)
+        </summary>
+        <div className="p-3 pt-0 space-y-2">
+          {/* Moy filtri */}
           <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
             <input
               type="checkbox"
@@ -147,10 +225,8 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
           {form.filterChanged && (
             <Input label="Moy filtri narxi" type="number" value={form.filterCost} onChange={v => setForm(f => ({ ...f, filterCost: v }))} placeholder="50 000" />
           )}
-        </div>
 
-        {/* Havo filtri */}
-        <div className="space-y-2 mt-2">
+          {/* Havo filtri */}
           <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
             <input
               type="checkbox"
@@ -163,10 +239,8 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
           {form.airFilterChanged && (
             <Input label="Havo filtri narxi" type="number" value={form.airFilterCost} onChange={v => setForm(f => ({ ...f, airFilterCost: v }))} placeholder="30 000" />
           )}
-        </div>
 
-        {/* Yoqilg'i filtri */}
-        <div className="space-y-2 mt-2">
+          {/* Yoqilg'i filtri */}
           <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
             <input
               type="checkbox"
@@ -180,7 +254,7 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
             <Input label="Yoqilg'i filtri narxi" type="number" value={form.fuelFilterCost} onChange={v => setForm(f => ({ ...f, fuelFilterCost: v }))} placeholder="40 000" />
           )}
         </div>
-      </div>
+      </details>
 
       {/* Jami xarajat (moy + filtrlar) */}
       {totalCost > 0 && (
@@ -202,10 +276,10 @@ export const OilForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => {
       <p className="text-xs text-gray-500 -mt-1">Masalan: 10000 km dan keyin moy almashtiriladi</p>
       <SubmitButton isEdit={isEdit} />
     </form>
-  )
-})
+  );
+};
 
-export const TireForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicleOdometer }) => (
+export const TireForm = ({ form, setForm, errors, onSubmit, isEdit, vehicleOdometer }) => (
   <form onSubmit={onSubmit} className="space-y-3">
     <Select label="Pozitsiya" value={form.position} onChange={v => setForm(f => ({ ...f, position: v }))}
       options={TIRE_POSITIONS.map(p => ({ value: p, label: p }))} />
@@ -230,7 +304,7 @@ export const TireForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
     </div>
     <SubmitButton isEdit={isEdit} />
   </form>
-))
+);
 
 export const BulkTireForm = memo(({ form, setForm, errors, onSubmit, vehicleOdometer }) => (
   <form onSubmit={onSubmit} className="space-y-3">
@@ -253,98 +327,20 @@ export const BulkTireForm = memo(({ form, setForm, errors, onSubmit, vehicleOdom
       Barchasini qo'shish
     </button>
   </form>
-))
+));
 
-export const ServiceForm = memo(({ form, setForm, errors, onSubmit, isEdit }) => (
+export const ServiceForm = ({ form, setForm, errors, onSubmit, isEdit }) => (
   <form onSubmit={onSubmit} className="space-y-3">
     <Select label="Xizmat turi" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))}
       options={SERVICE_TYPES.map(t => ({ value: t, label: t }))} />
-    <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} />
+    <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="500 000" />
     <div className="grid grid-cols-2 gap-3">
-      <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
-      <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} />
+      <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} error={errors.date} />
+      <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} placeholder="100 000" />
     </div>
     <Textarea label="Izoh" value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} />
     <SubmitButton isEdit={isEdit} />
   </form>
-))
-
-// Raqamni formatlash (1000000 -> 1 000 000)
-const formatNumber = (value) => {
-  if (!value) return ''
-  const num = value.toString().replace(/\s/g, '')
-  if (isNaN(num)) return value
-  return num.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
-
-// Formatdan tozalash
-const unformatNumber = (value) => {
-  return value.toString().replace(/\s/g, '')
-}
-
-const Input = memo(({ label, type = 'text', value, onChange, placeholder, error }) => {
-  const isNumber = type === 'number'
-
-  const handleChange = (e) => {
-    if (isNumber) {
-      const raw = unformatNumber(e.target.value)
-      if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-        onChange(raw)
-      }
-    } else {
-      onChange(e.target.value)
-    }
-  }
-
-  const displayValue = isNumber ? formatNumber(value) : value
-
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label}
-      </label>
-      <input
-        type={isNumber ? 'text' : type}
-        inputMode={isNumber ? 'numeric' : undefined}
-        value={displayValue}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={`w-full px-3 py-2.5 text-base bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${error ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-blue-400'}`}
-      />
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  )
-})
-
-const Select = memo(({ label, value, onChange, options }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-    >
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
-  </div>
-))
-
-const Textarea = memo(({ label, value, onChange }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      rows={2}
-      className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
-    />
-  </div>
-))
-
-const SubmitButton = memo(({ isEdit }) => (
-  <button type="submit" className="w-full py-3 text-base bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg text-white font-semibold transition-all shadow-lg shadow-blue-500/25">
-    {isEdit ? 'Yangilash' : 'Saqlash'}
-  </button>
-))
+);
 
 export const VehicleForms = { Modal, FuelForm, OilForm, TireForm, BulkTireForm, ServiceForm }
