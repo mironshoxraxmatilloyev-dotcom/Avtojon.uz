@@ -4,7 +4,7 @@ import {
   X, Route, Map, DollarSign, CheckCircle, Wallet, TrendingUp, TrendingDown,
   Calculator, Percent, ArrowRight, Sparkles, Fuel, Utensils, Wrench, Car,
   Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet,
-  Mic
+  Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown
 } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
 import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, formatMoney } from './constants'
@@ -96,8 +96,8 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Yangi bosqich</h2>
-                <p className="text-emerald-400/80 text-sm mt-0.5">
-                  {isLocal ? '🇺🇿 Mahalliy yo\'nalish' : '🌍 Xalqaro yo\'nalish'}
+                <p className="text-emerald-400/80 text-sm mt-0.5 flex items-center gap-1">
+                  {isLocal ? <><Flag size={14} /> Mahalliy yo'nalish</> : <><Globe size={14} /> Xalqaro yo'nalish</>}
                 </p>
               </div>
             </div>
@@ -285,13 +285,13 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
 
   // Valyutalar ro'yxati
   const currencies = isInternational ? [
-    { code: 'UZS', symbol: "so'm", flag: '🇺🇿' },
-    { code: 'USD', symbol: '$', flag: '🇺🇸' },
-    { code: 'RUB', symbol: '₽', flag: '🇷🇺' },
-    { code: 'KZT', symbol: '₸', flag: '🇰🇿' },
-    { code: 'EUR', symbol: '€', flag: '🇪🇺' },
-    { code: 'TRY', symbol: '₺', flag: '🇹🇷' }
-  ] : [{ code: 'UZS', symbol: "so'm", flag: '🇺🇿' }]
+    { code: 'UZS', symbol: "so'm", label: 'UZ' },
+    { code: 'USD', symbol: '$', label: 'US' },
+    { code: 'RUB', symbol: '₽', label: 'RU' },
+    { code: 'KZT', symbol: '₸', label: 'KZ' },
+    { code: 'EUR', symbol: '€', label: 'EU' },
+    { code: 'TRY', symbol: '₺', label: 'TR' }
+  ] : [{ code: 'UZS', symbol: "so'm", label: 'UZ' }]
 
   // Icon render helper
   const renderIcon = (iconName, className = "w-6 h-6") => {
@@ -328,7 +328,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
               className="w-full py-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl transition-all flex items-center justify-center gap-3"
             >
               <Mic size={22} />
-              🎤 Ovoz bilan kiritish
+              Ovoz bilan kiritish
               <Sparkles size={16} className="text-amber-300" />
             </button>
           )}
@@ -430,7 +430,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
               </div>
               {rates && form.currency !== 'UZS' && (
                 <p className="text-xs text-slate-500 mt-2">
-                  💱 Joriy kurs: 1 {form.currency} = {formatMoney(Math.round(rates.UZS / rates[form.currency]))} so'm
+                  Joriy kurs: 1 {form.currency} = {formatMoney(Math.round(rates.UZS / rates[form.currency]))} so'm
                 </p>
               )}
             </div>
@@ -511,7 +511,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
           {isFuel && (
             <div>
               <label className="block text-sm font-semibold text-slate-600 mb-3">
-                🚗 Spidometr (km)
+                Spidometr (km)
               </label>
               <input
                 type="number"
@@ -522,7 +522,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
               />
               {flight?.startOdometer && form.odometer && Number(form.odometer) > flight.startOdometer && (
                 <p className="text-blue-600 text-sm mt-2">
-                  📏 Boshlang'ichdan: +{(Number(form.odometer) - flight.startOdometer).toLocaleString()} km
+                  Boshlang'ichdan: +{(Number(form.odometer) - flight.startOdometer).toLocaleString()} km
                 </p>
               )}
             </div>
@@ -530,7 +530,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
 
           {/* Sana */}
           <div>
-            <label className="block text-sm font-semibold text-slate-600 mb-3">📅 Sana</label>
+            <label className="block text-sm font-semibold text-slate-600 mb-3">Sana</label>
             <input
               type="date"
               value={form.date}
@@ -674,7 +674,7 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
           {/* Valyuta kursi ko'rsatish */}
           {isInternational && rates && (
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center justify-between">
-              <span className="text-amber-400 text-sm">💱 Joriy kurs:</span>
+              <span className="text-amber-400 text-sm">Joriy kurs:</span>
               <span className="text-amber-300 font-bold">1 USD = {formatMoney(uzsToUsdRate)} so'm</span>
             </div>
           )}

@@ -111,13 +111,13 @@ export default function FlightHeader({ flight, navigate }) {
           {/* 1. Mijozdan olingan pul */}
           <div className="bg-emerald-500/20 backdrop-blur-sm rounded-xl p-3 border border-emerald-500/30">
             <p className="text-emerald-400 text-lg sm:text-xl font-bold">+{formatMoney(mijozPuli)}</p>
-            <p className="text-emerald-300/70 text-[10px] sm:text-xs">💰 Mijozdan</p>
+            <p className="text-emerald-300/70 text-[10px] sm:text-xs">Mijozdan</p>
           </div>
 
           {/* 2. Yo'l uchun to'lov */}
           <div className="bg-amber-500/20 backdrop-blur-sm rounded-xl p-3 border border-amber-500/30">
             <p className="text-amber-400 text-lg sm:text-xl font-bold">{formatMoney(yolPuli)}</p>
-            <p className="text-amber-300/70 text-[10px] sm:text-xs">🛣️ Yo'l puli</p>
+            <p className="text-amber-300/70 text-[10px] sm:text-xs">Yo'l puli</p>
           </div>
 
           {/* 3. Sarflangan */}
@@ -125,12 +125,12 @@ export default function FlightHeader({ flight, navigate }) {
             {isInternational ? (
               <>
                 <p className="text-red-400 text-lg sm:text-xl font-bold">-{formatUSD(sarflanganUSD)}</p>
-                <p className="text-red-300/70 text-[10px] sm:text-xs">💸 Sarflangan</p>
+                <p className="text-red-300/70 text-[10px] sm:text-xs">Sarflangan</p>
               </>
             ) : (
               <>
                 <p className="text-red-400 text-lg sm:text-xl font-bold">-{formatMoney(sarflangan)}</p>
-                <p className="text-red-300/70 text-[10px] sm:text-xs">💸 Sarflangan</p>
+                <p className="text-red-300/70 text-[10px] sm:text-xs">Sarflangan</p>
               </>
             )}
           </div>
@@ -140,7 +140,7 @@ export default function FlightHeader({ flight, navigate }) {
             <p className={`text-lg sm:text-xl font-bold ${qoldiq >= 0 ? 'text-cyan-400' : 'text-rose-400'}`}>
               {qoldiq >= 0 ? '+' : ''}{formatMoney(qoldiq)}
             </p>
-            <p className={`text-[10px] sm:text-xs ${qoldiq >= 0 ? 'text-cyan-300/70' : 'text-rose-300/70'}`}>💵 Qoldiq</p>
+            <p className={`text-[10px] sm:text-xs ${qoldiq >= 0 ? 'text-cyan-300/70' : 'text-rose-300/70'}`}>Qoldiq</p>
           </div>
 
           {/* 5. Sof foyda (xarajatlar va shofyor ulushi ayirilgan) */}

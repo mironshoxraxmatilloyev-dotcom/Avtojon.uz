@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { 
   Plus, X, Route, Calendar, Globe, Flag,
   Activity, CheckCircle, Fuel, Gauge, Wallet,
-  ChevronDown, ChevronUp, Trash2, DollarSign, ArrowRight
+  ChevronDown, ChevronUp, Trash2, DollarSign, ArrowRight,
+  Utensils, Wrench, Car, FileText, Package, CircleDot, Circle, Droplet
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -12,11 +13,11 @@ import { useAuthStore } from '../store/authStore'
 import { useAlert } from '../components/ui'
 import { useSocket } from '../hooks/useSocket'
 
-// Davlatlar
+// Davlatlar - Flag icon ishlatiladi
 const COUNTRIES = {
-  UZB: { name: "O'zbekiston", flag: '🇺🇿' },
-  KZ: { name: 'Qozog\'iston', flag: '🇰🇿' },
-  RU: { name: 'Rossiya', flag: '🇷🇺' }
+  UZB: { name: "O'zbekiston", code: 'UZ' },
+  KZ: { name: 'Qozog\'iston', code: 'KZ' },
+  RU: { name: 'Rossiya', code: 'RU' }
 }
 
 // Valyutalar
@@ -27,32 +28,32 @@ const CURRENCIES = {
   RUB: { symbol: '₽', name: 'Rubl' }
 }
 
-// Asosiy xarajat turlari
+// Asosiy xarajat turlari - Lucide iconlar
 const EXPENSE_CATEGORIES = [
-  { value: 'fuel', label: 'Yoqilg\'i', icon: '⛽' },
-  { value: 'food', label: 'Ovqat', icon: '🍽️' },
-  { value: 'repair', label: 'Ta\'mir', icon: '🔧' },
-  { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️' },
-  { value: 'fine', label: 'Jarima', icon: '📋' },
-  { value: 'other', label: 'Boshqa', icon: '📦' }
+  { value: 'fuel', label: 'Yoqilg\'i', Icon: Fuel, color: 'text-amber-500' },
+  { value: 'food', label: 'Ovqat', Icon: Utensils, color: 'text-green-500' },
+  { value: 'repair', label: 'Ta\'mir', Icon: Wrench, color: 'text-red-500' },
+  { value: 'toll', label: 'Yo\'l to\'lovi', Icon: Car, color: 'text-blue-500' },
+  { value: 'fine', label: 'Jarima', Icon: FileText, color: 'text-purple-500' },
+  { value: 'other', label: 'Boshqa', Icon: Package, color: 'text-gray-500' }
 ]
 
-// Yoqilg'i turlari
+// Yoqilg'i turlari - Lucide iconlar
 const FUEL_TYPES = [
-  { value: 'fuel_metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-  { value: 'fuel_propan', label: 'Propan', icon: '🟡', unit: 'kub' },
-  { value: 'fuel_benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-  { value: 'fuel_diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
+  { value: 'fuel_metan', label: 'Metan', Icon: CircleDot, color: 'text-green-500', unit: 'kub' },
+  { value: 'fuel_propan', label: 'Propan', Icon: Circle, color: 'text-yellow-500', unit: 'kub' },
+  { value: 'fuel_benzin', label: 'Benzin', Icon: Fuel, color: 'text-red-500', unit: 'litr' },
+  { value: 'fuel_diesel', label: 'Dizel', Icon: Droplet, color: 'text-blue-500', unit: 'litr' }
 ]
 
-// Eski format uchun (display)
+// Eski format uchun (display) - Lucide iconlar
 const EXPENSE_TYPES = [
   ...FUEL_TYPES,
-  { value: 'food', label: 'Ovqat', icon: '🍽️' },
-  { value: 'repair', label: 'Ta\'mir', icon: '🔧' },
-  { value: 'toll', label: 'Yo\'l to\'lovi', icon: '🛣️' },
-  { value: 'fine', label: 'Jarima', icon: '📋' },
-  { value: 'other', label: 'Boshqa', icon: '📦' }
+  { value: 'food', label: 'Ovqat', Icon: Utensils, color: 'text-green-500' },
+  { value: 'repair', label: 'Ta\'mir', Icon: Wrench, color: 'text-red-500' },
+  { value: 'toll', label: 'Yo\'l to\'lovi', Icon: Car, color: 'text-blue-500' },
+  { value: 'fine', label: 'Jarima', Icon: FileText, color: 'text-purple-500' },
+  { value: 'other', label: 'Boshqa', Icon: Package, color: 'text-gray-500' }
 ]
 
 export default function Flights() {
@@ -660,7 +661,9 @@ export default function Flights() {
                   <div className="min-w-0">
                     <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{flight.name || 'Yangi marshrut'}</h3>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">
-                      {flight.flightType === 'international' ? '🌍' : '🇺🇿'} {flight.driver?.fullName} • {flight.vehicle?.plateNumber}
+                      <span className="inline-flex items-center gap-1">
+                        {flight.flightType === 'international' ? <Globe size={12} /> : <Flag size={12} />}
+                      </span> {flight.driver?.fullName} • {flight.vehicle?.plateNumber}
                     </p>
                   </div>
                 </div>
@@ -755,7 +758,11 @@ export default function Flights() {
                     {flight.expenses?.map((exp) => (
                       <div key={exp._id} className="bg-white p-3 rounded-xl flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">{EXPENSE_TYPES.find(t => t.value === exp.type)?.icon || '📦'}</span>
+                          {(() => {
+                            const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
+                            const IconComponent = expType?.Icon || Package
+                            return <IconComponent size={20} className={expType?.color || 'text-gray-500'} />
+                          })()}
                           <div>
                             <p className="font-medium">{EXPENSE_TYPES.find(t => t.value === exp.type)?.label}</p>
                             {exp.description && <p className="text-xs text-gray-400">{exp.description}</p>}
@@ -1270,7 +1277,7 @@ export default function Flights() {
                 {/* Haydovchi ulushi - har doim ko'rsatiladi */}
                 <div className={`bg-gradient-to-r ${selectedFlight.profit > 0 ? 'from-emerald-500/10 to-teal-500/10 border-emerald-500/20' : 'from-red-500/10 to-orange-500/10 border-red-500/20'} rounded-xl p-4 border`}>
                   <label className={`block text-sm font-medium mb-2 ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    💰 Haydovchiga foydadan necha % berasiz?
+                    Haydovchiga foydadan necha % berasiz?
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -1441,7 +1448,7 @@ export default function Flights() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">📦 Boshqa</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Boshqa</label>
                     <input
                       type="number"
                       value={borderForm.otherFees}

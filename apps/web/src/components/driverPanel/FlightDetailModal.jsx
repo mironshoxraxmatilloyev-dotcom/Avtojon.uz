@@ -1,8 +1,19 @@
-import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle } from 'lucide-react'
+import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle, Fuel, Utensils, Wrench, Car, Globe, Flag } from 'lucide-react'
 import { formatMoney, formatDate, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../store/langStore'
+
+// Icon mapping for expense types
+const EXPENSE_ICONS = {
+  fuel: Fuel,
+  food: Utensils,
+  repair: Wrench,
+  toll: Car,
+  parking: Car,
+  wash: Wallet,
+  other: Package,
+}
 
 // Mashrut nomini legs dan olish
 const getFlightRoute = (flight, t) => {
@@ -19,15 +30,15 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
   const [flight, setFlight] = useState(initialFlight)
   const { t, lang } = useTranslation()
 
-  // Expense labels - til bo'yicha
+  // Expense labels - til bo'yicha (Lucide iconlar bilan)
   const expenseLabels = {
-    fuel: { icon: '⛽', label: lang === 'ru' ? 'Ёқилғи' : "Yoqilg'i" },
-    food: { icon: '🍽️', label: lang === 'ru' ? 'Овқат' : 'Ovqat' },
-    repair: { icon: '🔧', label: lang === 'ru' ? 'Таъмирлаш' : "Ta'mirlash" },
-    toll: { icon: '🛣️', label: lang === 'ru' ? 'Йўл тўлови' : "Yo'l to'lovi" },
-    parking: { icon: '🅿️', label: lang === 'ru' ? 'Парковка' : 'Parkovka' },
-    wash: { icon: '🚿', label: lang === 'ru' ? 'Ювиш' : 'Yuvish' },
-    other: { icon: '📦', label: lang === 'ru' ? 'Бошқа' : 'Boshqa' },
+    fuel: { Icon: Fuel, color: 'text-amber-500', label: lang === 'ru' ? 'Ёқилғи' : "Yoqilg'i" },
+    food: { Icon: Utensils, color: 'text-green-500', label: lang === 'ru' ? 'Овқат' : 'Ovqat' },
+    repair: { Icon: Wrench, color: 'text-red-500', label: lang === 'ru' ? 'Таъмирлаш' : "Ta'mirlash" },
+    toll: { Icon: Car, color: 'text-blue-500', label: lang === 'ru' ? 'Йўл тўлови' : "Yo'l to'lovi" },
+    parking: { Icon: Car, color: 'text-purple-500', label: lang === 'ru' ? 'Парковка' : 'Parkovka' },
+    wash: { Icon: Wallet, color: 'text-cyan-500', label: lang === 'ru' ? 'Ювиш' : 'Yuvish' },
+    other: { Icon: Package, color: 'text-gray-500', label: lang === 'ru' ? 'Бошқа' : 'Boshqa' },
   }
 
   // initialFlight o'zgarganda flight ni yangilash
@@ -88,16 +99,16 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
     clientPaymentHint: lang === 'ru' ? 'Буюртмалар учун тўлов' : "Buyurtmalar uchun to'lov",
     roadExpense: lang === 'ru' ? 'Йўл харажати' : "Yo'l xarajati",
     roadExpenseHint: lang === 'ru' ? 'Йўлда сарфлаш учун' : "Yo'lda sarflash uchun",
-    ordersTitle: lang === 'ru' ? '📦 Буюртмалар' : '📦 Buyurtmalar',
-    expensesTitle: lang === 'ru' ? '💸 Харажатлар' : '💸 Xarajatlar',
+    ordersTitle: lang === 'ru' ? 'Буюртмалар' : 'Buyurtmalar',
+    expensesTitle: lang === 'ru' ? 'Харажатлар' : 'Xarajatlar',
     unconfirmed: lang === 'ru' ? 'та тасдиқланмаган' : 'ta tasdiqlanmagan',
-    calculation: lang === 'ru' ? '📊 Ҳисоб-китоб' : '📊 Hisob-kitob',
+    calculation: lang === 'ru' ? 'Ҳисоб-китоб' : 'Hisob-kitob',
     totalIncome: lang === 'ru' ? 'Жами кирим' : 'Jami kirim',
     totalExpense: lang === 'ru' ? 'Жами харажат' : 'Jami xarajat',
     netProfit: lang === 'ru' ? 'Соф фойда' : 'Sof foyda',
-    yourShare: lang === 'ru' ? '🎁 Улушингиз' : '🎁 Ulushingiz',
-    mustPay: lang === 'ru' ? '💰 Бериш керак:' : '💰 Berish kerak:',
-    willReturn: lang === 'ru' ? '💵 Сизга қайтарилади:' : '💵 Sizga qaytariladi:',
+    yourShare: lang === 'ru' ? 'Улушингиз' : 'Ulushingiz',
+    mustPay: lang === 'ru' ? 'Бериш керак:' : 'Berish kerak:',
+    willReturn: lang === 'ru' ? 'Сизга қайтарилади:' : 'Sizga qaytariladi:',
     paid: lang === 'ru' ? 'Тўланган' : "To'langan",
     waiting: lang === 'ru' ? 'Кутилмоқда' : 'Kutilmoqda',
     close: lang === 'ru' ? 'Ёпиш' : 'Yopish',
@@ -174,10 +185,11 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
                 {flight.expenses.map((exp, idx) => {
                   const info = expenseLabels[exp.type] || expenseLabels.other
                   const isConfirmed = exp.confirmedByDriver
+                  const IconComponent = info.Icon
                   return (
                     <div key={exp._id || idx} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isConfirmed ? 'bg-emerald-50 border border-emerald-200' : 'bg-white border border-slate-100'}`}>
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="text-lg">{info.icon}</span>
+                        <IconComponent size={18} className={info.color} />
                         <div className="min-w-0">
                           <span className="text-slate-700 font-medium text-sm block truncate">{info.label}</span>
                           {exp.description && <span className="text-slate-400 text-xs block truncate">{exp.description}</span>}

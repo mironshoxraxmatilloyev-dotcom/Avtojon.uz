@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { 
   ArrowLeft, User, Phone, Truck, Route, 
   Calendar, Wallet, TrendingUp, CheckCircle, Clock, 
-  Activity, ChevronRight, X, Play, Gauge, Fuel
+  Activity, ChevronRight, X, Play, Gauge, Fuel, Globe, Flag
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -529,7 +529,7 @@ export default function DriverDetail() {
                           : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <span className="text-2xl">🇺🇿</span>
+                      <Flag size={28} className="mx-auto" />
                       <p className="font-medium text-base mt-1">Mahalliy</p>
                     </button>
                     <button
@@ -541,7 +541,7 @@ export default function DriverDetail() {
                           : 'border-white/10 bg-white/5 text-slate-400'
                       }`}
                     >
-                      <span className="text-2xl">🌍</span>
+                      <Globe size={28} className="mx-auto" />
                       <p className="font-medium text-base mt-1">Xalqaro</p>
                     </button>
                   </div>

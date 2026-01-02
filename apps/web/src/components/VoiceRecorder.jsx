@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Mic, MicOff, Loader2, X, Check, AlertCircle, Volume2 } from 'lucide-react'
+import { Mic, MicOff, Loader2, X, Check, AlertCircle, Volume2, Fuel, Utensils, Car, Wrench, Droplet, FileText, CircleDot, Circle } from 'lucide-react'
 import api from '../services/api'
 
 // Xarajat turlari mapping
@@ -19,6 +19,18 @@ const EXPENSE_TYPE_MAP = {
   other: 'other'
 }
 
+// Xarajat turlari icon mapping
+const EXPENSE_TYPE_ICONS = {
+  fuel: { Icon: Fuel, color: 'text-amber-500', label: "Yoqilg'i" },
+  food: { Icon: Utensils, color: 'text-green-500', label: 'Ovqat' },
+  toll: { Icon: Car, color: 'text-blue-500', label: "Yo'l to'lovi" },
+  repair: { Icon: Wrench, color: 'text-red-500', label: "Ta'mir" },
+  wash: { Icon: Droplet, color: 'text-cyan-500', label: 'Yuvish' },
+  fine: { Icon: FileText, color: 'text-purple-500', label: 'Jarima' },
+  parking: { Icon: Car, color: 'text-purple-500', label: 'Parkovka' },
+  other: { Icon: CircleDot, color: 'text-gray-500', label: 'Boshqa' }
+}
+
 // Yoqilg'i turlari mapping
 const FUEL_TYPE_MAP = {
   metan: 'fuel_metan',
@@ -27,6 +39,14 @@ const FUEL_TYPE_MAP = {
   diesel: 'fuel_diesel',
   propan: 'fuel_propan',
   gas: 'fuel_gas'
+}
+
+// Yoqilg'i turlari icon mapping
+const FUEL_TYPE_ICONS = {
+  metan: { Icon: CircleDot, color: 'text-blue-500', label: 'Metan' },
+  benzin: { Icon: Circle, color: 'text-yellow-500', label: 'Benzin' },
+  dizel: { Icon: Droplet, color: 'text-amber-700', label: 'Dizel' },
+  propan: { Icon: Circle, color: 'text-green-500', label: 'Propan' }
 }
 
 export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg }) {
@@ -388,15 +408,17 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
                   {result.data.type && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-400">Turi:</span>
-                      <span className="text-white font-semibold capitalize">
-                        {result.data.type === 'fuel' ? '⛽ Yoqilg\'i' :
-                         result.data.type === 'food' ? '🍽️ Ovqat' :
-                         result.data.type === 'toll' ? '🛣️ Yo\'l to\'lovi' :
-                         result.data.type === 'repair' ? '🔧 Ta\'mir' :
-                         result.data.type === 'wash' ? '🚿 Yuvish' :
-                         result.data.type === 'fine' ? '📋 Jarima' :
-                         result.data.type === 'parking' ? '🅿️ Parkovka' :
-                         result.data.type}
+                      <span className="text-white font-semibold capitalize flex items-center gap-1.5">
+                        {(() => {
+                          const typeInfo = EXPENSE_TYPE_ICONS[result.data.type] || EXPENSE_TYPE_ICONS.other
+                          const IconComponent = typeInfo.Icon
+                          return (
+                            <>
+                              <IconComponent size={16} className={typeInfo.color} />
+                              {typeInfo.label}
+                            </>
+                          )
+                        })()}
                       </span>
                     </div>
                   )}
@@ -414,10 +436,10 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
                         }))}
                         className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm font-semibold focus:outline-none focus:border-blue-500"
                       >
-                        <option value="metan">🔵 Metan</option>
-                        <option value="benzin">🟡 Benzin</option>
-                        <option value="dizel">🟤 Dizel</option>
-                        <option value="propan">🟢 Propan</option>
+                        <option value="metan">Metan</option>
+                        <option value="benzin">Benzin</option>
+                        <option value="dizel">Dizel</option>
+                        <option value="propan">Propan</option>
                       </select>
                     </div>
                   )}

@@ -1,17 +1,17 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Fuel, MapPin } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Fuel, MapPin, CircleDot, Circle, Droplet, Utensils, Wrench, Car, FileText, Package, Wallet } from 'lucide-react'
 
-// Xarajat turlari
+// Xarajat turlari - Lucide iconlar bilan
 const EXPENSE_TYPES = {
-  fuel_metan: { icon: '🟢', label: 'Metan', color: 'from-green-500 to-emerald-500' },
-  fuel_propan: { icon: '🟡', label: 'Propan', color: 'from-yellow-500 to-amber-500' },
-  fuel_benzin: { icon: '⛽', label: 'Benzin', color: 'from-orange-500 to-red-500' },
-  fuel_diesel: { icon: '🛢️', label: 'Dizel', color: 'from-amber-600 to-orange-600' },
-  food: { icon: '🍽️', label: 'Ovqat', color: 'from-green-500 to-emerald-500' },
-  repair: { icon: '🔧', label: 'Ta\'mir', color: 'from-red-500 to-rose-500' },
-  toll: { icon: '🛣️', label: 'Yo\'l to\'lovi', color: 'from-blue-500 to-indigo-500' },
-  fine: { icon: '📋', label: 'Jarima', color: 'from-purple-500 to-violet-500' },
-  other: { icon: '📦', label: 'Boshqa', color: 'from-gray-500 to-slate-500' }
+  fuel_metan: { Icon: CircleDot, color: 'from-green-500 to-emerald-500', iconColor: 'text-green-500', label: 'Metan' },
+  fuel_propan: { Icon: Circle, color: 'from-yellow-500 to-amber-500', iconColor: 'text-yellow-500', label: 'Propan' },
+  fuel_benzin: { Icon: Fuel, color: 'from-orange-500 to-red-500', iconColor: 'text-red-500', label: 'Benzin' },
+  fuel_diesel: { Icon: Droplet, color: 'from-amber-600 to-orange-600', iconColor: 'text-blue-500', label: 'Dizel' },
+  food: { Icon: Utensils, color: 'from-green-500 to-emerald-500', iconColor: 'text-green-500', label: 'Ovqat' },
+  repair: { Icon: Wrench, color: 'from-red-500 to-rose-500', iconColor: 'text-red-500', label: 'Ta\'mir' },
+  toll: { Icon: Car, color: 'from-blue-500 to-indigo-500', iconColor: 'text-blue-500', label: 'Yo\'l to\'lovi' },
+  fine: { Icon: FileText, color: 'from-purple-500 to-violet-500', iconColor: 'text-purple-500', label: 'Jarima' },
+  other: { Icon: Package, color: 'from-gray-500 to-slate-500', iconColor: 'text-gray-500', label: 'Boshqa' }
 }
 
 const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
@@ -139,8 +139,8 @@ export default function LegExpenses({
                       
                       return (
                         <div key={expense._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50">
-                          <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center text-base flex-shrink-0`}>
-                            {expType.icon}
+                          <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center flex-shrink-0`}>
+                            <expType.Icon size={18} className="text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">
@@ -196,7 +196,7 @@ export default function LegExpenses({
                         onClick={(e) => { e.stopPropagation(); onAddPayment(leg) }}
                         className="flex-1 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 hover:shadow-md transition"
                       >
-                        💰 To'lov olish
+                        <Wallet size={14} /> To'lov olish
                       </button>
                     )}
                   </div>

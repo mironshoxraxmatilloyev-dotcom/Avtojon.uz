@@ -31,27 +31,27 @@ const DEFAULT_RATES = {
 
 // Davlatlar va ularning valyutalari
 export const COUNTRY_CURRENCIES = {
-  UZB: { code: 'UZS', symbol: 'so\'m', name: 'O\'zbek so\'mi', flag: '🇺🇿' },
-  KZ: { code: 'KZT', symbol: '₸', name: 'Tenge', flag: '🇰🇿' },
-  RU: { code: 'RUB', symbol: '₽', name: 'Rubl', flag: '🇷🇺' },
-  TJ: { code: 'TJS', symbol: 'SM', name: 'Somoni', flag: '🇹🇯' },
-  KG: { code: 'KGS', symbol: 'сом', name: 'Som', flag: '🇰🇬' },
-  TM: { code: 'TMT', symbol: 'm', name: 'Manat', flag: '🇹🇲' },
-  AF: { code: 'AFN', symbol: '؋', name: 'Afg\'oni', flag: '🇦🇫' },
-  CN: { code: 'CNY', symbol: '¥', name: 'Yuan', flag: '🇨🇳' },
-  TR: { code: 'TRY', symbol: '₺', name: 'Lira', flag: '🇹🇷' },
-  IR: { code: 'IRR', symbol: '﷼', name: 'Riyal', flag: '🇮🇷' },
-  AZ: { code: 'AZN', symbol: '₼', name: 'Manat', flag: '🇦🇿' },
-  GE: { code: 'GEL', symbol: '₾', name: 'Lari', flag: '🇬🇪' },
-  BY: { code: 'BYN', symbol: 'Br', name: 'Rubl', flag: '🇧🇾' },
-  UA: { code: 'UAH', symbol: '₴', name: 'Grivna', flag: '🇺🇦' },
-  PL: { code: 'PLN', symbol: 'zł', name: 'Zlotiy', flag: '🇵🇱' },
-  DE: { code: 'EUR', symbol: '€', name: 'Yevro', flag: '🇩🇪' },
-  LT: { code: 'EUR', symbol: '€', name: 'Yevro', flag: '🇱🇹' },
-  LV: { code: 'EUR', symbol: '€', name: 'Yevro', flag: '🇱🇻' },
-  EE: { code: 'EUR', symbol: '€', name: 'Yevro', flag: '🇪🇪' },
-  FI: { code: 'EUR', symbol: '€', name: 'Yevro', flag: '🇫🇮' },
-  AE: { code: 'AED', symbol: 'د.إ', name: 'Dirham', flag: '🇦🇪' }
+  UZB: { code: 'UZS', symbol: 'so\'m', name: 'O\'zbek so\'mi', countryCode: 'UZ' },
+  KZ: { code: 'KZT', symbol: '₸', name: 'Tenge', countryCode: 'KZ' },
+  RU: { code: 'RUB', symbol: '₽', name: 'Rubl', countryCode: 'RU' },
+  TJ: { code: 'TJS', symbol: 'SM', name: 'Somoni', countryCode: 'TJ' },
+  KG: { code: 'KGS', symbol: 'сом', name: 'Som', countryCode: 'KG' },
+  TM: { code: 'TMT', symbol: 'm', name: 'Manat', countryCode: 'TM' },
+  AF: { code: 'AFN', symbol: '؋', name: 'Afg\'oni', countryCode: 'AF' },
+  CN: { code: 'CNY', symbol: '¥', name: 'Yuan', countryCode: 'CN' },
+  TR: { code: 'TRY', symbol: '₺', name: 'Lira', countryCode: 'TR' },
+  IR: { code: 'IRR', symbol: '﷼', name: 'Riyal', countryCode: 'IR' },
+  AZ: { code: 'AZN', symbol: '₼', name: 'Manat', countryCode: 'AZ' },
+  GE: { code: 'GEL', symbol: '₾', name: 'Lari', countryCode: 'GE' },
+  BY: { code: 'BYN', symbol: 'Br', name: 'Rubl', countryCode: 'BY' },
+  UA: { code: 'UAH', symbol: '₴', name: 'Grivna', countryCode: 'UA' },
+  PL: { code: 'PLN', symbol: 'zł', name: 'Zlotiy', countryCode: 'PL' },
+  DE: { code: 'EUR', symbol: '€', name: 'Yevro', countryCode: 'DE' },
+  LT: { code: 'EUR', symbol: '€', name: 'Yevro', countryCode: 'LT' },
+  LV: { code: 'EUR', symbol: '€', name: 'Yevro', countryCode: 'LV' },
+  EE: { code: 'EUR', symbol: '€', name: 'Yevro', countryCode: 'EE' },
+  FI: { code: 'EUR', symbol: '€', name: 'Yevro', countryCode: 'FI' },
+  AE: { code: 'AED', symbol: 'د.إ', name: 'Dirham', countryCode: 'AE' }
 }
 
 // Valyuta belgilari

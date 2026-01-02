@@ -1,7 +1,18 @@
-import { Route, Wallet, Package, Receipt } from 'lucide-react'
+import { Route, Wallet, Package, Receipt, Globe, Flag, Fuel, Utensils, Wrench, Car } from 'lucide-react'
 import { formatMoney, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
+
+// Icon mapping for expense types
+const EXPENSE_ICONS = {
+  fuel: { Icon: Fuel, color: 'text-amber-500' },
+  food: { Icon: Utensils, color: 'text-green-500' },
+  repair: { Icon: Wrench, color: 'text-red-500' },
+  toll: { Icon: Car, color: 'text-blue-500' },
+  parking: { Icon: Car, color: 'text-purple-500' },
+  wash: { Icon: Wallet, color: 'text-cyan-500' },
+  other: { Icon: Package, color: 'text-gray-500' },
+}
 
 export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate }) {
   const [flight, setFlight] = useState(initialFlight)
@@ -60,7 +71,10 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
             </div>
             <div className="min-w-0">
               <h3 className="text-white font-bold text-sm sm:text-base truncate">{flight.name || 'Faol marshrut'}</h3>
-              <p className="text-white/80 text-xs sm:text-sm">{flight.flightType === 'international' ? '🌍 Xalqaro' : '🇺🇿 Mahalliy'}</p>
+              <p className="text-white/80 text-xs sm:text-sm flex items-center gap-1">
+                {flight.flightType === 'international' ? <Globe size={12} /> : <Flag size={12} />}
+                {flight.flightType === 'international' ? 'Xalqaro' : 'Mahalliy'}
+              </p>
             </div>
           </div>
           <span className="px-2 sm:px-3 py-1 bg-emerald-500 rounded-full text-white text-[10px] sm:text-xs font-bold flex items-center gap-1 flex-shrink-0">
@@ -144,6 +158,8 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
             <div className="space-y-1.5 sm:space-y-2 max-h-40 sm:max-h-48 overflow-y-auto">
               {flight.expenses.map((exp, idx) => {
                 const info = EXPENSE_LABELS[exp.type] || EXPENSE_LABELS.other
+                const iconInfo = EXPENSE_ICONS[exp.type] || EXPENSE_ICONS.other
+                const IconComponent = iconInfo.Icon
                 const isConfirmed = exp.confirmedByDriver
                 return (
                   <div 
@@ -152,7 +168,7 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
                     onClick={e => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                      <span className="text-base sm:text-lg">{info.icon}</span>
+                      <IconComponent size={18} className={iconInfo.color} />
                       <div className="min-w-0">
                         <span className="text-slate-700 text-xs sm:text-sm font-medium block truncate">{info.label}</span>
                         {exp.description && <p className="text-slate-400 text-[10px] sm:text-xs truncate">{exp.description}</p>}

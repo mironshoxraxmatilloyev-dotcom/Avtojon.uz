@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import {
   BarChart3, TrendingUp, Users, Route, Fuel, Calendar,
   ArrowUpRight, Activity, DollarSign, Clock, CheckCircle,
-  X, ChevronLeft, ChevronRight, Filter, Sparkles, Download, FileSpreadsheet
+  X, ChevronLeft, ChevronRight, Filter, Sparkles, Download, FileSpreadsheet,
+  Utensils, Wrench, Car, CircleDot
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
@@ -112,7 +113,7 @@ const exportToExcel = (data, filename) => {
       <Column ss:Width="200"/>
       <Column ss:Width="150"/>
       <Row ss:Height="35">
-        <Cell ss:MergeAcross="1" ss:StyleID="title"><Data ss:Type="String">📊 Hisobot - ${filename}</Data></Cell>
+        <Cell ss:MergeAcross="1" ss:StyleID="title"><Data ss:Type="String">Hisobot - ${filename}</Data></Cell>
       </Row>
       <Row><Cell/></Row>
       <Row ss:Height="25">
@@ -120,41 +121,41 @@ const exportToExcel = (data, filename) => {
         <Cell ss:StyleID="header"><Data ss:Type="String">Qiymat</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">👥 Jami haydovchilar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Jami haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">✅ Bo'sh haydovchilar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Bo'sh haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.free}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">🚗 Band haydovchilar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Band haydovchilar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.drivers.busy}</Data></Cell>
       </Row>
       <Row><Cell/></Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">📦 Jami marshrutlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Jami marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">✔️ Tugatilgan marshrutlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Tugatilgan marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.completed}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">🔄 Faol marshrutlar</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Faol marshrutlar</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.flights.active}</Data></Cell>
       </Row>
       <Row><Cell/></Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">💰 Jami xarajat (so'm)</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Jami xarajat (so'm)</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.total}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">⛽ Yoqilg'i (so'm)</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Yoqilg'i (so'm)</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.fuel}</Data></Cell>
       </Row>
       <Row>
-        <Cell ss:StyleID="data"><Data ss:Type="String">📋 Boshqa (so'm)</Data></Cell>
+        <Cell ss:StyleID="data"><Data ss:Type="String">Boshqa (so'm)</Data></Cell>
         <Cell ss:StyleID="number"><Data ss:Type="Number">${data.stats.expenses.other}</Data></Cell>
       </Row>
     </Table>
@@ -966,8 +967,8 @@ export default function Reports() {
             </p>
             <p className="text-cyan-200 mt-2">km / 1 kub</p>
             <div className="mt-3 flex gap-3 text-xs">
-              <span className="bg-white/20 px-2 py-1 rounded-lg">🟢 {stats.fuel?.totalKub || 0} kub</span>
-              <span className="bg-white/20 px-2 py-1 rounded-lg">⛽ {stats.fuel?.totalLitr || 0} litr</span>
+              <span className="bg-white/20 px-2 py-1 rounded-lg flex items-center gap-1"><CircleDot size={12} className="text-green-300" /> {stats.fuel?.totalKub || 0} kub</span>
+              <span className="bg-white/20 px-2 py-1 rounded-lg flex items-center gap-1"><Fuel size={12} /> {stats.fuel?.totalLitr || 0} litr</span>
             </div>
           </div>
         </div>
@@ -1128,7 +1129,7 @@ export default function Reports() {
             </div>
             <div className="mt-3 p-3 bg-emerald-50 rounded-xl">
               <p className="text-sm text-emerald-700 text-center">
-                🚛 1 kub metan bilan <span className="font-bold">{stats.fuel?.efficiency || 0} km</span> yurish mumkin
+                1 kub metan bilan <span className="font-bold">{stats.fuel?.efficiency || 0} km</span> yurish mumkin
               </p>
             </div>
           </div>
@@ -1137,28 +1138,28 @@ export default function Reports() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">⛽</span>
+                <Fuel size={18} className="text-orange-500" />
                 <span className="text-sm font-medium text-orange-700">Yoqilg'i</span>
               </div>
               <p className="text-xl font-bold text-orange-600">{formatMoney(stats.expenses.fuel)}</p>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🍽️</span>
+                <Utensils size={18} className="text-green-500" />
                 <span className="text-sm font-medium text-green-700">Ovqat</span>
               </div>
               <p className="text-xl font-bold text-green-600">{formatMoney(stats.expenses.food || 0)}</p>
             </div>
             <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-4 border border-red-100">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🔧</span>
+                <Wrench size={18} className="text-red-500" />
                 <span className="text-sm font-medium text-red-700">Ta'mir</span>
               </div>
               <p className="text-xl font-bold text-red-600">{formatMoney(stats.expenses.repair || 0)}</p>
             </div>
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🛣️</span>
+                <Car size={18} className="text-blue-500" />
                 <span className="text-sm font-medium text-blue-700">Yo'l to'lovi</span>
               </div>
               <p className="text-xl font-bold text-blue-600">{formatMoney(stats.expenses.toll || 0)}</p>
