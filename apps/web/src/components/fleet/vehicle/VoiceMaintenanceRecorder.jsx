@@ -277,127 +277,119 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
           {/* Result */}
           {result && !error && (
             <div className="space-y-4">
-              {result.data && (
-                <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
-                  <p className="text-emerald-400 text-xs font-semibold">ANIQLANGAN MA'LUMOTLAR:</p>
-                  
-                  {/* Oil specific fields */}
-                  {context === 'oil' && (
-                    <>
-                      {editedData.oilType && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Moy turi:</span>
-                          <input
-                            type="text"
-                            value={editedData.oilType || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, oilType: e.target.value }))}
-                            className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
-                          />
-                        </div>
-                      )}
-                      {editedData.oilBrand && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Brend:</span>
-                          <input
-                            type="text"
-                            value={editedData.oilBrand || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, oilBrand: e.target.value }))}
-                            className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
-                          />
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Miqdori (litr):</span>
-                        <input
-                          type="number"
-                          value={editedData.liters || ''}
-                          onChange={(e) => setEditedData(prev => ({ ...prev, liters: e.target.value }))}
-                          className="w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-cyan-400 text-right font-semibold focus:outline-none"
-                          placeholder="0"
-                        />
-                      </div>
-                    </>
-                  )}
+              <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
+                <p className="text-emerald-400 text-xs font-semibold">ANIQLANGAN MA'LUMOTLAR:</p>
+                
+                {/* Oil specific fields */}
+                {context === 'oil' && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Moy turi:</span>
+                      <input
+                        type="text"
+                        value={editedData.oilType || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, oilType: e.target.value }))}
+                        className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
+                        placeholder="10W-40"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Brend:</span>
+                      <input
+                        type="text"
+                        value={editedData.oilBrand || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, oilBrand: e.target.value }))}
+                        className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
+                        placeholder="Mobil"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Miqdori (litr):</span>
+                      <input
+                        type="number"
+                        value={editedData.liters || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, liters: e.target.value }))}
+                        className="w-24 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-cyan-400 text-right font-semibold focus:outline-none"
+                        placeholder="0"
+                      />
+                    </div>
+                  </>
+                )}
 
-                  {/* Tire specific fields */}
-                  {context === 'tire' && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Brend:</span>
-                        <input
-                          type="text"
-                          value={editedData.brand || ''}
-                          onChange={(e) => setEditedData(prev => ({ ...prev, brand: e.target.value }))}
-                          className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
-                          placeholder="Michelin"
-                        />
-                      </div>
-                      {editedData.size && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400">O'lcham:</span>
-                          <input
-                            type="text"
-                            value={editedData.size || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, size: e.target.value }))}
-                            className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
-                          />
-                        </div>
-                      )}
-                      {editedData.position && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Pozitsiya:</span>
-                          <select
-                            value={editedData.position || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, position: e.target.value }))}
-                            className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none"
-                          >
-                            <option value="">Tanlang</option>
-                            <option value="Old chap">Old chap</option>
-                            <option value="Old o'ng">Old o'ng</option>
-                            <option value="Orqa chap">Orqa chap</option>
-                            <option value="Orqa o'ng">Orqa o'ng</option>
-                            <option value="Orqa chap (ichki)">Orqa chap (ichki)</option>
-                            <option value="Orqa o'ng (ichki)">Orqa o'ng (ichki)</option>
-                          </select>
-                        </div>
-                      )}
-                      {editedData.count && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Soni:</span>
-                          <input
-                            type="number"
-                            value={editedData.count || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, count: e.target.value }))}
-                            className="w-20 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-cyan-400 text-right font-semibold focus:outline-none"
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
+                {/* Tire specific fields */}
+                {context === 'tire' && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Brend:</span>
+                      <input
+                        type="text"
+                        value={editedData.brand || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, brand: e.target.value }))}
+                        className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
+                        placeholder="Michelin"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">O'lcham:</span>
+                      <input
+                        type="text"
+                        value={editedData.size || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, size: e.target.value }))}
+                        className="w-32 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-right font-semibold focus:outline-none"
+                        placeholder="315/80R22.5"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Pozitsiya:</span>
+                      <select
+                        value={editedData.position || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, position: e.target.value }))}
+                        className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none"
+                      >
+                        <option value="">Tanlang</option>
+                        <option value="Old chap">Old chap</option>
+                        <option value="Old o'ng">Old o'ng</option>
+                        <option value="Orqa chap">Orqa chap</option>
+                        <option value="Orqa o'ng">Orqa o'ng</option>
+                        <option value="Orqa chap (ichki)">Orqa chap (ichki)</option>
+                        <option value="Orqa o'ng (ichki)">Orqa o'ng (ichki)</option>
+                      </select>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Soni:</span>
+                      <input
+                        type="number"
+                        value={editedData.count || 1}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, count: e.target.value }))}
+                        className="w-20 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-cyan-400 text-right font-semibold focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
 
-                  {/* Service specific fields */}
-                  {context === 'service' && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Xizmat turi:</span>
-                        <select
-                          value={editedData.type || 'TO-1'}
-                          onChange={(e) => setEditedData(prev => ({ ...prev, type: e.target.value }))}
-                          className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none"
-                        >
-                          <option value="TO-1">TO-1</option>
-                          <option value="TO-2">TO-2</option>
-                          <option value="TO-3">TO-3</option>
-                          <option value="Tormoz">Tormoz</option>
-                          <option value="Mufta">Mufta</option>
-                          <option value="Reduktor">Reduktor</option>
-                          <option value="Dvigatel">Dvigatel</option>
-                          <option value="Korobka">Korobka</option>
-                          <option value="Elektrika">Elektrika</option>
-                          <option value="Kuzov">Kuzov</option>
-                          <option value="Boshqa">Boshqa</option>
-                        </select>
-                      </div>
+                {/* Service specific fields */}
+                {context === 'service' && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Xizmat turi:</span>
+                      <select
+                        value={editedData.type || 'TO-1'}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, type: e.target.value }))}
+                        className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none"
+                      >
+                        <option value="TO-1">TO-1</option>
+                        <option value="TO-2">TO-2</option>
+                        <option value="TO-3">TO-3</option>
+                        <option value="Tormoz">Tormoz</option>
+                        <option value="Mufta">Mufta</option>
+                        <option value="Reduktor">Reduktor</option>
+                        <option value="Dvigatel">Dvigatel</option>
+                        <option value="Korobka">Korobka</option>
+                        <option value="Elektrika">Elektrika</option>
+                        <option value="Kuzov">Kuzov</option>
+                        <option value="Boshqa">Boshqa</option>
+                      </select>
+                    </div>
                       {editedData.description && (
                         <div className="flex justify-between items-center">
                           <span className="text-slate-400">Tavsif:</span>
@@ -623,7 +615,7 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
                     </>
                   )}
 
-                  {result.data.confidence && (
+                  {result?.data?.confidence && (
                     <div className="flex justify-between items-center pt-2 border-t border-white/10">
                       <span className="text-slate-500 text-xs">Aniqlik:</span>
                       <span className={`text-xs font-semibold ${result.data.confidence >= 0.9 ? 'text-emerald-400' : result.data.confidence >= 0.7 ? 'text-amber-400' : 'text-red-400'}`}>
@@ -632,7 +624,6 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
                     </div>
                   )}
                 </div>
-              )}
 
               {/* Action buttons */}
               <div className="flex gap-3">
