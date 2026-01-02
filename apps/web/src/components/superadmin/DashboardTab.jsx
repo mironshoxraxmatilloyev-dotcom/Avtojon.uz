@@ -14,7 +14,15 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
     )
   }
 
-  // flights object yoki number bo'lishi mumkin
+  // Backend object qaytaradi: { businessmen: { total, active }, users: { total, active }, ... }
+  const businessmenCount = typeof stats.businessmen === 'object' ? stats.businessmen?.total : stats.businessmen
+  const usersCount = typeof stats.users === 'object' ? stats.users?.total : stats.users
+  const driversCount = typeof stats.drivers === 'object' ? stats.drivers?.total : stats.drivers
+  const vehiclesCount = typeof stats.vehicles === 'object' ? stats.vehicles?.total : stats.vehicles
+  
+  const activeBusinessmen = typeof stats.businessmen === 'object' ? stats.businessmen?.active : stats.activeBusinessmen
+  const activeUsers = typeof stats.users === 'object' ? stats.users?.active : stats.activeUsers
+  
   const totalFlights = typeof stats.flights === 'object' ? stats.flights?.total : stats.flights
   const activeFlights = typeof stats.flights === 'object' ? stats.flights?.active : stats.activeFlights
 
@@ -40,28 +48,28 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
         <StatCard
           icon={Building2}
           label="Biznesmenlar"
-          value={<AnimatedCounter value={stats.businessmen || 0} />}
+          value={<AnimatedCounter value={businessmenCount || 0} />}
           color="violet"
           onClick={() => setActiveTab('businessmen')}
         />
         <StatCard
           icon={Users}
           label="Foydalanuvchilar"
-          value={<AnimatedCounter value={stats.users || 0} />}
+          value={<AnimatedCounter value={usersCount || 0} />}
           color="cyan"
           onClick={() => setActiveTab('users')}
         />
         <StatCard
           icon={Truck}
           label="Haydovchilar"
-          value={<AnimatedCounter value={stats.drivers || 0} />}
+          value={<AnimatedCounter value={driversCount || 0} />}
           color="emerald"
           onClick={() => setActiveTab('drivers')}
         />
         <StatCard
           icon={Car}
           label="Mashinalar"
-          value={<AnimatedCounter value={stats.vehicles || 0} />}
+          value={<AnimatedCounter value={vehiclesCount || 0} />}
           color="pink"
           onClick={() => setActiveTab('vehicles')}
         />
@@ -78,11 +86,11 @@ const DashboardTab = memo(({ stats, setActiveTab }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Biznesmenlar</span>
-              <span className="text-emerald-400 font-semibold">{stats.activeBusinessmen || 0}</span>
+              <span className="text-emerald-400 font-semibold">{activeBusinessmen || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Foydalanuvchilar</span>
-              <span className="text-emerald-400 font-semibold">{stats.activeUsers || 0}</span>
+              <span className="text-emerald-400 font-semibold">{activeUsers || 0}</span>
             </div>
           </div>
         </div>
