@@ -61,11 +61,14 @@ export const connectSocket = () => {
   })
 
   socket.on('connect', () => {
+    console.log('🔌 Socket connected:', socket.id)
     // Xonalarga qayta qo'shilish
     if (pendingRooms.driver) {
+      console.log('🔌 Rejoining driver room:', `driver-${pendingRooms.driver}`)
       socket.emit('join-driver', pendingRooms.driver)
     }
     if (pendingRooms.business) {
+      console.log('🔌 Rejoining business room:', `business-${pendingRooms.business}`)
       socket.emit('join-business', pendingRooms.business)
     }
   })
@@ -109,7 +112,10 @@ export const joinBusinessRoom = (businessId) => {
 
   const s = getSocket()
   if (s?.connected) {
+    console.log('🔌 Joining business room:', `business-${id}`)
     s.emit('join-business', id)
+  } else {
+    console.log('⏳ Socket not connected, will join room on connect:', `business-${id}`)
   }
 }
 

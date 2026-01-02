@@ -14,13 +14,11 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
     const isDomestic = form.flightType === 'domestic'
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/90 p-0 sm:p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4">
             <div className="absolute inset-0" onClick={onClose} />
-            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-t-2xl sm:rounded-2xl w-full max-w-md border border-white/10 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                {/* Mobile drag handle */}
-                <div className="sm:hidden w-12 h-1 bg-white/30 rounded-full mx-auto mt-2 mb-1" />
-
-                <div className="sticky top-0 z-10 p-3 sm:p-4 border-b border-white/10 bg-slate-900/95 backdrop-blur-sm sm:rounded-t-2xl">
+            <div className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="sticky top-0 z-10 p-4 border-b border-white/10 bg-slate-900/95 backdrop-blur-sm rounded-t-2xl">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30">

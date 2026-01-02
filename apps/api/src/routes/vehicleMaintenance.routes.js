@@ -224,7 +224,14 @@ const validateMaintenanceData = (type, data, currentOdometer = 0) => {
   }
   
   if (type === 'income') {
-    if (!data.amount || Number(data.amount) <= 0) errors.push('Summa majburiy va musbat bo\'lishi kerak')
+    // Ijara uchun rentalDays va rentalRate dan amount hisoblanadi
+    if (data.type === 'rental') {
+      if (!data.rentalDays || Number(data.rentalDays) <= 0) errors.push('Kunlar soni majburiy')
+      if (!data.rentalRate || Number(data.rentalRate) <= 0) errors.push('Kunlik narx majburiy')
+      // amount avtomatik hisoblanadi, shuning uchun tekshirmaymiz
+    } else {
+      if (!data.amount || Number(data.amount) <= 0) errors.push('Summa majburiy va musbat bo\'lishi kerak')
+    }
     if (data.amount && Number(data.amount) > 1000000000) errors.push('Summa juda katta')
     if (data.distance && Number(data.distance) < 0) errors.push('Masofa salbiy bo\'lishi mumkin emas')
     if (data.distance && Number(data.distance) > 50000) errors.push('Masofa juda katta (max 50,000 km)')
@@ -795,6 +802,11 @@ router.post('/vehicles/:vehicleId/income', protect, async (req, res) => {
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Ijara uchun amount ni avtomatik hisoblash
+    if (body.type === 'rental' && body.rentalDays && body.rentalRate) {
+      body.amount = Number(body.rentalDays) * Number(body.rentalRate)
     }
     
     // Validatsiya

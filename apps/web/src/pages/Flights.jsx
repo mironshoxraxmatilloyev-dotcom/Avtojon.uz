@@ -80,7 +80,9 @@ export default function Flights() {
     // Flight boshlanganda
     socket.on('flight-started', (data) => {
       if (data.flight) {
-        setFlights(prev => [data.flight, ...prev])
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        setFlights(prev => [newFlight, ...prev])
         showToast.success(data.message || 'Yangi marshrut boshlandi!')
       }
     })
@@ -88,7 +90,10 @@ export default function Flights() {
     // Flight yangilanganda (xarajat, buyurtma qo'shilganda)
     socket.on('flight-updated', (data) => {
       if (data.flight) {
-        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
         if (data.message) {
           showToast.info(data.message)
         }
@@ -98,7 +103,10 @@ export default function Flights() {
     // Flight yopilganda
     socket.on('flight-completed', (data) => {
       if (data.flight) {
-        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
         showToast.success(data.message || 'Marshrut yopildi!')
       }
     })
@@ -106,7 +114,10 @@ export default function Flights() {
     // Flight tasdiqlanganda
     socket.on('flight-confirmed', (data) => {
       if (data.flight) {
-        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
         showToast.success(data.message || 'Mashrut tasdiqlandi!')
       }
     })
@@ -114,7 +125,8 @@ export default function Flights() {
     // Flight o'chirilganda
     socket.on('flight-deleted', (data) => {
       if (data.flightId) {
-        setFlights(prev => prev.filter(f => f._id !== data.flightId))
+        const deletedId = data.flightId?.toString()
+        setFlights(prev => prev.filter(f => f._id?.toString() !== deletedId))
         showToast.warning(data.message || 'Mashrut o\'chirildi')
       }
     })
@@ -122,8 +134,22 @@ export default function Flights() {
     // Flight bekor qilinganda
     socket.on('flight-cancelled', (data) => {
       if (data.flight) {
-        setFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
         showToast.warning(data.message || 'Marshrut bekor qilindi')
+      }
+    })
+
+    // Xarajat tasdiqlanganda (haydovchi tomonidan)
+    socket.on('expense-confirmed', (data) => {
+      if (data.flight) {
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
+        showToast.success(data.message || '✅ Haydovchi xarajatni tasdiqladi')
       }
     })
 
@@ -134,6 +160,7 @@ export default function Flights() {
       socket.off('flight-confirmed')
       socket.off('flight-deleted')
       socket.off('flight-cancelled')
+      socket.off('expense-confirmed')
     }
   }, [socket, isDemoMode])
 

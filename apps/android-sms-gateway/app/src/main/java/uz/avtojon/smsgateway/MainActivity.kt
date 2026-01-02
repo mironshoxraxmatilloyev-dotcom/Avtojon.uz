@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
     
     private fun checkAndRequestPermissions() {
         val permissions = mutableListOf(
-            Manifest.permission.SEND_SMS
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_PHONE_STATE
         )
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -158,6 +159,9 @@ fun SmsGatewayApp() {
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
+                    // Default SIM 2 (Mobiuz) - index 1
+                    var selectedSim by remember { mutableStateOf(prefs.getInt("selected_sim", 1)) }
+                    
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -173,7 +177,7 @@ fun SmsGatewayApp() {
                             value = serverUrl,
                             onValueChange = { serverUrl = it },
                             label = { Text("Server URL") },
-                            placeholder = { Text("https://api.avtojon.uz") },
+                            placeholder = { Text("https://avtojon.uz") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -194,6 +198,46 @@ fun SmsGatewayApp() {
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                             )
                         )
+                        
+                        // SIM tanlash
+                        Text(
+                            text = "SMS yuborish uchun SIM",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 14.sp
+                        )
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // SIM 1 - Mobiuz
+                            FilterChip(
+                                selected = selectedSim == 0,
+                                onClick = { 
+                                    selectedSim = 0
+                                    prefs.edit().putInt("selected_sim", 0).apply()
+                                },
+                                label = { Text("SIM 1 (Mobiuz)") },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Color(0xFF8B5CF6),
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                            
+                            // SIM 2 - Beeline
+                            FilterChip(
+                                selected = selectedSim == 1,
+                                onClick = { 
+                                    selectedSim = 1
+                                    prefs.edit().putInt("selected_sim", 1).apply()
+                                },
+                                label = { Text("SIM 2 (Beeline)") },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Color(0xFFFBBF24),
+                                    selectedLabelColor = Color.Black
+                                )
+                            )
+                        }
                         
                         Button(
                             onClick = {

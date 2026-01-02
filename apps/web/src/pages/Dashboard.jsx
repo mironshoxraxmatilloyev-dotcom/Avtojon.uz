@@ -169,8 +169,11 @@ export default function Dashboard() {
     // Flight tasdiqlanganda - real-time yangilash
     socket.on('flight-confirmed', (data) => {
       if (data.flight) {
-        setActiveFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-        setRecentFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setActiveFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
+        setRecentFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
       }
       if (data.message) {
         showToast.success(data.message)
@@ -180,19 +183,37 @@ export default function Dashboard() {
     // Flight yangilanganda (xarajat, buyurtma qo'shilganda) - real-time yangilash
     socket.on('flight-updated', (data) => {
       if (data.flight) {
-        setActiveFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
-        setRecentFlights(prev => prev.map(f => f._id === data.flight._id ? data.flight : f))
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setActiveFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
+        setRecentFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
       }
       if (data.message) {
         showToast.info(data.message)
       }
     })
 
+    // Xarajat tasdiqlanganda (haydovchi tomonidan) - real-time yangilash
+    socket.on('expense-confirmed', (data) => {
+      if (data.flight) {
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        const newFlightId = newFlight._id?.toString()
+        setActiveFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
+        setRecentFlights(prev => prev.map(f => f._id?.toString() === newFlightId ? newFlight : f))
+      }
+      if (data.message) {
+        showToast.success(data.message)
+      }
+    })
+
     // Flight o'chirilganda - real-time yangilash
     socket.on('flight-deleted', (data) => {
       if (data.flightId) {
-        setActiveFlights(prev => prev.filter(f => f._id !== data.flightId))
-        setRecentFlights(prev => prev.filter(f => f._id !== data.flightId))
+        const deletedId = data.flightId?.toString()
+        setActiveFlights(prev => prev.filter(f => f._id?.toString() !== deletedId))
+        setRecentFlights(prev => prev.filter(f => f._id?.toString() !== deletedId))
         setStats(prev => ({
           ...prev,
           activeTrips: Math.max(0, prev.activeTrips - 1)
@@ -228,6 +249,7 @@ export default function Dashboard() {
       socket.off('flight-updated')
       socket.off('flight-deleted')
       socket.off('flight-cancelled')
+      socket.off('expense-confirmed')
     }
   }, [socket])
 

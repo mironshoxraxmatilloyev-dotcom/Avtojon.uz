@@ -87,6 +87,7 @@ export default function Payment() {
   }
 
   const formatPrice = (price) => {
+    if (price === undefined || price === null || isNaN(price)) return '0'
     return new Intl.NumberFormat('uz-UZ').format(price)
   }
 
@@ -264,7 +265,7 @@ export default function Payment() {
           <div className="flex items-center justify-between">
             <p className="text-lg font-semibold text-gray-900">Jami to'lov:</p>
             <p className="text-3xl font-bold text-indigo-600">
-              {formatPrice(priceData?.totalPrice)} <span className="text-base font-normal text-gray-500">so'm</span>
+              {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'} <span className="text-base font-normal text-gray-500">so'm</span>
             </p>
           </div>
         </div>
@@ -330,7 +331,7 @@ export default function Payment() {
             </>
           ) : (
             <>
-              To'lash - {formatPrice(priceData?.totalPrice)} so'm
+              To'lash - {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'} so'm
             </>
           )}
         </button>

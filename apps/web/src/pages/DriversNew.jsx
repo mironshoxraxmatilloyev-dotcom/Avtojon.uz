@@ -158,6 +158,17 @@ export default function DriversNew() {
             }
         })
 
+        // Xarajat tasdiqlanganda (haydovchi tomonidan)
+        socket.on('expense-confirmed', (data) => {
+            if (data.flight) {
+                const driverId = data.flight.driver?._id || data.flight.driver
+                // Deep copy qilish - React state yangilanishini ta'minlash
+                const newFlight = JSON.parse(JSON.stringify(data.flight))
+                dispatch({ type: 'UPDATE_FLIGHT', driverId, flight: newFlight })
+                showToast.success(data.message || '✅ Haydovchi xarajatni tasdiqladi')
+            }
+        })
+
         // Shofyor joylashuvi yangilanganda
         socket.on('driver-location', (data) => {
             // Bu yerda shofyor joylashuvini yangilash mumkin (agar kerak bo'lsa)
@@ -170,6 +181,7 @@ export default function DriversNew() {
             socket.off('flight-confirmed')
             socket.off('flight-deleted')
             socket.off('flight-cancelled')
+            socket.off('expense-confirmed')
             socket.off('driver-location')
         }
     }, [socket, isDemoMode, activeFlights])

@@ -5,8 +5,8 @@ import { X, Crown, Zap, AlertTriangle, Phone, Truck, Fuel, Wrench, BarChart3, He
 const SUPPORT_PHONE = '+998 88 019 19 09'
 
 export const VehicleModal = memo(({ form, setForm, onSubmit, onClose, isEdit }) => (
-  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
-    <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-2xl border-t-2 sm:border-2 border-slate-200 overflow-hidden max-h-[90vh]">
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border-2 border-slate-200 overflow-hidden max-h-[90vh]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
         <div className="flex items-center gap-2.5">

@@ -342,8 +342,14 @@ router.put('/me/flights/:id/expenses/:expenseId/confirm', protect, driverOnly, a
       const businessId = flight.user.toString();
       const businessRoom = `business-${businessId}`;
       
+      // Room da qancha client borligini tekshirish
+      const room = io.sockets.adapter.rooms.get(businessRoom);
+      const roomSize = room ? room.size : 0;
+      
       console.log('📤 Expense confirmed - sending to room:', businessRoom);
       console.log('📤 Flight ID:', flight._id.toString());
+      console.log('📤 Room size:', roomSize);
+      console.log('📤 Driver:', req.driver.fullName);
       
       // expense-confirmed eventi
       io.to(businessRoom).emit('expense-confirmed', {
@@ -357,6 +363,10 @@ router.put('/me/flights/:id/expenses/:expenseId/confirm', protect, driverOnly, a
         flight: populatedFlight,
         message: `✅ ${req.driver.fullName} xarajatni tasdiqladi`
       });
+      
+      console.log('📤 Events emitted successfully');
+    } else {
+      console.log('❌ Socket.io not available');
     }
 
     res.json({ success: true, data: populatedFlight, message: 'Xarajat tasdiqlandi!' });

@@ -137,17 +137,23 @@ export default function VehicleDetailPanel() {
 
   const handleDelete = useCallback(async (type, itemId) => {
     if (!confirm('O\'chirishni tasdiqlaysizmi?')) return
+    
+    // Optimistic update - darhol UI dan o'chirish
     if (type === 'fuel') setFuelData(prev => ({ ...prev, refills: prev.refills.filter(r => r._id !== itemId) }))
     else if (type === 'oil') setOilData(prev => ({ ...prev, changes: prev.changes.filter(c => c._id !== itemId) }))
     else if (type === 'tires') setTires(prev => prev.filter(t => t._id !== itemId))
     else if (type === 'services') setServices(prev => ({ ...prev, services: prev.services.filter(s => s._id !== itemId) }))
     else if (type === 'income') setIncomeData(prev => ({ ...prev, incomes: prev.incomes.filter(i => i._id !== itemId) }))
+    
     alert.success('O\'chirildi')
+    
     try { 
       await api.delete(`/maintenance/${type}/${itemId}`)
-      loadData()
+      // Muvaffaqiyatli o'chirildi - hech narsa qilish shart emas
     } catch (err) {
       console.error('O\'chirishda xatolik:', err)
+      alert.error('Xatolik', 'O\'chirishda xatolik yuz berdi')
+      // Xatolik bo'lsa ma'lumotlarni qayta yuklash
       loadData()
     }
   }, [alert, loadData])
@@ -236,16 +242,8 @@ export default function VehicleDetailPanel() {
     })
     setModal(null)
     setEditId(null)
-    const tempId = `temp_${Date.now()}`
-    const newItem = { ...body, _id: itemId || tempId, date: body.date || new Date().toISOString() }
 
-    if (type === 'fuel') setFuelData(prev => ({ ...prev, refills: itemId ? prev.refills.map(r => r._id === itemId ? { ...r, ...body } : r) : [newItem, ...prev.refills] }))
-    else if (type === 'oil') setOilData(prev => ({ ...prev, changes: itemId ? prev.changes.map(c => c._id === itemId ? { ...c, ...body } : c) : [newItem, ...prev.changes] }))
-    else if (type === 'tire') setTires(prev => itemId ? prev.map(t => t._id === itemId ? { ...t, ...body } : t) : [...prev, { ...newItem, remainingKm: body.expectedLifeKm || 80000 }])
-    else if (type === 'service') setServices(prev => ({ ...prev, services: itemId ? prev.services.map(s => s._id === itemId ? { ...s, ...body } : s) : [newItem, ...prev.services] }))
-    else if (type === 'income') setIncomeData(prev => ({ ...prev, incomes: itemId ? prev.incomes.map(i => i._id === itemId ? { ...i, ...body } : i) : [newItem, ...prev.incomes] }))
-
-    alert.success(itemId ? 'Yangilandi' : 'Saqlandi')
+    alert.success(itemId ? 'Yangilandi' : 'Saqlanmoqda...')
     const apiType = type === 'tire' ? 'tires' : type === 'service' ? 'services' : type
     try {
       let response
@@ -260,8 +258,58 @@ export default function VehicleDetailPanel() {
         setMaintenanceAlerts(response.data.data.alerts)
       }
       
-      // Ma'lumotlarni serverdan qayta yuklash
-      loadData()
+      // API dan kelgan yangi ma'lumotni state ga qo'shish
+      if (response.data?.data) {
+        const savedItem = response.data.data
+        if (type === 'fuel') {
+          setFuelData(prev => ({
+            ...prev,
+            refills: itemId 
+              ? prev.refills.map(r => r._id === itemId ? savedItem : r)
+              : [savedItem, ...prev.refills],
+            stats: {
+              ...prev.stats,
+              totalLiters: (prev.stats?.totalLiters || 0) + (itemId ? 0 : (savedItem.liters || 0)),
+              totalCost: (prev.stats?.totalCost || 0) + (itemId ? 0 : (savedItem.cost || 0))
+            }
+          }))
+        } else if (type === 'oil') {
+          setOilData(prev => ({
+            ...prev,
+            changes: itemId 
+              ? prev.changes.map(c => c._id === itemId ? savedItem : c)
+              : [savedItem, ...prev.changes]
+          }))
+        } else if (type === 'tire') {
+          setTires(prev => itemId 
+            ? prev.map(t => t._id === itemId ? savedItem : t)
+            : [...prev, savedItem]
+          )
+        } else if (type === 'service') {
+          setServices(prev => ({
+            ...prev,
+            services: itemId 
+              ? prev.services.map(s => s._id === itemId ? savedItem : s)
+              : [savedItem, ...prev.services],
+            stats: {
+              ...prev.stats,
+              totalCost: (prev.stats?.totalCost || 0) + (itemId ? 0 : (savedItem.cost || 0))
+            }
+          }))
+        } else if (type === 'income') {
+          setIncomeData(prev => ({
+            ...prev,
+            incomes: itemId 
+              ? prev.incomes.map(i => i._id === itemId ? savedItem : i)
+              : [savedItem, ...prev.incomes],
+            stats: {
+              ...prev.stats,
+              totalIncome: (prev.stats?.totalIncome || 0) + (itemId ? 0 : (savedItem.amount || 0))
+            }
+          }))
+        }
+        alert.success(itemId ? 'Yangilandi' : 'Saqlandi')
+      }
     } catch (err) {
       console.error('Saqlashda xatolik:', err)
       alert.error('Xatolik', 'Ma\'lumot saqlanmadi')

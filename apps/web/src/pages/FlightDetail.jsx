@@ -89,15 +89,31 @@ export default function FlightDetail() {
     joinBusinessRoom(user._id)
 
     const handleUpdate = (data) => {
-      if (data.flight?._id === id) {
-        setFlight(data.flight)
+      // ID larni string ga o'girish va solishtirish
+      const eventFlightId = data.flight?._id?.toString()
+      const currentFlightId = id?.toString()
+      
+      if (eventFlightId && eventFlightId === currentFlightId) {
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        setFlight(newFlight)
         if (data.message) showToast.success(data.message)
       }
     }
 
     const handleExpenseConfirmed = (data) => {
-      if (data.flight?._id === id) {
-        setFlight(data.flight)
+      console.log('📥 expense-confirmed event:', data)
+      console.log('📥 Current flight ID:', id)
+      console.log('📥 Event flight ID:', data.flight?._id)
+      
+      // ID larni string ga o'girish va solishtirish
+      const eventFlightId = data.flight?._id?.toString()
+      const currentFlightId = id?.toString()
+      
+      if (eventFlightId && eventFlightId === currentFlightId) {
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(data.flight))
+        setFlight(newFlight)
         showToast.success('✅ Haydovchi xarajatni tasdiqladi')
       }
     }

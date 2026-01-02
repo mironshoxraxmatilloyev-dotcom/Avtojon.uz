@@ -65,8 +65,10 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
     try {
       const res = await api.put(`/driver/me/flights/${flight._id}/expenses/${expenseId}/confirm`)
       if (res.data.success && res.data.data) {
-        setFlight(res.data.data)
-        if (onUpdate) onUpdate(res.data.data)
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(res.data.data))
+        setFlight(newFlight)
+        if (onUpdate) onUpdate(newFlight)
       }
     } catch (err) {
       // Xatolik bo'lsa, qaytarish
@@ -104,9 +106,9 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white w-full sm:max-w-lg sm:mx-4 sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+        className="bg-white w-full max-w-lg rounded-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

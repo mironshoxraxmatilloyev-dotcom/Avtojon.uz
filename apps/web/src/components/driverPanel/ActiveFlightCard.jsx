@@ -1,13 +1,10 @@
-import { Route, Wallet, Package, Receipt, Mic } from 'lucide-react'
+import { Route, Wallet, Package, Receipt } from 'lucide-react'
 import { formatMoney, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
-import VoiceRecorder from '../VoiceRecorder'
-import { showToast } from '../Toast'
 
 export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate }) {
   const [flight, setFlight] = useState(initialFlight)
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
   // Flight prop o'zgarganda yangilash
   useEffect(() => {
@@ -37,8 +34,10 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
     try {
       const res = await api.put(`/driver/me/flights/${flight._id}/expenses/${expenseId}/confirm`)
       if (res.data.success && res.data.data) {
-        setFlight(res.data.data)
-        if (onFlightUpdate) onFlightUpdate(res.data.data)
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(res.data.data))
+        setFlight(newFlight)
+        if (onFlightUpdate) onFlightUpdate(newFlight)
       }
     } catch (err) {
       // Xatolik bo'lsa, qaytarish
@@ -49,38 +48,6 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
 
   // Tasdiqlanmagan xarajatlar soni
   const unconfirmedCount = flight?.expenses?.filter(e => !e.confirmedByDriver).length || 0
-
-  // Ovoz bilan xarajat qo'shish
-  const handleVoiceExpense = async (expenseData) => {
-    try {
-      // Optimistic update
-      const tempExpense = {
-        ...expenseData,
-        _id: `temp_${Date.now()}`,
-        confirmedByDriver: true,
-        confirmedAt: new Date().toISOString()
-      }
-      const updatedFlight = {
-        ...flight,
-        expenses: [...(flight.expenses || []), tempExpense],
-        totalExpenses: (flight.totalExpenses || 0) + (expenseData.amount || 0)
-      }
-      setFlight(updatedFlight)
-      if (onFlightUpdate) onFlightUpdate(updatedFlight)
-      showToast.success('🎤 Xarajat qo\'shildi!')
-
-      // Serverga yuborish
-      const res = await api.post(`/driver/me/flights/${flight._id}/expenses`, expenseData)
-      if (res.data?.data) {
-        setFlight(res.data.data)
-        if (onFlightUpdate) onFlightUpdate(res.data.data)
-      }
-    } catch (err) {
-      console.error('Xarajat qo\'shishda xatolik:', err)
-      showToast.error('Xatolik yuz berdi')
-      setFlight(flight)
-    }
-  }
 
   return (
     <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -229,28 +196,7 @@ export default function ActiveFlightCard({ flight: initialFlight, onFlightUpdate
           <Route size={16} className="sm:w-[18px] sm:h-[18px] text-blue-600" />
           <span className="text-blue-600 font-medium text-sm sm:text-base">Marshrut faol</span>
         </div>
-
-        {/* Ovozli xarajat qo'shish tugmasi */}
-        <button
-          onClick={() => setShowVoiceRecorder(true)}
-          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-violet-500/30 hover:shadow-xl transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-[0.98]"
-        >
-          <Mic size={18} className="sm:w-5 sm:h-5" />
-          🎤 Ovoz bilan xarajat qo'shish
-        </button>
       </div>
-
-      {/* Voice Recorder Modal */}
-      {showVoiceRecorder && (
-        <VoiceRecorder
-          flightId={flight?._id}
-          onResult={(data) => {
-            setShowVoiceRecorder(false)
-            handleVoiceExpense(data)
-          }}
-          onClose={() => setShowVoiceRecorder(false)}
-        />
-      )}
     </div>
   )
 }

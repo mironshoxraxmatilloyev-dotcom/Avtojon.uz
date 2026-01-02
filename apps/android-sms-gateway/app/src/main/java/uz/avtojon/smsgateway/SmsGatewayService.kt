@@ -100,8 +100,12 @@ class SmsGatewayService : Service() {
     
     private suspend fun sendSms(sms: SmsMessage) {
         try {
+            val prefs = getSharedPreferences("sms_gateway", 0)
+            // Default SIM 2 (Mobiuz) - index 1
+            val selectedSim = prefs.getInt("selected_sim", 1)
+            
             val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                getSystemService(SmsManager::class.java)
+                getSystemService(SmsManager::class.java).createForSubscriptionId(getSubscriptionId(selectedSim))
             } else {
                 @Suppress("DEPRECATION")
                 SmsManager.getDefault()
@@ -119,7 +123,7 @@ class SmsGatewayService : Service() {
             // Status yuborish
             api?.updateStatus(token, StatusUpdate(sms.id, "sent", null))
             
-            Log.d(TAG, "SMS yuborildi: ${sms.phone}")
+            Log.d(TAG, "SMS yuborildi: ${sms.phone} (SIM ${selectedSim + 1})")
             updateNotification("Oxirgi SMS: ${sms.phone}")
             
             // Log saqlash
@@ -180,6 +184,20 @@ class SmsGatewayService : Service() {
         val notification = createNotification(text)
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(NOTIFICATION_ID, notification)
+    }
+    
+    // SIM subscription ID olish
+    private fun getSubscriptionId(simSlot: Int): Int {
+        try {
+            val subscriptionManager = getSystemService(android.telephony.SubscriptionManager::class.java)
+            val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
+            if (subscriptionInfoList != null && subscriptionInfoList.size > simSlot) {
+                return subscriptionInfoList[simSlot].subscriptionId
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "SIM subscription olishda xato: ${e.message}")
+        }
+        return -1 // Default
     }
     
     override fun onDestroy() {

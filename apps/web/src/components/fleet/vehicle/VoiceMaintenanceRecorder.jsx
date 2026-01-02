@@ -202,7 +202,7 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="px-6 py-5 border-b border-white/10 flex justify-between items-center">
           <div className="flex items-center gap-3">

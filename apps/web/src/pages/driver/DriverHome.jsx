@@ -115,8 +115,24 @@ export default function DriverHome() {
     const join = () => joinDriverRoom(driverId)
     socket.connected ? join() : socket.on('connect', join)
     const onNew = (d) => { showToast.success('🚛 Yangi marshrut!'); setNewTripNotification(d.trip || d.flight); fetchData(); setTimeout(() => setNewTripNotification(null), 5000) }
-    const onUpdate = (d) => { if (d.flight) { setActiveFlight(p => p?._id === d.flight._id ? d.flight : p); setFlights(p => p.map(f => f._id === d.flight._id ? d.flight : f)) } }
-    const onComplete = (d) => { showToast.success('✅ Marshrut yopildi!'); setActiveFlight(null); d.flight ? setFlights(p => p.map(f => f._id === d.flight._id ? d.flight : f)) : fetchData({ silent: true }) }
+    const onUpdate = (d) => { 
+      if (d.flight) { 
+        // Deep copy qilish - React state yangilanishini ta'minlash
+        const newFlight = JSON.parse(JSON.stringify(d.flight))
+        setActiveFlight(p => p?._id === newFlight._id ? newFlight : p)
+        setFlights(p => p.map(f => f._id === newFlight._id ? newFlight : f)) 
+      } 
+    }
+    const onComplete = (d) => { 
+      showToast.success('✅ Marshrut yopildi!')
+      setActiveFlight(null)
+      if (d.flight) {
+        const newFlight = JSON.parse(JSON.stringify(d.flight))
+        setFlights(p => p.map(f => f._id === newFlight._id ? newFlight : f))
+      } else {
+        fetchData({ silent: true })
+      }
+    }
     const onCancel = () => { showToast.error('❌ Bekor qilindi!'); setActiveTrip(null); setActiveFlight(null); fetchData({ silent: true }) }
     ;['new-trip', 'new-flight', 'flight-started'].forEach(e => socket.on(e, onNew))
     socket.on('flight-updated', onUpdate)
@@ -141,11 +157,13 @@ export default function DriverHome() {
 
   // Xarajat tasdiqlanganda flight ni yangilash
   const handleFlightUpdate = useCallback((updatedFlight) => {
+    // Deep copy qilish - React state yangilanishini ta'minlash
+    const newFlight = JSON.parse(JSON.stringify(updatedFlight))
     // Modal ochiq bo'lsa yangilash, aks holda faqat state yangilash
-    setSelectedFlight(prev => prev?._id === updatedFlight._id ? updatedFlight : prev)
-    setFlights(prev => prev.map(f => f._id === updatedFlight._id ? updatedFlight : f))
-    if (activeFlight?._id === updatedFlight._id) {
-      setActiveFlight(updatedFlight)
+    setSelectedFlight(prev => prev?._id === newFlight._id ? newFlight : prev)
+    setFlights(prev => prev.map(f => f._id === newFlight._id ? newFlight : f))
+    if (activeFlight?._id === newFlight._id) {
+      setActiveFlight(newFlight)
     }
   }, [activeFlight])
 

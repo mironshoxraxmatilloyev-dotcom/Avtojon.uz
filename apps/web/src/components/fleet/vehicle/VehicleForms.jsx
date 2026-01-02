@@ -3,12 +3,11 @@ import { X } from 'lucide-react'
 import { FUEL_TYPES, TIRE_POSITIONS, SERVICE_TYPES } from './constants'
 
 export const Modal = memo(({ title, onClose, children }) => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-[99999] sm:p-4">
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
     <div 
-      className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md border border-gray-200 shadow-2xl overflow-hidden"
+      className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl overflow-hidden"
       style={{
-        maxHeight: 'calc(100vh - 100px)',
-        marginBottom: 'env(safe-area-inset-bottom, 80px)'
+        maxHeight: 'calc(100vh - 100px)'
       }}
     >
       <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
@@ -30,11 +29,6 @@ export const Modal = memo(({ title, onClose, children }) => (
 export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle, oilData, tires }) => {
   // Yoqilg'i turiga qarab birlik
   const unit = form.fuelType === 'metan' ? 'kub' : 'litr'
-  
-  // 1 litr narxini hisoblash (agar litr va jami summa kiritilgan bo'lsa)
-  const pricePerUnit = (Number(form.liters) > 0 && Number(form.cost) > 0) 
-    ? Math.round(Number(form.cost) / Number(form.liters)) 
-    : 0
 
   // Real-time ogohlantirish tekshirish
   const getMaintenanceWarnings = () => {
@@ -84,16 +78,6 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
         <Input label={unit === 'kub' ? 'Kub' : 'Litr'} type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} error={errors.liters} placeholder="50" />
         <Input label="Jami summa (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="500 000" />
       </div>
-      
-      {/* 1 litr narxi */}
-      {pricePerUnit > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-blue-700 text-sm font-medium">1 {unit} narxi:</span>
-            <span className="text-blue-700 font-bold">{formatNumber(pricePerUnit)} so'm</span>
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} />
