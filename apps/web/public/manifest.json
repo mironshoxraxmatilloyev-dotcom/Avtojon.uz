@@ -11,19 +11,19 @@
   "lang": "uz",
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/main_logo.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/main_logo.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/main_logo.jpg",
       "sizes": "180x180",
       "type": "image/jpeg"
     }
@@ -35,13 +35,13 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/logo.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/main_logo.jpg", "sizes": "192x192" }]
     },
     {
       "name": "Reyslar",
       "short_name": "Reyslar",
       "url": "/flights",
-      "icons": [{ "src": "/logo.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/main_logo.jpg", "sizes": "192x192" }]
     }
   ],
   "related_applications": [

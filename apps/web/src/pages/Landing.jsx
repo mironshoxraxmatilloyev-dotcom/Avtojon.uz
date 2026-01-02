@@ -40,7 +40,7 @@ const FixedHeader = memo(() => (
       <div className="flex justify-between items-center gap-2">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <img src="/logo.jpg" alt="Avtojon" className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md" />
+          <img src="/main_logo.jpg" alt="Avtojon" className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md" />
           <div className="flex items-baseline tracking-tight">
             <span className="text-xl sm:text-2xl font-extrabold text-white">avto</span>
             <span className="text-xl sm:text-2xl font-extrabold text-amber-300">JON</span>

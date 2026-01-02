@@ -8,7 +8,7 @@ export default function DriverHeader({ user, onLogout }) {
     <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-3 sm:px-4 py-3">
       <div className="flex justify-between items-center gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <img src="/logo.jpg" alt="Avtojon" className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover flex-shrink-0" />
+          <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover flex-shrink-0" />
           <div className="min-w-0">
             <h1 className="text-white font-semibold flex items-center gap-1 text-sm sm:text-base">
               Avtojon <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />

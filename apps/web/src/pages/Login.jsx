@@ -139,7 +139,7 @@ export default function Login() {
 
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
+            <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
             <span className="text-2xl font-bold text-white">Avtojon</span>
           </Link>
         </div>
@@ -200,7 +200,7 @@ export default function Login() {
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
-              <img src="/logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
+              <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
               <span className="text-2xl font-bold text-slate-800">Avtojon</span>
             </Link>
           </div>

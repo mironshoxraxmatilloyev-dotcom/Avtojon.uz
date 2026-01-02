@@ -267,7 +267,7 @@ export default function FleetDashboard() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img 
-                src="/logo.jpg" 
+                src="/main_logo.jpg" 
                 alt="Avtojon Logo" 
                 className="w-11 h-11 rounded-xl object-cover shadow-lg shadow-blue-500/30"
               />
@@ -389,7 +389,7 @@ export default function FleetDashboard() {
                 {/* Mobile Logo */}
                 <div className="lg:hidden relative">
                   <img 
-                    src="/logo.jpg" 
+                    src="/main_logo.jpg" 
                     alt="Avtojon Logo" 
                     className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-blue-500/25"
                   />

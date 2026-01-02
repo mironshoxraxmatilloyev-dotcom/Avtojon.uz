@@ -172,7 +172,7 @@ export default function DashboardLayout() {
               <Menu size={22} className="text-gray-700" />
             </button>
             <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg object-cover" />
+              <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg object-cover" />
               <span className="font-bold text-gray-900">Avtojon</span>
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             </div>
@@ -194,7 +194,7 @@ export default function DashboardLayout() {
         <div className="flex-shrink-0 p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className={`flex items-center gap-3 transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-              <img src="/logo.jpg" alt="Avtojon" className="w-11 h-11 rounded-xl object-cover shadow-lg" />
+              <img src="/main_logo.jpg" alt="Avtojon" className="w-11 h-11 rounded-xl object-cover shadow-lg" />
               <div>
                 <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
                   Avtojon

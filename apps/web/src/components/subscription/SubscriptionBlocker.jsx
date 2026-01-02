@@ -117,7 +117,7 @@ export function FleetSubscriptionBlocker({ vehicleCount = 1 }) {
         </div>
 
         <div className="flex items-center justify-center gap-2 mt-6">
-          <img src="/logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
+          <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
           <span className="text-slate-500 font-medium">Avtojon Fleet</span>
         </div>
       </div>
@@ -222,7 +222,7 @@ export function BusinessSubscriptionBlocker({ driverCount = 1 }) {
         </div>
 
         <div className="flex items-center justify-center gap-2 mt-6">
-          <img src="/logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
+          <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
           <span className="text-slate-500 font-medium">Avtojon</span>
         </div>
       </div>
