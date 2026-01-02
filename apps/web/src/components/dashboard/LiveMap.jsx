@@ -98,7 +98,7 @@ export function LiveMap({
               <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                 }`}>
-                {driver.status === 'busy' ? '🚛 Marshrutda' : '✅ Bo\'sh'}
+                {driver.status === 'busy' ? 'Marshrutda' : "Bo'sh"}
               </span>
             </div>
           </Popup>

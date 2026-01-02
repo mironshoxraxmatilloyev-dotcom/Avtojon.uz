@@ -73,7 +73,7 @@ export default function FlightHistory({ flights, onSelect }) {
             {flight.status === 'completed' && flight.driverProfitAmount > 0 && (
               <div className="mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100">
                 <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium">
-                  💰 {t('share')}: {formatMoney(flight.driverProfitAmount)} ({flight.driverProfitPercent}%)
+                  {t('share')}: {formatMoney(flight.driverProfitAmount)} ({flight.driverProfitPercent}%)
                 </span>
               </div>
             )}

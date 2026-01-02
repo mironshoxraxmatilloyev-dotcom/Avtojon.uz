@@ -206,7 +206,7 @@ export default function LegsWithExpenses({
               {Object.keys(groupedExpenses).length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {Object.entries(groupedExpenses).map(([type, data]) => {
-                    const cat = EXPENSE_CATEGORIES.find(c => c.value === type) || { icon: '📦', label: type, color: 'from-gray-500 to-gray-600' }
+                    const cat = EXPENSE_CATEGORIES.find(c => c.value === type) || { iconName: 'Package', label: type, color: 'from-gray-500 to-gray-600' }
                     const Icon = CATEGORY_ICONS[type] || Package
                     
                     return (
@@ -216,7 +216,7 @@ export default function LegsWithExpenses({
                         </div>
                         <div className="relative">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">{cat.icon}</span>
+                            <Icon size={24} />
                             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-semibold">{data.items.length}x</span>
                           </div>
                           <p className="text-xl font-bold">{formatMoney(data.total)}</p>
@@ -250,7 +250,7 @@ export default function LegsWithExpenses({
                             <span className="text-slate-400 font-normal">• {expense.quantity} {fuelUnit}</span>
                           )}
                           {isFuel && expense.odometer && (
-                            <span className="text-blue-500 font-normal text-sm">• 🚗 {expense.odometer.toLocaleString()} km</span>
+                            <span className="text-blue-500 font-normal text-sm">• {expense.odometer.toLocaleString()} km</span>
                           )}
                           {isHeavy && (
                             <span className="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">🏢 Biznesmen</span>

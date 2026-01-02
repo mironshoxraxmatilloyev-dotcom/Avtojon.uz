@@ -106,7 +106,7 @@ export function LegModal({ show, onClose, onSubmit, form, setForm, lastLeg, isDo
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              💰 To'lov (so'm)
+              To'lov (so'm)
             </label>
             <div className="relative">
               <input

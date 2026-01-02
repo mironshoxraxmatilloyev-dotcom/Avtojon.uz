@@ -143,7 +143,7 @@ export function SubscriptionModal({ data, days, setDays, loading, onSubmit, onCl
           <p className="text-white font-medium">
             {data.subscription?.endDate 
               ? new Date(data.subscription.endDate) > new Date()
-                ? `✅ Faol - ${new Date(data.subscription.endDate).toLocaleDateString('uz-UZ')} gacha`
+                ? `Faol - ${new Date(data.subscription.endDate).toLocaleDateString('uz-UZ')} gacha`
                 : '❌ Tugagan'
               : '⏳ Sinov muddati'}
           </p>

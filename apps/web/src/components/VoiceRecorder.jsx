@@ -487,7 +487,7 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
                   {/* Spidometr - yoqilg'i uchun */}
                   {result.data.type === 'fuel' && (
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-400">🚗 Spidometr:</span>
+                      <span className="text-slate-400">Spidometr:</span>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"

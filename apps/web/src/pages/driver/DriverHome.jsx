@@ -124,7 +124,7 @@ export default function DriverHome() {
       } 
     }
     const onComplete = (d) => { 
-      showToast.success('✅ Marshrut yopildi!')
+      showToast.success('Marshrut yopildi!')
       setActiveFlight(null)
       if (d.flight) {
         const newFlight = JSON.parse(JSON.stringify(d.flight))

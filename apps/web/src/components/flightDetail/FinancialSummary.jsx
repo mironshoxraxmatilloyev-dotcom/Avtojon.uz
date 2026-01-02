@@ -56,7 +56,7 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
     <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white font-semibold flex items-center gap-2">
-          <span className="text-lg">📊</span> 
+           
           Moliyaviy xulosa
           {isInternational && <span className="text-amber-400 text-sm">(USD)</span>}
         </h3>

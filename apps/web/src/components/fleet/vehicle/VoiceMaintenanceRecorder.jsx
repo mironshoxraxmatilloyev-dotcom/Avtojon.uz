@@ -123,7 +123,7 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
       mediaRecorderRef.current = mediaRecorder
       
       mediaRecorder.ondataavailable = (e) => {
-        console.log('📦 Audio chunk:', e.data.size, 'bytes')
+        console.log('Audio chunk:', e.data.size, 'bytes')
         if (e.data.size > 0) audioChunksRef.current.push(e.data)
       }
       

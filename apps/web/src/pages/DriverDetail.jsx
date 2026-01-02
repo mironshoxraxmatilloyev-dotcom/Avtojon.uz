@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { 
   ArrowLeft, User, Phone, Truck, Route, 
   Calendar, Wallet, TrendingUp, CheckCircle, Clock, 
-  Activity, ChevronRight, X, Play, Gauge, Fuel, Globe, Flag
+  Activity, ChevronRight, X, Play, Gauge, Fuel, Globe, Flag, CircleDot, Circle, Droplet
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -320,7 +320,7 @@ export default function DriverDetail() {
             {/* Marshrutlardan ulushlar */}
             {flights.filter(f => f.status === 'completed' && f.driverProfitAmount > 0).length > 0 && (
               <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
-                <p className="text-sm text-purple-600 font-medium mb-3">📊 Marshrutlardan ulushlar</p>
+                <p className="text-sm text-purple-600 font-medium mb-3">Marshrutlardan ulushlar</p>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {flights.filter(f => f.status === 'completed' && f.driverProfitAmount > 0).slice(0, 5).map(f => (
                     <div key={f._id} className="flex justify-between items-center text-sm">
@@ -578,10 +578,10 @@ export default function DriverDetail() {
                   <label className="block text-base text-emerald-200 mb-2">Yoqilg'i turi</label>
                   <div className="grid grid-cols-4 gap-2">
                     {[
-                      { value: 'metan', label: 'Metan', icon: '🟢', unit: 'kub' },
-                      { value: 'propan', label: 'Propan', icon: '🟡', unit: 'kub' },
-                      { value: 'benzin', label: 'Benzin', icon: '⛽', unit: 'litr' },
-                      { value: 'diesel', label: 'Dizel', icon: '🛢️', unit: 'litr' }
+                      { value: 'metan', label: 'Metan', Icon: CircleDot, color: 'text-green-500', unit: 'kub' },
+                      { value: 'propan', label: 'Propan', Icon: Circle, color: 'text-yellow-500', unit: 'kub' },
+                      { value: 'benzin', label: 'Benzin', Icon: Fuel, color: 'text-red-500', unit: 'litr' },
+                      { value: 'diesel', label: 'Dizel', Icon: Droplet, color: 'text-blue-500', unit: 'litr' }
                     ].map(fuel => (
                       <button
                         key={fuel.value}
@@ -593,7 +593,7 @@ export default function DriverDetail() {
                             : 'border-white/10 bg-white/5 text-slate-400'
                         }`}
                       >
-                        <span className="text-xl">{fuel.icon}</span>
+                        <fuel.Icon size={24} className={`mx-auto ${fuel.color}`} />
                         <p className="text-xs mt-1">{fuel.label}</p>
                       </button>
                     ))}

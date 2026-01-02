@@ -62,8 +62,8 @@ function LegItem({ leg, index, formatMoney }) {
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3 mt-1 text-[10px] sm:text-xs text-gray-500">
               {leg.distance > 0 && <span>📏 {leg.distance} km</span>}
-              {leg.payment > 0 && <span>💰 {formatMoney(leg.payment)}</span>}
-              {leg.givenBudget > 0 && <span>🛣️ {formatMoney(leg.givenBudget)}</span>}
+              {leg.payment > 0 && <span>{formatMoney(leg.payment)}</span>}
+              {leg.givenBudget > 0 && <span>{formatMoney(leg.givenBudget)}</span>}
             </div>
           </div>
         </div>

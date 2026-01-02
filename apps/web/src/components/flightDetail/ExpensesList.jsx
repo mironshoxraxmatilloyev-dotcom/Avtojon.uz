@@ -1,4 +1,4 @@
-import { Wallet, Plus, Pencil, Trash2, Fuel, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Wallet, Plus, Pencil, Trash2, Fuel, TrendingUp, TrendingDown, Minus, Package } from 'lucide-react'
 import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney } from './constants'
 
 export default function ExpensesList({
@@ -272,7 +272,7 @@ function LegExpenseGroup({ leg, legIdx, expenses, total, totalUSD, isInternation
 }
 
 function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, flight, allExpenses }) {
-  const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { icon: '📦', label: expense.type, color: 'from-gray-400 to-gray-500' }
+  const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { iconName: 'Package', label: expense.type, color: 'from-gray-400 to-gray-500' }
   const isFuel = expense.type?.startsWith('fuel_')
   const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
   const formatUSD = (amount) => `${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -352,7 +352,7 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
           </span>
           {fuelStats.consumption > 0 && (
             <span className={`font-semibold px-2 py-0.5 rounded ${fuelStats.consumption >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-              📊 {fuelStats.consumption} km/{fuelUnit}
+              {fuelStats.consumption} km/{fuelUnit}
             </span>
           )}
         </div>
@@ -377,10 +377,11 @@ function ExpenseSummary({ expenses, isInternational }) {
       <p className="text-xs text-gray-500 mb-2">Xarajat turlari:</p>
       <div className="flex flex-wrap gap-2">
         {Object.entries(grouped).map(([type, data]) => {
-          const expType = EXPENSE_CATEGORIES.find(c => c.value === type) || { icon: '📦', label: type }
+          const expType = EXPENSE_CATEGORIES.find(c => c.value === type) || { iconName: 'Package', label: type }
+          const IconComponent = expType.iconName ? require('lucide-react')[expType.iconName] : Package
           return (
             <div key={type} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs">
-              <span>{expType.icon}</span>
+              <IconComponent size={14} className="text-gray-500" />
               <span className="text-gray-600">{expType.label}</span>
               {isInternational ? (
                 <span className="font-bold text-gray-900">{formatUSD(data.totalUSD)}</span>

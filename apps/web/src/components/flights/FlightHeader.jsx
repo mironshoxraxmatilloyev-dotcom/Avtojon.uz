@@ -54,7 +54,7 @@ export default function FlightHeader({ flight, onBack, formatMoney }) {
             <span className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm ${
               isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
             }`}>
-              {isActive ? '🟢 Faol marshrut' : '✅ Yopilgan'}
+              {isActive ? 'Faol marshrut' : 'Yopilgan'}
             </span>
           </div>
         </div>

@@ -88,7 +88,7 @@ export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
         </div>
       )}
 
-      {/* 💰 Asosiy Moliyaviy Ko'rsatkichlar */}
+      {/* Asosiy Moliyaviy Ko'rsatkichlar */}
       <div className={`rounded-2xl p-4 sm:p-6 border shadow-sm ${summary.isProfitable
           ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
           : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'

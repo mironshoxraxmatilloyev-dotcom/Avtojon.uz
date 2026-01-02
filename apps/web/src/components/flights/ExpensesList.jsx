@@ -1,18 +1,18 @@
-import { Plus, Wallet, Trash2, Pencil } from 'lucide-react'
+import { Plus, Wallet, Trash2, Pencil, Fuel, Droplet, CircleDot, Circle, Utensils, Wrench, Car, FileText, Package } from 'lucide-react'
 
-// Xarajat turlari
+// Xarajat turlari - Lucide iconlar bilan
 const EXPENSE_TYPES = {
-  fuel_benzin: { label: 'Benzin', icon: '⛽' },
-  fuel_diesel: { label: 'Dizel', icon: '🛢️' },
-  fuel_gas: { label: 'Gaz', icon: '🔵' },
-  fuel_metan: { label: 'Metan', icon: '🟢' },
-  fuel_propan: { label: 'Propan', icon: '🟡' },
-  fuel: { label: 'Yoqilg\'i', icon: '⛽' },
-  food: { label: 'Ovqat', icon: '🍽️' },
-  repair: { label: 'Ta\'mir', icon: '🔧' },
-  toll: { label: 'Yo\'l to\'lovi', icon: '🛣️' },
-  fine: { label: 'Jarima', icon: '📋' },
-  other: { label: 'Boshqa', icon: '📦' },
+  fuel_benzin: { label: 'Benzin', Icon: Fuel, color: 'text-red-500' },
+  fuel_diesel: { label: 'Dizel', Icon: Droplet, color: 'text-blue-500' },
+  fuel_gas: { label: 'Gaz', Icon: CircleDot, color: 'text-blue-500' },
+  fuel_metan: { label: 'Metan', Icon: CircleDot, color: 'text-green-500' },
+  fuel_propan: { label: 'Propan', Icon: Circle, color: 'text-yellow-500' },
+  fuel: { label: 'Yoqilg\'i', Icon: Fuel, color: 'text-amber-500' },
+  food: { label: 'Ovqat', Icon: Utensils, color: 'text-green-500' },
+  repair: { label: 'Ta\'mir', Icon: Wrench, color: 'text-red-500' },
+  toll: { label: 'Yo\'l to\'lovi', Icon: Car, color: 'text-blue-500' },
+  fine: { label: 'Jarima', Icon: FileText, color: 'text-purple-500' },
+  other: { label: 'Boshqa', Icon: Package, color: 'text-gray-500' },
 }
 
 export default function ExpensesList({ expenses, isActive, onAddExpense, onEditExpense, onDeleteExpense, formatMoney }) {
@@ -71,8 +71,8 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
     <div className="p-2.5 sm:p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-lg flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
-            {type.icon}
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+            <type.Icon size={18} className={type.color} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -83,10 +83,10 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
             {/* Yoqilg'i detallari */}
             {isFuel && expense.quantity && (
               <div className="flex flex-wrap gap-2 mt-1 text-[10px] sm:text-xs text-gray-500">
-                <span>📊 {expense.quantity} {expense.quantityUnit || 'L'}</span>
-                {expense.pricePerUnit && <span>💵 {formatMoney(expense.pricePerUnit)}/{expense.quantityUnit || 'L'}</span>}
-                {expense.odometer && <span>🔢 {expense.odometer} km</span>}
-                {expense.fuelConsumption && <span>⛽ {expense.fuelConsumption} L/100km</span>}
+                <span>{expense.quantity} {expense.quantityUnit || 'L'}</span>
+                {expense.pricePerUnit && <span>{formatMoney(expense.pricePerUnit)}/{expense.quantityUnit || 'L'}</span>}
+                {expense.odometer && <span>{expense.odometer} km</span>}
+                {expense.fuelConsumption && <span>{expense.fuelConsumption} L/100km</span>}
               </div>
             )}
             
@@ -95,7 +95,7 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
             )}
             
             {expense.stationName && (
-              <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">📍 {expense.stationName}</p>
+              <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">{expense.stationName}</p>
             )}
           </div>
         </div>
