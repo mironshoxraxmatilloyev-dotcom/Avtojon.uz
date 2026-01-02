@@ -277,11 +277,6 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
           {/* Result */}
           {result && !error && (
             <div className="space-y-4">
-              <div className="bg-white/5 rounded-2xl p-4">
-                <p className="text-slate-400 text-xs font-semibold mb-2">SIZ AYTDINGIZ:</p>
-                <p className="text-white text-lg">"{result.text}"</p>
-              </div>
-
               {result.data && (
                 <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
                   <p className="text-emerald-400 text-xs font-semibold">ANIQLANGAN MA'LUMOTLAR:</p>
