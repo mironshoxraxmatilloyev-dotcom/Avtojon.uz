@@ -91,7 +91,10 @@ export default function Register() {
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3">
             <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
-            <span className="text-2xl font-bold text-white">Avtojon</span>
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-white">avto</span>
+              <span className="text-2xl font-bold text-amber-300">JON</span>
+            </div>
           </Link>
         </div>
 
@@ -103,7 +106,7 @@ export default function Register() {
               <span className="text-emerald-100">yangi bosqichga</span> olib chiqing
             </h1>
             <p className="text-emerald-100 text-lg max-w-md">
-              Minglab kompaniyalar Avtojon bilan ishlaydi. Siz ham qo'shiling!
+              Minglab kompaniyalar avtoJON bilan ishlaydi. Siz ham qo'shiling!
             </p>
           </div>
 
@@ -117,7 +120,7 @@ export default function Register() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-emerald-200 text-sm">© 2024 Avtojon. Barcha huquqlar himoyalangan.</p>
+          <p className="text-emerald-200 text-sm">© 2024 avtoJON. Barcha huquqlar himoyalangan.</p>
         </div>
       </div>
 
@@ -128,7 +131,10 @@ export default function Register() {
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
               <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
-              <span className="text-2xl font-bold text-slate-800">Avtojon</span>
+              <div className="flex items-baseline">
+                <span className="text-2xl font-bold text-slate-800">avto</span>
+                <span className="text-2xl font-bold text-amber-500">JON</span>
+              </div>
             </Link>
           </div>
 

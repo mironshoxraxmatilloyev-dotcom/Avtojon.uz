@@ -11,7 +11,7 @@ export default function DriverHeader({ user, onLogout }) {
           <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover flex-shrink-0" />
           <div className="min-w-0">
             <h1 className="text-white font-semibold flex items-center gap-1 text-sm sm:text-base">
-              Avtojon <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+              <span>avto</span><span className="text-amber-400">JON</span> <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
             </h1>
             <p className="text-slate-400 text-[10px] sm:text-xs truncate">{user?.fullName || 'Haydovchi'}</p>
           </div>

@@ -290,7 +290,7 @@ export default function Landing() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  Avtojon <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>avto</span><span className="text-amber-400">JON</span> <Sparkles className="w-4 h-4 text-amber-400" />
                 </h3>
                 <p className="text-slate-500 text-xs">Yuk tashish platformasi</p>
               </div>
@@ -308,7 +308,7 @@ export default function Landing() {
           </div>
 
           <div className="border-t border-slate-800 mt-8 pt-6 text-center">
-            <p className="text-slate-600 text-sm">© 2024 Avtojon. Barcha huquqlar himoyalangan.</p>
+            <p className="text-slate-600 text-sm">© 2024 avtoJON. Barcha huquqlar himoyalangan.</p>
           </div>
         </div>
       </footer>

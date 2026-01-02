@@ -53,7 +53,7 @@ export function FleetSubscriptionBlocker({ vehicleCount = 1 }) {
             </div>
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-amber-200" />
-              <span className="text-amber-100 text-sm font-medium">Avtojon Pro</span>
+              <span className="text-amber-100 text-sm font-medium"><span>avto</span><span className="text-white">JON</span> Pro</span>
             </div>
             <h1 className="text-2xl font-bold text-white">Sinov muddati tugadi</h1>
             <p className="text-amber-100 text-sm mt-1">Davom etish uchun obuna sotib oling</p>
@@ -118,7 +118,7 @@ export function FleetSubscriptionBlocker({ vehicleCount = 1 }) {
 
         <div className="flex items-center justify-center gap-2 mt-6">
           <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
-          <span className="text-slate-500 font-medium">Avtojon Fleet</span>
+          <span className="text-slate-500 font-medium"><span className="text-slate-700">avto</span><span className="text-amber-500">JON</span> Fleet</span>
         </div>
       </div>
     </div>
@@ -158,7 +158,7 @@ export function BusinessSubscriptionBlocker({ driverCount = 1 }) {
             </div>
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-blue-200" />
-              <span className="text-blue-100 text-sm font-medium">Avtojon Pro</span>
+              <span className="text-blue-100 text-sm font-medium"><span>avto</span><span className="text-white">JON</span> Pro</span>
             </div>
             <h1 className="text-2xl font-bold text-white">Sinov muddati tugadi</h1>
             <p className="text-blue-100 text-sm mt-1">Davom etish uchun obuna sotib oling</p>
@@ -223,7 +223,7 @@ export function BusinessSubscriptionBlocker({ driverCount = 1 }) {
 
         <div className="flex items-center justify-center gap-2 mt-6">
           <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg" />
-          <span className="text-slate-500 font-medium">Avtojon</span>
+          <span className="font-medium"><span className="text-slate-700">avto</span><span className="text-amber-500">JON</span></span>
         </div>
       </div>
     </div>

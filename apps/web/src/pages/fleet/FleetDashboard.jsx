@@ -276,8 +276,9 @@ export default function FleetDashboard() {
               </div>
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Avtojon
+              <h1 className="text-lg font-bold">
+                <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">avto</span>
+                <span className="text-amber-500">JON</span>
               </h1>
               <p className="text-[10px] text-slate-400 font-medium">Fleet Management Pro</p>
             </div>
@@ -396,7 +397,7 @@ export default function FleetDashboard() {
                 </div>
                 <div>
                   <h2 className="text-lg lg:text-xl font-bold text-slate-900">
-                    <span className="lg:hidden">Avtojon</span>
+                    <span className="lg:hidden flex items-baseline"><span>avto</span><span className="text-amber-500">JON</span></span>
                     <span className="hidden lg:inline">{navItems.find(n => n.id === activeTab)?.label}</span>
                   </h2>
                   <p className="text-xs lg:text-sm text-slate-500">

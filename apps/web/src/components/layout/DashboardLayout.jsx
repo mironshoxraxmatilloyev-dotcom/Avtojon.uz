@@ -173,7 +173,10 @@ export default function DashboardLayout() {
             </button>
             <div className="flex items-center gap-2">
               <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="font-bold text-gray-900">Avtojon</span>
+              <div className="flex items-baseline">
+                <span className="font-bold text-gray-900">avto</span>
+                <span className="font-bold text-amber-500">JON</span>
+              </div>
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             </div>
           </div>
@@ -197,10 +200,10 @@ export default function DashboardLayout() {
               <img src="/main_logo.jpg" alt="Avtojon" className="w-11 h-11 rounded-xl object-cover shadow-lg" />
               <div>
                 <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
-                  Avtojon
+                  <span>avto</span><span className="text-amber-400">JON</span>
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 </h1>
-                <p className="text-[10px] text-slate-500">{user?.companyName || 'Avtojon'}</p>
+                <p className="text-[10px] text-slate-500">{user?.companyName || 'avtoJON'}</p>
               </div>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/10 rounded-lg">

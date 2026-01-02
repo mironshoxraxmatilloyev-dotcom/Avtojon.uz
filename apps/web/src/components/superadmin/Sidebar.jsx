@@ -29,7 +29,7 @@ export default function Sidebar({ activeTab, setActiveTab, sidebarOpen, setSideb
                 <Zap className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-white">Avtojon.uz</h1>
+                <h1 className="text-lg font-bold text-white"><span>avto</span><span className="text-amber-400">JON</span>.uz</h1>
                 <p className="text-[10px] text-violet-400">Super Admin</p>
               </div>
             </div>
@@ -80,7 +80,7 @@ export function MobileHeader({ setSidebarOpen, onLogout }) {
           <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white"><Menu size={22} /></button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center"><Zap className="w-4 h-4 text-white" /></div>
-            <span className="font-bold text-white">Avtojon.uz</span>
+            <span className="font-bold text-white"><span>avto</span><span className="text-amber-400">JON</span>.uz</span>
           </div>
         </div>
         <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-400"><LogOut size={18} /></button>
