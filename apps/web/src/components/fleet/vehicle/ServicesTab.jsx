@@ -22,20 +22,20 @@ export const ServicesTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) 
       </div>
 
       {/* Add Buttons */}
-      <div className="flex justify-end gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
         <button
           onClick={() => setShowVoiceRecorder(true)}
-          className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/25"
         >
           <Mic size={18} />
-          🎤 Ovoz bilan
+          <span className="hidden sm:inline">🎤</span> Ovoz
         </button>
         <button
           onClick={onAdd}
-          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
+          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/25"
         >
           <Plus size={18} />
-          Xizmat qo'shish
+          <span className="hidden sm:inline">Xizmat</span> qo'shish
         </button>
       </div>
 

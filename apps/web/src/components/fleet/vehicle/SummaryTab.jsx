@@ -40,9 +40,9 @@ export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
   return (
     <div className="space-y-6">
       {/* Period Selector */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Umumiy ko'rinish</h2>
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900">Umumiy ko'rinish</h2>
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
           {[
             { value: '7', label: '7 kun' },
             { value: '30', label: '30 kun' },
@@ -52,7 +52,7 @@ export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${period === p.value
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${period === p.value
                   ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
@@ -89,51 +89,51 @@ export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
       )}
 
       {/* 💰 Asosiy Moliyaviy Ko'rsatkichlar */}
-      <div className={`rounded-2xl p-6 border shadow-sm ${summary.isProfitable
+      <div className={`rounded-2xl p-4 sm:p-6 border shadow-sm ${summary.isProfitable
           ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
           : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
         }`}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             {summary.isProfitable ? (
-              <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-7 h-7 text-emerald-600" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" />
               </div>
             ) : (
-              <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center">
-                <TrendingDown className="w-7 h-7 text-red-600" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-xl flex items-center justify-center">
+                <TrendingDown className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
               </div>
             )}
             <div>
-              <p className="text-gray-500 text-sm">Sof foyda/zarar ({period} kun)</p>
-              <p className={`text-3xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className="text-gray-500 text-xs sm:text-sm">Sof foyda/zarar ({period} kun)</p>
+              <p className={`text-xl sm:text-3xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
                 {summary.isProfitable ? '+' : ''}{fmt(summary.netProfit || 0)} so'm
               </p>
             </div>
           </div>
           {summary.profitMargin !== undefined && (
-            <div className="text-right">
-              <p className="text-gray-500 text-sm">Rentabellik</p>
-              <p className={`text-2xl font-bold ${summary.profitMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className="text-left sm:text-right pl-14 sm:pl-0">
+              <p className="text-gray-500 text-xs sm:text-sm">Rentabellik</p>
+              <p className={`text-xl sm:text-2xl font-bold ${summary.profitMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {summary.profitMargin}%
               </p>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200/50">
-          <div className="flex items-center gap-3">
-            <ArrowUpRight className="w-5 h-5 text-emerald-500" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 pt-4 border-t border-gray-200/50">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
             <div>
-              <p className="text-gray-500 text-xs">Daromad</p>
-              <p className="text-lg font-semibold text-gray-900">{fmt(summary.totalIncome || 0)} so'm</p>
+              <p className="text-gray-500 text-[10px] sm:text-xs">Daromad</p>
+              <p className="text-sm sm:text-lg font-semibold text-gray-900">{fmt(summary.totalIncome || 0)} so'm</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <ArrowDownRight className="w-5 h-5 text-red-500" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ArrowDownRight className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
             <div>
-              <p className="text-gray-500 text-xs">Xarajat</p>
-              <p className="text-lg font-semibold text-gray-900">{fmt(summary.totalExpenses || 0)} so'm</p>
+              <p className="text-gray-500 text-[10px] sm:text-xs">Xarajat</p>
+              <p className="text-sm sm:text-lg font-semibold text-gray-900">{fmt(summary.totalExpenses || 0)} so'm</p>
             </div>
           </div>
         </div>

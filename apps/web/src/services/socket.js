@@ -112,7 +112,14 @@ export const joinBusinessRoom = (businessId) => {
 
   const s = getSocket()
   if (s?.connected) {
-    console.log('🔌 Joining business room:', `business-${id}`)
+    console.log('═══════════════════════════════════════════')
+    console.log('🔌 JOIN BUSINESS ROOM')
+    console.log('═══════════════════════════════════════════')
+    console.log('🔌 Business ID:', id)
+    console.log('🔌 Room name:', `business-${id}`)
+    console.log('🔌 Socket ID:', s.id)
+    console.log('🔌 Socket connected:', s.connected)
+    console.log('═══════════════════════════════════════════')
     s.emit('join-business', id)
   } else {
     console.log('⏳ Socket not connected, will join room on connect:', `business-${id}`)

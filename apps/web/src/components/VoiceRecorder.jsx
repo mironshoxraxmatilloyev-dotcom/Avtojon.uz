@@ -253,7 +253,7 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-none">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] sm:max-h-[90vh] mb-[env(safe-area-inset-bottom,0px)]" style={{ marginBottom: 'max(env(safe-area-inset-bottom, 0px), 70px)' }}>
         {/* Mobile drag handle */}
         <div className="sm:hidden w-12 h-1 bg-white/30 rounded-full mx-auto mt-2 mb-1" />
         
@@ -277,7 +277,7 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(95vh-80px)] sm:max-h-none">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(85vh-80px)] sm:max-h-[70vh]">
           {/* Recording Button */}
           {!result && !isProcessing && (
             <div className="flex flex-col items-center">

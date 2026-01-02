@@ -27,27 +27,27 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
       </div>
 
       {/* Add Buttons */}
-      <div className="flex flex-wrap gap-3 justify-end">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
         <button
           onClick={() => setShowVoiceRecorder(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-violet-500/25"
+          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/25"
         >
           <Mic size={18} />
-          🎤 Ovoz bilan
+          <span className="sm:inline">🎤 Ovoz</span>
         </button>
         <button
           onClick={onAddBulk}
-          className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium flex items-center gap-2 transition-all border border-gray-200"
+          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium flex items-center justify-center gap-2 transition-all border border-gray-200"
         >
           <Plus size={18} />
-          To'liq almashtirish
+          <span>To'liq almashtirish</span>
         </button>
         <button
           onClick={onAdd}
-          className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-purple-500/25"
+          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/25"
         >
           <Plus size={18} />
-          Bitta shina
+          <span>Bitta shina</span>
         </button>
       </div>
 

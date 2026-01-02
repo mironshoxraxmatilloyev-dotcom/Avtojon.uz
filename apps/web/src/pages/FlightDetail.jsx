@@ -79,14 +79,25 @@ export default function FlightDetail() {
 
   // Socket listeners - to'g'ridan-to'g'ri socket bilan ishlash
   useEffect(() => {
-    // user yo'q bo'lsa, socket setup qilmaymiz (xato emas, faqat kutamiz)
-    if (!user?._id) return
+    // flight yuklangunga qadar kutamiz
+    if (!flight?.user) return
+
+    // Biznesmen ID ni flight dan olamiz (user authStore dan kelmasa ham ishlaydi)
+    const businessId = flight.user._id || flight.user
+
+    console.log('═══════════════════════════════════════════')
+    console.log('🔌 SOCKET SETUP - FlightDetail')
+    console.log('═══════════════════════════════════════════')
+    console.log('🔌 Business ID (from flight):', businessId)
+    console.log('🔌 User ID (from authStore):', user?._id)
+    console.log('🔌 Flight ID:', id)
+    console.log('═══════════════════════════════════════════')
 
     // Socket ni olish yoki yaratish
     const socket = connectSocket()
 
-    // Biznesmen room ga ulanish
-    joinBusinessRoom(user._id)
+    // Biznesmen room ga ulanish - flight.user dan olamiz
+    joinBusinessRoom(businessId)
 
     const handleUpdate = (data) => {
       // ID larni string ga o'girish va solishtirish
@@ -102,7 +113,8 @@ export default function FlightDetail() {
     }
 
     const handleExpenseConfirmed = (data) => {
-      console.log('📥 expense-confirmed event:', data)
+      console.log('📥 expense-confirmed event received!')
+      console.log('📥 Data:', JSON.stringify(data, null, 2))
       console.log('📥 Current flight ID:', id)
       console.log('📥 Event flight ID:', data.flight?._id)
       
@@ -110,11 +122,16 @@ export default function FlightDetail() {
       const eventFlightId = data.flight?._id?.toString()
       const currentFlightId = id?.toString()
       
+      console.log('📥 Comparing IDs:', eventFlightId, '===', currentFlightId, ':', eventFlightId === currentFlightId)
+      
       if (eventFlightId && eventFlightId === currentFlightId) {
+        console.log('📥 IDs match! Updating flight state...')
         // Deep copy qilish - React state yangilanishini ta'minlash
         const newFlight = JSON.parse(JSON.stringify(data.flight))
         setFlight(newFlight)
         showToast.success('✅ Haydovchi xarajatni tasdiqladi')
+      } else {
+        console.log('📥 IDs do not match, ignoring event')
       }
     }
     
@@ -130,7 +147,7 @@ export default function FlightDetail() {
       socket.off('flight-confirmed', handleUpdate)
       socket.off('expense-confirmed', handleExpenseConfirmed)
     }
-  }, [id, user?._id])
+  }, [id, flight?.user])
 
   if (loading) return <FlightDetailSkeleton />
   if (error?.type === 'notfound') return <NotFoundError title="Mashrut topilmadi" onBack={() => navigate('/dashboard/drivers')} />

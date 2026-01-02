@@ -199,28 +199,31 @@ export default function VoiceMaintenanceRecorder({ context = 'oil', onResult, on
   const formatMoney = (amount) => new Intl.NumberFormat('uz-UZ').format(amount)
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] sm:max-h-[90vh]" style={{ marginBottom: 'max(env(safe-area-inset-bottom, 0px), 70px)' }}>
+        {/* Mobile drag handle */}
+        <div className="sm:hidden w-12 h-1 bg-white/30 rounded-full mx-auto mt-2 mb-1" />
+        
         {/* Header */}
-        <div className="px-6 py-5 border-b border-white/10 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-2xl">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/10 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl">
               {config.icon}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">{config.title}</h2>
-              <p className="text-slate-400 text-sm">{config.subtitle}</p>
+              <h2 className="text-base sm:text-lg font-bold text-white">{config.title}</h2>
+              <p className="text-slate-400 text-xs sm:text-sm">{config.subtitle}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
-            <X size={20} />
+          <button onClick={onClose} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-white/10 rounded-lg sm:rounded-xl text-slate-400 hover:text-white transition-all">
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(85vh-100px)] sm:max-h-[70vh]">
           {/* Recording Button */}
           {!result && !isProcessing && (
             <div className="flex flex-col items-center">

@@ -346,10 +346,25 @@ router.put('/me/flights/:id/expenses/:expenseId/confirm', protect, driverOnly, a
       const room = io.sockets.adapter.rooms.get(businessRoom);
       const roomSize = room ? room.size : 0;
       
-      console.log('📤 Expense confirmed - sending to room:', businessRoom);
+      console.log('═══════════════════════════════════════════');
+      console.log('📤 EXPENSE CONFIRMED - SOCKET DEBUG');
+      console.log('═══════════════════════════════════════════');
       console.log('📤 Flight ID:', flight._id.toString());
-      console.log('📤 Room size:', roomSize);
+      console.log('📤 Flight user (businessId):', businessId);
+      console.log('📤 Target room:', businessRoom);
+      console.log('📤 Room size (clients):', roomSize);
       console.log('📤 Driver:', req.driver.fullName);
+      console.log('📤 Expense ID:', req.params.expenseId);
+      
+      // Barcha roomlarni ko'rsatish
+      const allRooms = [];
+      io.sockets.adapter.rooms.forEach((sockets, roomName) => {
+        if (roomName.startsWith('business-') || roomName.startsWith('driver-')) {
+          allRooms.push({ room: roomName, clients: sockets.size });
+        }
+      });
+      console.log('📤 All active rooms:', JSON.stringify(allRooms));
+      console.log('═══════════════════════════════════════════');
       
       // expense-confirmed eventi
       io.to(businessRoom).emit('expense-confirmed', {
@@ -364,7 +379,7 @@ router.put('/me/flights/:id/expenses/:expenseId/confirm', protect, driverOnly, a
         message: `✅ ${req.driver.fullName} xarajatni tasdiqladi`
       });
       
-      console.log('📤 Events emitted successfully');
+      console.log('📤 Events emitted to room:', businessRoom);
     } else {
       console.log('❌ Socket.io not available');
     }
