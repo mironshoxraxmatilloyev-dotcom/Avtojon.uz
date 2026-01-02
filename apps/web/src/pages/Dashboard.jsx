@@ -426,7 +426,7 @@ export default function Dashboard() {
               })()}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
-              {getGreeting()}, {user?.companyName || 'Admin'}!
+              {getGreeting()}, {user?.companyName || user?.fullName || 'Foydalanuvchi'}!
             </h1>
             <p className="text-blue-200 text-sm sm:text-base">Bugungi biznes holatini korib chiqing</p>
           </div>

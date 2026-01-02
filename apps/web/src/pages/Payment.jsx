@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Truck, CreditCard, ArrowLeft, Loader2, CheckCircle, XCircle, RefreshCw, Calendar, Shield } from 'lucide-react'
 import api from '../services/api'
 
-// Fleet users uchun: 10,000 so'm / mashina / oy
-const PRICE_PER_VEHICLE = 10000
+// Fleet users uchun: 20,000 so'm / mashina / oy
+// Biznesmenlar uchun: 30,000 so'm / mashina / oy
+const PRICE_PER_VEHICLE = 20000
 
 export default function Payment() {
   const navigate = useNavigate()

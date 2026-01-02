@@ -1,4 +1,4 @@
-import { Calendar, Zap, Hand } from 'lucide-react'
+import { Calendar, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatedCard } from '../ui'
 import { QuickStats } from './StatsCards'
@@ -59,9 +59,8 @@ export function HeroHeader({ user, stats }) {
             <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
             <span>{formatDateUz()}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 flex items-center gap-2">
-            {getGreeting()}, {user?.companyName || 'Admin'}!
-            <Hand size={28} className="text-amber-400 sm:w-8 sm:h-8" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
+            {getGreeting()}, {user?.companyName || user?.fullName || 'Foydalanuvchi'}!
           </h1>
           <p className="text-blue-200 text-sm sm:text-base">Bugungi biznes holatini korib chiqing</p>
         </div>

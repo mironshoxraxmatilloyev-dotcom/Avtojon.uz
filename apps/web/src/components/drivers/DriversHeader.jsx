@@ -1,4 +1,4 @@
-import { Plus, Calendar, ArrowUpRight, Users, Activity, User, Truck, Mic, Hand } from 'lucide-react'
+import { Plus, Calendar, ArrowUpRight, Users, Activity, User, Truck, Mic } from 'lucide-react'
 
 export default function DriversHeader({ user, drivers, vehicles, onAddDriver, onVoiceFlight }) {
   const getGreeting = () => {
@@ -31,9 +31,8 @@ export default function DriversHeader({ user, drivers, vehicles, onAddDriver, on
               return `${days[date.getDay()]}, ${date.getDate()}-${months[date.getMonth()]}`
             })()}</span>
           </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 flex items-center gap-2">
-            {getGreeting()}, {user?.companyName || 'Admin'}!
-            <Hand size={24} className="text-amber-400 sm:w-7 sm:h-7" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
+            {getGreeting()}, {user?.companyName || user?.fullName || 'Foydalanuvchi'}!
           </h1>
           <p className="text-blue-200 text-sm sm:text-base">Haydovchilarni boshqaring va kuzating</p>
         </div>

@@ -11,10 +11,10 @@ const { protect } = require('../middleware/auth')
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
 
 // ============ NARXLAR ============
-// Fleet users (admin): 10,000 so'm / mashina / oy
-// Biznesmenlar (business): 20,000 so'm / mashina / oy
-const PRICE_FLEET = 10000
-const PRICE_BUSINESS = 20000
+// Fleet users (oddiy mijozlar): 20,000 so'm / mashina / oy
+// Biznesmenlar (korporativ): 30,000 so'm / mashina / oy
+const PRICE_FLEET = 20000
+const PRICE_BUSINESS = 30000
 
 // ============ NARXNI HISOBLASH ============
 router.get('/calculate', protect, async (req, res) => {

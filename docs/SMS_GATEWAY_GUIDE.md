@@ -161,7 +161,7 @@ Matn: Salom, bu test xabar
 private val POLL_INTERVAL = 5000L  // 5 sekund
 private val HEARTBEAT_INTERVAL = 30000L  // 30 sekund
 ```
-
+![alt text](image.png)
 ### Backend Konfiguratsiyasi
 
 ```javascript
