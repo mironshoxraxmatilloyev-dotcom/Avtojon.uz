@@ -373,7 +373,7 @@ export default function FleetDashboard() {
         </header>
 
         {/* Content */}
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 pb-40 lg:pb-6">
           {activeTab === 'home' && (
             <HomeTab
               vehicles={filteredVehicles}
