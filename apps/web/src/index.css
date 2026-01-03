@@ -48,6 +48,13 @@ body:not(:has(.landing-page)) {
 nav[style*="position: fixed"][style*="bottom: 0"] {
   overflow: hidden !important;
   -webkit-overflow-scrolling: auto !important;
+
+/* 🚛 Fleet Dashboard - oxirgi element uchun padding */
+@media (max-width: 1023px) {
+  .min-h-screen.bg-slate-50 > main {
+    padding-bottom: 120px !important;
+  }
+}
   overscroll-behavior: none !important;
   touch-action: none !important;
 }
