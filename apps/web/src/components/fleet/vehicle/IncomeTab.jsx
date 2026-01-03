@@ -59,13 +59,12 @@ export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) =>
         />
       )}
 
-      {/* Stats Cards - Label tepada, pul pastda, icon yo'q */}
+      {/* Stats Cards - Label tepada, pul pastda, qalinroq */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-          {/* <DollarSign className="w-5 h-5 text-emerald-500" /> */}
-          <p className="text-xs text-gray-500 mb-1">Jami daromad</p>
-          <p className="text-xl font-bold text-emerald-600">{fmt(stats.totalIncome || 0)}</p>
-          <p className="text-xs text-gray-400">so'm</p>
+          <p className="text-sm font-medium text-gray-600 mb-1">Jami daromad</p>
+          <p className="text-2xl font-bold text-emerald-600">{fmt(stats.totalIncome || 0)}</p>
+          <p className="text-xs text-gray-400 mt-0.5">so'm</p>
         </div>
 
         {Object.entries(byType).slice(0, 3).map(([type, amount]) => {
@@ -74,10 +73,9 @@ export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) =>
           const textColors = { blue: 'text-blue-600', purple: 'text-purple-600', emerald: 'text-emerald-600', amber: 'text-amber-600' }
           return (
             <div key={type} className={`p-4 ${bgColors[config.color]} rounded-xl border`}>
-              {/* <config.icon className={`w-5 h-5 ${iconColors[config.color]}`} /> */}
-              <p className="text-xs text-gray-500 mb-1">{config.label}</p>
-              <p className={`text-xl font-bold ${textColors[config.color]}`}>{fmt(amount)}</p>
-              <p className="text-xs text-gray-400">so'm</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">{config.label}</p>
+              <p className={`text-2xl font-bold ${textColors[config.color]}`}>{fmt(amount)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">so'm</p>
             </div>
           )
         })}

@@ -224,12 +224,12 @@ const SummaryCard = memo(({ icon: Icon, label, value, color, isText }) => {
   const c = colors[color]
 
   return (
-    <div className={`${c.bg} rounded-xl p-3 lg:p-4`}>
-      <div className={`w-8 h-8 ${c.icon} rounded-lg flex items-center justify-center mb-2`}>
-        <Icon className="w-4 h-4 text-white" />
+    <div className={`${c.bg} rounded-xl p-4 lg:p-5`}>
+      <div className={`w-9 h-9 ${c.icon} rounded-lg flex items-center justify-center mb-2`}>
+        <Icon className="w-5 h-5 text-white" />
       </div>
-      <p className={`text-base lg:text-xl font-bold ${c.text}`}>{isText ? value : fmt(value)}</p>
-      <p className="text-[10px] lg:text-xs text-slate-500 font-medium">{label}</p>
+      <p className={`text-xl lg:text-2xl font-bold ${c.text}`}>{isText ? value : fmt(value)}</p>
+      <p className="text-xs lg:text-sm text-slate-500 font-medium mt-1">{label}</p>
     </div>
   )
 })

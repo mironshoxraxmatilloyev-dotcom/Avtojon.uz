@@ -2,12 +2,24 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 
+export type UserRole = 'super_admin' | 'admin' | 'business' | 'driver';
+
+interface Subscription {
+  plan: 'trial' | 'pro';
+  startDate?: string;
+  endDate?: string;
+  isExpired: boolean;
+  daysLeft?: number;
+}
+
 interface User {
-  _id: string;
+  id: string;
   username: string;
   fullName?: string;
-  role: string;
+  role: UserRole;
   businessmanId?: string;
+  userId?: string; // driver uchun
+  subscription?: Subscription;
 }
 
 interface AuthState {
@@ -20,7 +32,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isLoading: true,
@@ -44,7 +56,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (username: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { username: username.trim(), password });
+      const response = await api.post('/auth/login', { 
+        username: username.trim(), 
+        password 
+      });
       
       if (response.data.success) {
         const { accessToken, user } = response.data.data;
@@ -63,6 +78,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore logout errors
+    }
     await AsyncStorage.multiRemove(['token', 'user']);
     set({ token: null, user: null, isAuthenticated: false });
   },

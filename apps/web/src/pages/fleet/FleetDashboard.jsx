@@ -300,8 +300,7 @@ export default function FleetDashboard() {
 
       {/* Main */}
       <main 
-        className="lg:ml-64 lg:pb-6"
-        style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
+        className="lg:ml-64 lg:pb-6 pb-36"
       >
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 safe-top">
