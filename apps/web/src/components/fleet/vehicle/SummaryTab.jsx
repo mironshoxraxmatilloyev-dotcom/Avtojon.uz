@@ -39,10 +39,10 @@ export const SummaryTab = memo(({ vehicle }) => {
 
   return (
     <div className="space-y-6">
-      {/* Period Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Period Selector - to'liq qatorda */}
+      <div className="space-y-3">
         <h2 className="text-lg sm:text-xl font-bold text-gray-900">Umumiy ko'rinish</h2>
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
+        <div className="grid grid-cols-4 gap-2">
           {[
             { value: '7', label: '7 kun' },
             { value: '30', label: '30 kun' },
@@ -52,9 +52,9 @@ export const SummaryTab = memo(({ vehicle }) => {
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${period === p.value
+              className={`py-3 rounded-xl text-sm font-semibold transition-all ${period === p.value
                   ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                 }`}
             >
               {p.label}
@@ -63,25 +63,25 @@ export const SummaryTab = memo(({ vehicle }) => {
         </div>
       </div>
 
-      {/* 🔔 Smart Alerts */}
+      {/* 🔔 Smart Alerts - kattaroq */}
       {alerts.length > 0 && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-200">
-          <h3 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-2">
-            <Bell className="w-5 h-5" />
+          <h3 className="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+            <Bell className="w-6 h-6" />
             Diqqat! ({alerts.length} ta ogohlantirish)
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {alerts.slice(0, 4).map((alert, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-3 p-3 rounded-xl bg-white/80 ${alert.severity === 'danger' ? 'border-l-4 border-red-500' :
+                className={`flex items-start gap-3 p-4 rounded-xl bg-white/80 ${alert.severity === 'danger' ? 'border-l-4 border-red-500' :
                     alert.severity === 'warning' ? 'border-l-4 border-amber-500' : 'border-l-4 border-blue-500'
                   }`}
               >
-                <AlertTriangle className={`w-4 h-4 flex-shrink-0 ${alert.severity === 'danger' ? 'text-red-500' :
+                <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${alert.severity === 'danger' ? 'text-red-500' :
                     alert.severity === 'warning' ? 'text-amber-500' : 'text-blue-500'
                   }`} />
-                <span className="text-sm text-gray-700">{alert.message}</span>
+                <span className="text-base text-gray-700">{alert.message}</span>
               </div>
             ))}
           </div>
@@ -89,51 +89,51 @@ export const SummaryTab = memo(({ vehicle }) => {
       )}
 
       {/* Asosiy Moliyaviy Ko'rsatkichlar */}
-      <div className={`rounded-2xl p-4 sm:p-6 border shadow-sm ${summary.isProfitable
+      <div className={`rounded-2xl p-5 sm:p-8 border shadow-sm ${summary.isProfitable
           ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
           : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
         }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
             {summary.isProfitable ? (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
               </div>
             ) : (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-xl flex items-center justify-center">
-                <TrendingDown className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-100 rounded-2xl flex items-center justify-center">
+                <TrendingDown className="w-7 h-7 sm:w-8 sm:h-8 text-red-600" />
               </div>
             )}
             <div>
-              <p className="text-gray-500 text-xs sm:text-sm">Sof foyda/zarar ({period} kun)</p>
-              <p className={`text-xl sm:text-3xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className="text-gray-500 text-sm sm:text-base">Sof foyda/zarar ({period} kun)</p>
+              <p className={`text-2xl sm:text-4xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
                 {summary.isProfitable ? '+' : ''}{fmt(summary.netProfit || 0)} so'm
               </p>
             </div>
           </div>
           {summary.profitMargin !== undefined && (
-            <div className="text-left sm:text-right pl-14 sm:pl-0">
-              <p className="text-gray-500 text-xs sm:text-sm">Rentabellik</p>
-              <p className={`text-xl sm:text-2xl font-bold ${summary.profitMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className="text-left sm:text-right pl-[72px] sm:pl-0">
+              <p className="text-gray-500 text-sm sm:text-base">Rentabellik</p>
+              <p className={`text-2xl sm:text-4xl font-bold ${summary.profitMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {summary.profitMargin}%
               </p>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 pt-4 border-t border-gray-200/50">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-5 border-t border-gray-200/50">
+          <div className="flex items-center gap-3">
+            <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
             <div>
-              <p className="text-gray-500 text-[10px] sm:text-xs">Daromad</p>
-              <p className="text-sm sm:text-lg font-semibold text-gray-900">{fmt(summary.totalIncome || 0)} so'm</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Daromad</p>
+              <p className="text-base sm:text-xl font-bold text-gray-900">{fmt(summary.totalIncome || 0)} so'm</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ArrowDownRight className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+          <div className="flex items-center gap-3">
+            <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
             <div>
-              <p className="text-gray-500 text-[10px] sm:text-xs">Xarajat</p>
-              <p className="text-sm sm:text-lg font-semibold text-gray-900">{fmt(summary.totalExpenses || 0)} so'm</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Xarajat</p>
+              <p className="text-base sm:text-xl font-bold text-gray-900">{fmt(summary.totalExpenses || 0)} so'm</p>
             </div>
           </div>
         </div>

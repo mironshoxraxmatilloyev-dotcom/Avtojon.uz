@@ -761,11 +761,11 @@ export default function VehicleDetailPanel() {
 
       {/* Main Content - scrollable with bottom padding for nav */}
       <main 
-        className="lg:ml-[260px] overflow-y-auto lg:pb-8"
+        className="lg:ml-[260px] overflow-y-auto lg:pb-8 pb-32"
         style={{ 
           height: '100vh', 
-          paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
         }}
       >
         {/* PRO Header - Full Width */}
@@ -800,7 +800,7 @@ export default function VehicleDetailPanel() {
         </header>
 
         {/* Content - Full Width */}
-        <div className="p-4 lg:p-6 xl:p-8 w-full">
+        <div className="p-4 lg:p-6 xl:p-8 w-full pb-36 lg:pb-8">
           {activeTab === 'summary' && <SummaryTab vehicle={vehicle} />}
           {activeTab === 'income' && <IncomeTab data={incomeData} onAdd={() => openModal('income')} onEdit={(item) => openModal('income', item)} onDelete={(i) => handleDelete('income', i)} onVoiceAdd={handleVoiceIncome} />}
           {activeTab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} vehicleId={id} onVoiceAdd={handleVoiceFuel} vehicle={vehicle} />}
@@ -810,21 +810,19 @@ export default function VehicleDetailPanel() {
         </div>
       </main>
 
-      {/* PRO Bottom Navigation - Mobile - Instagram Style Fixed */}
+      {/* PRO Bottom Navigation - Mobile - Fixed at bottom */}
       <nav 
-        className="lg:hidden bg-white border-t border-slate-200/80 safe-bottom"
+        className="lg:hidden bg-white border-t border-slate-200/80 fixed-bottom-nav"
         style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
           zIndex: 99999,
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          overflow: 'hidden',
-          touchAction: 'none'
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          willChange: 'transform'
         }}
       >
         <div className="flex items-center justify-around h-16 px-1">

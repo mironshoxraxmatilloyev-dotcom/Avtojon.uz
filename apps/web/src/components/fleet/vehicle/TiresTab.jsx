@@ -1,17 +1,18 @@
 import { memo, useState } from 'react'
-import { Plus, Circle, Edit2, Trash2, Mic } from 'lucide-react'
+import { Plus, Circle, Edit2, Trash2, Mic, X } from 'lucide-react'
 import { fmt, fmtDate, TIRE_STATUS } from './constants'
 import VoiceMaintenanceRecorder from './VoiceMaintenanceRecorder'
 
 export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoiceAdd }) => {
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
+  const [selectedTire, setSelectedTire] = useState(null)
   const wornCount = tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length
   const newCount = tires.filter(t => (t.calculatedStatus || t.status) === 'new').length
 
   return (
-    <div className="space-y-8">
-      {/* Stats - Light Mode */}
-      <div className="grid grid-cols-3 gap-4">
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm text-center">
           <p className="text-3xl font-bold text-gray-900">{tires.length}</p>
           <p className="text-gray-500 text-sm">Jami</p>
@@ -28,26 +29,14 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
 
       {/* Add Buttons */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-        <button
-          onClick={() => setShowVoiceRecorder(true)}
-          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/25"
-        >
-          <Mic size={18} />
-          <span className="sm:inline">Ovoz</span>
+        <button onClick={() => setShowVoiceRecorder(true)} className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/25">
+          <Mic size={18} /> Ovoz
         </button>
-        <button
-          onClick={onAddBulk}
-          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium flex items-center justify-center gap-2 transition-all border border-gray-200"
-        >
-          <Plus size={18} />
-          <span>To'liq almashtirish</span>
+        <button onClick={onAddBulk} className="w-full sm:w-auto px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium flex items-center justify-center gap-2 transition-all border border-gray-200">
+          <Plus size={18} /> To'liq almashtirish
         </button>
-        <button
-          onClick={onAdd}
-          className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/25"
-        >
-          <Plus size={18} />
-          <span>Bitta shina</span>
+        <button onClick={onAdd} className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/25">
+          <Plus size={18} /> Bitta shina
         </button>
       </div>
 
@@ -55,75 +44,40 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
       {showVoiceRecorder && (
         <VoiceMaintenanceRecorder
           context="tire"
-          onResult={(voiceData) => {
-            setShowVoiceRecorder(false)
-            if (onVoiceAdd) {
-              onVoiceAdd(voiceData)
-            }
-          }}
+          onResult={(voiceData) => { setShowVoiceRecorder(false); if (onVoiceAdd) onVoiceAdd(voiceData) }}
           onClose={() => setShowVoiceRecorder(false)}
         />
       )}
 
-      {/* Tires Grid - Light Mode */}
+      {/* Tires List - faqat pozitsiya va holat */}
       {tires.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {tires.map(t => {
             const tireStatus = t.calculatedStatus || t.status || 'used'
             const statusColors = {
-              new: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', bar: 'bg-emerald-500' },
-              used: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', bar: 'bg-blue-500' },
-              worn: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', bar: 'bg-red-500' }
+              new: { bg: 'bg-emerald-50', text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' },
+              used: { bg: 'bg-blue-50', text: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
+              worn: { bg: 'bg-red-50', text: 'text-red-600', badge: 'bg-red-100 text-red-700' }
             }
             const colors = statusColors[tireStatus] || statusColors.used
             const status = TIRE_STATUS[tireStatus] || TIRE_STATUS.used
 
             return (
-              <div key={t._id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
+              <div
+                key={t._id}
+                onClick={() => setSelectedTire(t)}
+                className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center border ${colors.border}`}>
+                    <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center`}>
                       <Circle className={`w-5 h-5 ${colors.text}`} />
                     </div>
-                    <div>
-                      <p className="text-gray-900 font-semibold">{t.position}</p>
-                      <p className="text-gray-500 text-sm">{t.brand} {t.size}</p>
-                      {t.serialNumber && <p className="text-gray-400 text-xs">{t.serialNumber}</p>}
-                    </div>
+                    <p className="text-gray-900 font-bold text-lg">{t.position}</p>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${colors.bg} ${colors.text} border ${colors.border}`}>
+                  <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold ${colors.badge}`}>
                     {status.label}
                   </span>
-                </div>
-
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Qolgan masofa</span>
-                    <span className={`font-medium ${colors.text}`}>{fmt(t.remainingKm || 0)} km</span>
-                  </div>
-                  {t.installDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">O'rnatilgan</span>
-                      <span className="text-gray-900">{fmtDate(t.installDate)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
-                  <div
-                    className={`h-full ${colors.bar} rounded-full transition-all`}
-                    style={{ width: `${Math.max(0, Math.min(100, (t.remainingKm / (t.expectedLifeKm || 50000)) * 100))}%` }}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-1">
-                  <button onClick={() => onEdit(t)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-500 transition-colors">
-                    <Edit2 size={16} />
-                  </button>
-                  <button onClick={() => onDelete(t._id)} className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
                 </div>
               </div>
             )
@@ -135,6 +89,123 @@ export const TiresTab = memo(({ tires, onAdd, onAddBulk, onEdit, onDelete, onVoi
           <p className="text-gray-500">Shinalar qo'shilmagan</p>
         </div>
       )}
+
+      {/* Tire Detail Modal */}
+      {selectedTire && (
+        <TireDetailModal
+          tire={selectedTire}
+          onClose={() => setSelectedTire(null)}
+          onEdit={() => { setSelectedTire(null); onEdit(selectedTire) }}
+          onDelete={() => { setSelectedTire(null); onDelete(selectedTire._id) }}
+        />
+      )}
+    </div>
+  )
+})
+
+// Tire Detail Modal
+const TireDetailModal = memo(({ tire, onClose, onEdit, onDelete }) => {
+  const tireStatus = tire.calculatedStatus || tire.status || 'used'
+  const statusColors = {
+    new: { bg: 'bg-emerald-50', text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' },
+    used: { bg: 'bg-blue-50', text: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
+    worn: { bg: 'bg-red-50', text: 'text-red-600', badge: 'bg-red-100 text-red-700' }
+  }
+  const colors = statusColors[tireStatus] || statusColors.used
+  const status = TIRE_STATUS[tireStatus] || TIRE_STATUS.used
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center`}>
+              <Circle className={`w-5 h-5 ${colors.text}`} />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">{tire.position}</h3>
+              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${colors.badge}`}>{status.label}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X size={20} className="text-gray-400" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-4">
+          {/* Progress */}
+          <div className={`${colors.bg} rounded-xl p-4`}>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-600">Qolgan masofa</span>
+              <span className={`font-bold ${colors.text}`}>{fmt(tire.remainingKm || 0)} km</span>
+            </div>
+            <div className="h-3 bg-white rounded-full overflow-hidden">
+              <div
+                className={`h-full ${tireStatus === 'new' ? 'bg-emerald-500' : tireStatus === 'worn' ? 'bg-red-500' : 'bg-blue-500'} rounded-full`}
+                style={{ width: `${Math.max(5, Math.min(100, (tire.remainingKm / (tire.expectedLifeKm || 50000)) * 100))}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Ma'lumotlar */}
+          <div className="space-y-3">
+            {tire.brand && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Brend</span>
+                <span className="font-bold text-gray-900">{tire.brand}</span>
+              </div>
+            )}
+            {tire.size && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">O'lcham</span>
+                <span className="font-bold text-gray-900">{tire.size}</span>
+              </div>
+            )}
+            {tire.serialNumber && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Seriya raqami</span>
+                <span className="font-bold text-gray-900">{tire.serialNumber}</span>
+              </div>
+            )}
+            {tire.installDate && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">O'rnatilgan sana</span>
+                <span className="font-bold text-gray-900">{fmtDate(tire.installDate)}</span>
+              </div>
+            )}
+            {tire.installOdometer > 0 && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">O'rnatilgan km</span>
+                <span className="font-bold text-gray-900">{fmt(tire.installOdometer)} km</span>
+              </div>
+            )}
+            {tire.expectedLifeKm > 0 && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Kutilgan umr</span>
+                <span className="font-bold text-gray-900">{fmt(tire.expectedLifeKm)} km</span>
+              </div>
+            )}
+            {tire.cost > 0 && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Narxi</span>
+                <span className="font-bold text-red-500">{fmt(tire.cost)} so'm</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 p-4 border-t border-gray-100">
+          <button onClick={onEdit} className="flex-1 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+            <Edit2 size={16} /> Tahrirlash
+          </button>
+          <button onClick={onDelete} className="flex-1 py-2.5 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+            <Trash2 size={16} /> O'chirish
+          </button>
+        </div>
+      </div>
     </div>
   )
 })

@@ -19,11 +19,19 @@ out/
 apps/api/.env
 apps/api/.env.production
 apps/web/.env
+apps/mobile/.env
 
 # Secret files
 token
 *.key
 *.pem
+*.secret
+
+# Kiro IDE
+.kiro/
+
+# Nested repo (agar mavjud bo'lsa)
+Avtojon.uz/
 
 # Logs
 *.log

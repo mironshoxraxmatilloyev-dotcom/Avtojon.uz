@@ -406,17 +406,6 @@ export default function FleetDashboard() {
         </div>
       </nav>
 
-      {/* FAB for mobile */}
-      {activeTab === 'home' && (
-        <button
-          onClick={() => openModal()}
-          className="lg:hidden fixed right-4 w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-xl shadow-indigo-500/40 flex items-center justify-center text-white z-40 active:scale-95 transition-transform"
-          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <Plus size={24} strokeWidth={2.5} />
-        </button>
-      )}
-
       {/* Modals */}
       {showModal && <VehicleModal form={form} setForm={setForm} onSubmit={handleSubmit} onClose={() => setShowModal(false)} isEdit={!!editVehicle} />}
       {showVoiceModal && <VoiceVehicleCreator onResult={handleVoiceVehicle} onClose={() => setShowVoiceModal(false)} />}
@@ -448,12 +437,11 @@ const NavItem = ({ icon: Icon, label, active, onClick, badge }) => (
 const BottomNavItem = ({ icon: Icon, label, active, onClick, badge, isSpecial }) => (
   <button onClick={onClick} className="flex flex-col items-center justify-center gap-1 relative">
     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-      isSpecial ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30' :
       active ? 'bg-indigo-500 shadow-lg shadow-indigo-500/30' : ''
     }`}>
-      <Icon size={20} className={isSpecial || active ? 'text-white' : 'text-slate-400'} strokeWidth={active || isSpecial ? 2.5 : 1.5} />
+      <Icon size={20} className={active ? 'text-white' : 'text-slate-400'} strokeWidth={active ? 2.5 : 1.5} />
     </div>
-    <span className={`text-[10px] font-medium ${isSpecial ? 'text-violet-600' : active ? 'text-indigo-600' : 'text-slate-400'}`}>
+    <span className={`text-[10px] font-medium ${active ? 'text-indigo-600' : 'text-slate-400'}`}>
       {label}
     </span>
     {badge > 0 && (

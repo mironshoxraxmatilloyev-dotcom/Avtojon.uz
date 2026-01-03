@@ -82,10 +82,15 @@ const ServiceLogSchema = new mongoose.Schema({
   type: { 
     type: String, 
     required: true,
-    enum: ['TO-1', 'TO-2', 'repair', 'diagnostic', 'air_filter', 'fuel_filter', 'brake', 'suspension', 'electrical', 'body', 'other']
+    enum: [
+      // Inglizcha (eski)
+      'TO-1', 'TO-2', 'repair', 'diagnostic', 'air_filter', 'fuel_filter', 'brake', 'suspension', 'electrical', 'body', 'other',
+      // O'zbekcha (yangi)
+      'Moy almashtirish', 'Tormoz', 'Shina', 'Dvigatel', 'Uzatmalar qutisi', 'Elektrika', 'Kuzov', 'Boshqa'
+    ]
   },
   date: { type: Date, default: Date.now },
-  odometer: { type: Number, required: true },
+  odometer: { type: Number },
   cost: { type: Number, required: true },
   laborCost: { type: Number, default: 0 }, // ish haqi
   partsCost: { type: Number, default: 0 }, // ehtiyot qismlar

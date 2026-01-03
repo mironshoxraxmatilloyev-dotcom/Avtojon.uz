@@ -1,212 +1,99 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, ScrollView, Image, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import { useAuth } from '../store/authStore';
+import { useAuthStore } from '../store/authStore';
+import { COLORS } from '../constants/theme';
 
-export default function LoginScreen({ navigation }: any) {
-  const { login } = useAuth();
-  const [phone, setPhone] = useState('');
+export default function LoginScreen() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const login = useAuthStore((s) => s.login);
 
   const handleLogin = async () => {
-    if (!phone || !password) {
-      Alert.alert('Xatolik', 'Telefon va parolni kiriting');
+    if (!username.trim() || !password) {
+      Alert.alert('Xatolik', 'Username va parolni kiriting');
       return;
     }
 
     setLoading(true);
-    const success = await login(phone, password);
+    const result = await login(username, password);
     setLoading(false);
 
-    if (!success) {
-      Alert.alert('Xatolik', 'Telefon yoki parol noto\'g\'ri');
+    if (!result.success) {
+      Alert.alert('Xatolik', result.message || 'Kirish xatosi');
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <LinearGradient
-        colors={['#4f46e5', '#7c3aed']}
-        style={styles.header}
-      >
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
-          <View style={styles.titleContainer}>
+          <Image source={require('../assets/logo.jpg')} style={styles.logo} />
+          <View style={styles.titleRow}>
             <Text style={styles.titleWhite}>avto</Text>
             <Text style={styles.titleYellow}>JON</Text>
           </View>
-          <Text style={styles.subtitle}>Yuk tashish biznesini osonlashtiring</Text>
+          <Text style={styles.subtitle}>Fleet Management Pro</Text>
         </View>
-      </LinearGradient>
 
-      <ScrollView style={styles.formContainer} contentContainerStyle={styles.formContent}>
-        <Text style={styles.welcomeText}>Xush kelibsiz!</Text>
-        <Text style={styles.descText}>Hisobingizga kiring</Text>
+        <View style={styles.form}>
+          <Text style={styles.welcomeText}>Xush kelibsiz!</Text>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Telefon raqam</Text>
+          <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            placeholder="+998 90 123 45 67"
-            placeholderTextColor="#94a3b8"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
+            placeholder="username"
+            placeholderTextColor={COLORS.textMuted}
+            value={username}
+            onChangeText={setUsername}
             autoCapitalize="none"
+            autoCorrect={false}
           />
-        </View>
 
-        <View style={styles.inputContainer}>
           <Text style={styles.label}>Parol</Text>
           <TextInput
             style={styles.input}
             placeholder="••••••••"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={COLORS.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Kirish</Text>
+            )}
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Kirish</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.registerLink}
-          onPress={() => navigation.navigate('Register')}
-        >
-          <Text style={styles.registerText}>
-            Hisobingiz yo'qmi? <Text style={styles.registerTextBold}>Ro'yxatdan o'ting</Text>
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  logoContainer: {
-    alignItems: 'center',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  titleWhite: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fff',
-  },
-  titleYellow: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fbbf24',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 8,
-  },
-  formContainer: {
-    flex: 1,
-  },
-  formContent: {
-    padding: 24,
-  },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  descText: {
-    fontSize: 16,
-    color: '#64748b',
-    marginBottom: 32,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#1e293b',
-  },
-  button: {
-    backgroundColor: '#4f46e5',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  registerLink: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  registerText: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  registerTextBold: {
-    color: '#4f46e5',
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: COLORS.primary },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  logoContainer: { alignItems: 'center', marginBottom: 40 },
+  logo: { width: 80, height: 80, borderRadius: 20, marginBottom: 16 },
+  titleRow: { flexDirection: 'row' },
+  titleWhite: { fontSize: 32, fontWeight: '700', color: '#fff' },
+  titleYellow: { fontSize: 32, fontWeight: '700', color: COLORS.secondary },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+  form: { backgroundColor: '#fff', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  welcomeText: { fontSize: 24, fontWeight: '700', color: COLORS.text, marginBottom: 24, textAlign: 'center' },
+  label: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8 },
+  input: { backgroundColor: COLORS.background, borderRadius: 12, padding: 16, fontSize: 16, color: COLORS.text, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border },
+  button: { backgroundColor: COLORS.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
+  buttonDisabled: { opacity: 0.7 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

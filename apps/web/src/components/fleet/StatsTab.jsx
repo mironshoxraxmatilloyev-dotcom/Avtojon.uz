@@ -119,12 +119,12 @@ export const StatsTab = memo(({ vehicles }) => {
               </button>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={chartData} layout="vertical">
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
               <XAxis type="number" stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-              <YAxis type="category" dataKey="name" stroke="#64748b" fontSize={10} width={60} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="name" stroke="#64748b" fontSize={11} width={75} tickLine={false} axisLine={false} tick={{ fill: '#334155', fontWeight: 500 }} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="foyda" radius={[0, 4, 4, 0]} barSize={18}>
+              <Bar dataKey="foyda" radius={[0, 4, 4, 0]} barSize={16}>
                 {chartData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Bar>
             </BarChart>
