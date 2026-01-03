@@ -101,14 +101,12 @@ export default function Landing() {
                     Bepul boshlash
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <a
-                    href="https://youtube.com/@avtojon"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 transition-all w-full sm:w-auto backdrop-blur-sm"
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 transition-all w-full sm:w-auto backdrop-blur-sm cursor-default"
                   >
                     <Play size={20} /> Video qo'llanma
-                  </a>
+                  </button>
                 </div>
 
                 {/* Download App - Android va iOS - yonma-yon chiroyli */}
