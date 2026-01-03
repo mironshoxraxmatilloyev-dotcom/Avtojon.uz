@@ -299,7 +299,7 @@ export default function FleetDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="lg:ml-64 pb-20 lg:pb-6">
+      <main className="lg:ml-64 pb-28 lg:pb-6">
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 safe-top">
           <div className="px-4 py-3">

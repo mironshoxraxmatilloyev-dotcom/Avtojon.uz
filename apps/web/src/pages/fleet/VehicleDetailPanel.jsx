@@ -761,10 +761,10 @@ export default function VehicleDetailPanel() {
 
       {/* Main Content - scrollable with bottom padding for nav */}
       <main 
-        className="lg:ml-[260px] overflow-y-auto"
+        className="lg:ml-[260px] overflow-y-auto pb-24 lg:pb-8"
         style={{ 
           height: '100vh', 
-          paddingBottom: '100px',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
           WebkitOverflowScrolling: 'touch'
         }}
       >
@@ -812,7 +812,7 @@ export default function VehicleDetailPanel() {
 
       {/* PRO Bottom Navigation - Mobile - Instagram Style Fixed */}
       <nav 
-        className="lg:hidden bg-white border-t border-slate-200/80"
+        className="lg:hidden bg-white border-t border-slate-200/80 safe-bottom"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -827,7 +827,7 @@ export default function VehicleDetailPanel() {
           touchAction: 'none'
         }}
       >
-        <div className="flex items-center justify-around h-16 px-1 pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex items-center justify-around h-16 px-1">
           {NAV_ITEMS.map(item => (
             <button key={item.id} onClick={() => { setActiveTab(item.id); setModal(null); setEditId(null) }}
               className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full">
