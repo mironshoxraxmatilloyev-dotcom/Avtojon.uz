@@ -299,7 +299,10 @@ export default function FleetDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="lg:ml-64 pb-28 lg:pb-6">
+      <main 
+        className="lg:ml-64 lg:pb-6"
+        style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 safe-top">
           <div className="px-4 py-3">
@@ -407,7 +410,8 @@ export default function FleetDashboard() {
       {activeTab === 'home' && (
         <button
           onClick={() => openModal()}
-          className="lg:hidden fixed right-4 bottom-20 w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-xl shadow-indigo-500/40 flex items-center justify-center text-white z-40 active:scale-95 transition-transform"
+          className="lg:hidden fixed right-4 w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-xl shadow-indigo-500/40 flex items-center justify-center text-white z-40 active:scale-95 transition-transform"
+          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Plus size={24} strokeWidth={2.5} />
         </button>

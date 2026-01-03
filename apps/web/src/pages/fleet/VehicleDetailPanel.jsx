@@ -761,38 +761,38 @@ export default function VehicleDetailPanel() {
 
       {/* Main Content - scrollable with bottom padding for nav */}
       <main 
-        className="lg:ml-[260px] overflow-y-auto pb-24 lg:pb-8"
+        className="lg:ml-[260px] overflow-y-auto lg:pb-8"
         style={{ 
           height: '100vh', 
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
           WebkitOverflowScrolling: 'touch'
         }}
       >
         {/* PRO Header - Full Width */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
-          <div className="px-4 lg:px-6 xl:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/fleet')} className="lg:hidden p-2 text-slate-500 hover:text-slate-900 -ml-2">
-                  <ArrowLeft size={22} />
+          <div className="px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                <button onClick={() => navigate('/fleet')} className="lg:hidden p-1.5 sm:p-2 text-slate-500 hover:text-slate-900 flex-shrink-0">
+                  <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
                 </button>
-                <div className="lg:hidden w-11 h-11 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                  <Truck className="w-5 h-5 text-white" />
+                <div className="lg:hidden w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25 flex-shrink-0">
+                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">{vehicle.plateNumber}</h1>
-                  <p className="text-sm text-slate-500">{vehicle.brand} {vehicle.model}</p>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base sm:text-xl font-bold text-slate-900 truncate">{vehicle.plateNumber}</h1>
+                  <p className="text-xs sm:text-sm text-slate-500 truncate">{vehicle.brand} {vehicle.model}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                 {subscription?.plan === 'trial' && (
-                  <button onClick={() => setShowUpgradeModal(true)} className="lg:hidden flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold border border-amber-200">
-                    <Crown size={14} />
-                    {timeLeft}
+                  <button onClick={() => setShowUpgradeModal(true)} className="lg:hidden flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-amber-50 text-amber-700 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold border border-amber-200">
+                    <Crown size={12} className="sm:w-[14px] sm:h-[14px]" />
+                    <span className="whitespace-nowrap">{timeLeft}</span>
                   </button>
                 )}
-                <button onClick={loadData} disabled={refreshing} className="p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all">
-                  <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+                <button onClick={loadData} disabled={refreshing} className="p-2 sm:p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg sm:rounded-xl transition-all">
+                  <RefreshCw size={18} className={`sm:w-5 sm:h-5 ${refreshing ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>
@@ -801,7 +801,7 @@ export default function VehicleDetailPanel() {
 
         {/* Content - Full Width */}
         <div className="p-4 lg:p-6 xl:p-8 w-full">
-          {activeTab === 'summary' && <SummaryTab vehicle={vehicle} stats={stats} fuelData={fuelData} oilData={oilData} tires={tires} services={services} />}
+          {activeTab === 'summary' && <SummaryTab vehicle={vehicle} />}
           {activeTab === 'income' && <IncomeTab data={incomeData} onAdd={() => openModal('income')} onEdit={(item) => openModal('income', item)} onDelete={(i) => handleDelete('income', i)} onVoiceAdd={handleVoiceIncome} />}
           {activeTab === 'fuel' && <FuelTab data={fuelData} onAdd={() => openModal('fuel')} onEdit={(item) => openModal('fuel', item)} onDelete={(i) => handleDelete('fuel', i)} vehicleId={id} onVoiceAdd={handleVoiceFuel} vehicle={vehicle} />}
           {activeTab === 'oil' && <OilTab data={oilData} onAdd={() => openModal('oil')} onEdit={(item) => openModal('oil', item)} onDelete={(i) => handleDelete('oil', i)} onVoiceAdd={handleVoiceOil} />}

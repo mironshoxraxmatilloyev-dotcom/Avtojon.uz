@@ -6,7 +6,7 @@ import {
 import { fmt } from './constants'
 import api from '../../../services/api'
 
-export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
+export const SummaryTab = memo(({ vehicle }) => {
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('30')
@@ -160,86 +160,6 @@ export const SummaryTab = memo(({ vehicle, oilData, tires }) => {
         </div>
       </div>
 
-      {/* Oil & Tires Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Oil Status */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                <Droplets className="w-5 h-5 text-amber-600" />
-              </div>
-              Moy holati
-            </h3>
-            <StatusBadge status={analytics?.oilStatus?.status || oilData.status} />
-          </div>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500 text-base">Qolgan masofa</span>
-              <span className={`font-bold text-xl ${
-                (analytics?.oilStatus?.remainingKm || oilData.remainingKm) <= 1000 ? 'text-red-600' :
-                (analytics?.oilStatus?.remainingKm || oilData.remainingKm) <= 2000 ? 'text-amber-600' : 'text-emerald-600'
-              }`}>
-                {fmt(analytics?.oilStatus?.remainingKm || oilData.remainingKm)} km
-              </span>
-            </div>
-            {/* Progress bar */}
-            <div>
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full rounded-full transition-all ${
-                    (analytics?.oilStatus?.remainingKm || oilData.remainingKm) <= 1000 ? 'bg-red-500' :
-                    (analytics?.oilStatus?.remainingKm || oilData.remainingKm) <= 2000 ? 'bg-amber-500' : 'bg-emerald-500'
-                  }`}
-                  style={{ 
-                    width: `${Math.max(5, Math.min(100, ((analytics?.oilStatus?.remainingKm || oilData.remainingKm) / (vehicle.oilChangeIntervalKm || 15000)) * 100))}%` 
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tires Status */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-              <Circle className="w-5 h-5 text-purple-600" />
-            </div>
-            Shinalar holati
-          </h3>
-          {analytics?.tiresStatus ? (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-base">Jami</span>
-                <span className="text-gray-900 font-bold text-xl">{analytics.tiresStatus.total} ta</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-base">Diqqat talab</span>
-                <span className={`font-bold text-xl ${analytics.tiresStatus.needAttention > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                  {analytics.tiresStatus.needAttention} ta
-                </span>
-              </div>
-            </div>
-          ) : tires.length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-base">Jami</span>
-                <span className="text-gray-900 font-bold text-xl">{tires.length} ta</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-base">Eskirgan</span>
-                <span className="text-red-600 font-bold text-xl">
-                  {tires.filter(t => (t.calculatedStatus || t.status) === 'worn').length} ta
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-400 text-base">Shina qo'shilmagan</p>
-          )}
-        </div>
-      </div>
-
     </div>
   )
 })
@@ -290,22 +210,5 @@ const ExpenseBar = memo(({ label, data, color, icon: Icon }) => {
         />
       </div>
     </div>
-  )
-})
-
-const StatusBadge = memo(({ status }) => {
-  const config = {
-    ok: { label: 'Yaxshi', bg: 'bg-emerald-100', text: 'text-emerald-700' },
-    warning: { label: 'Yaqinlashmoqda', bg: 'bg-amber-100', text: 'text-amber-700' },
-    critical: { label: 'Kritik', bg: 'bg-red-100', text: 'text-red-700' },
-    overdue: { label: 'Muddati o\'tgan', bg: 'bg-red-100', text: 'text-red-700' },
-    approaching: { label: 'Yaqinlashmoqda', bg: 'bg-amber-100', text: 'text-amber-700' }
-  }
-  const { label, bg, text } = config[status] || config.ok
-  
-  return (
-    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${bg} ${text}`}>
-      {label}
-    </span>
   )
 })
