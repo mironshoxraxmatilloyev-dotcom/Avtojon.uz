@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAlert } from '../../components/ui'
 import api from '../../services/api'
-import { Plus, Truck, Home, BarChart3, AlertTriangle, Crown, Sparkles, Mic } from 'lucide-react'
+import { Plus, Home, BarChart3, AlertTriangle, Crown, Sparkles, Mic, User, Settings, LogOut } from 'lucide-react'
 import { HomeTab, StatsTab, ServiceTab, VehicleModal, UpgradeModal, ExpiredView } from '../../components/fleet'
 import VoiceVehicleCreator from '../../components/fleet/VoiceVehicleCreator'
 
@@ -33,7 +33,7 @@ const clearSubCache = () => {
 }
 
 export default function FleetDashboard() {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
   const isMounted = useRef(true)
@@ -48,6 +48,7 @@ export default function FleetDashboard() {
   const [subscription, setSubscription] = useState(() => getCache(CACHE_SUB_KEY))
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [timeLeft, setTimeLeft] = useState('')
   const [fleetAnalytics, setFleetAnalytics] = useState(null)
 
@@ -104,7 +105,6 @@ export default function FleetDashboard() {
 
   useEffect(() => { fetchVehicles() }, [])
 
-  // Fleet analytics yuklash
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
@@ -216,10 +216,8 @@ export default function FleetDashboard() {
     api.delete(`/vehicles/${id}`).catch(() => fetchVehicles())
   }, [fetchVehicles, alert])
 
-  // Ovoz bilan mashina qo'shish
   const handleVoiceVehicle = useCallback(async (vehicleData) => {
     setShowVoiceModal(false)
-    
     try {
       const res = await api.post('/vehicles', vehicleData)
       if (res.data?.data?._id) {
@@ -236,219 +234,147 @@ export default function FleetDashboard() {
     }
   }, [fetchVehicles, alert])
 
-  const navItems = [
-    { id: 'home', icon: Home, label: 'Avtopark' },
-    { id: 'stats', icon: BarChart3, label: 'Statistika' },
-    { id: 'service', icon: AlertTriangle, label: 'Diqqat' }
-  ]
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   if (subscription?.isExpired) {
     return <ExpiredView showModal={showUpgradeModal} setShowModal={setShowUpgradeModal} />
   }
 
   return (
-    <div className="h-screen bg-[#f8fafc] flex flex-col lg:flex-row" style={{ overflow: 'hidden', position: 'fixed', inset: 0 }}>
-      {/* PRO Sidebar - Desktop - Fixed Height No Scroll */}
-      <aside 
-        className="hidden lg:flex flex-col w-[280px] bg-white border-r border-slate-200/60 flex-shrink-0"
-        style={{ 
-          position: 'fixed', 
-          left: 0, 
-          top: 0, 
-          bottom: 0,
-          height: '100vh',
-          overflow: 'hidden',
-          touchAction: 'none',
-          overscrollBehavior: 'none'
-        }}
-      >
-        {/* Logo Section */}
-        <div className="p-5 border-b border-slate-100 flex-shrink-0">
+    <div className="min-h-screen bg-slate-50">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 fixed inset-y-0 left-0 z-40">
+        {/* Logo */}
+        <div className="p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <img 
-                src="/main_logo.jpg" 
-                alt="Avtojon Logo" 
-                className="w-11 h-11 rounded-xl object-cover shadow-lg shadow-blue-500/30"
-              />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-md flex items-center justify-center shadow-md">
-                <Sparkles className="w-2.5 h-2.5 text-white" />
-              </div>
-            </div>
+            <img src="/main_logo.jpg" alt="Logo" className="w-10 h-10 rounded-xl shadow-lg" />
             <div>
               <h1 className="text-lg font-bold">
-                <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">avto</span>
+                <span className="text-slate-800">avto</span>
                 <span className="text-amber-500">JON</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium">Fleet Management Pro</p>
+              <p className="text-[10px] text-slate-400">Fleet Management</p>
             </div>
           </div>
         </div>
 
-        {/* User Card */}
-        <div className="px-4 py-3 flex-shrink-0">
-          <div className="p-3 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl border border-slate-200/50">
+        {/* User */}
+        <div className="p-3">
+          <div className="p-3 bg-slate-50 rounded-xl">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/25">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 {user?.fullName?.charAt(0) || 'U'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800 truncate">{user?.fullName || 'Foydalanuvchi'}</p>
-                <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@avtopark.uz'}</p>
+                <p className="text-[10px] text-slate-400">{stats.total} ta mashina</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Navigation - Flex grow but no scroll */}
-        <nav className="flex-1 px-4 py-2 flex-shrink-0">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Asosiy</p>
-          <div className="space-y-1">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all duration-200 group ${
-                  activeTab === item.id
-                    ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/30'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                  activeTab === item.id 
-                    ? 'bg-white/20' 
-                    : 'bg-slate-100 group-hover:bg-slate-200'
-                }`}>
-                  <item.icon size={16} />
-                </div>
-                <span className="text-sm">{item.label}</span>
-                {item.id === 'service' && stats.attention > 0 && (
-                  <span className={`ml-auto px-2 py-0.5 rounded-md text-xs font-bold ${
-                    activeTab === item.id 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-red-100 text-red-600'
-                  }`}>
-                    {stats.attention}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+        {/* Nav */}
+        <nav className="flex-1 p-3 space-y-1">
+          <NavItem icon={Home} label="Avtopark" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+          <NavItem icon={BarChart3} label="Statistika" active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
+          <NavItem icon={AlertTriangle} label="Diqqat" active={activeTab === 'service'} onClick={() => setActiveTab('service')} badge={stats.attention} />
         </nav>
 
-        {/* Subscription Card - Compact */}
-        <div className="p-3 border-t border-slate-100 flex-shrink-0">
-          <div className={`p-3 rounded-xl border ${
-            subscription?.plan === 'pro' 
-              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200/50' 
-              : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200/50'
-          }`}>
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                subscription?.plan === 'pro' 
-                  ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30' 
-                  : 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-md shadow-amber-500/30'
-              }`}>
-                <Crown className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-800">
-                  {subscription?.plan === 'pro' ? 'Pro Tarif' : 'Trial'}
-                </p>
-                <p className="text-[10px] text-slate-500">{timeLeft} qoldi</p>
-              </div>
+        {/* Subscription */}
+        <div className="p-3 border-t border-slate-100">
+          <div className={`p-3 rounded-xl ${subscription?.plan === 'pro' ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className={`w-4 h-4 ${subscription?.plan === 'pro' ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <span className="text-xs font-bold text-slate-700">{subscription?.plan === 'pro' ? 'Pro' : 'Trial'}</span>
+              <span className="text-[10px] text-slate-500 ml-auto">{timeLeft}</span>
             </div>
-            <button 
-              onClick={() => setShowUpgradeModal(true)}
-              className={`w-full py-2 rounded-lg text-xs font-semibold transition-all ${
-                subscription?.plan === 'pro'
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/25'
-                  : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/25'
-              }`}
-            >
+            <button onClick={() => setShowUpgradeModal(true)} className={`w-full py-2 rounded-lg text-xs font-semibold text-white ${subscription?.plan === 'pro' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
               {subscription?.plan === 'pro' ? 'Uzaytirish' : 'Pro ga o\'tish'}
             </button>
           </div>
         </div>
-
       </aside>
 
-      {/* Main Content */}
-      <main 
-        className="flex-1 overflow-y-auto lg:ml-[280px]"
-        style={{ 
-          height: '100%',
-          paddingBottom: '100px',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        {/* PRO Header - Status bar safe area */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 pt-[env(safe-area-inset-top,24px)] lg:pt-0">
-          <div className="px-4 lg:px-6 py-4">
+      {/* Main */}
+      <main className="lg:ml-64 pb-20 lg:pb-6">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 safe-top">
+          <div className="px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {/* Mobile Logo */}
-                <div className="lg:hidden relative">
-                  <img 
-                    src="/main_logo.jpg" 
-                    alt="Avtojon Logo" 
-                    className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-blue-500/25"
-                  />
-                </div>
+                <img src="/main_logo.jpg" alt="Logo" className="w-9 h-9 rounded-xl shadow" />
                 <div>
-                  <h2 className="text-lg lg:text-xl font-bold text-slate-900">
-                    <span className="lg:hidden flex items-baseline"><span>avto</span><span className="text-amber-500">JON</span></span>
-                    <span className="hidden lg:inline">{navItems.find(n => n.id === activeTab)?.label}</span>
-                  </h2>
-                  <p className="text-xs lg:text-sm text-slate-500">
-                    {stats.total} ta mashina
-                  </p>
+                  <h1 className="text-base font-bold">
+                    <span className="text-slate-800">avto</span>
+                    <span className="text-amber-500">JON</span>
+                  </h1>
+                  <p className="text-[10px] text-slate-400">{stats.total} ta mashina</p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
-                {/* Mobile Subscription */}
-                <button 
-                  onClick={() => setShowUpgradeModal(true)}
-                  className={`lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${
-                    subscription?.plan === 'pro'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200'
-                  }`}
-                >
+                <button onClick={() => setShowUpgradeModal(true)} className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold ${subscription?.plan === 'pro' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                   <Crown size={12} />
                   {timeLeft}
                 </button>
-                
-                {/* Add Button - faqat desktop da ovoz tugmasi */}
-                {activeTab === 'home' && (
-                  <>
-                    <button
-                      onClick={() => setShowVoiceModal(true)}
-                      className="hidden lg:flex items-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-violet-500/30 active:scale-[0.98]"
-                    >
-                      <Mic size={16} strokeWidth={2.5} />
-                    </button>
-                    <button
-                      onClick={() => openModal()}
-                      className="flex items-center gap-1.5 px-3 lg:px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 rounded-xl text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-500/30 active:scale-[0.98]"
-                    >
-                      <Plus size={16} strokeWidth={2.5} />
-                      <span className="hidden sm:inline">Mashina qo'shish</span>
-                    </button>
-                  </>
-                )}
+                <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">
+                  {user?.fullName?.charAt(0) || 'U'}
+                </button>
               </div>
+            </div>
+          </div>
+
+          {/* Profile Dropdown */}
+          {showProfileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              <div className="absolute right-4 top-14 z-50 bg-white rounded-xl shadow-xl border border-slate-200 py-2 min-w-[180px]">
+                <div className="px-3 py-2 border-b border-slate-100">
+                  <p className="font-semibold text-slate-800 text-sm">{user?.fullName}</p>
+                  <p className="text-[10px] text-slate-400">{user?.phone}</p>
+                </div>
+                <button onClick={handleLogout} className="w-full px-3 py-2.5 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm">
+                  <LogOut size={16} />
+                  Chiqish
+                </button>
+              </div>
+            </>
+          )}
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden lg:block sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">
+                {activeTab === 'home' ? 'Avtopark' : activeTab === 'stats' ? 'Statistika' : 'Diqqat talab'}
+              </h2>
+              <p className="text-sm text-slate-500">{stats.total} ta mashina</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {activeTab === 'home' && (
+                <>
+                  <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 rounded-xl text-white font-semibold text-sm shadow-lg shadow-violet-500/25">
+                    <Mic size={18} />
+                    Ovoz
+                  </button>
+                  <button onClick={() => openModal()} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white font-semibold text-sm shadow-lg shadow-indigo-500/25">
+                    <Plus size={18} />
+                    Qo'shish
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Content Area - Bottom nav uchun padding */}
-        <div className="p-4 lg:p-6 lg:pb-6">
+        {/* Content */}
+        <div className="p-4 lg:p-6">
           {activeTab === 'home' && (
             <HomeTab
               vehicles={filteredVehicles}
-              stats={stats}
               search={search}
               setSearch={setSearch}
               onVehicleClick={(v) => navigate(`/fleet/vehicle/${v._id}`)}
@@ -467,134 +393,69 @@ export default function FleetDashboard() {
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile - FIXED - NO SCROLL */}
-      <nav 
-        className="lg:hidden bg-white border-t border-slate-200/80" 
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          zIndex: 99999,
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          overflow: 'visible',
-          touchAction: 'none'
-        }}
-      >
-        <div className="grid grid-cols-4 h-16 pb-[env(safe-area-inset-bottom,0px)]">
-          {/* Avtopark */}
-          <button
-            onClick={() => { setActiveTab('home'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
-            className="flex flex-col items-center justify-center gap-0.5"
-          >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-              activeTab === 'home' 
-                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
-                : ''
-            }`}>
-              <Home 
-                size={22} 
-                className={activeTab === 'home' ? 'text-white' : 'text-slate-500'}
-                strokeWidth={activeTab === 'home' ? 2.5 : 1.5}
-              />
-            </div>
-            <span className={`text-[10px] font-semibold ${
-              activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400'
-            }`}>
-              Avtopark
-            </span>
-          </button>
-
-          {/* Statistika */}
-          <button
-            onClick={() => { setActiveTab('stats'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
-            className="flex flex-col items-center justify-center gap-0.5"
-          >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-              activeTab === 'stats' 
-                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
-                : ''
-            }`}>
-              <BarChart3 
-                size={22} 
-                className={activeTab === 'stats' ? 'text-white' : 'text-slate-500'}
-                strokeWidth={activeTab === 'stats' ? 2.5 : 1.5}
-              />
-            </div>
-            <span className={`text-[10px] font-semibold ${
-              activeTab === 'stats' ? 'text-indigo-600' : 'text-slate-400'
-            }`}>
-              Statistika
-            </span>
-          </button>
-
-          {/* Ovoz */}
-          <button
-            onClick={() => setShowVoiceModal(true)}
-            className="flex flex-col items-center justify-center gap-0.5"
-          >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30">
-              <Mic size={22} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-[10px] font-semibold text-violet-600">Ovoz</span>
-          </button>
-
-          {/* Diqqat */}
-          <button
-            onClick={() => { setActiveTab('service'); setShowModal(false); setShowVoiceModal(false); setShowUpgradeModal(false); setShowMenu(null) }}
-            className="flex flex-col items-center justify-center gap-0.5 relative"
-          >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-              activeTab === 'service' 
-                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-lg shadow-indigo-500/30' 
-                : ''
-            }`}>
-              <AlertTriangle 
-                size={22} 
-                className={activeTab === 'service' ? 'text-white' : 'text-slate-500'}
-                strokeWidth={activeTab === 'service' ? 2.5 : 1.5}
-              />
-            </div>
-            <span className={`text-[10px] font-semibold ${
-              activeTab === 'service' ? 'text-indigo-600' : 'text-slate-400'
-            }`}>
-              Diqqat
-            </span>
-            {stats.attention > 0 && (
-              <span className="absolute top-2 right-4 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">
-                {stats.attention}
-              </span>
-            )}
-          </button>
+      {/* Mobile Bottom Nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 safe-bottom">
+        <div className="grid grid-cols-4 h-16">
+          <BottomNavItem icon={Home} label="Avtopark" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+          <BottomNavItem icon={BarChart3} label="Statistika" active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
+          <BottomNavItem icon={Mic} label="Ovoz" isSpecial onClick={() => setShowVoiceModal(true)} />
+          <BottomNavItem icon={AlertTriangle} label="Diqqat" active={activeTab === 'service'} onClick={() => setActiveTab('service')} badge={stats.attention} />
         </div>
       </nav>
 
+      {/* FAB for mobile */}
+      {activeTab === 'home' && (
+        <button
+          onClick={() => openModal()}
+          className="lg:hidden fixed right-4 bottom-20 w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-xl shadow-indigo-500/40 flex items-center justify-center text-white z-40 active:scale-95 transition-transform"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
       {/* Modals */}
-      {showModal && (
-        <VehicleModal
-          form={form}
-          setForm={setForm}
-          onSubmit={handleSubmit}
-          onClose={() => setShowModal(false)}
-          isEdit={!!editVehicle}
-        />
-      )}
-      {showVoiceModal && (
-        <VoiceVehicleCreator
-          onResult={handleVoiceVehicle}
-          onClose={() => setShowVoiceModal(false)}
-        />
-      )}
-      {showUpgradeModal && (
-        <UpgradeModal
-          onClose={() => setShowUpgradeModal(false)}
-          canClose={!subscription?.isExpired}
-        />
-      )}
+      {showModal && <VehicleModal form={form} setForm={setForm} onSubmit={handleSubmit} onClose={() => setShowModal(false)} isEdit={!!editVehicle} />}
+      {showVoiceModal && <VoiceVehicleCreator onResult={handleVoiceVehicle} onClose={() => setShowVoiceModal(false)} />}
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} canClose={!subscription?.isExpired} />}
       {showMenu && <div className="fixed inset-0 z-30" onClick={() => setShowMenu(null)} />}
     </div>
   )
 }
+
+// Nav Item Component
+const NavItem = ({ icon: Icon, label, active, onClick, badge }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
+      active ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-600 hover:bg-slate-100'
+    }`}
+  >
+    <Icon size={18} />
+    <span className="text-sm">{label}</span>
+    {badge > 0 && (
+      <span className={`ml-auto px-2 py-0.5 rounded-md text-xs font-bold ${active ? 'bg-white/20' : 'bg-red-100 text-red-600'}`}>
+        {badge}
+      </span>
+    )}
+  </button>
+)
+
+// Bottom Nav Item
+const BottomNavItem = ({ icon: Icon, label, active, onClick, badge, isSpecial }) => (
+  <button onClick={onClick} className="flex flex-col items-center justify-center gap-1 relative">
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+      isSpecial ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30' :
+      active ? 'bg-indigo-500 shadow-lg shadow-indigo-500/30' : ''
+    }`}>
+      <Icon size={20} className={isSpecial || active ? 'text-white' : 'text-slate-400'} strokeWidth={active || isSpecial ? 2.5 : 1.5} />
+    </div>
+    <span className={`text-[10px] font-medium ${isSpecial ? 'text-violet-600' : active ? 'text-indigo-600' : 'text-slate-400'}`}>
+      {label}
+    </span>
+    {badge > 0 && (
+      <span className="absolute top-0 right-4 min-w-[16px] h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+        {badge}
+      </span>
+    )}
+  </button>
+)
