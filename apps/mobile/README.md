@@ -1,6 +1,22 @@
-# Avtojon Mobile App
+# avtoJON Mobile App
 
-React Native da qurilgan Avtojon Fleet Management ilovasi.
+React Native da qurilgan avtoJON Fleet Management ilovasi.
+
+## Xususiyatlar
+
+- Login sahifasi (app ochilganda darhol login)
+- Fleet Dashboard - barcha mashinalar ro'yxati
+- Statistika - moliyaviy tahlil va mashinalar reytingi
+- Diqqat - ogohlantirishlar va xizmat kerak bo'lgan mashinalar
+- Profil - foydalanuvchi ma'lumotlari va sozlamalar
+- Mashina qo'shish
+- Mashina tafsilotlari:
+  - Umumiy ko'rinish (daromad/xarajat)
+  - Daromad qo'shish
+  - Yoqilg'i qo'shish
+  - Moy almashtirish
+  - Shina qo'shish
+  - Xizmat qo'shish
 
 ## O'rnatish
 
@@ -12,15 +28,18 @@ npm install
 ## Ishga tushirish
 
 ### Android
-```bash
-# Metro bundler
-npm start
 
-# Boshqa terminalda
+```bash
 npm run android
 ```
 
-### APK yaratish
+### iOS
+
+```bash
+npm run ios
+```
+
+## APK yaratish
 
 ```bash
 cd android
@@ -29,20 +48,34 @@ cd android
 
 APK fayl: `android/app/build/outputs/apk/release/app-release.apk`
 
-## Xususiyatlar
-
-- ✅ Login (username/parol)
-- ✅ Token AsyncStorage da saqlanadi (uzoq vaqt login qilmaslik)
-- ✅ Avtopark ro'yxati
-- ✅ Mashina qo'shish
-- ✅ Mashina tafsilotlari (Summary, Daromad, Yoqilg'i, Moy, Shina, Xizmat)
-- ✅ Moliyaviy analitika
-- ✅ Profil va chiqish
-
 ## Texnologiyalar
 
 - React Native 0.74
 - React Navigation 6
 - Zustand (state management)
-- Axios (API)
-- AsyncStorage (token saqlash)
+- Axios (API calls)
+- TypeScript
+
+## Struktura
+
+```
+src/
+├── components/
+│   └── Icons.tsx          # SVG iconlar
+├── constants/
+│   └── theme.ts           # Ranglar va konstantalar
+├── navigation/
+│   └── AppNavigator.tsx   # Navigation konfiguratsiyasi
+├── screens/
+│   ├── LoginScreen.tsx
+│   ├── FleetDashboardScreen.tsx
+│   ├── StatsScreen.tsx
+│   ├── AlertsScreen.tsx
+│   ├── ProfileScreen.tsx
+│   ├── VehicleDetailScreen.tsx
+│   └── AddVehicleScreen.tsx
+├── services/
+│   └── api.ts             # API konfiguratsiyasi
+└── store/
+    └── authStore.ts       # Auth state
+```

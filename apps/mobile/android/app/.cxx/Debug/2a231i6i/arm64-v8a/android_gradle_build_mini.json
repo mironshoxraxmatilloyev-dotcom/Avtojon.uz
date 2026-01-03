@@ -1,0 +1,182 @@
+{
+  "buildFiles": [
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/react-native-svg/android/src/main/jni/CMakeLists.txt",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/javohir/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/.cxx/Debug/2a231i6i/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/javohir/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/.cxx/Debug/2a231i6i/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
+      "artifactName": "react_codegen_safeareacontext",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_safeareacontext.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so"
+      ]
+    },
+    "react_codegen_rngesturehandler_codegen::@39f233abcd2c728bc6ec": {
+      "artifactName": "react_codegen_rngesturehandler_codegen",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rngesturehandler_codegen.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_imagemanager/libs/android.arm64-v8a/libreact_render_imagemanager.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_image/libs/android.arm64-v8a/librrc_image.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so"
+      ]
+    },
+    "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
+      "artifactName": "react_codegen_rnscreens",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnscreens.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so"
+      ]
+    },
+    "appmodules::@6890427a1f51a3e7e1df": {
+      "artifactName": "appmodules",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libappmodules.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/fabricjni/libs/android.arm64-v8a/libfabricjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_newarchdefaults/libs/android.arm64-v8a/libreact_newarchdefaults.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_cxxreactpackage/libs/android.arm64-v8a/libreact_cxxreactpackage.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_legacyviewmanagerinterop/libs/android.arm64-v8a/librrc_legacyviewmanagerinterop.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/runtimeexecutor/libs/android.arm64-v8a/libruntimeexecutor.so",
+        "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnasyncstorage.so",
+        "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rngesturehandler_codegen.so",
+        "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_safeareacontext.so",
+        "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnscreens.so",
+        "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnsvg.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_imagemanager/libs/android.arm64-v8a/libreact_render_imagemanager.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_image/libs/android.arm64-v8a/librrc_image.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so"
+      ]
+    },
+    "react_codegen_rnsvg::@4f40eb209d0c0b4a3b65": {
+      "artifactName": "react_codegen_rnsvg",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnsvg.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_image/libs/android.arm64-v8a/librrc_image.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_imagemanager/libs/android.arm64-v8a/libreact_render_imagemanager.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so"
+      ]
+    },
+    "react_codegen_rnasyncstorage::@1596841e19ec5b9eeffe": {
+      "artifactName": "react_codegen_rnasyncstorage",
+      "abi": "arm64-v8a",
+      "output": "/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a/libreact_codegen_rnasyncstorage.so",
+      "runtimeFiles": [
+        "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab/modules/fbjni/libs/android.arm64-v8a/libfbjni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/folly_runtime/libs/android.arm64-v8a/libfolly_runtime.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/glog/libs/android.arm64-v8a/libglog.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_codegen_rncore/libs/android.arm64-v8a/libreact_codegen_rncore.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_debug/libs/android.arm64-v8a/libreact_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_nativemodule_core/libs/android.arm64-v8a/libreact_nativemodule_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_componentregistry/libs/android.arm64-v8a/libreact_render_componentregistry.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_core/libs/android.arm64-v8a/libreact_render_core.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_debug/libs/android.arm64-v8a/libreact_render_debug.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_graphics/libs/android.arm64-v8a/libreact_render_graphics.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_imagemanager/libs/android.arm64-v8a/libreact_render_imagemanager.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_render_mapbuffer/libs/android.arm64-v8a/libreact_render_mapbuffer.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/react_utils/libs/android.arm64-v8a/libreact_utils.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_image/libs/android.arm64-v8a/librrc_image.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/rrc_view/libs/android.arm64-v8a/librrc_view.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/turbomodulejsijni/libs/android.arm64-v8a/libturbomodulejsijni.so",
+        "/home/javohir/.gradle/caches/8.13/transforms/7890f6f326bb0ee0625fe720efabc030/transformed/jetified-react-android-0.74.5-debug/prefab/modules/yoga/libs/android.arm64-v8a/libyoga.so"
+      ]
+    }
+  }
+}

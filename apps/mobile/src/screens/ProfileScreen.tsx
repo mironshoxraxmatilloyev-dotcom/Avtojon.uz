@@ -1,341 +1,217 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  StatusBar, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
-import { COLORS } from '../constants/theme';
+import { COLORS, fmt } from '../constants/theme';
+import api from '../services/api';
+import { User, LogOut, Crown, Truck, ChevronRight, Shield } from '../components/Icons';
 
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Admin',
-  admin: 'Fleet Admin',
-  business: 'Biznesmen',
-  driver: 'Haydovchi',
-};
+interface Subscription {
+  plan: 'trial' | 'pro';
+  startDate?: string;
+  endDate?: string;
+  isExpired: boolean;
+  daysLeft?: number;
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [vehicleCount, setVehicleCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [subRes, vehiclesRes] = await Promise.all([
+          api.get('/vehicles/subscription'),
+          api.get('/vehicles'),
+        ]);
+        setSubscription(subRes.data.data);
+        setVehicleCount(vehiclesRes.data.data?.length || 0);
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Chiqish',
-      'Hisobdan chiqishni xohlaysizmi?',
-      [
-        { text: 'Bekor qilish', style: 'cancel' },
-        { 
-          text: 'Chiqish', 
-          style: 'destructive',
-          onPress: logout 
-        },
-      ]
-    );
+    Alert.alert('Chiqish', 'Hisobdan chiqmoqchimisiz?', [
+      { text: 'Bekor', style: 'cancel' },
+      { text: 'Chiqish', style: 'destructive', onPress: logout },
+    ]);
   };
 
-  const roleLabel = ROLE_LABELS[user?.role || 'admin'] || 'Foydalanuvchi';
-  const subscription = user?.subscription;
+  const getDaysLeft = () => {
+    if (!subscription?.endDate) return 0;
+    const diff = new Date(subscription.endDate).getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  const daysLeft = getDaysLeft();
   const isPro = subscription?.plan === 'pro';
-  const daysLeft = subscription?.daysLeft || 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {user?.fullName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || '?'}
-            </Text>
+          <Text style={styles.title}>Profil</Text>
+        </View>
+
+        {/* User Card */}
+        <View style={styles.userCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{user?.fullName?.charAt(0) || 'U'}</Text>
           </View>
-          <Text style={styles.name}>{user?.fullName || user?.username}</Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>{roleLabel}</Text>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{user?.fullName || 'Foydalanuvchi'}</Text>
+            <Text style={styles.userRole}>
+              {user?.role === 'admin' ? 'Fleet Admin' : user?.role === 'business' ? 'Biznes' : 'Foydalanuvchi'}
+            </Text>
           </View>
         </View>
 
         {/* Subscription Card */}
-        {subscription && (
-          <View style={[styles.card, isPro ? styles.cardPro : styles.cardTrial]}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>{isPro ? '👑' : '⏱️'}</Text>
-              <Text style={[styles.cardTitle, isPro && styles.cardTitlePro]}>
-                {isPro ? 'Pro Tarif' : 'Trial Tarif'}
+        <View style={[styles.subscriptionCard, { backgroundColor: isPro ? COLORS.successLight : COLORS.warningLight }]}>
+          <View style={styles.subscriptionHeader}>
+            <View style={[styles.subscriptionIcon, { backgroundColor: isPro ? COLORS.success : COLORS.warning }]}>
+              <Crown size={20} color="#fff" />
+            </View>
+            <View style={styles.subscriptionInfo}>
+              <Text style={styles.subscriptionPlan}>{isPro ? 'Pro' : 'Trial'} Tarif</Text>
+              <Text style={styles.subscriptionDays}>
+                {subscription?.isExpired ? 'Tugagan' : `${daysLeft} kun qoldi`}
               </Text>
             </View>
-            {!isPro && (
-              <Text style={styles.cardSubtitle}>
-                {subscription.isExpired 
-                  ? 'Obuna tugadi' 
-                  : `${daysLeft} kun qoldi`}
-              </Text>
-            )}
           </View>
-        )}
-
-        {/* Info Cards */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hisob ma'lumotlari</Text>
-          
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>👤</Text>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Username</Text>
-                <Text style={styles.infoValue}>{user?.username}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>📧</Text>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>To'liq ism</Text>
-                <Text style={styles.infoValue}>{user?.fullName || '-'}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>🔐</Text>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Rol</Text>
-                <Text style={styles.infoValue}>{roleLabel}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sozlamalar</Text>
-          
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🔔</Text>
-            <Text style={styles.actionText}>Bildirishnomalar</Text>
-            <Text style={styles.actionArrow}>›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🔒</Text>
-            <Text style={styles.actionText}>Parolni o'zgartirish</Text>
-            <Text style={styles.actionArrow}>›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>❓</Text>
-            <Text style={styles.actionText}>Yordam</Text>
-            <Text style={styles.actionArrow}>›</Text>
+          <TouchableOpacity style={[styles.upgradeButton, { backgroundColor: isPro ? COLORS.success : COLORS.warning }]}>
+            <Text style={styles.upgradeButtonText}>{isPro ? 'Uzaytirish' : 'Pro ga o\'tish'}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutIcon}>🚪</Text>
-          <Text style={styles.logoutText}>Chiqish</Text>
-        </TouchableOpacity>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <View style={[styles.statIcon, { backgroundColor: COLORS.primaryLight + '30' }]}>
+              <Truck size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.statValue}>{vehicleCount}</Text>
+            <Text style={styles.statLabel}>Mashinalar</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={[styles.statIcon, { backgroundColor: COLORS.successLight }]}>
+              <Shield size={20} color={COLORS.success} />
+            </View>
+            <Text style={styles.statValue}>{isPro ? 'Pro' : 'Trial'}</Text>
+            <Text style={styles.statLabel}>Tarif</Text>
+          </View>
+        </View>
 
-        {/* Version */}
-        <Text style={styles.version}>avtoJON v1.0.0</Text>
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          <Text style={styles.menuTitle}>Sozlamalar</Text>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={[styles.menuIcon, { backgroundColor: COLORS.infoLight }]}>
+              <User size={18} color={COLORS.info} />
+            </View>
+            <Text style={styles.menuText}>Profil ma'lumotlari</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemDanger]} onPress={handleLogout}>
+            <View style={[styles.menuIcon, { backgroundColor: COLORS.dangerLight }]}>
+              <LogOut size={18} color={COLORS.danger} />
+            </View>
+            <Text style={[styles.menuText, { color: COLORS.danger }]}>Chiqish</Text>
+            <ChevronRight size={18} color={COLORS.danger} />
+          </TouchableOpacity>
+        </View>
+
+        {/* App Info */}
+        <View style={styles.appInfo}>
+          <Text style={styles.appName}>avtoJON</Text>
+          <Text style={styles.appVersion}>Versiya 1.0.0</Text>
+        </View>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+  container: { flex: 1, backgroundColor: COLORS.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
+  title: { fontSize: 24, fontWeight: '700', color: COLORS.text },
+
+  userCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 16,
+    borderRadius: 16, padding: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  
-  // Header
-  header: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+  avatar: {
+    width: 56, height: 56, borderRadius: 16,
+    backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center',
   },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+  avatarText: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  userInfo: { marginLeft: 14 },
+  userName: { fontSize: 18, fontWeight: '700', color: COLORS.text },
+  userRole: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+
+  subscriptionCard: {
+    marginHorizontal: 16, marginBottom: 16, borderRadius: 16, padding: 16,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+  subscriptionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  subscriptionIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  subscriptionInfo: { marginLeft: 12 },
+  subscriptionPlan: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  subscriptionDays: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+  upgradeButton: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  upgradeButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+
+  statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12, marginBottom: 20 },
+  statCard: {
+    flex: 1, backgroundColor: '#fff', borderRadius: 14, padding: 14, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
   },
-  name: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
+  statIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  statValue: { fontSize: 20, fontWeight: '700', color: COLORS.text },
+  statLabel: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+
+  menuSection: { paddingHorizontal: 16 },
+  menuTitle: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 12 },
+  menuItem: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 8,
   },
-  roleBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  roleText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  
-  // Subscription Card
-  card: {
-    marginHorizontal: 16,
-    marginTop: -20,
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  cardTrial: {
-    backgroundColor: '#fef3c7',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  cardPro: {
-    backgroundColor: '#ecfdf5',
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardIcon: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#92400e',
-  },
-  cardTitlePro: {
-    color: '#065f46',
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#92400e',
-    marginTop: 4,
-    marginLeft: 32,
-  },
-  
-  // Section
-  section: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textMuted,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  
-  // Info Card
-  infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  infoIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-  },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginTop: 2,
-  },
-  
-  // Action Card
-  actionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  actionIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  actionText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    color: COLORS.text,
-  },
-  actionArrow: {
-    fontSize: 20,
-    color: COLORS.textMuted,
-  },
-  
-  // Logout
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 16,
-    marginTop: 8,
-    padding: 16,
-    backgroundColor: '#fef2f2',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fecaca',
-  },
-  logoutIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.danger,
-  },
-  
-  // Version
-  version: {
-    textAlign: 'center',
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginVertical: 24,
-  },
+  menuItemDanger: { marginTop: 8 },
+  menuIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  menuText: { flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '500', color: COLORS.text },
+
+  appInfo: { alignItems: 'center', paddingVertical: 24 },
+  appName: { fontSize: 16, fontWeight: '700', color: COLORS.textMuted },
+  appVersion: { fontSize: 12, color: COLORS.textMuted, marginTop: 4 },
 });

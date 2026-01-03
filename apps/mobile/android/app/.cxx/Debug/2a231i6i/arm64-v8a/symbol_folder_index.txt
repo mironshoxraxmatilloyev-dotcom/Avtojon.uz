@@ -1,0 +1,1 @@
+/home/javohir/Avtojon.uz-main/apps/mobile/android/app/build/intermediates/cxx/Debug/2a231i6i/obj/arm64-v8a

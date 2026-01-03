@@ -1,11 +1,9 @@
-import { useState, memo, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
-import api from '../services/api'
+import { memo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Truck, MapPin, BarChart3, Shield, ArrowRight, Sparkles,
   CheckCircle, Star, Users, Route, TrendingUp, Play,
-  Fuel, Calculator, Globe, Download, Smartphone
+  Fuel, Calculator, Globe
 } from 'lucide-react'
 
 const features = [
@@ -35,7 +33,7 @@ const AnimatedText = memo(({ children, delay = 0 }) => (
 
 // Fixed Header Component - scroll qilinmaydigan navbar
 const FixedHeader = memo(() => (
-  <header className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 pointer-events-auto pt-[env(safe-area-inset-top)]">
+  <header className="fixed top-0 left-0 right-0 z-[99999] pointer-events-auto pt-[env(safe-area-inset-top)]" style={{ backgroundColor: '#09b3b4' }}>
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
       <div className="flex justify-between items-center gap-2">
         {/* Logo */}
@@ -43,16 +41,13 @@ const FixedHeader = memo(() => (
           <img src="/main_logo.jpg" alt="Avtojon" className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-md" />
           <div className="flex items-baseline tracking-tight">
             <span className="text-xl sm:text-2xl font-extrabold text-white">avto</span>
-            <span className="text-xl sm:text-2xl font-extrabold text-amber-300">JON</span>
+            <span className="text-xl sm:text-2xl font-extrabold" style={{ color: '#09b3b4', WebkitTextStroke: '1px white' }}>JON</span>
           </div>
         </Link>
-        {/* Buttons - mobilda kichikroq */}
+        {/* Buttons - faqat Kirish */}
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-          <Link to="/login" className="text-white/90 font-medium text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 hover:text-white transition-colors whitespace-nowrap">
+          <Link to="/login" className="bg-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm shadow-lg hover:bg-gray-100 transition-all whitespace-nowrap" style={{ color: '#09b3b4' }}>
             Kirish
-          </Link>
-          <Link to="/register" className="bg-white text-indigo-600 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm shadow-lg hover:bg-amber-300 hover:text-indigo-700 transition-all whitespace-nowrap">
-            Boshlash
           </Link>
         </div>
       </div>
@@ -61,25 +56,6 @@ const FixedHeader = memo(() => (
 ))
 
 export default function Landing() {
-  const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
-  const [demoLoading, setDemoLoading] = useState(false)
-
-  const handleDemoLogin = useCallback(async () => {
-    setDemoLoading(true)
-    try {
-      const response = await api.post('/auth/demo')
-      if (response.data.success && response.data.data) {
-        setAuth(response.data.data.token, response.data.data.user)
-        navigate('/dashboard')
-      }
-    } catch (error) {
-      alert('Demo akkauntga kirishda xatolik yuz berdi.')
-    } finally {
-      setDemoLoading(false)
-    }
-  }, [setAuth, navigate])
-
   return (
     <div className="landing-page min-h-screen overflow-x-hidden">
       {/* Fixed Header - scroll qilinmaydi */}
@@ -99,33 +75,24 @@ export default function Landing() {
         <section className="relative z-10 pt-[calc(5rem+env(safe-area-inset-top))] sm:pt-[calc(6rem+env(safe-area-inset-top))] pb-16 sm:pb-20">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto text-center">
-              {/* Badge */}
-              <AnimatedText delay={0.1}>
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-8">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-sm text-white/90 font-medium">Xalqaro reyslar qo'llab-quvvatlanadi</span>
-                </div>
-              </AnimatedText>
-
               {/* Title */}
-              <AnimatedText delay={0.2}>
+              <AnimatedText delay={0.1}>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-[1.15] tracking-tight text-white">
-                  Mashinangiz <span className="text-amber-300">100%</span>
+                  Mashinangiz <span style={{ color: '#09b3b4' }}>100%</span>
                   <br />
                   nazorat va hisob-kitobda
                 </h2>
               </AnimatedText>
 
               {/* Subtitle */}
-              <AnimatedText delay={0.3}>
+              <AnimatedText delay={0.2}>
                 <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Mashinalar, haydovchilar va reyslarni bir platformada boshqaring.
-                  Real-time monitoring va avtomatik hisob-kitob.
+                  Mashinangiz xarajatlarini, daromadlarini va foydasini doim bilib borish uchun hoziroq bepul boshlang
                 </p>
               </AnimatedText>
 
               {/* CTA Buttons */}
-              <AnimatedText delay={0.4}>
+              <AnimatedText delay={0.3}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
                     to="/register"
@@ -134,35 +101,50 @@ export default function Landing() {
                     Bepul boshlash
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <button
-                    onClick={handleDemoLogin}
-                    disabled={demoLoading}
-                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 transition-all w-full sm:w-auto disabled:opacity-50 backdrop-blur-sm"
+                  <a
+                    href="https://youtube.com/@avtojon"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 transition-all w-full sm:w-auto backdrop-blur-sm"
                   >
-                    {demoLoading ? (
-                      <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Yuklanmoqda...</>
-                    ) : (
-                      <><Play size={20} /> Demo ko'rish</>
-                    )}
-                  </button>
+                    <Play size={20} /> Video qo'llanma
+                  </a>
                 </div>
 
-                {/* Download App - Haydovchilar uchun */}
-                <div className="mt-6">
+                {/* Download App - Android va iOS - yonma-yon chiroyli */}
+                <div className="mt-8 flex flex-row items-center justify-center gap-4">
                   <a
                     href="/api/downloads/avtojon.apk"
                     download="Avtojon.apk"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500/90 hover:bg-emerald-400 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-emerald-500/20 backdrop-blur-sm"
+                    className="group flex items-center gap-3 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 text-white rounded-xl transition-all backdrop-blur-sm hover:scale-105"
                   >
-                    <Smartphone size={18} />
-                    <span> Ilovani  yuklab olish</span>
-                    <Download size={16} />
+                    <svg className="w-7 h-7 text-[#a3e635]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z" />
+                    </svg>
+                    <div className="text-left leading-tight">
+                      <div className="text-[10px] text-white/70 uppercase tracking-wide">Yuklab olish</div>
+                      <div className="text-sm font-semibold">Android</div>
+                    </div>
+                  </a>
+                  <a
+                    href="https://apps.apple.com/app/avtojon"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 text-white rounded-xl transition-all backdrop-blur-sm hover:scale-105"
+                  >
+                    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                    </svg>
+                    <div className="text-left leading-tight">
+                      <div className="text-[10px] text-white/70 uppercase tracking-wide">Yuklab olish</div>
+                      <div className="text-sm font-semibold">iOS</div>
+                    </div>
                   </a>
                 </div>
               </AnimatedText>
 
               {/* Trust badges */}
-              <AnimatedText delay={0.5}>
+              <AnimatedText delay={0.4}>
                 <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-white/70 text-sm">
                   <span className="flex items-center gap-2"><CheckCircle size={18} className="text-emerald-300" /> Bepul sinov</span>
                   <span className="flex items-center gap-2"><CheckCircle size={18} className="text-emerald-300" /> Karta talab qilinmaydi</span>
@@ -290,7 +272,7 @@ export default function Landing() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span>avto</span><span className="text-amber-400">JON</span> <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>avto</span><span style={{ color: '#09b3b4' }}>JON</span> <Sparkles className="w-4 h-4" style={{ color: '#09b3b4' }} />
                 </h3>
                 <p className="text-slate-500 text-xs">Yuk tashish platformasi</p>
               </div>

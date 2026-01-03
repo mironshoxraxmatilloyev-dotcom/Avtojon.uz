@@ -93,7 +93,7 @@ export default function Register() {
             <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
             <div className="flex items-baseline">
               <span className="text-2xl font-bold text-white">avto</span>
-              <span className="text-2xl font-bold text-amber-300">JON</span>
+              <span className="text-2xl font-bold" style={{ color: '#09b3b4' }}>JON</span>
             </div>
           </Link>
         </div>
@@ -125,146 +125,143 @@ export default function Register() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-slate-50">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-3">
-              <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold text-slate-800">avto</span>
-                <span className="text-2xl font-bold text-amber-500">JON</span>
-              </div>
-            </Link>
-          </div>
+      <div className="flex-1 flex flex-col p-4 lg:p-12 bg-slate-50">
+        {/* Top Bar - Orqaga */}
+        <div className="flex justify-start items-center mb-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors group"
+          >
+            <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+            Orqaga
+          </Link>
+        </div>
 
-          {/* Header */}
-          <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Ro'yxatdan o'ting</h2>
-            <p className="text-slate-500">Bir necha daqiqada hisob yarating</p>
-          </div>
-
-          {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Ismingiz</label>
-                <div className="relative">
-                  <UserCircle className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-slate-400'}`} />
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur('fullName')}
-                    onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
-                      errors.fullName && touched.fullName 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-emerald-500'
-                    }`}
-                    placeholder="Ism Familiya"
-                  />
+        {/* Form Container - Centered */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-md">
+            {/* Mobile Logo */}
+            <div className="lg:hidden text-center mb-6">
+              <Link to="/" className="inline-flex items-center gap-3">
+                <img src="/main_logo.jpg" alt="Avtojon" className="w-12 h-12 rounded-xl object-cover" />
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-bold text-slate-800">avto</span>
+                  <span className="text-2xl font-bold" style={{ color: '#09b3b4' }}>JON</span>
                 </div>
-                {errors.fullName && touched.fullName ? (
-                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
-                    <AlertCircle size={12} /> {errors.fullName}
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-400 mt-1.5">Login qilish uchun ham ishlatiladi</p>
-                )}
-              </div>
+              </Link>
+            </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Parol</label>
-                <div className="relative">
-                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password && touched.password ? 'text-red-400' : 'text-slate-400'}`} />
-                  <input
-                    ref={passwordRef}
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur('password')}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
-                      errors.password && touched.password 
-                        ? 'border-red-300 focus:border-red-500' 
-                        : 'border-slate-200 focus:border-emerald-500'
-                    }`}
-                    placeholder="Kamida 6 ta belgi"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+            {/* Form Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Full Name - Ism */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Ism</label>
+                  <div className="relative">
+                    <UserCircle className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.fullName && touched.fullName ? 'text-red-400' : 'text-slate-400'}`} />
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={form.fullName}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('fullName')}
+                      className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
+                        errors.fullName && touched.fullName 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-slate-200 focus:border-emerald-500'
+                      }`}
+                      placeholder="Ism Familiya"
+                    />
+                  </div>
+                  {errors.fullName && touched.fullName && (
+                    <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                      <AlertCircle size={12} /> {errors.fullName}
+                    </p>
+                  )}
                 </div>
-                {errors.password && touched.password && (
-                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
-                    <AlertCircle size={12} /> {errors.password}
-                  </p>
-                )}
+
+                {/* Phone - Telefon */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Telefon</label>
+                  <PhoneInputField
+                    value={form.phone}
+                    onChange={(phone) => {
+                      setForm({ ...form, phone })
+                      if (touched.phone) setErrors(prev => ({ ...prev, phone: validateField('phone', phone) }))
+                    }}
+                    onBlur={() => handleBlur('phone')}
+                    placeholder="Telefon raqam"
+                    error={errors.phone && touched.phone}
+                  />
+                  {errors.phone && touched.phone && (
+                    <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                      <AlertCircle size={12} /> {errors.phone}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password - Parol */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parol</label>
+                  <div className="relative">
+                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password && touched.password ? 'text-red-400' : 'text-slate-400'}`} />
+                    <input
+                      ref={passwordRef}
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('password')}
+                      className={`w-full pl-12 pr-12 py-3.5 bg-white border-2 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
+                        errors.password && touched.password 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-slate-200 focus:border-emerald-500'
+                      }`}
+                      placeholder="Kamida 6 ta belgi"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {errors.password && touched.password && (
+                    <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
+                      <AlertCircle size={12} /> {errors.password}
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Ro'yxatdan o'tish
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+                <p className="text-slate-500">
+                  Hisobingiz bormi?{' '}
+                  <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+                    Kirish
+                  </Link>
+                </p>
               </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Telefon <span className="text-red-500">*</span>
-                </label>
-                <PhoneInputField
-                  value={form.phone}
-                  onChange={(phone) => {
-                    setForm({ ...form, phone })
-                    if (touched.phone) setErrors(prev => ({ ...prev, phone: validateField('phone', phone) }))
-                  }}
-                  onBlur={() => handleBlur('phone')}
-                  placeholder="Telefon raqam"
-                  error={errors.phone && touched.phone}
-                />
-                {errors.phone && touched.phone && (
-                  <p className="flex items-center gap-1 text-red-500 text-xs mt-2">
-                    <AlertCircle size={12} /> {errors.phone}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    Ro'yxatdan o'tish
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-slate-500">
-                Hisobingiz bormi?{' '}
-                <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
-                  Kirish
-                </Link>
-              </p>
             </div>
           </div>
-
-          {/* Back Link */}
-          <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-slate-500 hover:text-emerald-600 transition-colors group">
-            <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
-            Bosh sahifaga
-          </Link>
         </div>
       </div>
     </div>

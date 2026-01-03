@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView,
+  Platform, StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { COLORS } from '../constants/theme';
+import { Truck, User, Lock, Eye, EyeOff, ChevronRight } from '../components/Icons';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -45,19 +38,19 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <KeyboardAvoidingView 
-        style={styles.keyboardView} 
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scroll} 
+        <ScrollView
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo va sarlavha */}
+          {/* Logo */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Text style={styles.logoEmoji}>🚛</Text>
+              <Truck size={40} color="#fff" />
             </View>
             <View style={styles.titleRow}>
               <Text style={styles.titleWhite}>avto</Text>
@@ -75,7 +68,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Username</Text>
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputIcon}>👤</Text>
+                <User size={18} color={COLORS.textMuted} />
                 <TextInput
                   style={styles.input}
                   placeholder="username"
@@ -93,21 +86,18 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Parol</Text>
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputIcon}>🔒</Text>
+                <Lock size={18} color={COLORS.textMuted} />
                 <TextInput
                   style={styles.input}
-                  placeholder="••••••••"
+                  placeholder="Parol"
                   placeholderTextColor={COLORS.textMuted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoComplete="password"
                 />
-                <TouchableOpacity 
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+                  {showPassword ? <Eye size={18} color={COLORS.textMuted} /> : <EyeOff size={18} color={COLORS.textMuted} />}
                 </TouchableOpacity>
               </View>
             </View>
@@ -124,7 +114,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.buttonText}>Kirish</Text>
-                  <Text style={styles.buttonIcon}>→</Text>
+                  <ChevronRight size={20} color="#fff" />
                 </>
               )}
             </TouchableOpacity>
@@ -145,7 +135,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Footer */}
-          <Text style={styles.footer}>© 2024 avtoJON. Barcha huquqlar himoyalangan.</Text>
+          <Text style={styles.footer}>2024 avtoJON. Barcha huquqlar himoyalangan.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -153,184 +143,55 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.primary,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    paddingBottom: 40,
-  },
-  
-  // Header
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
+  container: { flex: 1, backgroundColor: COLORS.primary },
+  keyboardView: { flex: 1 },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 40 },
+
+  header: { alignItems: 'center', marginBottom: 32 },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
+    width: 80, height: 80, borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 16,
   },
-  logoEmoji: {
-    fontSize: 40,
-  },
-  titleRow: {
-    flexDirection: 'row',
-  },
-  titleWhite: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  titleYellow: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: COLORS.secondary,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 4,
-  },
-  
-  // Form card
+  titleRow: { flexDirection: 'row' },
+  titleWhite: { fontSize: 36, fontWeight: '700', color: '#fff' },
+  titleYellow: { fontSize: 36, fontWeight: '700', color: COLORS.secondary },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+
   formCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    backgroundColor: '#fff', borderRadius: 24, padding: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15, shadowRadius: 24, elevation: 8,
   },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.text,
-    textAlign: 'center',
-  },
-  welcomeSubtext: {
-    fontSize: 14,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 24,
-  },
-  
-  // Input
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: 8,
-  },
+  welcomeText: { fontSize: 24, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
+  welcomeSubtext: { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', marginTop: 4, marginBottom: 24 },
+
+  inputGroup: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8 },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 12,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.background, borderRadius: 12,
+    borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 12,
   },
-  inputIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 18,
-  },
-  
-  // Button
+  input: { flex: 1, paddingVertical: 14, paddingHorizontal: 10, fontSize: 16, color: COLORS.text },
+  eyeButton: { padding: 4 },
+
   button: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: COLORS.primary, borderRadius: 12, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonIcon: {
-    color: '#fff',
-    fontSize: 18,
-    marginLeft: 8,
-  },
-  
-  // Divider
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.border,
-  },
-  dividerText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginHorizontal: 12,
-  },
-  
-  // Register hint
-  registerHint: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  registerText: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-  },
-  registerLink: {
-    fontSize: 13,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  
-  // Footer
-  footer: {
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 12,
-    marginTop: 24,
-  },
+  buttonDisabled: { opacity: 0.7 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600', marginRight: 8 },
+
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  dividerText: { color: COLORS.textMuted, fontSize: 12, marginHorizontal: 12 },
+
+  registerHint: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
+  registerText: { fontSize: 13, color: COLORS.textMuted },
+  registerLink: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
+
+  footer: { textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 24 },
 });
