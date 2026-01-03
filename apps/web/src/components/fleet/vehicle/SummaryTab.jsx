@@ -88,52 +88,54 @@ export const SummaryTab = memo(({ vehicle }) => {
         </div>
       )}
 
-      {/* Asosiy Moliyaviy Ko'rsatkichlar */}
-      <div className={`rounded-2xl p-5 sm:p-8 border shadow-sm ${summary.isProfitable
+      {/* Asosiy Moliyaviy Ko'rsatkichlar - Yangilangan dizayn */}
+      <div className={`rounded-2xl overflow-hidden border shadow-sm ${summary.isProfitable
           ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
           : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
         }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* Yuqori qism - Sof foyda */}
+        <div className="p-5 sm:p-6">
           <div className="flex items-center gap-4">
             {summary.isProfitable ? (
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
+              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <TrendingUp className="w-7 h-7 text-white" />
               </div>
             ) : (
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-100 rounded-2xl flex items-center justify-center">
-                <TrendingDown className="w-7 h-7 sm:w-8 sm:h-8 text-red-600" />
+              <div className="w-14 h-14 bg-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
+                <TrendingDown className="w-7 h-7 text-white" />
               </div>
             )}
-            <div>
-              <p className="text-gray-500 text-sm sm:text-base">Sof foyda/zarar ({period} kun)</p>
-              <p className={`text-2xl sm:text-4xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className="flex-1">
+              <p className="text-gray-500 text-sm">Sof foyda/zarar ({period} kun)</p>
+              <p className={`text-3xl sm:text-4xl font-bold ${summary.isProfitable ? 'text-emerald-600' : 'text-red-600'}`}>
                 {summary.isProfitable ? '+' : ''}{fmt(summary.netProfit || 0)} so'm
               </p>
             </div>
           </div>
-          {summary.profitMargin !== undefined && (
-            <div className="text-left sm:text-right pl-[72px] sm:pl-0">
-              <p className="text-gray-500 text-sm sm:text-base">Rentabellik</p>
-              <p className={`text-2xl sm:text-4xl font-bold ${summary.profitMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {summary.profitMargin}%
-              </p>
-            </div>
-          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-5 border-t border-gray-200/50">
-          <div className="flex items-center gap-3">
-            <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
-            <div>
-              <p className="text-gray-500 text-xs sm:text-sm">Daromad</p>
-              <p className="text-base sm:text-xl font-bold text-gray-900">{fmt(summary.totalIncome || 0)} so'm</p>
+        {/* Pastki qism - Daromad va Xarajat */}
+        <div className="bg-white/60 backdrop-blur-sm border-t border-gray-200/50">
+          <div className="grid grid-cols-2 divide-x divide-gray-200/50">
+            {/* Daromad */}
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span className="text-gray-500 text-sm">Daromad</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-emerald-600 pl-10">{fmt(summary.totalIncome || 0)} so'm</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-            <div>
-              <p className="text-gray-500 text-xs sm:text-sm">Xarajat</p>
-              <p className="text-base sm:text-xl font-bold text-gray-900">{fmt(summary.totalExpenses || 0)} so'm</p>
+            {/* Xarajat */}
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <ArrowDownRight className="w-4 h-4 text-red-600" />
+                </div>
+                <span className="text-gray-500 text-sm">Xarajat</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-red-600 pl-10">{fmt(summary.totalExpenses || 0)} so'm</p>
             </div>
           </div>
         </div>
