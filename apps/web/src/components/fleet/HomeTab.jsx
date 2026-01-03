@@ -94,6 +94,8 @@ export const HomeTab = memo(({
               onMenuToggle={() => setShowMenu(showMenu === v._id ? null : v._id)}
             />
           ))}
+          {/* Bottom nav uchun bo'sh joy */}
+          <div className="h-20 lg:hidden" />
         </div>
       )}
     </div>
