@@ -114,8 +114,8 @@ businessmanSchema.statics.getPlans = function() {
   };
 };
 
-// Biznesmen uchun narx - 20,000 so'm / mashina / oy
-businessmanSchema.statics.PRICE_PER_VEHICLE = 20000;
+// Biznesmen uchun narx - 30,000 so'm / mashina / oy
+businessmanSchema.statics.PRICE_PER_VEHICLE = 30000;
 
 // Index yaratish - tez qidiruv uchun (username allaqachon unique: true orqali indexed)
 businessmanSchema.index({ isActive: 1 });

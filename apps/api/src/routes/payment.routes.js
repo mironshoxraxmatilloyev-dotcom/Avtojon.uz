@@ -11,9 +11,9 @@ const { protect } = require('../middleware/auth')
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
 
 // ============ NARXLAR ============
-// Fleet users (oddiy mijozlar): 20,000 so'm / mashina / oy
+// Fleet users (oddiy mijozlar): 10,000 so'm / mashina / oy
 // Biznesmenlar (korporativ): 30,000 so'm / mashina / oy
-const PRICE_FLEET = 20000
+const PRICE_FLEET = 10000
 const PRICE_BUSINESS = 30000
 
 // ============ NARXNI HISOBLASH ============
