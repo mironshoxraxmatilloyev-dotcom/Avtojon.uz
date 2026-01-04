@@ -81,14 +81,21 @@ coverage/
 *.tgz
 .yarn-integrity
 
-# Android build outputs
+# ==========================================
+# MOBILE APP - GitHub'ga yuklanmaydi
+# ==========================================
+apps/mobile/
+
+# ==========================================
+# ANDROID SMS GATEWAY
+# ==========================================
 apps/android-sms-gateway/.gradle/
 apps/android-sms-gateway/build/
 apps/android-sms-gateway/app/build/
 apps/android-sms-gateway/local.properties
 apps/android-sms-gateway/gradle/wrapper/gradle-wrapper.jar
 
-# APK files - barcha joylarda ignore qilish
+# APK/AAB files (umuman)
 *.apk
 *.aab
 *.dex
