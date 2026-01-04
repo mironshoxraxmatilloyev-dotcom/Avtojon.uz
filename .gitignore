@@ -108,6 +108,10 @@ apps/android-sms-gateway/gradle/wrapper/gradle-wrapper.jar
 *.ap_
 *.apks
 
+# LEKIN: Web downloads papkasidagi APK saqlansin (yuklab olish uchun)
+!apps/web/public/downloads/
+!apps/web/public/downloads/*.apk
+
 # Android release/signing files
 *.keystore
 *.jks
