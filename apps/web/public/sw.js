@@ -7,9 +7,7 @@ const DYNAMIC_CACHE = 'avtojon-dynamic-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/favicon.ico',
-  '/logo-192.png',
-  '/logo-512.png'
+  '/main_logo.jpg'
 ];
 
 // Install event - statik fayllarni cache qilish
@@ -108,8 +106,8 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body || 'Yangi xabar',
-      icon: '/logo-192.png',
-      badge: '/logo-192.png',
+      icon: '/main_logo.jpg',
+      badge: '/main_logo.jpg',
       vibrate: [100, 50, 100],
       data: {
         url: data.url || '/'

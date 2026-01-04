@@ -69,7 +69,7 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
           <Mic size={18} /> Ovoz
         </button>
         <button onClick={onAdd} className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl text-white font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/25">
-          <Plus size={18} /> Qo'shish
+          <Fuel size={18} /> Yoqilg'i qo'shish
         </button>
       </div>
 

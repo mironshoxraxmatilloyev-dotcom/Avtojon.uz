@@ -1,9 +1,0 @@
-{
-  "enabled": true,
-  "prefabPath": "/home/javohir/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar",
-  "packages": [
-    "/home/javohir/.gradle/caches/8.13/transforms/eec6caf67946303985eaa35386807667/transformed/jetified-react-android-0.74.5-release/prefab",
-    "/home/javohir/.gradle/caches/8.13/transforms/7cd5f17da845308fd85cd9dcbebbd233/transformed/jetified-hermes-android-0.74.5-release/prefab",
-    "/home/javohir/.gradle/caches/8.13/transforms/e600c72ca8c8188a01eae2e9a86ca54f/transformed/jetified-fbjni-0.6.0/prefab"
-  ]
-}

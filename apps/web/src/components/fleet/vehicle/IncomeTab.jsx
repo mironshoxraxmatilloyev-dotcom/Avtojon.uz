@@ -41,8 +41,9 @@ export const IncomeTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) =>
             onClick={onAdd}
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-emerald-500/25"
           >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Qo'shish</span>
+            <TrendingUp size={18} />
+            <span className="hidden sm:inline">Daromad qo'shish</span>
+            <span className="sm:hidden">Qo'shish</span>
           </button>
         </div>
       </div>

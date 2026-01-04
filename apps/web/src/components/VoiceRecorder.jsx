@@ -56,6 +56,7 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
   const [result, setResult] = useState(null)
   const [audioLevel, setAudioLevel] = useState(0)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [wavePhase, setWavePhase] = useState(0)
   
   // Qo'shimcha ma'lumotlar uchun state (yoqilg'i miqdori)
   const [editedData, setEditedData] = useState({})
@@ -84,6 +85,21 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
       })
     }
   }, [result])
+
+  // Wave animation for recording
+  useEffect(() => {
+    let animationId
+    if (isRecording) {
+      const animate = () => {
+        setWavePhase(p => p + 0.15)
+        animationId = requestAnimationFrame(animate)
+      }
+      animationId = requestAnimationFrame(animate)
+    }
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId)
+    }
+  }, [isRecording])
 
   // Audio level monitoring
   const monitorAudioLevel = useCallback(() => {
@@ -305,29 +321,39 @@ export default function VoiceRecorder({ onResult, onClose, flightId, selectedLeg
                 onClick={isRecording ? stopRecording : startRecording}
                 className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all ${
                   isRecording 
-                    ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                    ? 'bg-red-500 hover:bg-red-600' 
                     : 'bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700'
                 } shadow-2xl active:scale-95`}
               >
-                {/* Audio level indicator */}
+                {/* ChatGPT style wave animation */}
                 {isRecording && (
-                  <div 
-                    className="absolute inset-0 rounded-full bg-red-400/30 transition-transform"
-                    style={{ transform: `scale(${1 + audioLevel * 0.5})` }}
-                  />
+                  <>
+                    {/* Animated wave bars */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 bg-white/80 rounded-full"
+                          style={{
+                            height: `${20 + audioLevel * 60 + Math.sin(wavePhase + i * 0.8) * 15}px`,
+                            transition: 'height 0.05s ease-out'
+                          }}
+                        />
+                      ))}
+                    </div>
+                    {/* Outer pulse rings */}
+                    <div className="absolute inset-0 rounded-full border-4 border-red-400/50 animate-ping" style={{ animationDuration: '1.5s' }} />
+                    <div className="absolute inset-[-8px] rounded-full border-2 border-red-300/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
+                  </>
                 )}
                 
-                {isRecording ? (
-                  <MicOff className="w-10 h-10 sm:w-12 sm:h-12 text-white relative z-10" />
-                ) : (
-                  <Mic className="w-10 h-10 sm:w-12 sm:h-12 text-white relative z-10" />
-                )}
+                {!isRecording && <Mic className="w-10 h-10 sm:w-12 sm:h-12 text-white relative z-10" />}
               </button>
               
               {isRecording ? (
                 <div className="mt-3 sm:mt-4 text-center">
                   <p className="text-red-400 font-semibold text-base sm:text-lg">{formatTime(recordingTime)}</p>
-                  <p className="text-slate-400 text-xs sm:text-sm mt-1">Yozilmoqda... To'xtatish uchun bosing</p>
+                  <p className="text-slate-400 text-xs sm:text-sm mt-1">Gapiring... To'xtatish uchun bosing</p>
                 </div>
               ) : (
                 <p className="text-slate-400 text-xs sm:text-sm mt-3 sm:mt-4 text-center">
