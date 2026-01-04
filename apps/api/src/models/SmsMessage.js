@@ -16,8 +16,8 @@ const smsMessageSchema = new mongoose.Schema({
   // SMS matni
   message: {
     type: String,
-    required: true,
-    maxlength: 160 // Bitta SMS limiti
+    required: true
+    // maxlength olib tashlandi - uzun SMS'lar uchun
   },
   
   // Status
