@@ -288,13 +288,28 @@ router.get('/vehicles/:vehicleId/fuel', protect, async (req, res) => {
     const monthlyRefills = refills.filter(r => r.date && new Date(r.date) >= thisMonth)
     stats.monthlyConsumption = monthlyRefills.reduce((sum, r) => sum + (r.liters || 0), 0)
     
-    // O'rtacha sarf (100km uchun)
+    // O'rtacha sarf (100km uchun) - to'g'ri hisoblash
     if (refills.length >= 2) {
-      const firstOdo = refills[refills.length - 1]?.odometer || 0
-      const lastOdo = refills[0]?.odometer || 0
-      const totalKm = lastOdo - firstOdo
-      if (totalKm > 0) {
-        stats.avgPer100km = Math.round((stats.totalLiters / totalKm) * 100 * 10) / 10
+      // Odometr bo'yicha tartiblash
+      const sorted = [...refills].filter(r => r.odometer && r.odometer > 0).sort((a, b) => a.odometer - b.odometer)
+      if (sorted.length >= 2) {
+        let totalKm = 0
+        let totalFuel = 0
+        
+        for (let i = 1; i < sorted.length; i++) {
+          const kmDiff = sorted[i].odometer - sorted[i - 1].odometer
+          const liters = sorted[i].liters || 0
+          if (kmDiff > 0 && liters > 0) {
+            totalKm += kmDiff
+            totalFuel += liters
+          }
+        }
+        
+        if (totalKm > 0 && totalFuel > 0) {
+          stats.avgPer100km = Math.round((totalFuel / totalKm) * 100 * 10) / 10
+          stats.kmPerUnit = Math.round((totalKm / totalFuel) * 10) / 10
+          stats.totalKmCalculated = totalKm
+        }
       }
     }
     
@@ -1053,33 +1068,49 @@ router.get('/vehicles/:vehicleId/analytics', protect, async (req, res) => {
     const netProfit = totalIncome - totalExpenses
     const profitMargin = totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0
     
-    // === YOQILG'I SAMARADORLIGI ===
+    // === YOQILG'I SAMARADORLIGI - TO'G'RI HISOBLASH ===
     let fuelEfficiency = { avgConsumption: 0, trend: 'stable', totalLiters: 0, totalKm: 0, kmPerCubicMeter: 0 }
     if (fuelRefills.length >= 2) {
-      const totalLiters = fuelRefills.reduce((sum, r) => sum + (r.liters || 0), 0)
-      const firstOdo = fuelRefills[fuelRefills.length - 1]?.odometer || 0
-      const lastOdo = fuelRefills[0]?.odometer || 0
-      const totalKm = lastOdo - firstOdo
+      // Odometr bo'yicha tartiblash (kichikdan kattaga)
+      const sortedRefills = [...fuelRefills].filter(r => r.odometer && r.odometer > 0).sort((a, b) => (a.odometer || 0) - (b.odometer || 0))
       
-      fuelEfficiency.totalLiters = totalLiters
-      fuelEfficiency.totalKm = totalKm
-      
-      if (totalKm > 0 && totalLiters > 0) {
-        fuelEfficiency.avgConsumption = Math.round((totalLiters / totalKm) * 100 * 10) / 10
-        // Metan uchun 1 kub metrda necha km
-        if (vehicle.fuelType === 'metan' || vehicle.fuelType === 'gas') {
-          fuelEfficiency.kmPerCubicMeter = Math.round(totalKm / totalLiters * 10) / 10
+      if (sortedRefills.length >= 2) {
+        let totalKm = 0
+        let totalLiters = 0
+        
+        // Har bir ketma-ket juftlik uchun sarfni hisoblash
+        for (let i = 1; i < sortedRefills.length; i++) {
+          const prevOdo = sortedRefills[i - 1].odometer
+          const currOdo = sortedRefills[i].odometer
+          const currLiters = sortedRefills[i].liters || 0
+          
+          const kmDiff = currOdo - prevOdo
+          if (kmDiff > 0 && currLiters > 0) {
+            totalKm += kmDiff
+            totalLiters += currLiters
+          }
         }
         
-        // Trend
-        if (fuelRefills.length >= 6) {
-          const recent = fuelRefills.slice(0, 3)
-          const older = fuelRefills.slice(3, 6)
-          const recentAvg = recent.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
-          const olderAvg = older.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
-          if (olderAvg > 0) {
-            if (recentAvg > olderAvg * 1.1) fuelEfficiency.trend = 'increasing'
-            else if (recentAvg < olderAvg * 0.9) fuelEfficiency.trend = 'decreasing'
+        fuelEfficiency.totalLiters = totalLiters
+        fuelEfficiency.totalKm = totalKm
+        
+        if (totalKm > 0 && totalLiters > 0) {
+          fuelEfficiency.avgConsumption = Math.round((totalLiters / totalKm) * 100 * 10) / 10
+          // Metan uchun 1 kub metrda necha km
+          if (vehicle.fuelType === 'metan' || vehicle.fuelType === 'gas') {
+            fuelEfficiency.kmPerCubicMeter = Math.round(totalKm / totalLiters * 10) / 10
+          }
+          
+          // Trend
+          if (sortedRefills.length >= 6) {
+            const recent = sortedRefills.slice(-3)
+            const older = sortedRefills.slice(-6, -3)
+            const recentAvg = recent.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
+            const olderAvg = older.reduce((s, r) => s + (r.fuelConsumption || 0), 0) / 3
+            if (olderAvg > 0) {
+              if (recentAvg > olderAvg * 1.1) fuelEfficiency.trend = 'increasing'
+              else if (recentAvg < olderAvg * 0.9) fuelEfficiency.trend = 'decreasing'
+            }
           }
         }
       }

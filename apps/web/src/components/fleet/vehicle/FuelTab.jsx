@@ -13,15 +13,29 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
   const isGas = fuelType === 'metan' || fuelType === 'gas' || fuelType === 'propan' || fuelType.includes('metan') || fuelType.includes('gaz')
   const unit = isGas ? 'kub' : 'litr'
 
-  // Yoqilg'i sarfini hisoblash
+  // Yoqilg'i sarfini hisoblash - har bir ketma-ket juftlik uchun
   const fuelEfficiency = (() => {
     if (refills.length < 2) return null
+    // Odometr bo'yicha tartiblash (kichikdan kattaga)
     const sorted = [...refills].filter(r => r.odometer && r.odometer > 0).sort((a, b) => (a.odometer || 0) - (b.odometer || 0))
     if (sorted.length < 2) return null
-    const firstOdo = sorted[0]?.odometer || 0
-    const lastOdo = sorted[sorted.length - 1]?.odometer || 0
-    const totalKm = lastOdo - firstOdo
-    const totalFuel = sorted.slice(1).reduce((sum, r) => sum + (r.liters || 0), 0)
+    
+    // Har bir ketma-ket juftlik uchun sarfni hisoblash
+    let totalKm = 0
+    let totalFuel = 0
+    
+    for (let i = 1; i < sorted.length; i++) {
+      const prevOdo = sorted[i - 1].odometer
+      const currOdo = sorted[i].odometer
+      const currLiters = sorted[i].liters || 0
+      
+      const kmDiff = currOdo - prevOdo
+      if (kmDiff > 0 && currLiters > 0) {
+        totalKm += kmDiff
+        totalFuel += currLiters
+      }
+    }
+    
     if (totalKm <= 0 || totalFuel <= 0) return null
     const per100km = (totalFuel / totalKm) * 100
     const kmPerUnit = totalKm / totalFuel
@@ -54,7 +68,7 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
           {fuelEfficiency ? (
             <div>
               <p className="text-3xl font-bold text-blue-700">{fuelEfficiency.kmPerUnit} <span className="text-lg font-medium">km/{unit}</span></p>
-              <p className="text-blue-600 text-sm mt-1">yoki {fuelEfficiency.per100km} {unit}/100km</p>
+              <p className="text-blue-600 text-sm mt-1">1 km uchun {(fuelEfficiency.per100km / 100).toFixed(2)} {unit}</p>
               <p className="text-blue-500 text-xs mt-1">{fmt(fuelEfficiency.totalKm)} km asosida hisoblandi</p>
             </div>
           ) : (
