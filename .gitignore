@@ -87,6 +87,11 @@ coverage/
 apps/mobile/
 
 # ==========================================
+# WEB CAPACITOR ANDROID - GitHub'ga yuklanmaydi
+# ==========================================
+apps/web/android/
+
+# ==========================================
 # ANDROID SMS GATEWAY
 # ==========================================
 apps/android-sms-gateway/.gradle/
