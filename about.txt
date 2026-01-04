@@ -1,0 +1,212 @@
+================================================================================
+                        AVTOJON FLEET - AVTOPARK BOSHQARUV TIZIMI
+================================================================================
+
+UMUMIY MA'LUMOT
+---------------
+Avtojon Fleet - yuk mashinalar avtoparkini to'liq boshqarish uchun mo'ljallangan
+zamonaviy tizim. Web va Mobile ilovalar orqali mashinalarni nazorat qilish,
+xarajatlarni kuzatish va texnik holatni monitoring qilish imkonini beradi.
+
+================================================================================
+                              ASOSIY IMKONIYATLAR
+================================================================================
+
+1. MASHINA BOSHQARUVI
+---------------------
+   - Cheksiz mashina qo'shish
+   - Davlat raqami, marka, yil, yoqilg'i turi
+   - Spidometr (odometer) kuzatuvi
+   - Mashina holati (normal, warning, critical)
+
+2. YOQILG'I HISOBI (FuelTab)
+----------------------------
+   - Har bir yoqilg'i quyilishini qayd qilish
+   - Litr/kub miqdori va narxi
+   - Spidometr ko'rsatkichi
+   - 1 km ga sarf avtomatik hisoblanadi
+   - Yoqilg'i turlari: Dizel, Benzin, Gaz, Metan, Propan
+   - Jami xarajat statistikasi
+
+3. MOY ALMASHTIRISH (OilTab)
+----------------------------
+   - Moy almashtirish tarixi
+   - Moy brendi va turi (10W-40, 5W-30, va h.k.)
+   - Keyingi almashtirish muddati
+   - Ogohlantirish tizimi (warning/critical)
+   - Qolgan km ko'rsatkichi
+
+4. SHINA NAZORATI (TiresTab)
+----------------------------
+   - Shina ma'lumotlari (brend, o'lcham)
+   - Almashtirish tarixi
+   - Yurgan masofa hisobi
+   - Eslatma tizimi
+
+5. TEXNIK XIZMAT (ServicesTab)
+------------------------------
+   - Barcha texnik xizmatlar ro'yxati
+   - Xizmat turlari: TO-1, TO-2, Tormoz, Mufta, va h.k.
+   - Xarajat va sana
+   - Rejalashtirilgan xizmatlar
+
+6. DAROMAD HISOBI (IncomeTab)
+-----------------------------
+   - Har bir mashinadan daromad
+   - Yuk tashish daromadlari
+   - Kunlik/oylik statistika
+
+7. UMUMIY STATISTIKA (SummaryTab)
+---------------------------------
+   - Jami daromad
+   - Jami xarajat (yoqilg'i + moy + shina + xizmat)
+   - Sof foyda
+   - Grafik ko'rinishda tahlil
+
+================================================================================
+                              OVOZLI KIRITISH (AI)
+================================================================================
+
+Tizim Groq AI orqali ovozli kiritishni qo'llab-quvvatlaydi:
+
+- "40 litr dizel 150 mingga quyildim" → Avtomatik yoqilg'i qo'shiladi
+- "Mobil moy 450 mingga almashtirildi" → Moy yozuvi qo'shiladi
+- "Bugun 500 ming daromad qildim" → Daromad qayd qilinadi
+
+Texnologiya:
+- Whisper (ovozni matnga)
+- LLM (matnni tahlil qilish)
+- Strukturalangan ma'lumot chiqarish
+
+================================================================================
+                              OGOHLANTIRISH TIZIMI
+================================================================================
+
+Tizim avtomatik ravishda quyidagilarni kuzatadi:
+
+1. MOY HOLATI:
+   - Normal: 3000+ km qoldi
+   - Warning: 1000-3000 km qoldi (sariq)
+   - Critical: 1000 km dan kam qoldi (qizil)
+
+2. SHINA HOLATI:
+   - Yurgan masofa bo'yicha
+   - Almashtirish muddati
+
+3. TEXNIK XIZMAT:
+   - Rejalashtirilgan xizmatlar
+   - Muddati o'tgan xizmatlar
+
+================================================================================
+                              TEXNIK ARXITEKTURA
+================================================================================
+
+BACKEND (apps/api/)
+-------------------
+- Node.js + Express
+- MongoDB (Mongoose)
+- JWT autentifikatsiya
+- Socket.io (real-time)
+
+Asosiy modellar:
+- Vehicle - mashina ma'lumotlari
+- VehicleMaintenance - texnik xizmat yozuvlari
+- User - foydalanuvchilar
+- Businessman - biznes egasi
+
+API endpointlar:
+- GET/POST /api/vehicles - mashinalar
+- GET/POST /api/maintenance/:vehicleId/fuel - yoqilg'i
+- GET/POST /api/maintenance/:vehicleId/oil - moy
+- GET/POST /api/maintenance/:vehicleId/tires - shina
+- GET/POST /api/maintenance/:vehicleId/services - xizmat
+- GET/POST /api/maintenance/:vehicleId/income - daromad
+- GET /api/maintenance/fleet/analytics - umumiy statistika
+- POST /api/voice/process - ovozli kiritish
+
+WEB FRONTEND (apps/web/)
+------------------------
+- React 18 + Vite
+- Tailwind CSS
+- Zustand (state management)
+- Recharts (grafiklar)
+- Lucide React (ikonkalar)
+
+Asosiy sahifalar:
+- /fleet - Avtopark dashboard
+- /fleet/vehicle/:id - Mashina tafsilotlari
+
+Komponentlar:
+- FleetDashboard.jsx - asosiy sahifa
+- VehicleDetailPanel.jsx - mashina panel
+- FuelTab.jsx - yoqilg'i
+- OilTab.jsx - moy
+- TiresTab.jsx - shina
+- ServicesTab.jsx - xizmat
+- IncomeTab.jsx - daromad
+- SummaryTab.jsx - statistika
+- VoiceRecorder.jsx - ovozli kiritish
+
+MOBILE APP (apps/mobile/)
+-------------------------
+- React Native 0.73
+- React Navigation
+- Zustand
+- Axios
+
+Ekranlar:
+- FleetDashboardScreen - asosiy ekran
+- VehicleDetailScreen - mashina tafsilotlari
+- StatsScreen - statistika
+- AlertsScreen - ogohlantirishlar
+
+Komponentlar:
+- VehicleCard - mashina kartasi
+- AddVehicleModal - mashina qo'shish
+- VoiceRecorder - ovozli kiritish
+- FuelTab, OilTab, TiresTab, ServicesTab, IncomeTab, SummaryTab
+
+================================================================================
+                              OBUNA TIZIMI
+================================================================================
+
+Narxlash:
+- 10,000 so'm / mashina / oy
+- 7 kunlik bepul sinov (trial)
+
+To'lov:
+- Payme integratsiyasi
+- Avtomatik obuna yangilanishi
+
+================================================================================
+                              FOYDALANISH
+================================================================================
+
+1. Ro'yxatdan o'tish (telefon raqam)
+2. SMS orqali tasdiqlash
+3. Mashina qo'shish
+4. Yoqilg'i, moy, xizmat ma'lumotlarini kiritish
+5. Statistikani kuzatish
+6. Ogohlantirishlarni ko'rish
+
+================================================================================
+                              TEXNIK TALABLAR
+================================================================================
+
+Web:
+- Zamonaviy brauzer (Chrome, Firefox, Safari, Edge)
+- Internet aloqasi
+
+Mobile:
+- Android 7.0+
+- Internet aloqasi
+
+================================================================================
+                              ALOQA
+================================================================================
+
+Website: https://avtojon.uz
+Telegram: @avtojon_support
+Telefon: +998 88 019 19 09
+
+================================================================================

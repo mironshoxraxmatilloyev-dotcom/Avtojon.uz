@@ -210,31 +210,31 @@ fun SmsGatewayApp() {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // SIM 1 - Mobiuz
+                            // SIM 1 - Beeline
                             FilterChip(
                                 selected = selectedSim == 0,
                                 onClick = { 
                                     selectedSim = 0
                                     prefs.edit().putInt("selected_sim", 0).apply()
                                 },
-                                label = { Text("SIM 1 (Mobiuz)") },
+                                label = { Text("SIM 1 (Beeline)") },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF8B5CF6),
-                                    selectedLabelColor = Color.White
+                                    selectedContainerColor = Color(0xFFFBBF24),
+                                    selectedLabelColor = Color.Black
                                 )
                             )
                             
-                            // SIM 2 - Beeline
+                            // SIM 2 - Mobiuz
                             FilterChip(
                                 selected = selectedSim == 1,
                                 onClick = { 
                                     selectedSim = 1
                                     prefs.edit().putInt("selected_sim", 1).apply()
                                 },
-                                label = { Text("SIM 2 (Beeline)") },
+                                label = { Text("SIM 2 (Mobiuz)") },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFFFBBF24),
-                                    selectedLabelColor = Color.Black
+                                    selectedContainerColor = Color(0xFF8B5CF6),
+                                    selectedLabelColor = Color.White
                                 )
                             )
                         }

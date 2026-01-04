@@ -102,6 +102,7 @@ class SmsGatewayService : Service() {
         try {
             val prefs = getSharedPreferences("sms_gateway", 0)
             // Default SIM 2 (Mobiuz) - index 1
+            // SIM 1 = Beeline (index 0), SIM 2 = Mobiuz (index 1)
             val selectedSim = prefs.getInt("selected_sim", 1)
             
             val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -111,19 +112,32 @@ class SmsGatewayService : Service() {
                 SmsManager.getDefault()
             }
             
-            // SMS yuborish
-            smsManager.sendTextMessage(
-                sms.phone,
-                null,
-                sms.message,
-                null,
-                null
-            )
+            // Uzun SMS uchun multipart ishlatish
+            val parts = smsManager.divideMessage(sms.message)
+            if (parts.size > 1) {
+                // Uzun SMS - bir nechta qismga bo'lingan, lekin bitta SMS sifatida yuboriladi
+                smsManager.sendMultipartTextMessage(
+                    sms.phone,
+                    null,
+                    parts,
+                    null,
+                    null
+                )
+            } else {
+                // Qisqa SMS
+                smsManager.sendTextMessage(
+                    sms.phone,
+                    null,
+                    sms.message,
+                    null,
+                    null
+                )
+            }
             
             // Status yuborish
             api?.updateStatus(token, StatusUpdate(sms.id, "sent", null))
             
-            Log.d(TAG, "SMS yuborildi: ${sms.phone} (SIM ${selectedSim + 1})")
+            Log.d(TAG, "SMS yuborildi: ${sms.phone} (SIM ${selectedSim + 1}, ${parts.size} qism)")
             updateNotification("Oxirgi SMS: ${sms.phone}")
             
             // Log saqlash

@@ -63,13 +63,11 @@ export const FuelTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd, vehicl
             <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
               <Gauge className="w-5 h-5 text-white" />
             </div>
-            <p className="text-blue-700 font-medium">O'rtacha sarf</p>
+            <p className="text-blue-700 font-medium">1 km ga sarf</p>
           </div>
           {fuelEfficiency ? (
             <div>
-              <p className="text-3xl font-bold text-blue-700">{fuelEfficiency.kmPerUnit} <span className="text-lg font-medium">km/{unit}</span></p>
-              <p className="text-blue-600 text-sm mt-1">1 km uchun {(fuelEfficiency.per100km / 100).toFixed(2)} {unit}</p>
-              <p className="text-blue-500 text-xs mt-1">{fmt(fuelEfficiency.totalKm)} km asosida hisoblandi</p>
+              <p className="text-3xl font-bold text-blue-700">{(fuelEfficiency.per100km / 100).toFixed(2)} <span className="text-lg font-medium">{unit}/km</span></p>
             </div>
           ) : (
             <p className="text-blue-600 text-lg">Kamida 2 ta yoqilg'i yozuvi kerak</p>
