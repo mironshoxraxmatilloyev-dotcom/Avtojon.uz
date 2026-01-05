@@ -454,30 +454,41 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
 
     // Yoqilg'i xarajati uchun qo'shimcha hisob-kitob
     let distanceSinceLast = null;
-    let fuelConsumption = null;
-    
+    let fuelConsumption = null; // Shu to'ldirish uchun km/kub
+    let avgFuelConsumption = null; // Umumiy o'rtacha km/kub
+    let totalFuelQuantity = null;
+    let totalDistance = null;
+
     if (type && type.startsWith('fuel_') && odometer) {
-      // Oldingi yoqilg'i xarajatini topish
-      const lastFuelExpense = [...flight.expenses]
-        .reverse()
-        .find(exp => exp.type && exp.type.startsWith('fuel_') && exp.odometer);
-      
-      if (lastFuelExpense && lastFuelExpense.odometer) {
+      // Shu turdagi barcha yoqilg'i xarajatlarini olish
+      const sameFuelExpenses = flight.expenses.filter(
+        (exp) => exp.type === type && exp.odometer && exp.quantity
+      );
+
+      // Jami olingan yoqilg'i (boshlang'ich + qo'shilganlar + hozirgi)
+      const startFuel = flight.startFuel || 0;
+      const addedFuel = sameFuelExpenses.reduce((sum, exp) => sum + (exp.quantity || 0), 0) + (quantity || 0);
+      totalFuelQuantity = startFuel + addedFuel;
+
+      // Jami bosib o'tilgan masofa (mashrut boshidan)
+      totalDistance = odometer - (flight.startOdometer || 0);
+
+      // Oldingi to'ldirishdan beri masofa
+      const lastFuelExpense = [...sameFuelExpenses].reverse()[0];
+      if (lastFuelExpense) {
         distanceSinceLast = odometer - lastFuelExpense.odometer;
-        
-        // Sarflanish hisoblash (km/kub yoki km/litr)
-        // Oldingi to'ldirishdagi yoqilg'i bilan bosib o'tilgan masofa
-        if (lastFuelExpense.quantity && distanceSinceLast > 0) {
-          fuelConsumption = Math.round((distanceSinceLast / lastFuelExpense.quantity) * 10) / 10;
-        }
-      } else if (flight.startOdometer && flight.startFuel) {
-        // Birinchi yoqilg'i - mashrut boshidan hisoblash
-        distanceSinceLast = odometer - flight.startOdometer;
-        if (flight.startFuel > 0 && distanceSinceLast > 0) {
-          fuelConsumption = Math.round((distanceSinceLast / flight.startFuel) * 10) / 10;
-        }
-      } else if (flight.startOdometer) {
-        distanceSinceLast = odometer - flight.startOdometer;
+      } else {
+        distanceSinceLast = totalDistance;
+      }
+
+      // 1. SHU TO'LDIRISH UCHUN: O'sha oralig'idagi masofa / hozirgi to'ldirish
+      if (quantity && distanceSinceLast > 0) {
+        fuelConsumption = Math.round((distanceSinceLast / quantity) * 10) / 10;
+      }
+
+      // 2. UMUMIY O'RTACHA: Jami masofa / (Boshlang'ich + Qo'shilgan yoqilg'i)
+      if (totalFuelQuantity > 0 && totalDistance > 0) {
+        avgFuelConsumption = Math.round((totalDistance / totalFuelQuantity) * 10) / 10;
       }
     }
 
@@ -518,7 +529,13 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       expenseData.stationName = stationName || null;
       expenseData.odometer = odometer ? Number(odometer) : null;
       expenseData.distanceSinceLast = distanceSinceLast;
+      // Shu to'ldirish uchun km/kub (oralig'idagi masofa / hozirgi to'ldirish)
       expenseData.fuelConsumption = fuelConsumption;
+      // Umumiy o'rtacha km/kub (jami masofa / jami yoqilg'i)
+      expenseData.avgFuelConsumption = avgFuelConsumption;
+      // Jami masofa va jami yoqilg'i (UI da ko'rsatish uchun)
+      expenseData.totalDistance = totalDistance;
+      expenseData.totalFuelQuantity = totalFuelQuantity;
     }
 
     // Joylashuv

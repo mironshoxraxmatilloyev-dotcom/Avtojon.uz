@@ -59,8 +59,8 @@ const smsGatewaySchema = new mongoose.Schema({
   
   // Rate limit
   rateLimit: {
-    maxPerMinute: { type: Number, default: 30 },
-    maxPerDay: { type: Number, default: 500 }
+    maxPerMinute: { type: Number, default: 60 },
+    maxPerDay: { type: Number, default: 2000 }
   },
   
   // IP whitelist (ixtiyoriy)
