@@ -220,10 +220,12 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
 
   const isBorder = form.category === 'border'
   const isFuel = form.category === 'fuel'
+  const isOil = form.category === 'oil'
   const quickAmounts = useMemo(() => {
     if (form.currency === 'USD') return [10, 20, 50, 100, 200]
     if (form.currency === 'RUB') return [1000, 2000, 5000, 10000, 20000]
     if (form.currency === 'KZT') return [5000, 10000, 20000, 50000, 100000]
+    if (form.category === 'oil') return [100000, 200000, 300000, 500000, 800000]
     return QUICK_AMOUNTS[form.category] || QUICK_AMOUNTS.other
   }, [form.category, form.currency])
 
@@ -275,13 +277,13 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
       amountInUZS,
       description: form.description,
       quantity: isFuel && form.quantity ? Number(form.quantity) : null,
-      odometer: isFuel && form.odometer ? Number(form.odometer) : null,
+      odometer: (isFuel || isOil) && form.odometer ? Number(form.odometer) : null,
       date: form.date ? new Date(form.date) : new Date(),
       legId: selectedLeg?.leg?._id || null,
       legIndex: selectedLeg?.index ?? null,
       exchangeRate: rates?.[form.currency] || 1
     })
-  }, [form, selectedLeg, onSubmit, isFuel, isBorder, convertedToUZS, rates])
+  }, [form, selectedLeg, onSubmit, isFuel, isOil, isBorder, convertedToUZS, rates])
 
   // Valyutalar ro'yxati
   const currencies = isInternational ? [
@@ -507,8 +509,8 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
             </div>
           )}
 
-          {/* Spidometr - faqat yoqilg'i uchun */}
-          {isFuel && (
+          {/* Spidometr - yoqilg'i va moy uchun */}
+          {(isFuel || isOil) && (
             <div>
               <label className="block text-sm font-semibold text-slate-600 mb-3">
                 Spidometr (km)
@@ -1176,6 +1178,345 @@ export const PlatonModal = memo(function PlatonModal({ flight, onClose, onSubmit
           <button
             type="submit"
             className="w-full py-5 bg-gradient-to-r from-rose-500 via-red-500 to-red-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-rose-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
+          >
+            <CheckCircle size={22} />
+            Saqlash
+          </button>
+        </form>
+      </div>
+    </ModalWrapper>,
+    document.body
+  )
+})
+
+// ============================================
+// FLIGHT EDIT MODAL - Reys ma'lumotlarini tahrirlash (TO'LIQ)
+// ============================================
+export const FlightEditModal = memo(function FlightEditModal({ flight, onClose, onSubmit }) {
+  const [activeTab, setActiveTab] = useState('general') // general, odometer, financial
+  const [form, setForm] = useState({
+    // Umumiy
+    name: flight?.name || '',
+    notes: flight?.notes || '',
+    // Spidometr va yoqilg'i
+    startOdometer: flight?.startOdometer?.toString() || '',
+    startFuel: flight?.startFuel?.toString() || '',
+    // Moliyaviy
+    totalGivenBudget: flight?.totalGivenBudget?.toString() || '',
+    totalPayment: flight?.totalPayment?.toString() || ''
+  })
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault()
+    onSubmit({
+      name: form.name,
+      notes: form.notes,
+      startOdometer: Number(form.startOdometer) || 0,
+      startFuel: Number(form.startFuel) || 0,
+      totalGivenBudget: Number(form.totalGivenBudget) || 0,
+      totalPayment: Number(form.totalPayment) || 0
+    })
+  }, [form, onSubmit])
+
+  const tabs = [
+    { id: 'general', label: 'Umumiy', icon: FileText },
+    { id: 'odometer', label: 'Spidometr', icon: Gauge },
+    { id: 'financial', label: 'Moliyaviy', icon: Wallet }
+  ]
+
+  return createPortal(
+    <ModalWrapper onClose={onClose} size="lg">
+      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl max-h-[95vh] overflow-hidden">
+        <div className="relative px-6 py-5 border-b border-white/10 bg-gradient-to-r from-blue-500/10 via-transparent to-indigo-500/10">
+          <div className="relative flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
+                <Gauge className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Marshrut ma'lumotlari</h2>
+                <p className="text-blue-400/80 text-sm mt-0.5">Barcha ma'lumotlarni tahrirlash</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
+              <X size={22} />
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-white/10 px-4">
+          {tabs.map(tab => {
+            const IconComp = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
+                  activeTab === tab.id
+                    ? 'text-blue-400 border-blue-400'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+              >
+                <IconComp size={16} />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(95vh-180px)]">
+          {/* Umumiy tab */}
+          {activeTab === 'general' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">Marshrut nomi</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
+                  placeholder="Masalan: Toshkent - Moskva"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">Izoh (ixtiyoriy)</label>
+                <textarea
+                  value={form.notes}
+                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-indigo-500/50 focus:outline-none transition-colors resize-none"
+                  rows={3}
+                  placeholder="Qo'shimcha ma'lumot..."
+                />
+              </div>
+            </>
+          )}
+
+          {/* Spidometr tab */}
+          {activeTab === 'odometer' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">Boshlang'ich spidometr (km)</label>
+                <input
+                  type="number"
+                  value={form.startOdometer}
+                  onChange={e => setForm(f => ({ ...f, startOdometer: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
+                  placeholder="Masalan: 125000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">Boshlang'ich yoqilg'i (kub/litr)</label>
+                <input
+                  type="number"
+                  value={form.startFuel}
+                  onChange={e => setForm(f => ({ ...f, startFuel: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-amber-500/50 focus:outline-none transition-colors"
+                  placeholder="Masalan: 100"
+                />
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                <p className="text-blue-400 text-sm">
+                  💡 Tugash spidometri va qoldiq yoqilg'i marshrutni yopishda kiritiladi
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Moliyaviy tab */}
+          {activeTab === 'financial' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">
+                  <span className="flex items-center gap-2">
+                    <DollarSign size={16} className="text-emerald-400" />
+                    Mijozdan olingan to'lov (so'm)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.totalPayment ? formatMoney(form.totalPayment) : ''}
+                  onChange={e => setForm(f => ({ ...f, totalPayment: e.target.value.replace(/\D/g, '') }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+                <p className="text-emerald-400/70 text-xs mt-1">Mijoz tomonidan to'langan jami summa</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-400 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Wallet size={16} className="text-amber-400" />
+                    Yo'l uchun berilgan pul (so'm)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.totalGivenBudget ? formatMoney(form.totalGivenBudget) : ''}
+                  onChange={e => setForm(f => ({ ...f, totalGivenBudget: e.target.value.replace(/\D/g, '') }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-amber-500/50 focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+                <p className="text-amber-400/70 text-xs mt-1">Haydovchiga yo'l xarajatlari uchun berilgan pul</p>
+              </div>
+
+              {/* Hisob-kitob */}
+              <div className="bg-slate-800/50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Jami kirim:</span>
+                  <span className="text-emerald-400 font-bold">
+                    {formatMoney((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0))} so'm
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Xarajatlar:</span>
+                  <span className="text-red-400 font-bold">-{formatMoney(flight?.totalExpenses || 0)} so'm</span>
+                </div>
+                <div className="border-t border-white/10 pt-2 flex justify-between">
+                  <span className="text-slate-300 font-medium">Balans:</span>
+                  <span className={`font-bold ${
+                    ((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0) - (flight?.totalExpenses || 0)) >= 0
+                      ? 'text-emerald-400'
+                      : 'text-red-400'
+                  }`}>
+                    {formatMoney((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0) - (flight?.totalExpenses || 0))} so'm
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          <button
+            type="submit"
+            className="w-full py-5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
+          >
+            <CheckCircle size={22} />
+            Saqlash
+          </button>
+        </form>
+      </div>
+    </ModalWrapper>,
+    document.body
+  )
+})
+
+
+// ============================================
+// LEG EDIT MODAL - Buyurtma ma'lumotlarini tahrirlash
+// ============================================
+export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit }) {
+  const [form, setForm] = useState({
+    fromCity: leg?.fromCity || '',
+    toCity: leg?.toCity || '',
+    payment: leg?.payment?.toString() || '',
+    givenBudget: leg?.givenBudget?.toString() || '',
+    distance: leg?.distance?.toString() || ''
+  })
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault()
+    onSubmit({
+      fromCity: form.fromCity,
+      toCity: form.toCity,
+      payment: Number(form.payment) || 0,
+      givenBudget: Number(form.givenBudget) || 0,
+      distance: Number(form.distance) || 0
+    })
+  }, [form, onSubmit])
+
+  return createPortal(
+    <ModalWrapper onClose={onClose} size="lg">
+      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl max-h-[95vh] overflow-hidden">
+        <div className="relative px-6 py-5 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-transparent to-teal-500/10">
+          <div className="relative flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
+                <Route className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Buyurtmani tahrirlash</h2>
+                <p className="text-emerald-400/80 text-sm mt-0.5">{leg?.fromCity?.split(',')[0]} → {leg?.toCity?.split(',')[0]}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
+              <X size={22} />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Manzillar */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Qayerdan</label>
+              <input
+                type="text"
+                value={form.fromCity}
+                onChange={e => setForm(f => ({ ...f, fromCity: e.target.value }))}
+                className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+                placeholder="Boshlang'ich manzil"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Qayerga</label>
+              <input
+                type="text"
+                value={form.toCity}
+                onChange={e => setForm(f => ({ ...f, toCity: e.target.value }))}
+                className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+                placeholder="Boradigan manzil"
+              />
+            </div>
+          </div>
+
+          {/* Mijozdan to'lov */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Mijozdan to'lov (so'm)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={form.payment ? formatMoney(form.payment) : ''}
+              onChange={e => setForm(f => ({ ...f, payment: e.target.value.replace(/\D/g, '') }))}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+              placeholder="0"
+            />
+            <p className="text-emerald-400/70 text-xs mt-1">Mijoz tomonidan to'lanadigan summa</p>
+          </div>
+
+          {/* Yo'l xarajati */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Yo'l xarajati (so'm)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={form.givenBudget ? formatMoney(form.givenBudget) : ''}
+              onChange={e => setForm(f => ({ ...f, givenBudget: e.target.value.replace(/\D/g, '') }))}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-amber-500/50 focus:outline-none transition-colors"
+              placeholder="0"
+            />
+            <p className="text-amber-400/70 text-xs mt-1">Haydovchiga berilgan yo'l puli</p>
+          </div>
+
+          {/* Masofa */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Masofa (km)</label>
+            <input
+              type="number"
+              value={form.distance}
+              onChange={e => setForm(f => ({ ...f, distance: e.target.value }))}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
+              placeholder="0"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={22} />
             Saqlash

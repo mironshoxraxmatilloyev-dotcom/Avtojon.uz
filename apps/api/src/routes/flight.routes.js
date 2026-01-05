@@ -454,10 +454,11 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
 
     // Yoqilg'i xarajati uchun qo'shimcha hisob-kitob
     let distanceSinceLast = null;
-    let fuelConsumption = null; // Shu to'ldirish uchun km/kub
+    let fuelConsumption = null; // Shu oraliq uchun km/kub
     let avgFuelConsumption = null; // Umumiy o'rtacha km/kub
     let totalFuelQuantity = null;
     let totalDistance = null;
+    let previousFuelQuantity = null; // Oldingi to'ldirish miqdori
 
     if (type && type.startsWith('fuel_') && odometer) {
       // Shu turdagi barcha yoqilg'i xarajatlarini olish
@@ -473,17 +474,20 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       // Jami bosib o'tilgan masofa (mashrut boshidan)
       totalDistance = odometer - (flight.startOdometer || 0);
 
-      // Oldingi to'ldirishdan beri masofa
+      // Oldingi to'ldirishdan beri masofa va oldingi yoqilg'i miqdori
       const lastFuelExpense = [...sameFuelExpenses].reverse()[0];
       if (lastFuelExpense) {
         distanceSinceLast = odometer - lastFuelExpense.odometer;
+        previousFuelQuantity = lastFuelExpense.quantity; // Oldingi to'ldirish
       } else {
         distanceSinceLast = totalDistance;
+        previousFuelQuantity = startFuel; // Boshlang'ich yoqilg'i
       }
 
-      // 1. SHU TO'LDIRISH UCHUN: O'sha oralig'idagi masofa / hozirgi to'ldirish
-      if (quantity && distanceSinceLast > 0) {
-        fuelConsumption = Math.round((distanceSinceLast / quantity) * 10) / 10;
+      // 1. ORALIQ SARF: Shu oralig'idagi masofa / OLDINGI to'ldirish (yoki boshlang'ich)
+      // Mantiq: Shu masofani bosib o'tish uchun OLDINGI yoqilg'i sarflangan
+      if (previousFuelQuantity > 0 && distanceSinceLast > 0) {
+        fuelConsumption = Math.round((distanceSinceLast / previousFuelQuantity) * 10) / 10;
       }
 
       // 2. UMUMIY O'RTACHA: Jami masofa / (Boshlang'ich + Qo'shilgan yoqilg'i)
@@ -842,6 +846,42 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       // Yengil va katta xarajatlarni saqlash
       flight.lightExpenses = Math.round(lightExpensesUZS);
       flight.heavyExpenses = Math.round(heavyExpensesUZS);
+    }
+
+    // ============ ANIQ YOQILGʻI SARFI HISOBLASH (mashrut yopilganda) ============
+    // Formula: Sarflangan = Boshlang'ich + Barcha to'ldirishlar - Oxirgi qoldiq
+    if (endOdometer && flight.startOdometer) {
+      const totalDistanceFinal = endOdometer - flight.startOdometer;
+      flight.totalDistance = totalDistanceFinal;
+      
+      // Yoqilg'i turi bo'yicha hisoblash
+      const fuelTypes = ['fuel_metan', 'fuel_propan', 'fuel_benzin', 'fuel_diesel'];
+      const fuelStats = {};
+      
+      fuelTypes.forEach(fuelType => {
+        const fuelExpenses = flight.expenses.filter(exp => exp.type === fuelType && exp.quantity);
+        if (fuelExpenses.length > 0 || (fuelType === 'fuel_metan' && flight.startFuel)) {
+          const startFuel = fuelType === 'fuel_metan' ? (flight.startFuel || 0) : 0;
+          const addedFuel = fuelExpenses.reduce((sum, exp) => sum + (exp.quantity || 0), 0);
+          const endFuelAmount = fuelType === 'fuel_metan' ? (endFuel || 0) : 0;
+          
+          // Aniq sarflangan yoqilg'i = Boshlang'ich + To'ldirishlar - Qoldiq
+          const consumedFuel = startFuel + addedFuel - endFuelAmount;
+          
+          if (consumedFuel > 0) {
+            fuelStats[fuelType] = {
+              startFuel,
+              addedFuel,
+              endFuel: endFuelAmount,
+              consumed: Math.round(consumedFuel * 10) / 10,
+              // Aniq km/kub (yoki km/litr)
+              efficiency: Math.round((totalDistanceFinal / consumedFuel) * 10) / 10
+            };
+          }
+        }
+      });
+      
+      flight.fuelStats = fuelStats;
     }
 
     await flight.save();

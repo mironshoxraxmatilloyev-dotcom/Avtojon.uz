@@ -1,7 +1,7 @@
-import { Gauge, Fuel, Zap } from 'lucide-react'
+import { Gauge, Fuel, Zap, Edit3 } from 'lucide-react'
 import { formatMoney } from './constants'
 
-export default function OdometerFuelCard({ flight }) {
+export default function OdometerFuelCard({ flight, onEdit }) {
   // Yoqilg'i ma'lumotlarini hisoblash
   const fuelData = { litr: 0, kub: 0, types: [] }
   flight.expenses?.forEach(exp => {
@@ -46,18 +46,32 @@ export default function OdometerFuelCard({ flight }) {
     }
   }
 
+  const isActive = flight.status === 'active'
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* Spidometr */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-            <Gauge className="text-white w-6 h-6" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <Gauge className="text-white w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800">Spidometr</h3>
+              <p className="text-sm text-slate-400">Kilometraj ma'lumotlari</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800">Spidometr</h3>
-            <p className="text-sm text-slate-400">Kilometraj ma'lumotlari</p>
-          </div>
+          {isActive && onEdit && (
+            <button
+              onClick={onEdit}
+              className="px-3 py-2 flex items-center gap-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-blue-600 hover:text-blue-700 transition-colors border border-blue-200"
+              title="Tahrirlash"
+            >
+              <Edit3 size={16} />
+              <span className="text-sm font-medium">Tahrirlash</span>
+            </button>
+          )}
         </div>
         
         <div className="grid grid-cols-3 gap-3">

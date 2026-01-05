@@ -24,7 +24,9 @@ import {
   CompleteModal,
   PaymentModal,
   PlatonModal,
-  DriverPaymentModal
+  DriverPaymentModal,
+  FlightEditModal,
+  LegEditModal
 } from '../components/flightDetail/AllModals'
 
 export default function FlightDetail() {
@@ -45,6 +47,7 @@ export default function FlightDetail() {
   const [showPlatonModal, setShowPlatonModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showDriverPaymentModal, setShowDriverPaymentModal] = useState(false)
+  const [showFlightEditModal, setShowFlightEditModal] = useState(false)
 
   // Selected items
   const [selectedLegForPayment, setSelectedLegForPayment] = useState(null)
@@ -336,7 +339,7 @@ export default function FlightDetail() {
           </div>
         )}
 
-        <OdometerFuelCard flight={flight} />
+        <OdometerFuelCard flight={flight} onEdit={() => setShowFlightEditModal(true)} />
 
         {/* Yoqilg'i sarflanishi statistikasi */}
         <FuelConsumptionCard flight={flight} />
@@ -597,6 +600,34 @@ export default function FlightDetail() {
           initialStart={lastLeg?.toCoords}
           initialStartAddress={lastLeg?.toCity}
           endOnly={flight?.legs?.length > 0}
+        />
+      )}
+
+      {showFlightEditModal && (
+        <FlightEditModal
+          flight={flight}
+          onClose={() => setShowFlightEditModal(false)}
+          onSubmit={(data) => {
+            // 🚀 Modal ni darhol yopish
+            setShowFlightEditModal(false)
+            showToast.success('Ma\'lumotlar saqlandi')
+
+            // 🚀 Optimistic update - barcha maydonlar
+            setFlight(prev => ({
+              ...prev,
+              name: data.name || prev.name,
+              notes: data.notes,
+              startOdometer: data.startOdometer,
+              startFuel: data.startFuel,
+              totalGivenBudget: data.totalGivenBudget,
+              totalPayment: data.totalPayment
+            }))
+
+            // Background da serverga yuborish
+            api.put(`/flights/${id}`, data)
+              .then(res => res.data?.data && setFlight(res.data.data))
+              .catch(() => fetchFlight(false))
+          }}
         />
       )}
     </div>

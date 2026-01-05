@@ -61,6 +61,7 @@ export const OLD_CURRENCIES = {
 export const EXPENSE_CATEGORIES = [
   // Yengil xarajatlar - shofyor hisobidan
   { value: 'fuel', label: "Yoqilg'i", iconName: 'Fuel', color: 'from-amber-500 to-orange-500', bgColor: 'bg-amber-500', expenseClass: 'light' },
+  { value: 'oil', label: 'Moy', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', bgColor: 'bg-yellow-600', expenseClass: 'light', hasOdometer: true },
   { value: 'food', label: 'Ovqat', iconName: 'Utensils', color: 'from-green-500 to-emerald-500', bgColor: 'bg-green-500', expenseClass: 'light' },
   { value: 'toll', label: "Yo'l to'lovi", iconName: 'Car', color: 'from-blue-500 to-indigo-500', bgColor: 'bg-blue-500', expenseClass: 'light' },
   { value: 'wash', label: 'Moyka', iconName: 'Droplet', color: 'from-cyan-500 to-blue-500', bgColor: 'bg-cyan-500', expenseClass: 'light' },
@@ -102,6 +103,7 @@ export const FUEL_TYPES = [
 // Display uchun barcha turlar
 export const EXPENSE_TYPES = [
   ...FUEL_TYPES.map(f => ({ ...f, color: 'from-amber-500 to-orange-500', expenseClass: 'light' })),
+  { value: 'oil', label: 'Moy', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', expenseClass: 'light', hasOdometer: true },
   { value: 'food', label: 'Ovqat', iconName: 'Utensils', color: 'from-green-500 to-emerald-500', expenseClass: 'light' },
   { value: 'toll', label: "Yo'l to'lovi", iconName: 'Car', color: 'from-blue-500 to-indigo-500', expenseClass: 'light' },
   { value: 'wash', label: 'Moyka', iconName: 'Droplet', color: 'from-cyan-500 to-blue-500', expenseClass: 'light' },
