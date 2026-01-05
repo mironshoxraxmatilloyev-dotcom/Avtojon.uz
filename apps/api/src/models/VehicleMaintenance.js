@@ -60,11 +60,28 @@ const OilChangeSchema = new mongoose.Schema({
 const TireSchema = new mongoose.Schema({
   vehicle: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle', required: true },
   businessman: { type: mongoose.Schema.Types.ObjectId },
-  position: { type: String, required: true },
-  brand: { type: String, required: true },
-  model: { type: String },
-  size: { type: String },
-  serialNumber: { type: String }, // DOT raqami
+  position: { type: String, required: true }, // FL, FR, RL, RR
+  brand: { type: String, required: true }, // Michelin, Bridgestone, Continental, etc.
+  model: { type: String }, // Pilot Sport, Turanza, etc.
+  // Shina raqamlari - maxsus format: 205/55R16, 195/65R15, etc.
+  // Format: width/aspectRatio R diameter
+  // Misol: 205 (kenglik mm), 55 (balandlik %), R (radial), 16 (diametr inches)
+  size: { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: function(v) {
+        // Format: XXX/XXRXX (masalan: 205/55R16)
+        return /^\d{3}\/\d{2}R\d{2}$/.test(v)
+      },
+      message: 'Shina raqami noto\'g\'ri format: 205/55R16 kabi bo\'lishi kerak'
+    }
+  },
+  // DOT raqami - shina ishlab chiqarish sanasi va joyi
+  // Format: XXXX (masalan: 1520 = 15-chi hafta, 2020-yil)
+  dotNumber: { type: String }, // DOT raqami
+  // Shina seriya raqami (opsional)
+  serialNumber: { type: String },
   cost: { type: Number, default: 0 },
   installDate: { type: Date, default: Date.now },
   installOdometer: { type: Number, required: true },

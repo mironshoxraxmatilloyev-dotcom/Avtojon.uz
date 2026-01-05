@@ -553,6 +553,20 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       };
     }
 
+    // Shina raqamlari (tire replacement uchun)
+    if (type === 'tire' && tireNumber) {
+      expenseData.tireNumber = tireNumber;
+      // Agar tireNumber array bo'lsa (bir nechta shinalar almastirilgan)
+      if (Array.isArray(tireNumber)) {
+        expenseData.tireNumbers = tireNumber;
+        expenseData.tireCount = tireNumber.length;
+      } else {
+        // Yoki string bo'lsa (bitta shina)
+        expenseData.tireNumbers = [tireNumber];
+        expenseData.tireCount = 1;
+      }
+    }
+
     flight.expenses.push(expenseData);
     await flight.save();
 

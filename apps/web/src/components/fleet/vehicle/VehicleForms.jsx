@@ -289,9 +289,13 @@ export const TireForm = ({ form, setForm, errors, onSubmit, isEdit, vehicleOdome
       options={TIRE_POSITIONS.map(p => ({ value: p, label: p }))} />
     <div className="grid grid-cols-2 gap-3">
       <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} placeholder="Michelin..." />
-      <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
+      <Input label="Model" value={form.model} onChange={v => setForm(f => ({ ...f, model: v }))} placeholder="Defender T/H..." />
     </div>
-    <Input label="DOT raqami (seriya)" value={form.serialNumber} onChange={v => setForm(f => ({ ...f, serialNumber: v }))} placeholder="DOT XXXX XXXX 2024" />
+    <Input label="Shina raqami (o'lcham)" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} error={errors.size} placeholder="315/80 R22.5" />
+    <div className="grid grid-cols-2 gap-3">
+      <Input label="DOT raqami" value={form.dotNumber} onChange={v => setForm(f => ({ ...f, dotNumber: v }))} placeholder="DOT XXXX XXXX 2024" />
+      <Input label="Seriya raqami" value={form.serialNumber} onChange={v => setForm(f => ({ ...f, serialNumber: v }))} placeholder="Shina seriya raqami" />
+    </div>
     <div className="grid grid-cols-2 gap-3">
       <Input label="O'rnatish sanasi" type="date" value={form.installDate} onChange={v => setForm(f => ({ ...f, installDate: v }))} />
       <Input 
@@ -313,8 +317,12 @@ export const TireForm = ({ form, setForm, errors, onSubmit, isEdit, vehicleOdome
 export const BulkTireForm = memo(({ form, setForm, errors, onSubmit, vehicleOdometer }) => (
   <form onSubmit={onSubmit} className="space-y-3">
     <Input label="Brend" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} error={errors.brand} placeholder="Michelin, Bridgestone..." />
-    <Input label="O'lcham" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} placeholder="315/80 R22.5" />
-    <Input label="DOT raqami (seriya)" value={form.serialNumber} onChange={v => setForm(f => ({ ...f, serialNumber: v }))} placeholder="DOT XXXX XXXX 2024" />
+    <Input label="Model" value={form.model} onChange={v => setForm(f => ({ ...f, model: v }))} placeholder="Defender T/H..." />
+    <Input label="Shina raqami (o'lcham)" value={form.size} onChange={v => setForm(f => ({ ...f, size: v }))} error={errors.size} placeholder="315/80 R22.5" />
+    <div className="grid grid-cols-2 gap-3">
+      <Input label="DOT raqami" value={form.dotNumber} onChange={v => setForm(f => ({ ...f, dotNumber: v }))} placeholder="DOT XXXX XXXX 2024" />
+      <Input label="Seriya raqami" value={form.serialNumber} onChange={v => setForm(f => ({ ...f, serialNumber: v }))} placeholder="Shina seriya raqami" />
+    </div>
     <div className="grid grid-cols-2 gap-3">
       <Select label="Shinalar soni" value={form.count} onChange={v => setForm(f => ({ ...f, count: v }))}
         options={[{ value: '4', label: '4 ta' }, { value: '6', label: '6 ta' }, { value: '8', label: '8 ta' }, { value: '10', label: '10 ta' }]} />

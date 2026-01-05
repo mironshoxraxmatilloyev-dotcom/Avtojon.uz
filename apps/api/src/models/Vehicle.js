@@ -46,6 +46,18 @@ const vehicleSchema = new mongoose.Schema({
   // === SHINA SOZLAMALARI ===
   tireCount: { type: Number, default: 6 }, // shina soni (4, 6, 8...)
   tireLifeExpectedKm: { type: Number, default: 80000 }, // shina umri
+  tireNumbers: [{
+    position: {
+      type: String,
+      enum: ['front_left', 'front_right', 'rear_left_1', 'rear_left_2', 'rear_right_1', 'rear_right_2', 'rear_left_3', 'rear_right_3'],
+      required: true
+    },
+    number: String, // shina raqami (masalan: 12345678)
+    installDate: Date,
+    installOdometer: { type: Number, default: 0 },
+    lastReplacementDate: Date,
+    lastReplacementOdometer: { type: Number, default: 0 }
+  }],
   
   // === TEXNIK XIZMAT ===
   serviceIntervalKm: { type: Number, default: 30000 }, // TO oralig'i

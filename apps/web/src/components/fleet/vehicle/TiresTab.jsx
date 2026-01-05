@@ -157,16 +157,28 @@ const TireDetailModal = memo(({ tire, onClose, onEdit, onDelete }) => {
                 <span className="font-bold text-gray-900">{tire.brand}</span>
               </div>
             )}
+            {tire.model && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">Model</span>
+                <span className="font-bold text-gray-900">{tire.model}</span>
+              </div>
+            )}
             {tire.size && (
               <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500">O'lcham</span>
-                <span className="font-bold text-gray-900">{tire.size}</span>
+                <span className="text-gray-500">Shina raqami</span>
+                <span className="font-bold text-gray-900 font-mono text-lg">{tire.size}</span>
+              </div>
+            )}
+            {tire.dotNumber && (
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-500">DOT raqami</span>
+                <span className="font-bold text-gray-900 font-mono">{tire.dotNumber}</span>
               </div>
             )}
             {tire.serialNumber && (
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-500">Seriya raqami</span>
-                <span className="font-bold text-gray-900">{tire.serialNumber}</span>
+                <span className="font-bold text-gray-900 font-mono">{tire.serialNumber}</span>
               </div>
             )}
             {tire.installDate && (

@@ -5,7 +5,7 @@ import api from '../../services/api'
 import { useAlert } from '../../components/ui'
 import {
   SummaryTab, FuelTab, OilTab, TiresTab, ServicesTab, IncomeTab,
-  initFuelForm, initOilForm, initTireForm, initServiceForm, initIncomeForm, today, TIRE_POSITIONS,
+  initFuelForm, initOilForm, initTireForm, initBulkTireForm, initServiceForm, initIncomeForm, today, TIRE_POSITIONS,
   MaintenanceAlertModal
 } from '../../components/fleet/vehicle'
 import { Modal, FuelForm, OilForm, TireForm, BulkTireForm, ServiceForm } from '../../components/fleet/vehicle/VehicleForms'
@@ -47,7 +47,7 @@ export default function VehicleDetailPanel() {
   const [tireForm, setTireForm] = useState(() => initTireForm())
   const [serviceForm, setServiceForm] = useState(() => initServiceForm())
   const [incomeForm, setIncomeForm] = useState(() => initIncomeForm())
-  const [bulkTireForm, setBulkTireForm] = useState({ brand: '', size: '', cost: '', count: '4' })
+  const [bulkTireForm, setBulkTireForm] = useState(() => initBulkTireForm())
 
   const [subscription, setSubscription] = useState(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -129,7 +129,7 @@ export default function VehicleDetailPanel() {
     setErrors({})
     if (type === 'fuel') setFuelForm(item ? { date: item.date?.split('T')[0] || today(), liters: item.liters?.toString() || '', cost: item.cost?.toString() || '', odometer: item.odometer?.toString() || '', fuelType: item.fuelType || 'diesel', station: item.station || '' } : initFuelForm(odo, vehicle?.fuelType || 'diesel'))
     if (type === 'oil') setOilForm(item ? { date: item.date?.split('T')[0] || today(), odometer: item.odometer?.toString() || '', oilType: item.oilType || '', oilBrand: item.oilBrand || '', liters: item.liters?.toString() || '', cost: item.cost?.toString() || '', nextChangeOdometer: item.nextChangeOdometer?.toString() || '', filterChanged: item.filterChanged || false, filterCost: item.filterCost?.toString() || '', airFilterChanged: item.airFilterChanged || false, airFilterCost: item.airFilterCost?.toString() || '', fuelFilterChanged: item.fuelFilterChanged || false, fuelFilterCost: item.fuelFilterCost?.toString() || '' } : initOilForm(odo))
-    if (type === 'tire') setTireForm(item ? { position: item.position || TIRE_POSITIONS[0], brand: item.brand || '', model: item.model || '', size: item.size || '', serialNumber: item.serialNumber || '', installDate: item.installDate?.split('T')[0] || today(), installOdometer: item.installOdometer?.toString() || '', expectedLifeKm: item.expectedLifeKm?.toString() || '80000', cost: item.cost?.toString() || '' } : initTireForm(odo))
+    if (type === 'tire') setTireForm(item ? { position: item.position || TIRE_POSITIONS[0], brand: item.brand || '', model: item.model || '', size: item.size || '', dotNumber: item.dotNumber || '', installDate: item.installDate?.split('T')[0] || today(), installOdometer: item.installOdometer?.toString() || '', expectedLifeKm: item.expectedLifeKm?.toString() || '80000', cost: item.cost?.toString() || '' } : initTireForm(odo))
     if (type === 'service') setServiceForm(item ? { type: item.type || 'TO-1', date: item.date?.split('T')[0] || today(), odometer: item.odometer?.toString() || '', cost: item.cost?.toString() || '', description: item.description || '', serviceName: item.serviceName || '' } : initServiceForm(odo))
     if (type === 'tire-bulk') setBulkTireForm({ brand: '', size: '', cost: '', count: '4', installOdometer: odo })
     if (type === 'income') setIncomeForm(item ? { type: item.type || 'trip', date: item.date?.split('T')[0] || today(), amount: item.amount?.toString() || '', fromCity: item.fromCity || '', toCity: item.toCity || '', cargoWeight: item.cargoWeight?.toString() || '', clientName: item.clientName || '', rentalDays: item.rentalDays?.toString() || '', rentalRate: item.rentalRate?.toString() || '', description: item.description || '' } : initIncomeForm())

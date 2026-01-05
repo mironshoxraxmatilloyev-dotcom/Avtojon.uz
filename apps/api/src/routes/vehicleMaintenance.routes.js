@@ -656,6 +656,59 @@ router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
   }
 })
 
+// Barcha shinalarni qo'shish (to'liq almashtirish)
+router.post('/vehicles/:vehicleId/tires/bulk', protect, async (req, res) => {
+  try {
+    const { vehicleId } = req.params
+    const businessmanId = getBusinessmanId(req)
+    const { _id, count, ...body } = req.body
+    
+    // Ownership tekshirish
+    const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
+    }
+    
+    // Validatsiya
+    const errors = validateMaintenanceData('tire', body, vehicle.currentOdometer)
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors.join(', ') })
+    }
+    
+    if (!count || Number(count) <= 0) {
+      return res.status(400).json({ success: false, message: 'Shinalar soni majburiy' })
+    }
+    
+    // Pozitsiyalar ro'yxati
+    const positions = ['front_left', 'front_right', 'rear_left_1', 'rear_left_2', 'rear_right_1', 'rear_right_2', 'rear_left_3', 'rear_right_3']
+    const selectedPositions = positions.slice(0, Number(count))
+    
+    // Eski shinalarni replaced qilish
+    await Tire.updateMany(
+      { vehicle: vehicleId, status: { $ne: 'replaced' } },
+      { status: 'replaced', replacedDate: new Date(), replacedOdometer: vehicle.currentOdometer }
+    )
+    
+    // Yangi shinalarni qo'shish
+    const tires = await Tire.insertMany(
+      selectedPositions.map(position => ({
+        ...body,
+        position,
+        vehicle: vehicleId,
+        businessman: businessmanId
+      }))
+    )
+    
+    // Barcha shina alertlarini o'chirish
+    await VehicleAlert.deleteMany({ vehicle: vehicleId, type: 'tire', isResolved: false })
+    
+    res.status(201).json({ success: true, data: tires, message: `${tires.length} ta shina qo'shildi` })
+  } catch (err) {
+    console.error('❌ Bulk tire POST error:', err.message)
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
+
 // Shina yangilash
 router.put('/tires/:id', protect, async (req, res) => {
   try {

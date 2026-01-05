@@ -536,17 +536,17 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
           {form.category === 'tire' && (
             <div>
               <label className="block text-sm font-semibold text-slate-600 mb-3">
-                Shina raqamlari (masalan: 1,2,3,4 yoki 1,3)
+                Shinaning maxsus raqamlari
               </label>
               <input
                 type="text"
                 value={form.tireNumber}
                 onChange={e => setForm(f => ({ ...f, tireNumber: e.target.value }))}
                 className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg placeholder-slate-400 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/10 transition-all"
-                placeholder="1, 2, 3, 4 (o'zgartirilgan shinalarning raqamlari)"
+                placeholder="205/55R16, 195/65R15 (shinaning o'lchami)"
               />
               <p className="text-xs text-slate-500 mt-2">
-                💡 Masalan: "1,3" = 1-chi va 3-chi shinalar o'zgartirildi
+                💡 Format: Kenglik/Balandlik R Diametr (masalan: 205/55R16)
               </p>
             </div>
           )}
@@ -912,17 +912,15 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit,
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-400 mb-3">To'lov summasi</label>
+            <label className="block text-sm font-semibold text-slate-400 mb-3">Mijozdan olingan to'lov (so'm)</label>
             <input
-              type="text"
-              inputMode="numeric"
-              value={payment ? formatMoney(payment) : ''}
-              onChange={e => setPayment(e.target.value.replace(/\D/g, ''))}
+              type="number"
+              value={payment}
+              onChange={e => setPayment(e.target.value)}
               className="w-full px-6 py-6 bg-white/5 border-2 border-white/10 rounded-2xl text-white text-3xl font-bold text-center placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
               placeholder="0"
               autoFocus
             />
-            <p className="text-center text-slate-500 text-sm mt-2">so'm</p>
           </div>
 
           <button
