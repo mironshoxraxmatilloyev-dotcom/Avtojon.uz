@@ -32,6 +32,7 @@ export default function LegsWithExpenses({
   onEditExpense,
   onDeleteExpense,
   onAddPayment,
+  onEditPayment,
   selectedLegIndex: externalSelectedLegIndex,
   onSelectedLegChange
 }) {
@@ -161,9 +162,20 @@ export default function LegsWithExpenses({
             
             {/* Payment */}
             {selectedLeg.payment > 0 ? (
-              <div className="bg-emerald-50 px-5 py-3 rounded-xl border border-emerald-200">
-                <p className="text-xs text-emerald-600 font-medium">Mijozdan to'lov</p>
-                <p className="text-2xl font-bold text-emerald-600">+{formatMoney(selectedLeg.payment)}</p>
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-50 px-5 py-3 rounded-xl border border-emerald-200">
+                  <p className="text-xs text-emerald-600 font-medium">Mijozdan to'lov</p>
+                  <p className="text-2xl font-bold text-emerald-600">+{formatMoney(selectedLeg.payment)}</p>
+                </div>
+                {isActive && (
+                  <button 
+                    onClick={() => onEditPayment(selectedLeg)} 
+                    className="px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-600 active:scale-[0.98] transition-all"
+                    title="To'lovni tahrirlash"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                )}
               </div>
             ) : isActive && (
               <button 

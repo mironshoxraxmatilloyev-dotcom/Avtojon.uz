@@ -145,7 +145,12 @@ router.get('/:id', protect, businessOnly, async (req, res) => {
 // Yangi mashina qo'shish
 router.post('/', protect, businessOnly, async (req, res) => {
   try {
-    const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentDriver, currentOdometer } = req.body;
+    const { 
+      plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, 
+      cargoCapacity, currentDriver, currentOdometer,
+      // Moy almashtirish sozlamalari
+      oilChangeIntervalKm, lastOilChangeOdometer
+    } = req.body;
 
     // Faqat aktiv mashinalar orasida tekshirish
     const existingVehicle = await Vehicle.findOne({ 
@@ -168,7 +173,10 @@ router.post('/', protect, businessOnly, async (req, res) => {
       fuelConsumptionRate,
       cargoCapacity,
       currentOdometer: currentOdometer || 0,
-      currentDriver: currentDriver || null
+      currentDriver: currentDriver || null,
+      // Moy almashtirish sozlamalari
+      oilChangeIntervalKm: oilChangeIntervalKm || 15000,
+      lastOilChangeOdometer: lastOilChangeOdometer || 0
     });
 
     const populatedVehicle = await Vehicle.findById(vehicle._id).populate('currentDriver', 'fullName username');
@@ -182,7 +190,12 @@ router.post('/', protect, businessOnly, async (req, res) => {
 // Mashinani tahrirlash
 router.put('/:id', protect, businessOnly, async (req, res) => {
   try {
-    const { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentOdometer, vin, isActive } = req.body;
+    const { 
+      plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, 
+      cargoCapacity, currentOdometer, vin, isActive,
+      // Moy almashtirish sozlamalari
+      oilChangeIntervalKm, lastOilChangeOdometer, lastOilChangeDate
+    } = req.body;
 
     // Agar plateNumber o'zgartirilsa, boshqa mashinada yo'qligini tekshirish
     if (plateNumber) {
@@ -197,9 +210,28 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
       }
     }
 
+    // Yangilanadigan maydonlar
+    const updateData = {};
+    if (plateNumber !== undefined) updateData.plateNumber = plateNumber;
+    if (brand !== undefined) updateData.brand = brand;
+    if (model !== undefined) updateData.model = model;
+    if (year !== undefined) updateData.year = year;
+    if (fuelType !== undefined) updateData.fuelType = fuelType;
+    if (fuelTankCapacity !== undefined) updateData.fuelTankCapacity = fuelTankCapacity;
+    if (fuelConsumptionRate !== undefined) updateData.fuelConsumptionRate = fuelConsumptionRate;
+    if (cargoCapacity !== undefined) updateData.cargoCapacity = cargoCapacity;
+    if (currentOdometer !== undefined) updateData.currentOdometer = currentOdometer;
+    if (vin !== undefined) updateData.vin = vin;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    
+    // Moy almashtirish sozlamalari
+    if (oilChangeIntervalKm !== undefined) updateData.oilChangeIntervalKm = Number(oilChangeIntervalKm);
+    if (lastOilChangeOdometer !== undefined) updateData.lastOilChangeOdometer = Number(lastOilChangeOdometer);
+    if (lastOilChangeDate !== undefined) updateData.lastOilChangeDate = lastOilChangeDate;
+
     const vehicle = await Vehicle.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
-      { plateNumber, brand, model, year, fuelType, fuelTankCapacity, fuelConsumptionRate, cargoCapacity, currentOdometer, vin, isActive },
+      updateData,
       { new: true }
     );
 

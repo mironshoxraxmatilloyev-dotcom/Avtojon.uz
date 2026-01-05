@@ -22,9 +22,9 @@ const isValidObjectId = (id) => {
 // Yoqilg'i va xarajatlar statistikasi
 router.get('/stats/fuel', protect, businessOnly, asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
-  
+
   const filter = { user: req.user._id };
-  
+
   // Sana filtri
   if (startDate || endDate) {
     filter.createdAt = {};
@@ -59,21 +59,21 @@ router.get('/stats/fuel', protect, businessOnly, asyncHandler(async (req, res) =
   flights.forEach(flight => {
     // Masofa
     totalDistance += flight.totalDistance || 0;
-    
+
     // Xarajatlar
     (flight.expenses || []).forEach(exp => {
       const amount = exp.amount || 0;
-      
+
       // Yoqilg'i turlari
       if (exp.type?.startsWith('fuel_')) {
         totalFuelCost += amount;
         expensesByType.fuel += amount;
-        
+
         if (fuelByType[exp.type]) {
           fuelByType[exp.type].cost += amount;
           if (exp.quantity) {
             fuelByType[exp.type].quantity += exp.quantity;
-            
+
             // Litr yoki kub
             if (exp.type === 'fuel_metan' || exp.type === 'fuel_propan') {
               totalFuelKub += exp.quantity;
@@ -127,9 +127,9 @@ router.get('/stats/fuel', protect, businessOnly, asyncHandler(async (req, res) =
 router.get('/', protect, businessOnly, asyncHandler(async (req, res) => {
   const { status, driverId, limit } = req.query;
   const filter = { user: req.user._id };
-  
+
   if (status) filter.status = status;
-  
+
   // driverId faqat valid ObjectId bo'lsa qo'shish
   if (driverId && isValidObjectId(driverId)) {
     filter.driver = driverId;
@@ -154,7 +154,7 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
     const { status, driverId } = req.query;
 
     // Barcha reyslarni olish (completed va active)
-    const filter = { 
+    const filter = {
       user: req.user._id,
       status: { $in: ['completed', 'active'] }
     };
@@ -175,12 +175,12 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
       const totalExpenses = f.totalExpenses || 0;
       const netProfit = f.netProfit || f.profit || (totalIncome - totalExpenses);
       const driverProfitAmount = f.driverProfitAmount || 0;
-      
+
       let calculatedDriverOwes = f.driverOwes || f.businessProfit || 0;
       if (calculatedDriverOwes === 0 && netProfit > 0) {
         calculatedDriverOwes = netProfit - driverProfitAmount;
       }
-      
+
       return {
         ...f,
         driverOwes: calculatedDriverOwes,
@@ -200,8 +200,8 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
     const totalDebt = filteredFlights.reduce((sum, f) => f.driverPaymentStatus !== 'paid' ? sum + (f.driverOwes || 0) : sum, 0);
     const paidAmount = filteredFlights.reduce((sum, f) => f.driverPaymentStatus === 'paid' ? sum + (f.driverOwes || 0) : sum, 0);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: filteredFlights,
       stats: {
         totalDebt,
@@ -243,7 +243,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
       vehicle = await Vehicle.findOne({ _id: vehicleId, user: req.user._id });
     } else {
       // Shofyorga biriktirilgan mashinani olish
-      vehicle = await Vehicle.findOne({ 
+      vehicle = await Vehicle.findOne({
         user: req.user._id,
         $or: [
           { currentDriver: driverId },
@@ -251,7 +251,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
         ]
       });
     }
-    
+
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' });
     }
@@ -389,13 +389,13 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
     }
 
     leg.payment = Number(payment) || 0;
-    
+
     // To'lov kiritilganda buyurtma (leg) tugallanadi
     if (Number(payment) > 0 && leg.status === 'in_progress') {
       leg.status = 'completed';
       leg.completedAt = new Date();
     }
-    
+
     await flight.save();
 
     const populatedFlight = await Flight.findById(flight._id)
@@ -405,7 +405,7 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
     // Socket xabar
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Buyurtma tugallandi!'
       });
@@ -421,7 +421,7 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
 // Xarajat qo'shish
 router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
   try {
-    const { 
+    const {
       type, amount, description, legIndex, legId,
       // Valyuta ma'lumotlari (xalqaro reyslar uchun)
       currency, country,
@@ -430,6 +430,8 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       // Yoqilg'i uchun qo'shimcha
       quantity, quantityUnit, pricePerUnit,
       odometer, stationName, location,
+      // Shina raqamlari
+      tireNumber,
       // Xarajat turi (yengil/katta)
       expenseClass
     } = req.body;
@@ -447,7 +449,7 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
     const rates = await getCurrencyRates();
     const expenseCurrency = currency || 'UZS';
     const expenseAmount = Number(amount);
-    
+
     // USD va UZS ga konvertatsiya
     const amountInUSD = Math.round(convertToUSD(expenseAmount, expenseCurrency, rates) * 100) / 100;
     const amountInUZS = Math.round(convertToUZS(expenseAmount, expenseCurrency, rates));
@@ -497,10 +499,10 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
     }
 
     // Xarajat ma'lumotlari
-    // Katta xarajat turlari
-    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance'];
+    // Katta xarajat turlari (shofyor oyligiga ta'sir qilmaydi)
+    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
     const actualExpenseClass = expenseClass || (HEAVY_EXPENSE_TYPES.includes(type) ? 'heavy' : 'light');
-    
+
     const expenseData = {
       type,
       expenseClass: actualExpenseClass,
@@ -584,8 +586,8 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
       return res.status(404).json({ success: false, message: 'Xarajat topilmadi' });
     }
 
-    const { 
-      type, amount, description, quantity, quantityUnit, pricePerUnit, 
+    const {
+      type, amount, description, quantity, quantityUnit, pricePerUnit,
       odometer, stationName, location, date,
       // Valyuta ma'lumotlari
       currency, amountInUSD, amountInUZS, exchangeRate
@@ -602,7 +604,7 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     if (stationName !== undefined) flight.expenses[expenseIndex].stationName = stationName;
     if (location !== undefined) flight.expenses[expenseIndex].location = location;
     if (date !== undefined) flight.expenses[expenseIndex].date = new Date(date);
-    
+
     // Valyuta ma'lumotlarini yangilash
     if (currency !== undefined) flight.expenses[expenseIndex].currency = currency;
     if (amountInUSD !== undefined) flight.expenses[expenseIndex].amountInUSD = Number(amountInUSD);
@@ -618,7 +620,7 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     // Socket xabar
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Xarajat yangilandi'
       });
@@ -649,7 +651,7 @@ router.delete('/:id/expenses/:expenseId', protect, businessOnly, async (req, res
     // Socket xabar - xarajat o'chirildi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Xarajat o\'chirildi'
       });
@@ -670,13 +672,52 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Mashrut topilmadi' });
     }
 
-    const { startOdometer, startFuel, endOdometer, endFuel, notes } = req.body;
+    const {
+      name, startOdometer, startFuel, endOdometer, endFuel, notes,
+      // Moliyaviy maydonlar
+      totalGivenBudget, totalPayment
+    } = req.body;
 
+    // Umumiy maydonlar
+    if (name !== undefined) flight.name = name;
+    if (notes !== undefined) flight.notes = notes;
+
+    // Spidometr va yoqilg'i
     if (startOdometer !== undefined) flight.startOdometer = startOdometer;
     if (startFuel !== undefined) flight.startFuel = startFuel;
     if (endOdometer !== undefined) flight.endOdometer = endOdometer;
     if (endFuel !== undefined) flight.endFuel = endFuel;
-    if (notes !== undefined) flight.notes = notes;
+
+    // Moliyaviy maydonlar - legs dagi qiymatlarni yangilash
+    if (totalGivenBudget !== undefined || totalPayment !== undefined) {
+      // Agar legs bo'sh bo'lsa, bitta virtual leg yaratish
+      if (!flight.legs || flight.legs.length === 0) {
+        flight.legs = [{
+          fromCity: 'Boshlanish',
+          toCity: 'Tugash',
+          payment: totalPayment || 0,
+          givenBudget: totalGivenBudget || 0,
+          status: 'in_progress',
+          startedAt: new Date()
+        }];
+      } else {
+        // Mavjud legs dagi qiymatlarni yangilash
+        // Birinchi leg ga yangi qiymatlarni qo'shish
+        const currentTotalPayment = flight.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+        const currentTotalGivenBudget = flight.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
+
+        // Farqni birinchi leg ga qo'shish
+        if (totalPayment !== undefined) {
+          const paymentDiff = totalPayment - currentTotalPayment;
+          flight.legs[0].payment = (flight.legs[0].payment || 0) + paymentDiff;
+        }
+
+        if (totalGivenBudget !== undefined) {
+          const budgetDiff = totalGivenBudget - currentTotalGivenBudget;
+          flight.legs[0].givenBudget = (flight.legs[0].givenBudget || 0) + budgetDiff;
+        }
+      }
+    }
 
     await flight.save();
 
@@ -687,7 +728,7 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
     // Socket xabar - mashrut yangilandi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Mashrut ma\'lumotlari yangilandi'
       });
@@ -704,7 +745,7 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
 router.put('/:id/complete', protect, businessOnly, async (req, res) => {
   try {
     const { endOdometer, endFuel, driverProfitPercent } = req.body;
-    
+
     // DEBUG
     console.log('🔍 Complete request body:', { endOdometer, endFuel, driverProfitPercent });
 
@@ -732,65 +773,65 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     // Shofyor ulushi (foydadan %)
     const percent = Number(driverProfitPercent) || 0;
     flight.driverProfitPercent = percent;
-    
+
     // DEBUG
     console.log('🔍 Percent:', percent);
-    
+
     // ============ XALQARO MASHRUT UCHUN USD DA HISOBLASH ============
     const isInternational = flight.flightType === 'international';
-    
+
     // Valyuta kurslarini olish
     const rates = await getCurrencyRates();
     const uzsToUsdRate = rates.UZS || 12800;
-    
+
     // Jami to'lov (mijozdan) - so'm da
     const totalPayment = flight.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
-    
+
     // Jami berilgan yo'l puli
     const totalGivenBudget = flight.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
-    
+
     // Jami xarajatlar
     let totalExpensesUZS = 0;
     let totalExpensesUSD = 0;
     let lightExpensesUZS = 0; // Yengil xarajatlar (shofyor hisobidan)
     let heavyExpensesUZS = 0; // Katta xarajatlar (biznesmen hisobidan)
-    
-    // Katta xarajat turlari
-    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance'];
-    
+
+    // Katta xarajat turlari (shofyor oyligiga ta'sir qilmaydi)
+    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
+
     flight.expenses.forEach(exp => {
       const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
       const amountUZS = exp.amountInUZS || exp.amount || 0;
       const amountUSD = exp.amountInUSD || (exp.amount || 0) / uzsToUsdRate;
-      
+
       totalExpensesUZS += amountUZS;
       totalExpensesUSD += amountUSD;
-      
+
       if (isHeavy) {
         heavyExpensesUZS += amountUZS;
       } else {
         lightExpensesUZS += amountUZS;
       }
     });
-    
+
     // Xalqaro mashrut uchun USD da hisoblash
     if (isInternational) {
       // To'lovni USD ga konvertatsiya
       const totalPaymentUSD = totalPayment / uzsToUsdRate;
       const totalGivenBudgetUSD = totalGivenBudget / uzsToUsdRate;
-      
+
       // Jami kirim USD da
       const totalIncomeUSD = totalPaymentUSD + totalGivenBudgetUSD;
-      
+
       // Sof foyda USD da
       const netProfitUSD = totalIncomeUSD - totalExpensesUSD;
-      
+
       // USD maydonlarini saqlash
       flight.totalPaymentUSD = Math.round(totalPaymentUSD * 100) / 100;
       flight.totalIncomeUSD = Math.round(totalIncomeUSD * 100) / 100;
       flight.totalExpensesUSD = Math.round(totalExpensesUSD * 100) / 100;
       flight.netProfitUSD = Math.round(netProfitUSD * 100) / 100;
-      
+
       // Shofyor ulushi USD da
       if (netProfitUSD > 0 && percent > 0) {
         flight.driverProfitAmountUSD = Math.round(netProfitUSD * percent / 100 * 100) / 100;
@@ -799,11 +840,11 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
         flight.driverProfitAmountUSD = 0;
         flight.driverProfitAmount = 0;
       }
-      
+
       // Biznesmen foydasi USD da
       flight.businessProfitUSD = Math.round((netProfitUSD - (flight.driverProfitAmountUSD || 0)) * 100) / 100;
       flight.driverOwesUSD = flight.businessProfitUSD;
-      
+
       // Valyuta kursi saqlash
       flight.exchangeRateAtClose = uzsToUsdRate;
       flight.closedWithRates = rates;
@@ -811,38 +852,38 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       // Mahalliy mashrut - so'm da hisoblash
       // MUHIM: Shofyor foydasi faqat YENGIL xarajatlardan hisoblanadi
       // Katta xarajatlar biznesmen zimmasida qoladi
-      
+
       // Avvalgi reysdan qolgan pul (haydovchida)
       const previousBalance = flight.previousBalance || 0;
-      
+
       const totalIncome = totalPayment + totalGivenBudget;
       const totalExpenses = totalExpensesUZS;
-      
+
       // Jami pul haydovchida = Avvalgi qoldiq + Jami kirim
       const totalWithPrevious = previousBalance + totalIncome;
-      
+
       // Shofyor uchun sof foyda = Jami pul - FAQAT yengil xarajatlar
       const netProfitForDriver = totalWithPrevious - lightExpensesUZS;
-      
+
       // Haqiqiy sof foyda (barcha xarajatlar bilan)
       const netProfit = totalWithPrevious - totalExpenses;
-      
+
       // Shofyor ulushi - YENGIL xarajatlar ayirilgan foydadan hisoblanadi
       if (netProfitForDriver > 0 && percent > 0) {
         flight.driverProfitAmount = Math.round(netProfitForDriver * percent / 100);
       } else {
         flight.driverProfitAmount = 0;
       }
-      
+
       // Biznesmen foydasi = Haqiqiy sof foyda - Shofyor ulushi
       flight.businessProfit = netProfit - flight.driverProfitAmount;
-      
+
       // Shofyor beradigan pul = Biznesmen foydasi
       flight.driverOwes = flight.businessProfit;
-      
+
       // Jami kirim (avvalgi qoldiq bilan)
       flight.totalIncome = totalWithPrevious;
-      
+
       // Yengil va katta xarajatlarni saqlash
       flight.lightExpenses = Math.round(lightExpensesUZS);
       flight.heavyExpenses = Math.round(heavyExpensesUZS);
@@ -853,21 +894,21 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     if (endOdometer && flight.startOdometer) {
       const totalDistanceFinal = endOdometer - flight.startOdometer;
       flight.totalDistance = totalDistanceFinal;
-      
+
       // Yoqilg'i turi bo'yicha hisoblash
       const fuelTypes = ['fuel_metan', 'fuel_propan', 'fuel_benzin', 'fuel_diesel'];
       const fuelStats = {};
-      
+
       fuelTypes.forEach(fuelType => {
         const fuelExpenses = flight.expenses.filter(exp => exp.type === fuelType && exp.quantity);
         if (fuelExpenses.length > 0 || (fuelType === 'fuel_metan' && flight.startFuel)) {
           const startFuel = fuelType === 'fuel_metan' ? (flight.startFuel || 0) : 0;
           const addedFuel = fuelExpenses.reduce((sum, exp) => sum + (exp.quantity || 0), 0);
           const endFuelAmount = fuelType === 'fuel_metan' ? (endFuel || 0) : 0;
-          
+
           // Aniq sarflangan yoqilg'i = Boshlang'ich + To'ldirishlar - Qoldiq
           const consumedFuel = startFuel + addedFuel - endFuelAmount;
-          
+
           if (consumedFuel > 0) {
             fuelStats[fuelType] = {
               startFuel,
@@ -880,7 +921,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
           }
         }
       });
-      
+
       flight.fuelStats = fuelStats;
     }
 
@@ -891,7 +932,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     if (driver) {
       const now = new Date();
       const currentMonth = `${now.getFullYear()}-${now.getMonth()}`;
-      const lastUpdatedMonth = driver.earningsLastUpdated 
+      const lastUpdatedMonth = driver.earningsLastUpdated
         ? `${driver.earningsLastUpdated.getFullYear()}-${driver.earningsLastUpdated.getMonth()}`
         : null;
 
@@ -906,7 +947,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
         driver.currentMonthEarnings = (driver.currentMonthEarnings || 0) + flight.driverProfitAmount;
         driver.pendingEarnings = (driver.pendingEarnings || 0) + flight.driverProfitAmount;
       }
-      
+
       // MUHIM: Haydovchi balansini yangilash
       // Mashrut yopilganda haydovchida qoladigan pul = biznesmenga berishi kerak (driverOwes)
       // Shofyor ulushi (driverProfitAmount) alohida - u shofyorning haqi
@@ -922,7 +963,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       // Hozircha haydovchida to'liq driverOwes turadi
       // Biznesmen pul olganda (driver-payment) bu kamayadi
       driver.currentBalance = flight.driverOwes || 0;
-      
+
       driver.earningsLastUpdated = now;
       driver.status = 'free';
       await driver.save();
@@ -931,7 +972,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone')
       .populate('vehicle', 'plateNumber brand');
-    
+
     // DEBUG - qaytarilayotgan ma'lumotlarni ko'rish
     console.log('🔍 PopulatedFlight:', {
       driverProfitPercent: populatedFlight.driverProfitPercent,
@@ -1004,9 +1045,9 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
 
     // Haydovchi tasdiqlagan bo'lsa - o'chirib bo'lmaydi
     if (flight.driverConfirmed) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Haydovchi tasdiqlagan reysni o\'chirib bo\'lmaydi' 
+      return res.status(400).json({
+        success: false,
+        message: 'Haydovchi tasdiqlagan reysni o\'chirib bo\'lmaydi'
       });
     }
 
@@ -1065,7 +1106,7 @@ async function getCurrencyRates() {
   if (currencyRatesCache.rates && currencyRatesCache.lastUpdated && (now - currencyRatesCache.lastUpdated < 3600000)) {
     return currencyRatesCache.rates;
   }
-  
+
   try {
     const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', { timeout: 5000 });
     if (response.data && response.data.rates) {
@@ -1076,7 +1117,7 @@ async function getCurrencyRates() {
   } catch (e) {
     console.error('Valyuta kurslarini olishda xatolik:', e.message);
   }
-  
+
   return DEFAULT_CURRENCY_RATES;
 }
 
@@ -1096,10 +1137,10 @@ const convertToUZS = (amount, currency, rates = DEFAULT_CURRENCY_RATES) => {
 // Chegara o'tish qo'shish (umumiy xarajatlar ichiga ham qo'shiladi)
 router.post('/:id/border-crossing', protect, businessOnly, async (req, res) => {
   try {
-    const { 
+    const {
       fromCountry, toCountry, borderName,
       customsFee, transitFee, insuranceFee, otherFees,
-      currency, exchangeRate, note 
+      currency, exchangeRate, note
     } = req.body;
 
     const flight = await Flight.findById(req.params.id);
@@ -1210,7 +1251,7 @@ router.post('/:id/border-crossing', protect, businessOnly, async (req, res) => {
     // Socket xabar - chegara xarajati qo'shildi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `Chegara xarajati qo'shildi: ${fromCountry} → ${toCountry}`
       });
@@ -1243,7 +1284,7 @@ router.delete('/:id/border-crossing/:crossingId', protect, businessOnly, async (
     // Socket xabar - chegara xarajati o'chirildi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Chegara xarajati o\'chirildi'
       });
@@ -1310,7 +1351,7 @@ router.put('/:id/platon', protect, businessOnly, async (req, res) => {
     // Socket xabar - platon yangilandi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Platon ma\'lumotlari yangilandi'
       });
@@ -1355,7 +1396,7 @@ router.post('/:id/waypoint', protect, businessOnly, async (req, res) => {
     // Socket xabar - waypoint qo'shildi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `Yangi nuqta qo'shildi: ${city}`
       });
@@ -1393,7 +1434,7 @@ router.delete('/:id/waypoint/:waypointId', protect, businessOnly, async (req, re
     // Socket xabar - waypoint o'chirildi
     const io = req.app.get('io');
     if (io) {
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: 'Nuqta o\'chirildi'
       });
@@ -1464,9 +1505,9 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
     const remainingBefore = totalOwed - previouslyPaid;
 
     if (amount > remainingBefore) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Qolgan qarz ${remainingBefore.toLocaleString()} so'm. Bundan ko'p qabul qilib bo'lmaydi.` 
+      return res.status(400).json({
+        success: false,
+        message: `Qolgan qarz ${remainingBefore.toLocaleString()} so'm. Bundan ko'p qabul qilib bo'lmaydi.`
       });
     }
 
@@ -1474,7 +1515,7 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
     if (!flight.driverPayments) {
       flight.driverPayments = [];
     }
-    
+
     flight.driverPayments.push({
       amount: Number(amount),
       date: new Date(),
@@ -1516,14 +1557,14 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
-      io.to(`driver-${flight.driver}`).emit('flight-updated', { 
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `${amount.toLocaleString()} so'm to'lov qabul qilindi`
       });
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: populatedFlight,
       payment: {
         amount,

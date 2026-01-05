@@ -59,7 +59,7 @@ router.get('/:id', protect, businessOnly, async (req, res) => {
         .select('-password')
         .lean(),
       Vehicle.findOne({ currentDriver: req.params.id, user: req.user._id, isActive: true })
-        .select('plateNumber brand model fuelType')
+        .select('_id plateNumber brand model year fuelType currentOdometer oilChangeIntervalKm lastOilChangeOdometer lastOilChangeDate')
         .lean()
     ]);
     

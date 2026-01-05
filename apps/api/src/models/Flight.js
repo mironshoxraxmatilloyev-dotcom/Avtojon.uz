@@ -135,8 +135,8 @@ const expenseSchema = new mongoose.Schema({
       'fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan',
       // Yengil xarajatlar
       'food', 'toll', 'wash', 'fine', 'repair_small',
-      // Katta xarajatlar
-      'repair_major', 'tire', 'accident', 'insurance',
+      // Katta xarajatlar (shofyor oyligiga ta'sir qilmaydi)
+      'repair_major', 'tire', 'accident', 'insurance', 'oil',
       // Chegara
       'border', 'border_customs', 'border_transit', 'border_insurance', 'border_other',
       // Eski turlar (backward compatibility)
@@ -195,6 +195,9 @@ const expenseSchema = new mongoose.Schema({
   odometer: { type: Number, default: null, min: 0 },
   distanceSinceLast: { type: Number, default: null },
   fuelConsumption: { type: Number, default: null },
+  
+  // Shina raqamlari (shina xarajati uchun)
+  tireNumber: { type: String, default: null },
   
   // Qo'shimcha
   stationName: { type: String, default: null },
@@ -459,8 +462,8 @@ flightSchema.pre('save', function(next) {
   this.totalDistance = this.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
   
   // ============ XARAJATLAR HISOBLASH (USD va UZS) ============
-  // Katta xarajat turlari - biznesmen hisobidan
-  const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance'];
+  // Katta xarajat turlari - biznesmen hisobidan (shofyor oyligiga ta'sir qilmaydi)
+  const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
   
   let totalExpensesUZS = 0;
   let totalExpensesUSD = 0;

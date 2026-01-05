@@ -10,6 +10,7 @@ import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../hooks/useSocket'
 import { showToast } from '../components/Toast'
 import { PageWrapper, AnimatedCard, AnimatedStatCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
+import { PaymentModal } from '../components/flightDetail/AllModals'
 
 
 
@@ -115,6 +116,10 @@ export default function Dashboard() {
   const [fullScreenMap, setFullScreenMap] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [shouldCenterMap, setShouldCenterMap] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedLegForPayment, setSelectedLegForPayment] = useState(null)
+  const [selectedFlightForPayment, setSelectedFlightForPayment] = useState(null)
+  const [isEditingPayment, setIsEditingPayment] = useState(false)
   const { socket, joinBusinessRoom } = useSocket()
   const isDemoMode = isDemo()
 
@@ -386,6 +391,14 @@ export default function Dashboard() {
     )
   }
 
+  // To'lovni tahrirlash handler
+  const handleEditPayment = (flight, leg) => {
+    setSelectedFlightForPayment(flight)
+    setSelectedLegForPayment(leg)
+    setIsEditingPayment(true)
+    setShowPaymentModal(true)
+  }
+
   return (
     <PageWrapper className="space-y-6 pb-8">
       {/* Demo Banner */}
@@ -481,6 +494,39 @@ export default function Dashboard() {
                       {flight.totalDistance || 0} km
                     </span>
                   </div>
+
+                  {/* To'lovlar ro'yxati */}
+                  {flight.legs && flight.legs.length > 0 && (
+                    <div className="mb-3 space-y-1.5">
+                      {flight.legs.map((leg, idx) => (
+                        <div key={leg._id || idx} className="flex items-center justify-between bg-slate-50 rounded-lg p-2 group/leg hover:bg-slate-100 transition">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] sm:text-xs text-slate-600 truncate">
+                              {leg.fromCity?.split(',')[0]} → {leg.toCity?.split(',')[0]}
+                            </p>
+                            {leg.payment > 0 ? (
+                              <p className="text-xs sm:text-sm font-bold text-emerald-600">+{(leg.payment || 0).toLocaleString()} so'm</p>
+                            ) : (
+                              <p className="text-xs text-slate-400">To'lov kiritilmagan</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditPayment(flight, leg)
+                            }}
+                            className="ml-2 p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition opacity-0 group-hover/leg:opacity-100"
+                            title="To'lovni tahrirlash"
+                          >
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                     <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -683,6 +729,73 @@ export default function Dashboard() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedLegForPayment && selectedFlightForPayment && (
+        <PaymentModal
+          leg={selectedLegForPayment}
+          isEditing={isEditingPayment}
+          onClose={() => { 
+            setShowPaymentModal(false)
+            setSelectedLegForPayment(null)
+            setSelectedFlightForPayment(null)
+            setIsEditingPayment(false)
+          }}
+          onSubmit={(payment) => {
+            // 🚀 Modal ni darhol yopish
+            setShowPaymentModal(false)
+            showToast.success(isEditingPayment ? 'To\'lov yangilandi' : 'To\'lov saqlandi')
+
+            // 🚀 Optimistic update
+            const legId = selectedLegForPayment._id
+            const flightId = selectedFlightForPayment._id
+            const oldPayment = selectedLegForPayment.payment || 0
+            const newPayment = Number(payment) || 0
+
+            setActiveFlights(prev => prev.map(f => {
+              if (f._id === flightId) {
+                return {
+                  ...f,
+                  legs: f.legs?.map(l =>
+                    l._id === legId ? { ...l, payment: newPayment } : l
+                  ) || [],
+                  totalPayment: (f.totalPayment || 0) - oldPayment + newPayment
+                }
+              }
+              return f
+            }))
+
+            setRecentFlights(prev => prev.map(f => {
+              if (f._id === flightId) {
+                return {
+                  ...f,
+                  legs: f.legs?.map(l =>
+                    l._id === legId ? { ...l, payment: newPayment } : l
+                  ) || [],
+                  totalPayment: (f.totalPayment || 0) - oldPayment + newPayment
+                }
+              }
+              return f
+            }))
+
+            setSelectedLegForPayment(null)
+            setSelectedFlightForPayment(null)
+            setIsEditingPayment(false)
+
+            // Background da serverga yuborish
+            api.put(`/flights/${flightId}/legs/${legId}/payment`, { payment })
+              .then(res => {
+                if (res.data?.data) {
+                  setActiveFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+                  setRecentFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))
+                }
+              })
+              .catch(() => {
+                showToast.error('Xatolik yuz berdi')
+              })
+          }}
+        />
       )}
     </PageWrapper>
   )

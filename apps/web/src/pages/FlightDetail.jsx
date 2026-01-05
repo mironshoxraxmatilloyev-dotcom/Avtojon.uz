@@ -54,6 +54,7 @@ export default function FlightDetail() {
   const [selectedLegForExpense, setSelectedLegForExpense] = useState(null)
   const [editingExpense, setEditingExpense] = useState(null)
   const [selectedLegIndex, setSelectedLegIndex] = useState(0)
+  const [isEditingPayment, setIsEditingPayment] = useState(false)
 
   // Fetch flight
   const fetchFlight = useCallback(async (showLoader = true) => {
@@ -188,6 +189,13 @@ export default function FlightDetail() {
 
   const handleAddPayment = (leg) => {
     setSelectedLegForPayment(leg)
+    setIsEditingPayment(false)
+    setShowPaymentModal(true)
+  }
+
+  const handleEditPayment = (leg) => {
+    setSelectedLegForPayment(leg)
+    setIsEditingPayment(true)
     setShowPaymentModal(true)
   }
 
@@ -352,6 +360,7 @@ export default function FlightDetail() {
           onEditExpense={handleEditExpense}
           onDeleteExpense={handleDeleteExpense}
           onAddPayment={handleAddPayment}
+          onEditPayment={handleEditPayment}
           selectedLegIndex={selectedLegIndex}
           onSelectedLegChange={setSelectedLegIndex}
         />
@@ -517,11 +526,12 @@ export default function FlightDetail() {
       {showPaymentModal && selectedLegForPayment && (
         <PaymentModal
           leg={selectedLegForPayment}
-          onClose={() => { setShowPaymentModal(false); setSelectedLegForPayment(null) }}
+          isEditing={isEditingPayment}
+          onClose={() => { setShowPaymentModal(false); setSelectedLegForPayment(null); setIsEditingPayment(false) }}
           onSubmit={(payment) => {
             // 🚀 Modal ni darhol yopish
             setShowPaymentModal(false)
-            showToast.success('To\'lov saqlandi')
+            showToast.success(isEditingPayment ? 'To\'lov yangilandi' : 'To\'lov saqlandi')
 
             // 🚀 Optimistic update
             const legId = selectedLegForPayment._id
@@ -537,6 +547,7 @@ export default function FlightDetail() {
             }))
 
             setSelectedLegForPayment(null)
+            setIsEditingPayment(false)
 
             // Background da serverga yuborish
             api.put(`/flights/${id}/legs/${legId}/payment`, { payment })

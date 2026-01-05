@@ -28,7 +28,7 @@ const DEMO_VEHICLES = [
     { _id: 'v3', plateNumber: '01 C 789 EF', brand: 'Mercedes', year: 2021, currentDriver: 'd3' },
 ]
 
-const INITIAL_FORM = { username: '', password: '', fullName: '', phone: '', paymentType: 'monthly', baseSalary: 0, perTripRate: 0, plateNumber: '', brand: '', year: '' }
+const INITIAL_FORM = { username: '', password: '', fullName: '', phone: '', paymentType: 'monthly', baseSalary: 0, perTripRate: 0, plateNumber: '', brand: '', year: '', vehicleId: '', oilChangeIntervalKm: 15000, lastOilChangeOdometer: 0, currentOdometer: 0 }
 const INITIAL_FLIGHT = { startOdometer: '', startFuel: '', fromCity: '', toCity: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'benzin', fuelUnit: 'litr' }
 
 // Reducer
@@ -251,6 +251,16 @@ export default function DriversNew() {
             baseSalary: Number(form.baseSalary) || 0,
             perTripRate: 0
         }
+
+        // Mashina ma'lumotlari
+        const vehicleData = {
+            plateNumber: form.plateNumber?.toUpperCase(),
+            brand: form.brand,
+            year: form.year ? Number(form.year) : undefined,
+            oilChangeIntervalKm: Number(form.oilChangeIntervalKm) || 15000,
+            lastOilChangeOdometer: Number(form.lastOilChangeOdometer) || 0
+        }
+
         const isEditing = !!editingDriver
         const editId = editingDriver?._id
         const driverName = form.fullName
@@ -260,7 +270,7 @@ export default function DriversNew() {
         } else {
             const tempId = 'temp_' + Date.now()
             const tempDriver = { _id: tempId, ...driverData, status: 'free', createdAt: new Date().toISOString() }
-            const tempVehicle = { _id: 'temp_v_' + Date.now(), plateNumber: form.plateNumber.toUpperCase(), brand: form.brand, year: form.year, currentDriver: tempId }
+            const tempVehicle = { _id: 'temp_v_' + Date.now(), ...vehicleData, currentDriver: tempId }
             dispatch({ type: 'ADD_DRIVER', driver: tempDriver, vehicle: tempVehicle })
         }
         setShowModal(false)
@@ -271,9 +281,13 @@ export default function DriversNew() {
         try {
             if (isEditing) {
                 await api.put(`/drivers/${editId}`, driverData)
+                // Mashina ma'lumotlarini ham yangilash
+                if (form.vehicleId) {
+                    await api.put(`/vehicles/${form.vehicleId}`, vehicleData)
+                }
             } else {
                 const res = await api.post('/drivers', driverData)
-                await api.post('/vehicles', { plateNumber: form.plateNumber.toUpperCase(), brand: form.brand, year: form.year ? Number(form.year) : undefined, currentDriver: res.data.data._id })
+                await api.post('/vehicles', { ...vehicleData, currentDriver: res.data.data._id })
             }
             fetchData(false)
         } catch (err) {
@@ -430,7 +444,22 @@ export default function DriversNew() {
     const handleEdit = (e, driver) => {
         e.stopPropagation()
         setEditingDriver(driver)
-        setForm({ username: driver.username || '', password: '', fullName: driver.fullName || '', phone: driver.phone || '', paymentType: driver.paymentType || 'monthly', baseSalary: driver.baseSalary || 0, perTripRate: driver.perTripRate || 0, plateNumber: '', brand: '', year: '' })
+        setForm({ 
+            username: driver.username || '', 
+            password: '', 
+            fullName: driver.fullName || '', 
+            phone: driver.phone || '', 
+            paymentType: driver.paymentType || 'monthly', 
+            baseSalary: driver.baseSalary || 0, 
+            perTripRate: driver.perTripRate || 0, 
+            plateNumber: '', 
+            brand: '', 
+            year: '',
+            vehicleId: '',
+            oilChangeIntervalKm: 15000,
+            lastOilChangeOdometer: 0,
+            currentOdometer: 0
+        })
         setShowModal(true)
     }
 

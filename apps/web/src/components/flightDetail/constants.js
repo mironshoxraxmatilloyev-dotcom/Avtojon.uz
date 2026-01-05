@@ -61,13 +61,13 @@ export const OLD_CURRENCIES = {
 export const EXPENSE_CATEGORIES = [
   // Yengil xarajatlar - shofyor hisobidan
   { value: 'fuel', label: "Yoqilg'i", iconName: 'Fuel', color: 'from-amber-500 to-orange-500', bgColor: 'bg-amber-500', expenseClass: 'light' },
-  { value: 'oil', label: 'Moy', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', bgColor: 'bg-yellow-600', expenseClass: 'light', hasOdometer: true },
   { value: 'food', label: 'Ovqat', iconName: 'Utensils', color: 'from-green-500 to-emerald-500', bgColor: 'bg-green-500', expenseClass: 'light' },
   { value: 'toll', label: "Yo'l to'lovi", iconName: 'Car', color: 'from-blue-500 to-indigo-500', bgColor: 'bg-blue-500', expenseClass: 'light' },
   { value: 'wash', label: 'Moyka', iconName: 'Droplet', color: 'from-cyan-500 to-blue-500', bgColor: 'bg-cyan-500', expenseClass: 'light' },
   { value: 'fine', label: 'Jarima', iconName: 'FileText', color: 'from-purple-500 to-violet-500', bgColor: 'bg-purple-500', expenseClass: 'light' },
   { value: 'repair_small', label: "Mayda ta'mir", iconName: 'Wrench', color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500', expenseClass: 'light' },
-  // Katta xarajatlar - biznesmen hisobidan
+  // Katta xarajatlar - biznesmen hisobidan (shofyor oyligiga ta'sir qilmaydi)
+  { value: 'oil', label: 'Moy almashtirish', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', bgColor: 'bg-yellow-600', expenseClass: 'heavy', hasOdometer: true },
   { value: 'repair_major', label: "Katta ta'mir", iconName: 'Wrench', color: 'from-red-600 to-rose-700', bgColor: 'bg-red-600', expenseClass: 'heavy' },
   { value: 'tire', label: 'Shina', iconName: 'Circle', color: 'from-slate-600 to-slate-800', bgColor: 'bg-slate-600', expenseClass: 'heavy' },
   { value: 'accident', label: 'Avariya', iconName: 'Shield', color: 'from-rose-600 to-red-700', bgColor: 'bg-rose-600', expenseClass: 'heavy' },
@@ -123,8 +123,8 @@ export const EXPENSE_TYPES = [
 // Xarajat turini aniqlash funksiyasi
 export const getExpenseClass = (type) => {
   if (!type) return 'light'
-  // Katta xarajatlar
-  if (['repair_major', 'tire', 'accident', 'insurance'].includes(type)) return 'heavy'
+  // Katta xarajatlar (shofyor oyligiga ta'sir qilmaydi)
+  if (['repair_major', 'tire', 'accident', 'insurance', 'oil'].includes(type)) return 'heavy'
   // Qolganlar yengil
   return 'light'
 }

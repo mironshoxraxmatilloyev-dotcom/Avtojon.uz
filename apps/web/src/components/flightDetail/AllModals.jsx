@@ -203,6 +203,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
     description: editingExpense?.description || '',
     quantity: editingExpense?.quantity?.toString() || '',
     odometer: editingExpense?.odometer?.toString() || '',
+    tireNumber: editingExpense?.tireNumber?.toString() || '',
     date: editingExpense?.date ? new Date(editingExpense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   }))
 
@@ -263,8 +264,8 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
       amountInUZS = convertedToUZS || Number(form.amount)
     }
 
-    // Katta xarajat turlarini aniqlash
-    const HEAVY_TYPES = ['repair_major', 'tire', 'accident', 'insurance']
+    // Katta xarajat turlarini aniqlash (shofyor oyligiga ta'sir qilmaydi)
+    const HEAVY_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil']
     const expenseType = isFuel ? form.type : isBorder ? form.type : form.category
     const expenseClass = HEAVY_TYPES.includes(expenseType) ? 'heavy' : 'light'
 
@@ -277,7 +278,8 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
       amountInUZS,
       description: form.description,
       quantity: isFuel && form.quantity ? Number(form.quantity) : null,
-      odometer: (isFuel || isOil) && form.odometer ? Number(form.odometer) : null,
+      odometer: (isFuel || isOil || form.category === 'repair' || form.category === 'tire' || form.category === 'accident') && form.odometer ? Number(form.odometer) : null,
+      tireNumber: form.category === 'tire' && form.tireNumber ? form.tireNumber : null,
       date: form.date ? new Date(form.date) : new Date(),
       legId: selectedLeg?.leg?._id || null,
       legIndex: selectedLeg?.index ?? null,
@@ -509,8 +511,8 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
             </div>
           )}
 
-          {/* Spidometr - yoqilg'i va moy uchun */}
-          {(isFuel || isOil) && (
+          {/* Spidometr - yoqilg'i, moy va katta xarajatlar uchun */}
+          {(isFuel || isOil || form.category === 'repair' || form.category === 'tire' || form.category === 'accident') && (
             <div>
               <label className="block text-sm font-semibold text-slate-600 mb-3">
                 Spidometr (km)
@@ -527,6 +529,25 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
                   Boshlang'ichdan: +{(Number(form.odometer) - flight.startOdometer).toLocaleString()} km
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Shina raqamlari - shina xarajati uchun */}
+          {form.category === 'tire' && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-3">
+                Shina raqamlari (masalan: 1,2,3,4 yoki 1,3)
+              </label>
+              <input
+                type="text"
+                value={form.tireNumber}
+                onChange={e => setForm(f => ({ ...f, tireNumber: e.target.value }))}
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg placeholder-slate-400 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/10 transition-all"
+                placeholder="1, 2, 3, 4 (o'zgartirilgan shinalarning raqamlari)"
+              />
+              <p className="text-xs text-slate-500 mt-2">
+                💡 Masalan: "1,3" = 1-chi va 3-chi shinalar o'zgartirildi
+              </p>
             </div>
           )}
 
@@ -839,10 +860,10 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
 })
 
 // ============================================
-// PAYMENT MODAL - To'lov olish (PRO)
+// PAYMENT MODAL - To'lov olish/tahrirlash (PRO)
 // ============================================
-export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit }) {
-  const [payment, setPayment] = useState('')
+export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit, isEditing = false }) {
+  const [payment, setPayment] = useState(isEditing ? String(leg?.payment || 0) : '')
   const quickAmounts = [500000, 1000000, 2000000, 3000000, 5000000]
 
   return createPortal(
@@ -856,7 +877,7 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit 
                 <DollarSign className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Mijozdan to'lov</h2>
+                <h2 className="text-xl font-bold text-white">{isEditing ? 'To\'lovni tahrirlash' : 'Mijozdan to\'lov'}</h2>
                 <p className="text-emerald-400/80 text-sm mt-0.5 flex items-center gap-1">
                   {leg.fromCity?.split(',')[0]}
                   <ArrowRight size={14} />
@@ -911,7 +932,7 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit 
             className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 shadow-xl shadow-emerald-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={22} />
-            To'lovni saqlash
+            {isEditing ? 'Saqlash' : 'To\'lovni saqlash'}
           </button>
         </div>
       </div>

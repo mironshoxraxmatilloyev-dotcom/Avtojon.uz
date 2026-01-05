@@ -1,7 +1,8 @@
 import { createPortal } from 'react-dom'
-import { X, User, Eye, EyeOff, RefreshCw } from 'lucide-react'
+import { X, User, Eye, EyeOff, RefreshCw, Truck, Droplets } from 'lucide-react'
 import { PhoneInputDark } from '../PhoneInput'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import api from '../../services/api'
 
 export default function DriverModal({ 
   show, 
@@ -17,6 +18,36 @@ export default function DriverModal({
   const [newPassword, setNewPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [vehicleData, setVehicleData] = useState(null)
+  const [loadingVehicle, setLoadingVehicle] = useState(false)
+
+  // Tahrirlash rejimida mashina ma'lumotlarini yuklash
+  useEffect(() => {
+    if (editingDriver && show) {
+      setLoadingVehicle(true)
+      api.get(`/drivers/${editingDriver._id}`)
+        .then(res => {
+          const vehicle = res.data.data?.vehicle
+          if (vehicle) {
+            setVehicleData(vehicle)
+            setForm(f => ({
+              ...f,
+              vehicleId: vehicle._id,
+              plateNumber: vehicle.plateNumber || '',
+              brand: vehicle.brand || '',
+              year: vehicle.year || '',
+              oilChangeIntervalKm: vehicle.oilChangeIntervalKm || 15000,
+              lastOilChangeOdometer: vehicle.lastOilChangeOdometer || 0,
+              currentOdometer: vehicle.currentOdometer || 0
+            }))
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingVehicle(false))
+    } else {
+      setVehicleData(null)
+    }
+  }, [editingDriver, show])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -197,47 +228,87 @@ export default function DriverModal({
             </div>
           )}
 
-          {/* Vehicle (only for new driver) */}
-          {!editingDriver && (
-            <div className="pt-4 sm:pt-5 border-t border-white/10">
-              <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-5">🚛 Mashina ma'lumotlari</h3>
-              <div className="space-y-4 sm:space-y-5">
+          {/* Vehicle - yangi va tahrirlash uchun */}
+          <div className="pt-4 sm:pt-5 border-t border-white/10">
+            <div className="flex items-center gap-2 mb-4 sm:mb-5">
+              <Truck className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Mashina ma'lumotlari</h3>
+              {loadingVehicle && <span className="text-xs text-slate-400">Yuklanmoqda...</span>}
+            </div>
+            <div className="space-y-4 sm:space-y-5">
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Davlat raqami {!editingDriver && '*'}</label>
+                <input 
+                  type="text" 
+                  value={form.plateNumber} 
+                  onChange={(e) => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} 
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
+                  placeholder="01 A 123 AB" 
+                  required={!editingDriver}
+                  disabled={editingDriver && !vehicleData}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:gap-5">
                 <div>
-                  <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Davlat raqami *</label>
+                  <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Marka</label>
                   <input 
                     type="text" 
-                    value={form.plateNumber} 
-                    onChange={(e) => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} 
-                    className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition uppercase" 
-                    placeholder="01 A 123 AB" 
-                    required 
+                    value={form.brand} 
+                    onChange={(e) => setForm({ ...form, brand: e.target.value })} 
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    placeholder="MAN, Volvo..." 
+                    disabled={editingDriver && !vehicleData}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                <div>
+                  <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Yil</label>
+                  <input 
+                    type="number" 
+                    value={form.year} 
+                    onChange={(e) => setForm({ ...form, year: e.target.value })} 
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
+                    placeholder="2020" 
+                    disabled={editingDriver && !vehicleData}
+                  />
+                </div>
+              </div>
+
+              {/* Moy almashtirish sozlamalari */}
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <Droplets className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-semibold text-amber-300">Moy almashtirish sozlamalari</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Marka</label>
+                    <label className="block text-xs font-medium text-amber-200/70 mb-1.5">Har necha km da</label>
                     <input 
-                      type="text" 
-                      value={form.brand} 
-                      onChange={(e) => setForm({ ...form, brand: e.target.value })} 
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                      placeholder="MAN, Volvo..." 
+                      type="number" 
+                      value={form.oilChangeIntervalKm || ''} 
+                      onChange={(e) => setForm({ ...form, oilChangeIntervalKm: e.target.value })} 
+                      className="w-full px-3 py-2.5 text-sm bg-white/5 border border-amber-500/30 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
+                      placeholder="15000" 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm sm:text-base font-semibold text-blue-200 mb-2 sm:mb-3">Yil</label>
+                    <label className="block text-xs font-medium text-amber-200/70 mb-1.5">Oxirgi almashtirish (km)</label>
                     <input 
                       type="number" 
-                      value={form.year} 
-                      onChange={(e) => setForm({ ...form, year: e.target.value })} 
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition" 
-                      placeholder="2020" 
+                      value={form.lastOilChangeOdometer || ''} 
+                      onChange={(e) => setForm({ ...form, lastOilChangeOdometer: e.target.value })} 
+                      className="w-full px-3 py-2.5 text-sm bg-white/5 border border-amber-500/30 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none transition" 
+                      placeholder="800000" 
                     />
                   </div>
                 </div>
+                {form.oilChangeIntervalKm && form.lastOilChangeOdometer && (
+                  <p className="text-xs text-amber-300/80">
+                    Keyingi almashtirish: <span className="font-bold">{(Number(form.lastOilChangeOdometer) + Number(form.oilChangeIntervalKm)).toLocaleString()} km</span> da
+                  </p>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Submit */}
           <button 
