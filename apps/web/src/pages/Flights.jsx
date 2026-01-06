@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { 
+import {
   Plus, X, Route, Calendar, Globe, Flag,
   Activity, CheckCircle, Fuel, Gauge, Wallet,
   ChevronDown, ChevronUp, Trash2, DollarSign, ArrowRight,
@@ -175,11 +175,11 @@ export default function Flights() {
 
   // Forms
   const [legForm, setLegForm] = useState({ toCity: '', payment: '', distance: '' })
-  const [expenseForm, setExpenseForm] = useState({ 
+  const [expenseForm, setExpenseForm] = useState({
     category: 'fuel', // asosiy kategoriya
     type: 'fuel_benzin', // yoqilg'i turi (faqat fuel kategoriyasi uchun)
-    amount: '', 
-    description: '', 
+    amount: '',
+    description: '',
     quantity: '',
     date: new Date().toISOString().split('T')[0] // bugungi sana
   })
@@ -261,7 +261,7 @@ export default function Flights() {
   const handleAddExpense = async (e) => {
     e.preventDefault()
     if (submitting) return
-    
+
     // Validatsiya
     if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
       alert.warning('Maydon to\'ldirilmagan', 'Xarajat summasini kiriting!')
@@ -272,7 +272,7 @@ export default function Flights() {
     const fuelType = FUEL_TYPES.find(f => f.value === expenseForm.type)
     const expenseLabel = isFuel ? fuelType?.label : EXPENSE_CATEGORIES.find(c => c.value === expenseForm.category)?.label
     const formattedAmount = new Intl.NumberFormat('uz-UZ').format(expenseForm.amount)
-    
+
     const expenseData = {
       type: isFuel ? expenseForm.type : expenseForm.category,
       amount: Number(expenseForm.amount),
@@ -291,11 +291,11 @@ export default function Flights() {
       totalExpenses: (f.totalExpenses || 0) + expenseData.amount,
       profit: (f.totalPayment || 0) - ((f.totalExpenses || 0) + expenseData.amount)
     } : f))
-    
+
     setShowExpenseModal(false)
     setExpenseForm({ category: 'fuel', type: 'fuel_benzin', amount: '', description: '', quantity: '', date: new Date().toISOString().split('T')[0] })
     showToast.success(`${expenseLabel}: ${formattedAmount} so'm qo'shildi`)
-    
+
     // Fonda API so'rovi
     api.post(`/flights/${flightId}/expenses`, expenseData)
       .then((res) => {
@@ -312,15 +312,15 @@ export default function Flights() {
   // Marshrutni yopish
   const handleComplete = async (e) => {
     e.preventDefault()
-    
+
     const driverPercent = Number(completeForm.driverProfitPercent) || 0
     const profit = (selectedFlight.totalPayment || 0) - (selectedFlight.totalExpenses || 0)
     const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
-    
+
     const confirmMessage = profit > 0 && driverPercent > 0
       ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nHaydovchiga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
       : `${selectedFlight.name} reysini yopishni xohlaysizmi?`
-    
+
     const confirmed = await alert.confirm({
       title: "Marshrutni yopish",
       message: confirmMessage,
@@ -428,7 +428,7 @@ export default function Flights() {
       borderCrossings: f.borderCrossings?.filter(bc => bc._id !== crossingId) || [],
       borderCrossingsTotalUSD: (f.borderCrossingsTotalUSD || 0) - crossingAmount
     } : f))
-    
+
     showToast.success('O\'chirildi')
     api.delete(`/flights/${flightId}/border-crossing/${crossingId}`)
       .then((res) => {
@@ -611,7 +611,7 @@ export default function Flights() {
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-green-900 to-slate-900 text-white p-6 md:p-8 rounded-3xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/20 rounded-full blur-3xl -mr-48 -mt-48"></div>
-        
+
         <div className="relative">
           <div className="flex items-center gap-2 text-green-300 text-sm mb-2">
             <Calendar size={14} />
@@ -662,11 +662,10 @@ export default function Flights() {
           <button
             key={value}
             onClick={() => setFilter(value)}
-            className={`px-5 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${
-              filter === value
+            className={`px-5 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${filter === value
                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             {label}
           </button>
@@ -678,15 +677,14 @@ export default function Flights() {
         {flights.map((flight) => (
           <div key={flight._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {/* Flight Header */}
-            <div 
+            <div
               className="p-3 sm:p-5 cursor-pointer hover:bg-gray-50 transition"
               onClick={() => setExpandedFlight(expandedFlight === flight._id ? null : flight._id)}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${
-                    flight.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                  }`}>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${flight.status === 'active' ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                    }`}>
                     {flight.driver?.fullName?.charAt(0) || '?'}
                   </div>
                   <div className="min-w-0">
@@ -802,7 +800,7 @@ export default function Flights() {
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-red-600">-{formatMoney(exp.amount)}</p>
                           {flight.status === 'active' && (
-                            <button 
+                            <button
                               onClick={() => handleDeleteExpense(flight._id, exp._id)}
                               className="p-1 text-gray-400 hover:text-red-500"
                             >
@@ -847,7 +845,7 @@ export default function Flights() {
                                 {bc.borderName && <span className="text-xs text-gray-500">({bc.borderName})</span>}
                               </div>
                               {flight.status === 'active' && (
-                                <button 
+                                <button
                                   onClick={() => handleDeleteBorderCrossing(flight._id, bc._id)}
                                   className="p-1 text-gray-400 hover:text-red-500"
                                 >
@@ -896,7 +894,7 @@ export default function Flights() {
                           </p>
                           {flight.status === 'active' && (
                             <button
-                              onClick={() => { 
+                              onClick={() => {
                                 setSelectedFlight(flight)
                                 setPlatonForm({
                                   amount: flight.platon?.amount || '',
@@ -904,7 +902,7 @@ export default function Flights() {
                                   distanceKm: flight.platon?.distanceKm || '',
                                   note: flight.platon?.note || ''
                                 })
-                                setShowPlatonModal(true) 
+                                setShowPlatonModal(true)
                               }}
                               className="text-xs px-3 py-1 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-200"
                             >
@@ -1010,8 +1008,7 @@ export default function Flights() {
                         O'chirish
                       </button>
                     </div>
-                      </button>
-                    </div>
+
                     {/* Xalqaro marshrut uchun qo'shimcha tugmalar */}
                     {flight.flightType === 'international' && (
                       <div className="flex flex-col sm:flex-row gap-2">
@@ -1024,7 +1021,7 @@ export default function Flights() {
                         </button>
                         {flight.countriesInRoute?.includes('RU') && (
                           <button
-                            onClick={() => { 
+                            onClick={() => {
                               setSelectedFlight(flight)
                               setPlatonForm({
                                 amount: flight.platon?.amount || '',
@@ -1032,7 +1029,7 @@ export default function Flights() {
                                 distanceKm: flight.platon?.distanceKm || '',
                                 note: flight.platon?.note || ''
                               })
-                              setShowPlatonModal(true) 
+                              setShowPlatonModal(true)
                             }}
                             className="flex-1 py-2.5 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700 transition flex items-center justify-center gap-2 text-sm"
                           >
@@ -1076,8 +1073,8 @@ export default function Flights() {
                     <div>
                       <h2 className="text-lg font-bold text-white">Yangi buyurtma</h2>
                       <p className="text-green-300 text-sm">
-                        {selectedFlight.legs?.length > 0 
-                          ? `${selectedFlight.legs[selectedFlight.legs.length - 1].toCity} dan` 
+                        {selectedFlight.legs?.length > 0
+                          ? `${selectedFlight.legs[selectedFlight.legs.length - 1].toCity} dan`
                           : 'Birinchi buyurtma'}
                       </p>
                     </div>
@@ -1164,17 +1161,16 @@ export default function Flights() {
                       <button
                         key={value}
                         type="button"
-                        onClick={() => setExpenseForm({ 
-                          ...expenseForm, 
+                        onClick={() => setExpenseForm({
+                          ...expenseForm,
                           category: value,
                           type: value === 'fuel' ? 'fuel_benzin' : value,
                           quantity: value === 'fuel' ? expenseForm.quantity : ''
                         })}
-                        className={`p-3 rounded-xl border text-center transition ${
-                          expenseForm.category === value
+                        className={`p-3 rounded-xl border text-center transition ${expenseForm.category === value
                             ? 'border-orange-500 bg-orange-500/20 text-white'
                             : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                        }`}
+                          }`}
                       >
                         <span className="text-xl">{icon}</span>
                         <p className="text-xs mt-1">{label}</p>
@@ -1193,11 +1189,10 @@ export default function Flights() {
                           key={value}
                           type="button"
                           onClick={() => setExpenseForm({ ...expenseForm, type: value })}
-                          className={`p-2.5 rounded-xl border text-center transition ${
-                            expenseForm.type === value
+                          className={`p-2.5 rounded-xl border text-center transition ${expenseForm.type === value
                               ? 'border-green-500 bg-green-500/20 text-white'
                               : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
-                          }`}
+                            }`}
                         >
                           <span className="text-lg">{icon}</span>
                           <p className="text-[10px] mt-0.5">{label}</p>
@@ -1255,8 +1250,8 @@ export default function Flights() {
                     placeholder="Qo'shimcha ma'lumot..."
                   />
                 </div>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={submitting}
                   className="w-full py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -1337,7 +1332,7 @@ export default function Flights() {
                     <div className={`mt-3 p-3 rounded-lg flex items-center justify-between ${selectedFlight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
                       <span className={`text-sm ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>Haydovchiga:</span>
                       <span className={`font-bold ${selectedFlight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {selectedFlight.profit > 0 
+                        {selectedFlight.profit > 0
                           ? `${formatMoney(Math.round(selectedFlight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
                           : "0 so'm (zarar bo'lgani uchun)"
                         }
@@ -1513,8 +1508,8 @@ export default function Flights() {
                   />
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={submitting}
                   className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold disabled:opacity-50"
                 >
@@ -1597,8 +1592,8 @@ export default function Flights() {
                   />
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={submitting}
                   className="w-full py-3 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-xl font-bold disabled:opacity-50"
                 >
