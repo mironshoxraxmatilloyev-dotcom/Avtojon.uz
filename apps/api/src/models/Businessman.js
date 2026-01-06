@@ -62,6 +62,11 @@ const businessmanSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     }
+  },
+  // Ro'yxatdan o'tgan sana
+  registrationDate: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 

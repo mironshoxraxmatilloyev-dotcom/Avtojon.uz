@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAlert } from '../../components/ui'
 import api from '../../services/api'
-import { 
+import {
   Users, Plus, Trash2, Search, Power, Edit3, Key,
   Truck, Car, ArrowLeft, Crown, Phone, Building2
 } from 'lucide-react'
-import { 
-  Sidebar, MobileHeader, DashboardTab, StatsTab, 
-  CredentialsModal, PasswordModal, SubscriptionModal, BusinessmanModal 
+import {
+  Sidebar, MobileHeader, DashboardTab, StatsTab,
+  CredentialsModal, PasswordModal, SubscriptionModal, BusinessmanModal
 } from '../../components/superadmin'
 import SmsPanel from '../../components/admin/SmsPanel'
 
@@ -27,7 +27,7 @@ export default function SuperAdminPanel() {
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  
+
   // Modals
   const [showModal, setShowModal] = useState(false)
   const [editingBusinessman, setEditingBusinessman] = useState(null)
@@ -38,7 +38,7 @@ export default function SuperAdminPanel() {
   const [formData, setFormData] = useState({ fullName: '', businessType: '', phone: '' })
   const [submitting, setSubmitting] = useState(false)
   const [copiedField, setCopiedField] = useState(null)
-  
+
   // Subscription
   const [subscriptionModal, setSubscriptionModal] = useState(null)
   const [subscriptionDays, setSubscriptionDays] = useState(30)
@@ -88,9 +88,9 @@ export default function SuperAdminPanel() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.fullName || !formData.businessType || !formData.phone) { 
+    if (!formData.fullName || !formData.businessType || !formData.phone) {
       alert.warning('Ogohlantirish', 'Barcha maydonlarni toldiring')
-      return 
+      return
     }
     setSubmitting(true)
     try {
@@ -114,40 +114,40 @@ export default function SuperAdminPanel() {
 
   const handleDelete = async (id) => {
     if (!await alert.confirm({ title: "O'chirish", message: "Rostdan o'chirmoqchimisiz?", type: "danger" })) return
-    try { 
+    try {
       await api.delete('/super-admin/businessmen/' + id)
       setBusinessmen(prev => prev.filter(b => b._id !== id))
       alert.success("O'chirildi", "Biznesmen o'chirildi")
-      fetchStats() 
+      fetchStats()
     } catch (err) { alert.error('Xatolik', "O'chirishda xatolik") }
   }
 
   const handlePasswordUpdate = async () => {
-    if (!newPassword || newPassword.length < 6) { 
+    if (!newPassword || newPassword.length < 6) {
       alert.warning('Ogohlantirish', 'Parol kamida 6 ta belgi')
-      return 
+      return
     }
-    try { 
+    try {
       // User yoki Businessman ekanligini aniqlash
       const isUser = users.some(u => u._id === passwordModal._id)
-      const endpoint = isUser 
+      const endpoint = isUser
         ? `/super-admin/users/${passwordModal._id}/set-password`
         : `/super-admin/businessmen/${passwordModal._id}/set-password`
-      
+
       await api.post(endpoint, { password: newPassword })
       setShowCredentials({ username: passwordModal.username, password: newPassword })
       setPasswordModal(null)
       setNewPassword('')
-      alert.success('Yangilandi', 'Parol yangilandi') 
+      alert.success('Yangilandi', 'Parol yangilandi')
     } catch (err) { alert.error('Xatolik', err.response?.data?.message || 'Xatolik') }
   }
 
   const toggleActive = async (b) => {
-    try { 
+    try {
       await api.put('/super-admin/businessmen/' + b._id, { isActive: !b.isActive })
       setBusinessmen(prev => prev.map(x => x._id === b._id ? { ...x, isActive: !x.isActive } : x))
       alert.success('Yangilandi', b.isActive ? 'Faolsizlantirildi' : 'Faollashtirildi')
-      fetchStats() 
+      fetchStats()
     } catch (err) { alert.error('Xatolik', 'Xatolik') }
   }
 
@@ -165,20 +165,20 @@ export default function SuperAdminPanel() {
     finally { setSubscriptionLoading(false) }
   }
 
-  const copyToClipboard = (text, field) => { 
+  const copyToClipboard = (text, field) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    setTimeout(() => setCopiedField(null), 2000) 
+    setTimeout(() => setCopiedField(null), 2000)
   }
-  
+
   const handleLogout = () => { logout(); navigate('/login') }
 
-  const filteredBusinessmen = businessmen.filter(b => 
+  const filteredBusinessmen = businessmen.filter(b =>
     b.fullName?.toLowerCase().includes(search.toLowerCase()) ||
     b.username?.toLowerCase().includes(search.toLowerCase())
   )
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.fullName?.toLowerCase().includes(search.toLowerCase()) ||
     u.username?.toLowerCase().includes(search.toLowerCase())
   )
@@ -212,8 +212,8 @@ export default function SuperAdminPanel() {
             <p className="text-slate-400 text-xs">{businessmen.length} ta biznesmen ro'yxatda</p>
           </div>
         </div>
-        <button 
-          onClick={() => { setShowModal(true); setEditingBusinessman(null); setFormData({ fullName: '', businessType: '', phone: '' }) }} 
+        <button
+          onClick={() => { setShowModal(true); setEditingBusinessman(null); setFormData({ fullName: '', businessType: '', phone: '' }) }}
           className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-xl text-white font-medium transition-all shadow-lg shadow-violet-500/30"
         >
           <Plus size={18} />
@@ -258,11 +258,11 @@ export default function SuperAdminPanel() {
                   </div>
                   {/* Ro'yxatdan o'tgan sana */}
                   <p className="text-xs text-slate-500 mt-1">
-                    Ro'yxatdan o'tdi: {b.createdAt ? formatDate(b.createdAt) : 'Noma\'lum'}
+                    📅 {formatFullDate(b.createdAt)}
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-1.5">
                 <ActionButton icon={Crown} color="violet" onClick={() => setSubscriptionModal({ type: 'businessmen', data: b })} title="Obuna" />
                 <ActionButton icon={Key} color="amber" onClick={() => setPasswordModal(b)} title="Parol" />
@@ -271,16 +271,15 @@ export default function SuperAdminPanel() {
                 <ActionButton icon={Trash2} color="red" onClick={() => handleDelete(b._id)} title="O'chirish" />
               </div>
             </div>
-            
+
             {/* Subscription Badge */}
             <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
               <span className="text-xs text-slate-500">Obuna holati</span>
-              <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                b.subscription?.endDate && new Date(b.subscription.endDate) > new Date()
+              <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${b.subscription?.endDate && new Date(b.subscription.endDate) > new Date()
                   ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                   : 'bg-red-500/10 text-red-400 border border-red-500/20'
-              }`}>
-                {b.subscription?.endDate 
+                }`}>
+                {b.subscription?.endDate
                   ? new Date(b.subscription.endDate) > new Date()
                     ? `✓ ${new Date(b.subscription.endDate).toLocaleDateString('uz-UZ')} gacha`
                     : '✗ Tugagan'
@@ -289,12 +288,12 @@ export default function SuperAdminPanel() {
             </div>
           </div>
         ))}
-        
+
         {filteredBusinessmen.length === 0 && (
-          <EmptyState 
-            icon={Users} 
-            title={search ? 'Hech narsa topilmadi' : 'Biznesmenlar yo\'q'} 
-            subtitle={search ? 'Boshqa so\'z bilan qidiring' : 'Yangi biznesmen qo\'shing'} 
+          <EmptyState
+            icon={Users}
+            title={search ? 'Hech narsa topilmadi' : 'Biznesmenlar yo\'q'}
+            subtitle={search ? 'Boshqa so\'z bilan qidiring' : 'Yangi biznesmen qo\'shing'}
           />
         )}
       </div>
@@ -338,7 +337,7 @@ export default function SuperAdminPanel() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Ro'yxatdan o'tdi: {u.createdAt ? formatDate(u.createdAt) : 'Noma\'lum'}
+                    Ro'yxatdan o'tdi: {u.createdAt ? formatDateSimple(u.createdAt) : 'Noma\'lum'}
                   </p>
                 </div>
               </div>
@@ -438,7 +437,7 @@ export default function SuperAdminPanel() {
           <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
         </div>
       </div>
-      
+
       {/* Mobile Sidebar */}
       <div className="lg:hidden">
         <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
@@ -470,25 +469,46 @@ function formatDate(dateString) {
   const diffMs = now - date
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
+
   // Soatlar
   if (diffHours < 1) return 'Hozir'
   if (diffHours < 24) return `${diffHours} soat oldin`
-  
+
   // Kunlar
   if (diffDays === 0) return `Bugun ${date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`
   if (diffDays === 1) return `Kecha ${date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`
   if (diffDays < 7) return `${diffDays} kun oldin`
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta oldin`
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} oy oldin`
-  
-  return date.toLocaleDateString('uz-UZ', { 
-    year: 'numeric', 
-    month: 'short', 
+
+  return date.toLocaleDateString('uz-UZ', {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+function formatFullDate(dateString) {
+  if (!dateString) return 'Noma\'lum'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('uz-UZ', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function formatDateSimple(dateString) {
+  if (!dateString) return 'Noma\'lum'
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function ActionButton({ icon: Icon, color, onClick, title }) {
