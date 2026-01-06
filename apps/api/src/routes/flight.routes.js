@@ -986,6 +986,9 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
         flight.driverProfitAmount = 0;
       }
 
+      // Sof foyda UZS da (statistika uchun)
+      flight.netProfit = Math.round(netProfitUSD * uzsToUsdRate);
+
       // Biznesmen foydasi USD da
       flight.businessProfitUSD = Math.round((netProfitUSD - (flight.driverProfitAmountUSD || 0)) * 100) / 100;
       flight.driverOwesUSD = flight.businessProfitUSD;
@@ -1138,7 +1141,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       // driverOwes = biznesmenga berishi kerak pul (netProfit - driverProfitAmount)
       // currentBalance = haydovchida qoladigan pul (previousBalance + netProfit - driverProfitAmount)
 
-      const newBalance = previousBalance + netProfit - (flight.driverProfitAmount || 0);
+      const newBalance = (flight.previousBalance || 0) + (flight.netProfit || 0) - (flight.driverProfitAmount || 0);
       driver.currentBalance = Math.max(0, newBalance);
 
       // 🚀 Reys boshlanmasdan oldingi xarajatlarni o'chirish
