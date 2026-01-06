@@ -1,29 +1,29 @@
-import { Phone, Truck, Edit, Trash2, Play, Route, Banknote, Wallet, Coins } from 'lucide-react'
+import { Phone, Truck, Edit, Trash2, Play, Route, Banknote, Wallet, Coins, Plus } from 'lucide-react'
 
-export default function DriverCard({ 
-  driver, 
-  vehicle, 
-  flight, 
-  onNavigate, 
-  onEdit, 
-  onDelete, 
-  onStartFlight, 
+export default function DriverCard({
+  driver,
+  vehicle,
+  flight,
+  onNavigate,
+  onEdit,
+  onDelete,
+  onStartFlight,
   onViewFlight,
-  formatMoney 
+  onAddExpense,
+  formatMoney
 }) {
   return (
-    <div 
-      onClick={() => onNavigate(driver._id)} 
+    <div
+      onClick={() => onNavigate(driver._id)}
       className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg flex-shrink-0 ${
-            driver.status === 'busy' 
-              ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
+          <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg flex-shrink-0 ${driver.status === 'busy'
+              ? 'bg-gradient-to-br from-orange-500 to-orange-600'
               : 'bg-gradient-to-br from-blue-500 to-blue-600'
-          }`}>
+            }`}>
             {driver.fullName?.charAt(0)}
           </div>
           <div className="min-w-0">
@@ -36,11 +36,10 @@ export default function DriverCard({
             </div>
           </div>
         </div>
-        <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${
-          driver.status === 'busy' 
-            ? 'bg-orange-100 text-orange-700' 
+        <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${driver.status === 'busy'
+            ? 'bg-orange-100 text-orange-700'
             : 'bg-green-100 text-green-700'
-        }`}>
+          }`}>
           {driver.status === 'busy' ? 'Marshrutda' : "Bo'sh"}
         </span>
       </div>
@@ -71,8 +70,8 @@ export default function DriverCard({
 
       {/* Active Flight */}
       {driver.status === 'busy' && flight && (
-        <div 
-          onClick={(e) => { e.stopPropagation(); onViewFlight(flight._id) }} 
+        <div
+          onClick={(e) => { e.stopPropagation(); onViewFlight(flight._id) }}
           className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl mb-3 sm:mb-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 cursor-pointer hover:shadow-md transition"
         >
           <div className="flex items-center justify-between gap-2">
@@ -100,8 +99,8 @@ export default function DriverCard({
             )}
           </p>
           <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">
-            {driver.paymentType === 'per_trip' 
-              ? formatMoney(driver.perTripRate) + '/marshrut' 
+            {driver.paymentType === 'per_trip'
+              ? formatMoney(driver.perTripRate) + '/marshrut'
               : formatMoney(driver.baseSalary)}
           </p>
           {/* To'lanmagan daromad */}
@@ -112,32 +111,40 @@ export default function DriverCard({
           )}
         </div>
         <div className="flex gap-0.5 sm:gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddExpense(driver) }}
+            className="px-2 py-1.5 sm:px-3 sm:py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition flex items-center gap-1.5 border border-purple-200 hover:border-purple-300"
+            title="Xarajat qo'shish"
+          >
+            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <span className="text-xs font-medium">Xarajat qo'shish</span>
+          </button>
           {driver.status === 'free' && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onStartFlight(driver) }} 
-              className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition" 
+            <button
+              onClick={(e) => { e.stopPropagation(); onStartFlight(driver) }}
+              className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
               title="Marshrut ochish"
             >
               <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           )}
           {driver.status === 'busy' && flight && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onViewFlight(flight._id) }} 
-              className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition" 
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewFlight(flight._id) }}
+              className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
               title="Marshrutni davom ettirish"
             >
               <Route size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           )}
-          <button 
-            onClick={(e) => onEdit(e, driver)} 
+          <button
+            onClick={(e) => onEdit(e, driver)}
             className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
           >
             <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
           </button>
-          <button 
-            onClick={(e) => onDelete(e, driver._id)} 
+          <button
+            onClick={(e) => onDelete(e, driver._id)}
             className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
           >
             <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />

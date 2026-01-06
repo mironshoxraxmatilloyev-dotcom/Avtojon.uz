@@ -7,7 +7,7 @@ import {
   Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown
 } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
-import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, formatMoney } from './constants'
+import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, FILTER_TYPES, formatMoney } from './constants'
 import VoiceRecorder from '../VoiceRecorder'
 
 // Icon mapping
@@ -191,12 +191,12 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
 // ============================================
 // EXPENSE MODAL - Xarajat qo'shish (PRO + Valyuta)
 // ============================================
-export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, editingExpense, onClose, onSubmit }) {
-  const isInternational = flight?.flightType === 'international'
+export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, editingExpense, onClose, onSubmit, hideInternationalFeatures = false }) {
+  const isInternational = flight?.flightType === 'international' && !hideInternationalFeatures
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
 
   const [form, setForm] = useState(() => ({
-    category: editingExpense?.type?.startsWith('fuel_') ? 'fuel' : editingExpense?.type?.startsWith('border_') ? 'border' : (editingExpense?.type || 'fuel'),
+    category: editingExpense?.type?.startsWith('fuel_') ? 'fuel' : editingExpense?.type?.startsWith('border_') ? 'border' : editingExpense?.type?.startsWith('filter_') ? 'filter' : (editingExpense?.type || 'fuel'),
     type: editingExpense?.type || 'fuel_metan',
     amount: editingExpense?.amount?.toString() || '',
     currency: editingExpense?.currency || 'UZS',
@@ -204,6 +204,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
     quantity: editingExpense?.quantity?.toString() || '',
     odometer: editingExpense?.odometer?.toString() || '',
     tireNumber: editingExpense?.tireNumber?.toString() || '',
+    timing: editingExpense?.timing || 'during', // 'before', 'during', 'after'
     date: editingExpense?.date ? new Date(editingExpense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   }))
 
@@ -222,11 +223,13 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
   const isBorder = form.category === 'border'
   const isFuel = form.category === 'fuel'
   const isOil = form.category === 'oil'
+  const isFilter = form.category === 'filter'
   const quickAmounts = useMemo(() => {
     if (form.currency === 'USD') return [10, 20, 50, 100, 200]
     if (form.currency === 'RUB') return [1000, 2000, 5000, 10000, 20000]
     if (form.currency === 'KZT') return [5000, 10000, 20000, 50000, 100000]
     if (form.category === 'oil') return [100000, 200000, 300000, 500000, 800000]
+    if (form.category === 'filter') return [50000, 100000, 150000, 200000, 300000]
     return QUICK_AMOUNTS[form.category] || QUICK_AMOUNTS.other
   }, [form.category, form.currency])
 
@@ -277,12 +280,13 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
       amountInUSD,
       amountInUZS,
       description: form.description,
-      quantity: isFuel && form.quantity ? Number(form.quantity) : null,
+      quantity: isFuel && form.quantity ? Number(form.quantity) : (isOil && form.quantity ? Number(form.quantity) : null),
       odometer: (isFuel || isOil || form.category === 'repair' || form.category === 'tire' || form.category === 'accident') && form.odometer ? Number(form.odometer) : null,
       tireNumber: form.category === 'tire' && form.tireNumber ? form.tireNumber : null,
       date: form.date ? new Date(form.date) : new Date(),
       legId: selectedLeg?.leg?._id || null,
       legIndex: selectedLeg?.index ?? null,
+      timing: form.timing, // 'before', 'during', 'after'
       exchangeRate: rates?.[form.currency] || 1
     })
   }, [form, selectedLeg, onSubmit, isFuel, isOil, isBorder, convertedToUZS, rates])
@@ -378,6 +382,25 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
                 {FUEL_TYPES.map(f => (
                   <option key={f.value} value={f.value}>
                     {f.label} ({f.unit})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Filtr turlari - Select */}
+          {isFilter && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-3">Filtr turi</label>
+              <select
+                value={form.type}
+                onChange={e => setForm(prev => ({ ...prev, type: e.target.value }))}
+                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg font-medium focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.5rem' }}
+              >
+                {FILTER_TYPES.map(f => (
+                  <option key={f.value} value={f.value}>
+                    {f.label}
                   </option>
                 ))}
               </select>
@@ -511,6 +534,22 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
             </div>
           )}
 
+          {/* Moy miqdori */}
+          {isOil && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-3">
+                Moy miqdori (litr)
+              </label>
+              <input
+                type="number"
+                value={form.quantity}
+                onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                placeholder="Litr miqdorini kiriting"
+              />
+            </div>
+          )}
+
           {/* Spidometr - yoqilg'i, moy va katta xarajatlar uchun */}
           {(isFuel || isOil || form.category === 'repair' || form.category === 'tire' || form.category === 'accident') && (
             <div>
@@ -560,6 +599,31 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
               onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
               className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-800 text-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
             />
+          </div>
+
+          {/* Xarajat vaqti - Reys boshlanishidan oldin/davomida/tugagandan keyin */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-3">Xarajat qo'shilgan vaqti</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'before', label: '📍 Oldin', desc: 'Reys boshlanishidan oldin' },
+                { value: 'during', label: '🚗 Davomida', desc: 'Reys davomida' },
+                { value: 'after', label: '🏁 Keyin', desc: 'Reys tugagandan keyin' }
+              ].map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, timing: option.value }))}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${form.timing === option.value
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-lg shadow-indigo-500/20'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                    }`}
+                >
+                  <p className="text-sm font-bold">{option.label}</p>
+                  <p className="text-xs text-slate-500 mt-1">{option.desc}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Izoh */}
@@ -1271,11 +1335,10 @@ export const FlightEditModal = memo(function FlightEditModal({ flight, onClose, 
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${
-                  activeTab === tab.id
-                    ? 'text-blue-400 border-blue-400'
-                    : 'text-slate-500 border-transparent hover:text-slate-300'
-                }`}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px ${activeTab === tab.id
+                  ? 'text-blue-400 border-blue-400'
+                  : 'text-slate-500 border-transparent hover:text-slate-300'
+                  }`}
               >
                 <IconComp size={16} />
                 {tab.label}
@@ -1398,11 +1461,10 @@ export const FlightEditModal = memo(function FlightEditModal({ flight, onClose, 
                 </div>
                 <div className="border-t border-white/10 pt-2 flex justify-between">
                   <span className="text-slate-300 font-medium">Balans:</span>
-                  <span className={`font-bold ${
-                    ((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0) - (flight?.totalExpenses || 0)) >= 0
-                      ? 'text-emerald-400'
-                      : 'text-red-400'
-                  }`}>
+                  <span className={`font-bold ${((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0) - (flight?.totalExpenses || 0)) >= 0
+                    ? 'text-emerald-400'
+                    : 'text-red-400'
+                    }`}>
                     {formatMoney((Number(form.totalPayment) || 0) + (Number(form.totalGivenBudget) || 0) - (flight?.totalExpenses || 0))} so'm
                   </span>
                 </div>

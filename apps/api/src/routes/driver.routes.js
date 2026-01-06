@@ -21,11 +21,11 @@ router.get('/locations', protect, businessOnly, async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    
+
     const drivers = await Driver.find({ user: req.user._id, isActive: true })
       .select('fullName phone status lastLocation')
       .lean();
-    
+
     res.json({ success: true, data: drivers, timestamp: Date.now() });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -62,16 +62,16 @@ router.get('/:id', protect, businessOnly, async (req, res) => {
         .select('_id plateNumber brand model year fuelType currentOdometer oilChangeIntervalKm lastOilChangeOdometer lastOilChangeDate')
         .lean()
     ]);
-    
+
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
     }
-    
+
     // currentBalance default qiymat (eski driverlar uchun)
     if (driver.currentBalance === undefined) {
       driver.currentBalance = 0;
     }
-    
+
     // Mashina ma'lumotini driver ga qo'shish
     res.json({ success: true, data: { ...driver, vehicle } });
   } catch (error) {
@@ -85,9 +85,9 @@ router.post('/', protect, businessOnly, async (req, res) => {
     const { username, password } = req.body;
 
     // Faqat aktiv shofyorlar orasida username tekshirish
-    const existingDriver = await Driver.findOne({ 
+    const existingDriver = await Driver.findOne({
       username: username.toLowerCase(),
-      isActive: true 
+      isActive: true
     });
     if (existingDriver) {
       return res.status(400).json({ success: false, message: 'Bu username band' });
@@ -149,7 +149,7 @@ router.put('/:id', protect, businessOnly, async (req, res) => {
 router.put('/:id/password', protect, businessOnly, async (req, res) => {
   try {
     const { password } = req.body;
-    
+
     if (!password || password.length < 6) {
       return res.status(400).json({ success: false, message: 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak' });
     }
@@ -180,19 +180,19 @@ router.delete('/:id', protect, businessOnly, async (req, res) => {
     if (!driver) {
       return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
     }
-    
+
     // Shofyorga biriktirilgan mashinani ham o'chirish (soft delete)
     await Vehicle.updateMany(
       { currentDriver: req.params.id, user: req.user._id },
       { isActive: false, currentDriver: null }
     );
-    
+
     // Shofyorning faol mashrutlarini bekor qilish
     await Flight.updateMany(
       { driver: req.params.id, status: 'active' },
       { status: 'cancelled' }
     );
-    
+
     res.json({ success: true, message: 'Shofyor va unga tegishli ma\'lumotlar o\'chirildi' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -232,8 +232,8 @@ router.post('/:id/pay-salary', protect, businessOnly, async (req, res) => {
 
     await driver.save();
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `${payAmount.toLocaleString()} so'm to'landi`,
       data: driver
     });
@@ -262,8 +262,8 @@ router.get('/:id/salary-history', protect, businessOnly, async (req, res) => {
 // Barcha shofyorlar oyliklari (hisobotlar uchun)
 router.get('/salaries/pending', protect, businessOnly, async (req, res) => {
   try {
-    const drivers = await Driver.find({ 
-      user: req.user._id, 
+    const drivers = await Driver.find({
+      user: req.user._id,
       isActive: true,
       pendingEarnings: { $gt: 0 }
     })
@@ -272,14 +272,160 @@ router.get('/salaries/pending', protect, businessOnly, async (req, res) => {
 
     const totalPending = drivers.reduce((sum, d) => sum + (d.pendingEarnings || 0), 0);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: drivers,
       stats: {
         totalPending,
         driversCount: drivers.length
       }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Shofyorga xarajat qo'shish
+router.post('/:id/add-expense', protect, businessOnly, async (req, res) => {
+  try {
+    const { amount, type, timing, description, flightId } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Xarajat miqdori noto\'g\'ri' });
+    }
+
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    // Xarajat qo'shish
+    driver.expenses = driver.expenses || [];
+    driver.expenses.push({
+      flightId: flightId || null,
+      amount,
+      type: type || 'other',
+      timing: timing || 'during',
+      description,
+      date: new Date()
+    });
+
+    // Vaqti bo'yicha jami xarajatlarni hisoblash
+    driver.totalExpensesBefore = driver.expenses
+      .filter(e => e.timing === 'before')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesDuring = driver.expenses
+      .filter(e => e.timing === 'during')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesAfter = driver.expenses
+      .filter(e => e.timing === 'after')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    await driver.save();
+
+    res.json({
+      success: true,
+      message: 'Xarajat muvaffaqiyatli qo\'shildi',
+      data: driver
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Shofyor xarajatlarini olish
+router.get('/:id/expenses', protect, businessOnly, async (req, res) => {
+  try {
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true })
+      .select('fullName expenses totalExpensesBefore totalExpensesDuring totalExpensesAfter')
+      .lean();
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    res.json({ success: true, data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Xarajatni tahrirlash
+router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) => {
+  try {
+    const { amount, type, timing, description, date } = req.body;
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    const expenseIndex = driver.expenses.findIndex(e => e._id.toString() === req.params.expenseId);
+    if (expenseIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Xarajat topilmadi' });
+    }
+
+    // Update expense
+    driver.expenses[expenseIndex] = {
+      ...driver.expenses[expenseIndex].toObject(),
+      amount: amount || driver.expenses[expenseIndex].amount,
+      type: type || driver.expenses[expenseIndex].type,
+      timing: timing || driver.expenses[expenseIndex].timing,
+      description: description !== undefined ? description : driver.expenses[expenseIndex].description,
+      date: date || driver.expenses[expenseIndex].date
+    };
+
+    // Recalculate totals
+    driver.totalExpensesBefore = driver.expenses
+      .filter(e => e.timing === 'before')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesDuring = driver.expenses
+      .filter(e => e.timing === 'during')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesAfter = driver.expenses
+      .filter(e => e.timing === 'after')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    await driver.save();
+
+    res.json({ success: true, message: 'Xarajat yangilandi', data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Xarajatni o'chirish
+router.delete('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) => {
+  try {
+    const driver = await Driver.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Shofyor topilmadi' });
+    }
+
+    // Remove expense
+    driver.expenses = driver.expenses.filter(e => e._id.toString() !== req.params.expenseId);
+
+    // Recalculate totals
+    driver.totalExpensesBefore = driver.expenses
+      .filter(e => e.timing === 'before')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesDuring = driver.expenses
+      .filter(e => e.timing === 'during')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    driver.totalExpensesAfter = driver.expenses
+      .filter(e => e.timing === 'after')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    await driver.save();
+
+    res.json({ success: true, message: 'Xarajat o\'chirildi', data: driver });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -440,7 +440,7 @@ router.get('/vehicles/:vehicleId/oil', protect, async (req, res) => {
     }
     
     const changes = await OilChange.find({ vehicle: vehicleId })
-      .select('date odometer oilType oilBrand liters cost nextChangeOdometer filterChanged')
+      .select('date odometer oilType oilBrand liters cost nextChangeOdometer oilFilterCost airFilterCost cabinFilterCost gasFilterCost')
       .sort({ date: -1 })
       .limit(50)
       .lean()

@@ -322,7 +322,7 @@ export default function SuperAdminPanel() {
       <div className="space-y-3">
         {filteredUsers.map(u => (
           <div key={u._id} className="bg-slate-800/30 backdrop-blur-xl border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">
                 <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-cyan-500/30">
                   {u.fullName?.charAt(0) || '?'}
@@ -330,6 +330,13 @@ export default function SuperAdminPanel() {
                 <div className="min-w-0">
                   <p className="text-white font-semibold text-lg truncate">{u.fullName || 'Noma\'lum'}</p>
                   <p className="text-slate-400 text-sm">@{u.username}</p>
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
+                    {u.phone && (
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Phone size={12} /> {u.phone}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 mt-1">
                     Ro'yxatdan o'tdi: {u.createdAt ? formatDate(u.createdAt) : 'Noma\'lum'}
                   </p>
@@ -461,10 +468,16 @@ function formatDate(dateString) {
   const date = new Date(dateString)
   const now = new Date()
   const diffMs = now - date
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
   
-  if (diffDays === 0) return 'Bugun'
-  if (diffDays === 1) return 'Kecha'
+  // Soatlar
+  if (diffHours < 1) return 'Hozir'
+  if (diffHours < 24) return `${diffHours} soat oldin`
+  
+  // Kunlar
+  if (diffDays === 0) return `Bugun ${date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`
+  if (diffDays === 1) return `Kecha ${date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`
   if (diffDays < 7) return `${diffDays} kun oldin`
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta oldin`
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} oy oldin`
@@ -472,7 +485,9 @@ function formatDate(dateString) {
   return date.toLocaleDateString('uz-UZ', { 
     year: 'numeric', 
     month: 'short', 
-    day: 'numeric' 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 

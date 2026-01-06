@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { X, Droplet, AlertCircle } from 'lucide-react'
 import { FUEL_TYPES, TIRE_POSITIONS, SERVICE_TYPES } from './constants'
 
@@ -82,7 +82,7 @@ const SubmitButton = memo(({ isEdit }) => (
 
 export const Modal = memo(({ title, onClose, children }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
-    <div 
+    <div
       className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl overflow-hidden flex flex-col"
       style={{
         maxHeight: 'calc(100vh - 100px)'
@@ -94,7 +94,7 @@ export const Modal = memo(({ title, onClose, children }) => (
           <X size={20} />
         </button>
       </div>
-      <div 
+      <div
         className="p-4 sm:p-5 overflow-y-auto flex-1"
       >
         {children}
@@ -120,7 +120,7 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
       const lastOilOdo = oilData.lastChange.odometer || 0
       const nextOilOdo = oilData.lastChange.nextChangeOdometer || (lastOilOdo + (vehicle?.oilChangeIntervalKm || 10000))
       const remainingKm = nextOilOdo - currentOdo
-      
+
       if (remainingKm <= 0) {
         warnings.push({ type: 'danger', iconType: 'oil', message: `⚠️ Moy almashtirish vaqti o'tdi! ${Math.abs(remainingKm).toLocaleString()} km ortiqcha yurildi` })
       } else if (remainingKm <= 1000) {
@@ -139,7 +139,7 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
         const usedKm = currentOdo - (tire.installOdometer || 0)
         const expectedLife = tire.expectedLifeKm || 80000
         const remainingKm = expectedLife - usedKm
-        
+
         if (remainingKm <= 0) {
           warnings.push({ type: 'danger', iconType: 'tire', message: `${tire.position} shina almashtirish kerak!` })
         } else if (remainingKm <= 5000) {
@@ -169,13 +169,12 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
       {warnings.length > 0 && (
         <div className="space-y-2">
           {warnings.map((w, i) => (
-            <div 
-              key={i} 
-              className={`flex items-center gap-2 p-3 rounded-lg border ${
-                w.type === 'danger' ? 'bg-red-50 border-red-200 text-red-700' :
+            <div
+              key={i}
+              className={`flex items-center gap-2 p-3 rounded-lg border ${w.type === 'danger' ? 'bg-red-50 border-red-200 text-red-700' :
                 w.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                'bg-blue-50 border-blue-200 text-blue-700'
-              }`}
+                  'bg-blue-50 border-blue-200 text-blue-700'
+                }`}
             >
               {w.iconType === 'oil' ? <Droplet size={16} /> : <AlertCircle size={16} />}
               <span className="text-sm font-medium">{w.message}</span>
@@ -192,90 +191,111 @@ export const FuelForm = memo(({ form, setForm, errors, onSubmit, isEdit, vehicle
 
 export const OilForm = ({ form, setForm, errors, onSubmit, isEdit }) => {
   // Jami xarajatni hisoblash (moy + filtrlar)
-  const totalCost = (Number(form.cost) || 0) + 
-    (form.filterChanged ? (Number(form.filterCost) || 0) : 0) +
-    (form.airFilterChanged ? (Number(form.airFilterCost) || 0) : 0) +
-    (form.fuelFilterChanged ? (Number(form.fuelFilterCost) || 0) : 0)
+  const totalCost = (Number(form.cost) || 0) +
+    (form.oilFilterCost ? (Number(form.oilFilterCost) || 0) : 0) +
+    (form.airFilterCost ? (Number(form.airFilterCost) || 0) : 0) +
+    (form.cabinFilterCost ? (Number(form.cabinFilterCost) || 0) : 0) +
+    (form.gasFilterCost ? (Number(form.gasFilterCost) || 0) : 0)
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <Input label="Moy turi" value={form.oilType} onChange={v => setForm(f => ({ ...f, oilType: v }))} error={errors.oilType} placeholder="5W-40, 10W-40..." />
+
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} placeholder="8" />
-        <Input label="Narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="400 000" />
+        <Input label="Litr" type="number" value={form.liters} onChange={v => setForm(f => ({ ...f, liters: v }))} error={errors.liters} placeholder="8" />
+        <Input label="Moy narxi (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} error={errors.cost} placeholder="400 000" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Input label="Sana" type="date" value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} error={errors.date} />
-        <Input label="Spidometr" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} placeholder="100 000" />
+        <Input label="Spidometr (km)" type="number" value={form.odometer} onChange={v => setForm(f => ({ ...f, odometer: v }))} error={errors.odometer} placeholder="100 000" />
       </div>
 
-      {/* Filtrlar bo'limi - collapsed by default */}
-      <details className="border border-gray-200 rounded-lg">
-        <summary className="p-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Filtrlar (ixtiyoriy)
-        </summary>
-        <div className="p-3 pt-0 space-y-2">
-          {/* Moy filtri */}
-          <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.filterChanged || false}
-              onChange={e => setForm(f => ({ ...f, filterChanged: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-            />
-            <span className="text-gray-700 text-sm">Moy filtri</span>
-          </label>
-          {form.filterChanged && (
-            <Input label="Moy filtri narxi" type="number" value={form.filterCost} onChange={v => setForm(f => ({ ...f, filterCost: v }))} placeholder="50 000" />
-          )}
+      {/* Filtrlar bo'limi - 4 ta filtr */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+        <h3 className="text-sm font-semibold text-blue-900">Filtrlar (ixtiyoriy)</h3>
 
-          {/* Havo filtri */}
-          <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
+        {/* Moy filtri */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
             <input
               type="checkbox"
-              checked={form.airFilterChanged || false}
-              onChange={e => setForm(f => ({ ...f, airFilterChanged: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+              checked={!!form.oilFilterCost}
+              onChange={e => setForm(f => ({ ...f, oilFilterCost: e.target.checked ? '' : undefined }))}
+              className="w-4 h-4 rounded border-gray-300 text-blue-500"
             />
-            <span className="text-gray-700 text-sm">Havo filtri</span>
+            <span className="text-gray-700 text-sm font-medium">Moy filtri</span>
           </label>
-          {form.airFilterChanged && (
-            <Input label="Havo filtri narxi" type="number" value={form.airFilterCost} onChange={v => setForm(f => ({ ...f, airFilterCost: v }))} placeholder="30 000" />
-          )}
-
-          {/* Yoqilg'i filtri */}
-          <label className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.fuelFilterChanged || false}
-              onChange={e => setForm(f => ({ ...f, fuelFilterChanged: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-            />
-            <span className="text-gray-700 text-sm">Yoqilg'i filtri</span>
-          </label>
-          {form.fuelFilterChanged && (
-            <Input label="Yoqilg'i filtri narxi" type="number" value={form.fuelFilterCost} onChange={v => setForm(f => ({ ...f, fuelFilterCost: v }))} placeholder="40 000" />
+          {form.oilFilterCost !== undefined && (
+            <Input label="Narxi (so'm)" type="number" value={form.oilFilterCost} onChange={v => setForm(f => ({ ...f, oilFilterCost: v }))} placeholder="50 000" />
           )}
         </div>
-      </details>
 
-      {/* Jami xarajat (moy + filtrlar) */}
+        {/* Havo filtri */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={!!form.airFilterCost}
+              onChange={e => setForm(f => ({ ...f, airFilterCost: e.target.checked ? '' : undefined }))}
+              className="w-4 h-4 rounded border-gray-300 text-blue-500"
+            />
+            <span className="text-gray-700 text-sm font-medium">Havo filtri</span>
+          </label>
+          {form.airFilterCost !== undefined && (
+            <Input label="Narxi (so'm)" type="number" value={form.airFilterCost} onChange={v => setForm(f => ({ ...f, airFilterCost: v }))} placeholder="30 000" />
+          )}
+        </div>
+
+        {/* Salarka filtri */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={!!form.cabinFilterCost}
+              onChange={e => setForm(f => ({ ...f, cabinFilterCost: e.target.checked ? '' : undefined }))}
+              className="w-4 h-4 rounded border-gray-300 text-blue-500"
+            />
+            <span className="text-gray-700 text-sm font-medium">Salarka filtri</span>
+          </label>
+          {form.cabinFilterCost !== undefined && (
+            <Input label="Narxi (so'm)" type="number" value={form.cabinFilterCost} onChange={v => setForm(f => ({ ...f, cabinFilterCost: v }))} placeholder="25 000" />
+          )}
+        </div>
+
+        {/* Gaz filtri */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={!!form.gasFilterCost}
+              onChange={e => setForm(f => ({ ...f, gasFilterCost: e.target.checked ? '' : undefined }))}
+              className="w-4 h-4 rounded border-gray-300 text-blue-500"
+            />
+            <span className="text-gray-700 text-sm font-medium">Gaz filtri</span>
+          </label>
+          {form.gasFilterCost !== undefined && (
+            <Input label="Narxi (so'm)" type="number" value={form.gasFilterCost} onChange={v => setForm(f => ({ ...f, gasFilterCost: v }))} placeholder="35 000" />
+          )}
+        </div>
+      </div>
+
+      {/* Jami xarajat */}
       {totalCost > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <span className="text-amber-700 text-sm font-medium">Jami (moy + filtrlar):</span>
-            <span className="text-amber-700 font-bold">{formatNumber(totalCost)} so'm</span>
+            <span className="text-amber-700 text-sm font-medium">Jami xarajat:</span>
+            <span className="text-amber-700 font-bold text-lg">{formatNumber(totalCost)} so'm</span>
           </div>
         </div>
       )}
 
-      <Input 
-        label="Necha km dan keyin almashtirish" 
-        type="number" 
-        value={form.nextChangeKm} 
-        onChange={v => setForm(f => ({ ...f, nextChangeKm: v }))} 
-        placeholder="10000 (default)"
+      <Input
+        label="Necha km dan keyin almashtirish"
+        type="number"
+        value={form.nextChangeKm}
+        onChange={v => setForm(f => ({ ...f, nextChangeKm: v }))}
+        placeholder="10000"
       />
       <p className="text-xs text-gray-500 -mt-1">Masalan: 10000 km dan keyin moy almashtiriladi</p>
       <SubmitButton isEdit={isEdit} />
@@ -298,11 +318,11 @@ export const TireForm = ({ form, setForm, errors, onSubmit, isEdit, vehicleOdome
     </div>
     <div className="grid grid-cols-2 gap-3">
       <Input label="O'rnatish sanasi" type="date" value={form.installDate} onChange={v => setForm(f => ({ ...f, installDate: v }))} />
-      <Input 
-        label="O'rnatish km" 
-        type="number" 
-        value={form.installOdometer} 
-        onChange={v => setForm(f => ({ ...f, installOdometer: v }))} 
+      <Input
+        label="O'rnatish km"
+        type="number"
+        value={form.installOdometer}
+        onChange={v => setForm(f => ({ ...f, installOdometer: v }))}
         placeholder={vehicleOdometer ? formatNumber(vehicleOdometer) : '100 000'}
       />
     </div>
@@ -328,11 +348,11 @@ export const BulkTireForm = memo(({ form, setForm, errors, onSubmit, vehicleOdom
         options={[{ value: '4', label: '4 ta' }, { value: '6', label: '6 ta' }, { value: '8', label: '8 ta' }, { value: '10', label: '10 ta' }]} />
       <Input label="Jami narx (so'm)" type="number" value={form.cost} onChange={v => setForm(f => ({ ...f, cost: v }))} placeholder="2 000 000" />
     </div>
-    <Input 
-      label="O'rnatish km" 
-      type="number" 
-      value={form.installOdometer} 
-      onChange={v => setForm(f => ({ ...f, installOdometer: v }))} 
+    <Input
+      label="O'rnatish km"
+      type="number"
+      value={form.installOdometer}
+      onChange={v => setForm(f => ({ ...f, installOdometer: v }))}
       placeholder={vehicleOdometer ? formatNumber(vehicleOdometer) : '100 000'}
     />
     <button type="submit" className="w-full py-3 text-base bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-white font-semibold transition-all shadow-lg shadow-purple-500/25">

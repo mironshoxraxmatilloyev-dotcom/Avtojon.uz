@@ -43,10 +43,8 @@ export const initFuelForm = (odo = '', ft = 'diesel') => ({
   date: today(), liters: '', cost: '', odometer: '', fuelType: ft, station: '' 
 })
 export const initOilForm = (odo = '') => ({ 
-  date: today(), odometer: '', oilType: '', oilBrand: '', liters: '', cost: '', nextChangeOdometer: '',
-  filterChanged: false, filterCost: '',
-  airFilterChanged: false, airFilterCost: '',
-  fuelFilterChanged: false, fuelFilterCost: ''
+  date: today(), odometer: '', oilType: '', oilBrand: '', liters: '', cost: '', nextChangeKm: '',
+  oilFilterCost: undefined, airFilterCost: undefined, cabinFilterCost: undefined, gasFilterCost: undefined
 })
 export const initTireForm = (odo = '') => ({ 
   position: TIRE_POSITIONS[0], brand: '', model: '', size: '', dotNumber: '', serialNumber: '', installDate: today(), 

@@ -7,6 +7,7 @@ import { useAlert, DriversListSkeleton, NetworkError, ServerError } from '../com
 import LocationPicker from '../components/LocationPicker'
 import { useSocket } from '../hooks/useSocket'
 import VoiceFlightCreator from '../components/VoiceFlightCreator'
+import { ExpenseModal } from '../components/flightDetail/AllModals'
 import {
     DriverCard,
     DriversHeader,
@@ -58,6 +59,12 @@ const dataReducer = (state, action) => {
             return { ...state, drivers: state.drivers.map(d => d._id === action.id ? { ...d, ...action.data } : d) }
         case 'DELETE_DRIVER':
             return { ...state, drivers: state.drivers.filter(d => d._id !== action.id) }
+        case 'REPLACE_DRIVER':
+            return {
+                ...state,
+                drivers: state.drivers.map(d => d._id === action.tempId ? action.driver : d),
+                vehicles: action.vehicle ? state.vehicles.map(v => v._id === action.tempVehicleId ? action.vehicle : v) : state.vehicles
+            }
         default:
             return state
     }
@@ -81,12 +88,16 @@ export default function DriversNew() {
     const [showFlightModal, setShowFlightModal] = useState(false)
     const [showLocationPicker, setShowLocationPicker] = useState(false)
     const [showVoiceFlight, setShowVoiceFlight] = useState(false)
+    const [showExpenseModal, setShowExpenseModal] = useState(false)
     const [editingDriver, setEditingDriver] = useState(null)
     const [selectedDriver, setSelectedDriver] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [form, setForm] = useState(INITIAL_FORM)
     const [flightForm, setFlightForm] = useState(INITIAL_FLIGHT)
+    const [expenseLoading, setExpenseLoading] = useState(false)
+    const [selectedLegForExpense, setSelectedLegForExpense] = useState(null)
+    const [editingExpense, setEditingExpense] = useState(null)
 
     // 🔌 Biznesmen xonasiga qo'shilish - real-time uchun
     useEffect(() => {
@@ -220,7 +231,7 @@ export default function DriversNew() {
 
     useEffect(() => { fetchData() }, [fetchData])
     useEffect(() => {
-        const isModalOpen = showModal || showFlightModal || showLocationPicker || showVoiceFlight
+        const isModalOpen = showModal || showFlightModal || showLocationPicker || showVoiceFlight || showExpenseModal
         if (isModalOpen) {
             document.body.style.overflow = 'hidden'
             document.documentElement.style.overflow = 'hidden'
@@ -232,7 +243,7 @@ export default function DriversNew() {
             document.body.style.overflow = ''
             document.documentElement.style.overflow = ''
         }
-    }, [showModal, showFlightModal, showLocationPicker, showVoiceFlight])
+    }, [showModal, showFlightModal, showLocationPicker, showVoiceFlight, showExpenseModal])
 
 
     // Add/Update driver
@@ -265,12 +276,16 @@ export default function DriversNew() {
         const editId = editingDriver?._id
         const driverName = form.fullName
 
+        let tempId = null // tempId ni shu yerda aniqlaymiz, shunda pastda ishlata olamiz
+        let tempVehicleId = null // tempVehicleId ni ham shu yerda aniqlaymiz
+
         if (isEditing) {
             dispatch({ type: 'UPDATE_DRIVER', id: editId, data: driverData })
         } else {
-            const tempId = 'temp_' + Date.now()
+            tempId = 'temp_' + Date.now()
             const tempDriver = { _id: tempId, ...driverData, status: 'free', createdAt: new Date().toISOString() }
-            const tempVehicle = { _id: 'temp_v_' + Date.now(), ...vehicleData, currentDriver: tempId }
+            tempVehicleId = 'temp_v_' + Date.now()
+            const tempVehicle = { _id: tempVehicleId, ...vehicleData, currentDriver: tempId }
             dispatch({ type: 'ADD_DRIVER', driver: tempDriver, vehicle: tempVehicle })
         }
         setShowModal(false)
@@ -285,11 +300,30 @@ export default function DriversNew() {
                 if (form.vehicleId) {
                     await api.put(`/vehicles/${form.vehicleId}`, vehicleData)
                 }
+                // Tahrirlashda fetch shart emas, chunki biz optimistik yangiladik
+                // Lekin backgroundda yangilab qo'yish zarar qilmaydi (silent)
+                fetchData(false)
             } else {
                 const res = await api.post('/drivers', driverData)
-                await api.post('/vehicles', { ...vehicleData, currentDriver: res.data.data._id })
+                const newDriver = res.data.data
+
+                // Mashina yaratish
+                let newVehicle = null
+                if (vehicleData.plateNumber) {
+                    const vRes = await api.post('/vehicles', { ...vehicleData, currentDriver: newDriver._id })
+                    newVehicle = vRes.data.data
+                }
+
+                // Temp ID ni real ID ga almashtirish
+                // Biz yuqorida tempId ni aniqlaganmiz, endi uni bemalol ishlata olamiz
+                dispatch({
+                    type: 'REPLACE_DRIVER',
+                    tempId: tempId,
+                    driver: newDriver,
+                    vehicle: newVehicle,
+                    tempVehicleId: tempVehicleId
+                })
             }
-            fetchData(false)
         } catch (err) {
             showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
             fetchData(false)
@@ -378,17 +412,17 @@ export default function DriversNew() {
 
     // Ovoz bilan reys ochish
     const handleVoiceFlightCreate = async (flightData) => {
-        if (isDemoMode) { 
+        if (isDemoMode) {
             alert.info('Demo rejim', 'Demo versiyada ishlamaydi')
             setShowVoiceFlight(false)
-            return 
+            return
         }
 
         const driver = drivers.find(d => d._id === flightData.driverId)
-        const vehicle = flightData.vehicleId 
+        const vehicle = flightData.vehicleId
             ? vehicles.find(v => v._id === flightData.vehicleId)
             : getDriverVehicle(flightData.driverId)
-        
+
         if (!driver) {
             alert.error('Xatolik', 'Haydovchi topilmadi')
             return
@@ -444,16 +478,16 @@ export default function DriversNew() {
     const handleEdit = (e, driver) => {
         e.stopPropagation()
         setEditingDriver(driver)
-        setForm({ 
-            username: driver.username || '', 
-            password: '', 
-            fullName: driver.fullName || '', 
-            phone: driver.phone || '', 
-            paymentType: driver.paymentType || 'monthly', 
-            baseSalary: driver.baseSalary || 0, 
-            perTripRate: driver.perTripRate || 0, 
-            plateNumber: '', 
-            brand: '', 
+        setForm({
+            username: driver.username || '',
+            password: '',
+            fullName: driver.fullName || '',
+            phone: driver.phone || '',
+            paymentType: driver.paymentType || 'monthly',
+            baseSalary: driver.baseSalary || 0,
+            perTripRate: driver.perTripRate || 0,
+            plateNumber: '',
+            brand: '',
             year: '',
             vehicleId: '',
             oilChangeIntervalKm: 15000,
@@ -482,6 +516,54 @@ export default function DriversNew() {
         }))
         setShowLocationPicker(false)
         setShowFlightModal(true)
+    }
+
+    // Xarajat qo'shish - ExpenseModal orqali
+    const handleAddExpense = (driver) => {
+        setSelectedDriver(driver)
+        setSelectedLegForExpense(null)
+        setEditingExpense(null)
+        setShowExpenseModal(true)
+    }
+
+    // ExpenseModal submit handler
+    const handleExpenseSubmit = async (data) => {
+        if (isDemoMode) {
+            alert.info('Demo rejim', 'Demo versiyada ishlamaydi')
+            return
+        }
+
+        setExpenseLoading(true)
+        try {
+            const flight = activeFlights[selectedDriver._id]
+
+            if (flight) {
+                // Faol reysga xarajat qo'shish - timing 'during' bo'ladi
+                await api.post(`/flights/${flight._id}/expenses`, {
+                    ...data,
+                    timing: data.timing || 'during'  // Data'dan kelayotgan timing'ni ishlatamiz
+                })
+                showToast.success('Xarajat muvaffaqiyatli qo\'shildi')
+            } else {
+                // Reys boshlanmaganda haydovchiga xarajat qo'shish - timing 'before' bo'ladi
+                await api.post(`/drivers/${selectedDriver._id}/add-expense`, {
+                    ...data,
+                    timing: data.timing || 'before'  // Reys boshlanmaganda 'before' bo'ladi
+                })
+                showToast.success('Xarajat muvaffaqiyatli qo\'shildi')
+            }
+
+            setShowExpenseModal(false)
+            setSelectedDriver(null)
+            setSelectedLegForExpense(null)
+            setEditingExpense(null)
+            // Faqat agar kerak bo'lsa fetch qilish
+            // fetchData(false)
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Xarajat qo\'shishda xatolik')
+        } finally {
+            setExpenseLoading(false)
+        }
     }
 
     // Filter
@@ -526,6 +608,7 @@ export default function DriversNew() {
                         onDelete={handleDelete}
                         onStartFlight={(d) => { setSelectedDriver(d); setShowFlightModal(true) }}
                         onViewFlight={(id) => navigate(`/dashboard/flights/${id}`)}
+                        onAddExpense={(d) => { setSelectedDriver(d); setShowExpenseModal(true) }}
                         formatMoney={formatMoney}
                     />
                 ))}
@@ -558,6 +641,18 @@ export default function DriversNew() {
                 selectedDriver={selectedDriver}
                 selectedVehicle={selectedDriver ? getDriverVehicle(selectedDriver._id) : null}
             />
+
+            {/* Xarajat qo'shish Modal - faqat ExpenseModal */}
+            {showExpenseModal && selectedDriver && (
+                <ExpenseModal
+                    flight={selectedDriver ? activeFlights[selectedDriver._id] : null}
+                    selectedLeg={selectedLegForExpense}
+                    editingExpense={editingExpense}
+                    onClose={() => { setShowExpenseModal(false); setSelectedDriver(null); setSelectedLegForExpense(null); setEditingExpense(null) }}
+                    onSubmit={handleExpenseSubmit}
+                    hideInternationalFeatures={true}
+                />
+            )}
 
             {/* Voice Flight Creator */}
             {showVoiceFlight && (

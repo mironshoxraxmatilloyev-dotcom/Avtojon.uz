@@ -25,26 +25,11 @@ export default function FlightHeader({ flight, navigate }) {
   const sarflangan = flight.totalExpenses || 0
   const qoldiq = yolPuli - sarflangan
   
-  // Net profit = Jami kirim - Jami xarajatlar
-  const totalIncome = mijozPuli + yolPuli
-  const netProfit = totalIncome - sarflangan
-  
-  // Shofyor ulushi va sof foyda
-  const driverProfitPercent = flight.driverProfitPercent || 0
-  
-  // Shofyor ulushi - backenddan yoki frontendda hisoblaymiz
-  const driverProfitAmount = flight.driverProfitAmount || (
-    netProfit > 0 && driverProfitPercent > 0 
-      ? Math.round(netProfit * driverProfitPercent / 100) 
-      : 0
-  )
-  
-  // Sof foyda = Net profit - Shofyor ulushi
-  // Backenddan kelsa uni ishlatamiz, aks holda hisoblaymiz
-  const businessProfit = flight.businessProfit || (netProfit - driverProfitAmount)
-  
-  // Shofyor beradigan pul = Sof foyda
-  const driverOwes = flight.driverOwes || businessProfit
+  // Backend'dan kelayotgan qiymatlarni ishlatamiz
+  const netProfit = flight.netProfit || 0
+  const businessProfit = flight.businessProfit || 0
+  const driverProfitAmount = flight.driverProfitAmount || 0
+  const driverOwes = flight.driverOwes || 0
   
   // DEBUG
   console.log('🔍 Hisob-kitob:', {
@@ -52,7 +37,6 @@ export default function FlightHeader({ flight, navigate }) {
     'flight.driverProfitAmount': flight.driverProfitAmount,
     'flight.driverOwes': flight.driverOwes,
     netProfit,
-    driverProfitPercent,
     driverProfitAmount,
     businessProfit,
     driverOwes
@@ -143,7 +127,7 @@ export default function FlightHeader({ flight, navigate }) {
             <p className={`text-[10px] sm:text-xs ${qoldiq >= 0 ? 'text-cyan-300/70' : 'text-rose-300/70'}`}>Qoldiq</p>
           </div>
 
-          {/* 5. Sof foyda (xarajatlar va shofyor ulushi ayirilgan) */}
+          {/* 5. Sof foyda (zarar bo'lsa manfiy) */}
           <div className={`backdrop-blur-sm rounded-xl p-3 border ${businessProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
             {isInternational ? (
               <>
@@ -151,7 +135,7 @@ export default function FlightHeader({ flight, navigate }) {
                   {businessProfitUSD >= 0 ? '+' : ''}{formatUSD(businessProfitUSD)}
                 </p>
                 <p className={`text-[10px] sm:text-xs ${businessProfitUSD >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  📈 Sof foyda
+                  {businessProfitUSD >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
                 </p>
               </>
             ) : (
@@ -160,7 +144,7 @@ export default function FlightHeader({ flight, navigate }) {
                   {businessProfit >= 0 ? '+' : ''}{formatMoney(businessProfit)}
                 </p>
                 <p className={`text-[10px] sm:text-xs ${businessProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  📈 Sof foyda
+                  {businessProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
                 </p>
               </>
             )}

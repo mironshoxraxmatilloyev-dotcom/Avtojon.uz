@@ -1,8 +1,9 @@
-import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle, Fuel, Utensils, Wrench, Car, Globe, Flag } from 'lucide-react'
+import { X, Route, Package, Wallet, MapPin, Clock, CheckCircle, Fuel, Utensils, Wrench, Car, Globe, Flag, Plus } from 'lucide-react'
 import { formatMoney, formatDate, EXPENSE_LABELS } from './constants'
 import api from '../../services/api'
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../store/langStore'
+import { showToast } from '../Toast'
 
 // Icon mapping for expense types
 const EXPENSE_ICONS = {
@@ -26,9 +27,22 @@ const getFlightRoute = (flight, t) => {
   return t('route')
 }
 
+const EXPENSE_TYPES = [
+  { value: 'fuel', label: "Yoqilg'i" },
+  { value: 'food', label: 'Ovqat' },
+  { value: 'toll', label: "Yo'l to'lovi" },
+  { value: 'wash', label: 'Yuvish' },
+  { value: 'repair', label: "Ta'mirlash" },
+  { value: 'parking', label: 'Parkovka' },
+  { value: 'other', label: 'Boshqa' }
+]
+
 export default function FlightDetailModal({ flight: initialFlight, onClose, onUpdate }) {
   const [flight, setFlight] = useState(initialFlight)
   const { t, lang } = useTranslation()
+  const [showExpenseForm, setShowExpenseForm] = useState(false)
+  const [expenseForm, setExpenseForm] = useState({ type: 'other', amount: '', description: '' })
+  const [addingExpense, setAddingExpense] = useState(false)
 
   // Expense labels - til bo'yicha (Lucide iconlar bilan)
   const expenseLabels = {
@@ -85,6 +99,38 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
       // Xatolik bo'lsa, qaytarish
       console.error('Xarajatni tasdiqlashda xatolik:', err)
       setFlight(flight)
+    }
+  }
+
+  // Xarajat qo'shish
+  const handleAddExpense = async (e) => {
+    e.preventDefault()
+    if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
+      showToast.error('Xarajat miqdorini kiriting!')
+      return
+    }
+
+    setAddingExpense(true)
+    try {
+      const res = await api.post(`/driver/me/flights/${flight._id}/expenses`, {
+        type: expenseForm.type,
+        amount: Number(expenseForm.amount),
+        description: expenseForm.description,
+        timing: 'before'
+      })
+      
+      if (res.data.success && res.data.data) {
+        const newFlight = JSON.parse(JSON.stringify(res.data.data))
+        setFlight(newFlight)
+        if (onUpdate) onUpdate(newFlight)
+        setExpenseForm({ type: 'other', amount: '', description: '' })
+        setShowExpenseForm(false)
+        showToast.success("Xarajat qo'shildi!")
+      }
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+    } finally {
+      setAddingExpense(false)
     }
   }
 
@@ -222,6 +268,79 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
                 })}
               </div>
             </div>
+          )}
+
+          {/* Xarajat qo'shish form */}
+          {showExpenseForm && (
+            <form onSubmit={handleAddExpense} className="bg-blue-50 rounded-xl p-3 border border-blue-200 space-y-2">
+              <h4 className="text-blue-900 font-semibold text-sm">Xarajat qo'shish</h4>
+              
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Xarajat turi</label>
+                <select
+                  value={expenseForm.type}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, type: e.target.value })}
+                  className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {EXPENSE_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Miqdori (so'm)</label>
+                <input
+                  type="number"
+                  value={expenseForm.amount}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                  placeholder="0"
+                  className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Izoh (ixtiyoriy)</label>
+                <textarea
+                  value={expenseForm.description}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                  placeholder="Xarajat haqida..."
+                  className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows="2"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExpenseForm(false)
+                    setExpenseForm({ type: 'other', amount: '', description: '' })
+                  }}
+                  className="flex-1 px-3 py-1.5 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition"
+                >
+                  Bekor
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingExpense}
+                  className="flex-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {addingExpense ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Xarajat qo'shish button */}
+          {!showExpenseForm && (
+            <button
+              onClick={() => setShowExpenseForm(true)}
+              className="w-full py-2.5 px-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-semibold transition flex items-center justify-center gap-2 border border-blue-200"
+            >
+              <Plus size={18} /> Xarajat qo'shish
+            </button>
           )}
 
           {/* Hisob-kitob */}

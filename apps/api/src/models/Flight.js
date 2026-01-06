@@ -89,21 +89,21 @@ const legSchema = new mongoose.Schema({
   fromCity: { type: String, required: true, trim: true },
   toCity: { type: String, required: true, trim: true },
   // Koordinatalar (xarita uchun) - ixtiyoriy
-  fromCoords: { 
-    lat: { type: Number, default: null }, 
-    lng: { type: Number, default: null } 
+  fromCoords: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
   },
-  toCoords: { 
-    lat: { type: Number, default: null }, 
-    lng: { type: Number, default: null } 
+  toCoords: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null }
   },
-  payment: { 
-    type: Number, 
+  payment: {
+    type: Number,
     default: 0,
     min: [0, 'To\'lov salbiy bo\'lishi mumkin emas']
   },
-  givenBudget: { 
-    type: Number, 
+  givenBudget: {
+    type: Number,
     default: 0,
     min: [0, 'Yo\'l puli salbiy bo\'lishi mumkin emas']
   },
@@ -111,8 +111,8 @@ const legSchema = new mongoose.Schema({
   totalBudget: { type: Number, default: 0 },
   spentAmount: { type: Number, default: 0 },
   balance: { type: Number, default: 0 },
-  distance: { 
-    type: Number, 
+  distance: {
+    type: Number,
     default: 0,
     min: [0, 'Masofa salbiy bo\'lishi mumkin emas']
   },
@@ -152,69 +152,75 @@ const expenseSchema = new mongoose.Schema({
     enum: ['light', 'heavy'],
     default: 'light'
   },
-  amount: { 
-    type: Number, 
+  // Xarajat qo'shilgan vaqti: 'before' = reys boshlanishidan oldin, 'during' = davomida, 'after' = tugagandan keyin
+  timing: {
+    type: String,
+    enum: ['before', 'during', 'after'],
+    default: 'during'
+  },
+  amount: {
+    type: Number,
     required: true,
     min: [0, 'Xarajat salbiy bo\'lishi mumkin emas']
   },
-  
+
   // Haydovchi tasdiqlashi
   confirmedByDriver: { type: Boolean, default: false },
   confirmedAt: { type: Date, default: null },
-  
+
   // Valyuta ma'lumotlari (xalqaro mashrutlar uchun)
-  currency: { 
-    type: String, 
+  currency: {
+    type: String,
     enum: ['UZS', 'USD', 'RUB', 'KZT', 'EUR', 'TRY', 'CNY', 'TJS', 'KGS', 'TMT', 'AZN', 'GEL', 'BYN', 'UAH', 'PLN', 'AFN', 'IRR', 'AED'],
-    default: 'UZS' 
+    default: 'UZS'
   },
   amountInUSD: { type: Number, default: 0, min: 0 },
   amountInUZS: { type: Number, default: 0, min: 0 },
   exchangeRate: { type: Number, default: 1, min: 0 },
-  
+
   // Qaysi davlatda sarflangan
-  country: { 
-    type: String, 
+  country: {
+    type: String,
     enum: ['UZB', 'KZ', 'RU', 'TJ', 'KG', 'TM', 'AF', 'CN', 'TR', 'IR', 'AZ', 'GE', 'BY', 'UA', 'PL', 'DE', 'LT', 'LV', 'EE', 'FI', null],
-    default: null 
+    default: null
   },
-  
+
   // Yoqilg'i uchun batafsil ma'lumotlar
   quantity: { type: Number, default: null, min: 0 },
   quantityUnit: { type: String, enum: ['litr', 'kub', null], default: null },
   pricePerUnit: { type: Number, default: null, min: 0 },
-  
+
   // Joylashuv ma'lumotlari
   location: {
     name: { type: String, default: null },
     lat: { type: Number, default: null },
     lng: { type: Number, default: null }
   },
-  
+
   // Odometr ma'lumotlari
   odometer: { type: Number, default: null, min: 0 },
   distanceSinceLast: { type: Number, default: null },
   fuelConsumption: { type: Number, default: null },
-  
+
   // Shina raqamlari (shina xarajati uchun)
   tireNumber: { type: String, default: null },
-  
+
   // Qo'shimcha
   stationName: { type: String, default: null },
   receiptImage: { type: String, default: null },
   description: String,
-  
+
   // Chegara xarajatlari uchun (border, customs, transit, insurance)
   borderInfo: {
     fromCountry: { type: String, default: null },
     toCountry: { type: String, default: null },
     borderName: { type: String, default: null }
   },
-  
+
   // Qaysi buyurtmaga tegishli
   legId: { type: mongoose.Schema.Types.ObjectId, default: null },
   legIndex: { type: Number, default: null },
-  
+
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
@@ -235,29 +241,29 @@ const flightSchema = new mongoose.Schema({
     ref: 'Vehicle',
     required: true
   },
-  
+
   // Mashrut nomi (avtomatik: birinchi va oxirgi shahar)
   name: String,
-  
+
   // Mashrut turi: 'domestic' - O'zbekiston ichida, 'international' - Xalqaro
   flightType: {
     type: String,
     enum: ['domestic', 'international'],
     default: 'domestic'
   },
-  
+
   // ============ XALQARO MASHRUT MAYDONLARI ============
   // Yo'nalish nuqtalari
   waypoints: [waypointSchema],
-  
+
   // Chegara o'tish xarajatlari
   borderCrossings: [borderCrossingSchema],
   borderCrossingsTotalUSD: { type: Number, default: 0 },
   borderCrossingsTotalUZS: { type: Number, default: 0 },
-  
+
   // Platon (Rossiya yo'l to'lovi)
   platon: platonSchema,
-  
+
   // Davlatlar bo'yicha xarajatlar xulosasi
   countryExpenses: {
     uzb: countryExpenseSummarySchema,
@@ -270,20 +276,20 @@ const flightSchema = new mongoose.Schema({
     type: String,
     enum: SUPPORTED_COUNTRIES
   }],
-  
+
   // Boshlang'ich ma'lumotlar
-  startOdometer: { 
-    type: Number, 
+  startOdometer: {
+    type: Number,
     default: 0,
     min: [0, 'Odometr salbiy bo\'lishi mumkin emas']
   },
-  startFuel: { 
-    type: Number, 
+  startFuel: {
+    type: Number,
     default: 0,
     min: [0, 'Yoqilg\'i salbiy bo\'lishi mumkin emas']
   },
-  fuelType: { 
-    type: String, 
+  fuelType: {
+    type: String,
     enum: ['benzin', 'diesel', 'gas', 'metan', 'propan'],
     default: 'benzin'
   },
@@ -292,59 +298,65 @@ const flightSchema = new mongoose.Schema({
     enum: ['litr', 'kub'],
     default: 'litr'
   },
-  
+
   // Avvalgi mashrutdan qolgan pul (mashrut ochilganda haydovchidagi balans)
   previousBalance: {
     type: Number,
     default: 0
   },
-  
+
   // Tugatish ma'lumotlari
-  endOdometer: { 
-    type: Number, 
+  endOdometer: {
+    type: Number,
     default: 0,
     min: [0, 'Odometr salbiy bo\'lishi mumkin emas']
   },
-  endFuel: { 
-    type: Number, 
+  endFuel: {
+    type: Number,
     default: 0,
     min: [0, 'Yoqilg\'i salbiy bo\'lishi mumkin emas']
   },
-  
+
   // buyurtmalar (cheksiz)
   legs: [legSchema],
-  
+
   // Xarajatlar (biznesmen kiritadi)
   expenses: [expenseSchema],
-  
+
   // Hisob-kitob
   totalPayment: { type: Number, default: 0 }, // Jami to'lov (mijozdan)
   totalGivenBudget: { type: Number, default: 0 }, // Jami berilgan yo'l xarajati
   totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar) - so'm da
   totalExpensesUSD: { type: Number, default: 0 }, // Jami xarajatlar USD da
-  // Yengil xarajatlar (shofyor hisobidan ayiriladi)
+  // Yengil va katta xarajatlarni saqlash
   lightExpenses: { type: Number, default: 0 },
   lightExpensesUSD: { type: Number, default: 0 },
   // Katta xarajatlar (biznesmen hisobidan)
   heavyExpenses: { type: Number, default: 0 },
   heavyExpensesUSD: { type: Number, default: 0 },
+  // Xarajatlarni vaqti bo'yicha guruhlash (hisobotlar uchun)
+  expensesByTiming: {
+    before: { type: Number, default: 0 }, // Reys boshlanishidan oldin
+    during: { type: Number, default: 0 }, // Reys davomida
+    after: { type: Number, default: 0 }   // Reys tugagandan keyin
+  },
   totalDistance: { type: Number, default: 0 }, // Jami masofa
-  
+
   // Yo'l puli (biznesmen shofyorga bergan pul)
   roadMoney: { type: Number, default: 0 }, // Yo'l uchun berilgan pul (so'm)
-  
+
   // YANGI HISOB-KITOB TIZIMI
   totalIncome: { type: Number, default: 0 }, // Jami kirim = mijozdan + yo'l uchun
   netProfit: { type: Number, default: 0 }, // Sof foyda = totalIncome - totalExpenses
-  
+
   // Shofyor ulushi (sof foydadan %)
   driverProfitPercent: { type: Number, default: 0 }, // Foydadan necha % shofyorga
   driverProfitAmount: { type: Number, default: 0 }, // Shofyorga beriladigan summa (so'm)
-  
+
   // Biznesmen foydasi va shofyor beradigan pul
   businessProfit: { type: Number, default: 0 }, // Biznesmen foydasi = netProfit - driverProfitAmount
   driverOwes: { type: Number, default: 0 }, // Shofyor beradigan pul = businessProfit (yoki totalIncome - totalExpenses - driverProfitAmount)
-  
+
   // ============ XALQARO MASHRUT UCHUN USD MAYDONLARI ============
   totalPaymentUSD: { type: Number, default: 0 }, // Jami to'lov USD da
   totalIncomeUSD: { type: Number, default: 0 }, // Jami kirim USD da
@@ -353,21 +365,27 @@ const flightSchema = new mongoose.Schema({
   businessProfitUSD: { type: Number, default: 0 }, // Biznesmen foydasi USD da
   driverOwesUSD: { type: Number, default: 0 }, // Shofyor beradi USD da
   exchangeRateAtClose: { type: Number, default: 0 }, // Yopilgandagi kurs (1 USD = ? so'm)
-  
+
   // Eski maydonlar (backward compatibility)
   finalBalance: { type: Number, default: 0 }, // Yo'l puli qoldig'i (eski)
   profit: { type: Number, default: 0 }, // Eski foyda (mijozdan - xarajat)
-  
+
+  // Shofyor xarajatlari (reys yopilganda hisoblanadi)
+  driverExpensesBefore: { type: Number, default: 0 }, // Reys boshlanishidan oldin
+  driverExpensesDuring: { type: Number, default: 0 }, // Reys davomida
+  driverExpensesAfter: { type: Number, default: 0 }, // Reys tugagandan keyin
+  driverTotalExpenses: { type: Number, default: 0 }, // Jami xarajatlar
+
   status: {
     type: String,
     enum: ['active', 'completed', 'cancelled'],
     default: 'active'
   },
-  
+
   // Haydovchi tasdiqlagan yoki yo'qligini belgilash
   driverConfirmed: { type: Boolean, default: false },
   driverConfirmedAt: { type: Date, default: null },
-  
+
   // Shofyor to'lov statusi (pul berdi/bermadi)
   driverPaymentStatus: {
     type: String,
@@ -375,39 +393,39 @@ const flightSchema = new mongoose.Schema({
     default: 'pending'
   },
   driverPaymentDate: { type: Date, default: null },
-  
+
   // Qisman to'lov ma'lumotlari
   driverPaidAmount: { type: Number, default: 0 }, // Haydovchi bergan summa
   driverRemainingDebt: { type: Number, default: 0 }, // Qolgan qarz
-  
+
   // To'lov tarixi
   driverPayments: [{
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
     note: { type: String, default: '' }
   }],
-  
+
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
   notes: String
 }, { timestamps: true });
 
 // Saqlashdan oldin hisob-kitob va validatsiya
-flightSchema.pre('save', function(next) {
+flightSchema.pre('save', function (next) {
   // ============ VALIDATSIYA ============
-  
+
   // Odometr validatsiyasi - endOdometer >= startOdometer
   if (this.endOdometer > 0 && this.endOdometer < this.startOdometer) {
     return next(new Error('Tugatish odometri boshlang\'ich odometrdan kichik bo\'lishi mumkin emas'));
   }
-  
+
   // driverProfitPercent 0-100 oralig'ida bo'lishi kerak
   if (this.driverProfitPercent < 0 || this.driverProfitPercent > 100) {
     return next(new Error('Shofyor foizi 0 dan 100 gacha bo\'lishi kerak'));
   }
 
   // ============ XALQARO MASHRUT HISOBLARI ============
-  
+
   // Chegara o'tish xarajatlari jami
   if (this.borderCrossings && this.borderCrossings.length > 0) {
     this.borderCrossingsTotalUSD = this.borderCrossings.reduce(
@@ -425,64 +443,64 @@ flightSchema.pre('save', function(next) {
 
   // Har bir buyurtma uchun xarajatlar va balance hisoblash
   let previousBalance = 0;
-  
+
   this.legs.forEach((leg, index) => {
     // Bu buyurtmaga tegishli xarajatlar
-    const legExpenses = this.expenses.filter(exp => 
+    const legExpenses = this.expenses.filter(exp =>
       exp.legIndex === index || (exp.legId && exp.legId.toString() === leg._id.toString())
     );
-    const spentAmount = legExpenses.reduce((sum, exp) => sum + (exp.amountInUZS || exp.amount || 0), 0);
-    
+    const spentAmount = legExpenses.reduce((sum, exp) => sum + (exp.amountInUZS || 0), 0);
+
     // Oldingi qoldiq
     leg.previousBalance = previousBalance;
-    
+
     // Jami budget = berilgan pul + oldingi qoldiq
     leg.totalBudget = (leg.givenBudget || 0) + previousBalance;
-    
+
     // Sarflangan
     leg.spentAmount = spentAmount;
-    
+
     // Qoldiq = jami budget - sarflangan
     leg.balance = leg.totalBudget - spentAmount;
-    
+
     // Keyingi buyurtma uchun qoldiq
     previousBalance = leg.balance;
   });
-  
+
   // Jami to'lov (mijozdan)
   this.totalPayment = this.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
-  
+
   // Jami berilgan budget
   this.totalGivenBudget = this.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
-  
+
   // Yo'l puli = jami berilgan budget
   this.roadMoney = this.totalGivenBudget;
-  
+
   // Jami masofa
   this.totalDistance = this.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
-  
+
   // ============ XARAJATLAR HISOBLASH (USD va UZS) ============
   // Katta xarajat turlari - biznesmen hisobidan (shofyor oyligiga ta'sir qilmaydi)
   const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
-  
+
   let totalExpensesUZS = 0;
   let totalExpensesUSD = 0;
   let lightExpensesUZS = 0; // Yengil xarajatlar (shofyor hisobidan)
   let lightExpensesUSD = 0;
   let heavyExpensesUZS = 0; // Katta xarajatlar (biznesmen hisobidan)
   let heavyExpensesUSD = 0;
-  
+
   this.expenses.forEach(exp => {
     // Xarajat turini aniqlash
     const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
-    
-    // Agar amountInUZS va amountInUSD mavjud bo'lsa
-    const amountUZS = exp.amountInUZS || exp.amount || 0;
-    const amountUSD = exp.amountInUSD || (exp.amount || 0) / 12800;
-    
+
+    // Faqat amountInUZS ishlatamiz (amount ishlatmayamiz)
+    const amountUZS = exp.amountInUZS || 0;
+    const amountUSD = exp.amountInUSD || 0;
+
     totalExpensesUZS += amountUZS;
     totalExpensesUSD += amountUSD;
-    
+
     if (isHeavy) {
       heavyExpensesUZS += amountUZS;
       heavyExpensesUSD += amountUSD;
@@ -491,62 +509,72 @@ flightSchema.pre('save', function(next) {
       lightExpensesUSD += amountUSD;
     }
   });
-  
+
   // Chegara xarajatlarini ham qo'shish
   if (this.borderCrossings && this.borderCrossings.length > 0) {
     totalExpensesUSD += this.borderCrossingsTotalUSD || 0;
     totalExpensesUZS += this.borderCrossingsTotalUZS || 0;
   }
-  
+
   // Platon xarajatini qo'shish
   if (this.platon && this.platon.amountInUSD) {
     totalExpensesUSD += this.platon.amountInUSD;
     totalExpensesUZS += Math.round(this.platon.amountInUSD * 12800);
   }
-  
+
   this.totalExpenses = Math.round(totalExpensesUZS);
   this.totalExpensesUSD = Math.round(totalExpensesUSD * 100) / 100;
-  
+
   // Yengil va katta xarajatlarni saqlash
   this.lightExpenses = Math.round(lightExpensesUZS);
   this.lightExpensesUSD = Math.round(lightExpensesUSD * 100) / 100;
   this.heavyExpenses = Math.round(heavyExpensesUZS);
   this.heavyExpensesUSD = Math.round(heavyExpensesUSD * 100) / 100;
-  
+
   // Oxirgi qoldiq (haydovchi qaytarishi kerak) - eski
   // finalBalance = Jami berilgan pul - Jami xarajatlar
   this.finalBalance = this.totalGivenBudget - this.totalExpenses;
-  
+
   // Eski foyda (backward compatibility)
   this.profit = this.totalPayment - this.totalExpenses;
-  
+
   // ============ YANGI HISOB-KITOB TIZIMI ============
   // 1. Jami kirim = Mijozdan olingan + Yo'l uchun berilgan
   this.totalIncome = this.totalPayment + this.totalGivenBudget;
-  
+
   // 2. Sof foyda = Jami kirim - Jami xarajatlar
+  // MUHIM: Reys boshlanmaganda (active) sof foyda zarar bo'lsa manfiy ko'rsatiladi
+  // Reys davomida pul olinsa zarar yopiladi va foyda ortadi
   this.netProfit = this.totalIncome - this.totalExpenses;
-  
+
   // 3. Shofyor ulushi va biznesmen foydasi
-  // MUHIM: Bu qiymatlar faqat mashrut yopilganda (complete endpoint) hisoblanadi
-  // Faol mashrutlar uchun shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
+  // MUHIM: Faol reysda shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
   if (this.status === 'active') {
     // Faol mashrutlar uchun - shofyor ulushi 0, chunki hali mashrut yopilmagan
-    // Biznesmen mashrut yopganda foizni belgilaydi
     this.driverProfitAmount = 0;
-    this.businessProfit = this.netProfit; // Hali shofyor ulushi ayirilmagan
+    this.businessProfit = this.netProfit; // Sof foyda = netProfit (zarar bo'lsa manfiy)
     this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
+  } else if (this.status === 'completed') {
+    // Yopilgan mashrutlar uchun - yangi netProfit asosida qayta hisoblash
+    const percent = this.driverProfitPercent || 0;
+    // Agar foyda bo'lsa va foiz belgilangan bo'lsa
+    if (this.netProfit > 0 && percent > 0) {
+      this.driverProfitAmount = Math.round(this.netProfit * percent / 100);
+    } else {
+      this.driverProfitAmount = 0;
+    }
+
+    this.businessProfit = this.netProfit - this.driverProfitAmount;
+    this.driverOwes = this.businessProfit;
   }
-  // Yopilgan mashrutlar uchun - driverProfitAmount, businessProfit, driverOwes 
-  // complete endpoint da o'rnatilgan, ularni o'zgartirmaymiz
-  
+
   // Mashrut nomi
   if (this.legs.length > 0) {
     const firstCity = this.legs[0].fromCity;
     const lastCity = this.legs[this.legs.length - 1].toCity;
     this.name = `${firstCity} - ${lastCity}`;
   }
-  
+
   next();
 });
 

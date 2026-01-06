@@ -16,33 +16,40 @@ import { PaymentModal } from '../components/flightDetail/AllModals'
 
 // Xaritani shofyorlar joylashuviga markazlashtirish komponenti
 function MapCenterUpdater({ locations, selectedDriver, shouldCenter }) {
-  const map = useMap()
-  const [initialized, setInitialized] = useState(false)
+  try {
+    const map = useMap()
+    const [initialized, setInitialized] = useState(false)
 
-  useEffect(() => {
-    // Agar tanlangan shofyor bo'lsa, unga zoom qilish
-    if (selectedDriver?.lastLocation) {
-      map.flyTo(
-        [selectedDriver.lastLocation.lat, selectedDriver.lastLocation.lng],
-        15,
-        { duration: 1.5 }
-      )
-      return
-    }
+    useEffect(() => {
+      if (!map) return
 
-    // Faqat birinchi marta (initialized=false) YOKI shouldCenter=true bo'lganda
-    const validLocations = locations?.filter(d => d.lastLocation) || []
+      // Agar tanlangan shofyor bo'lsa, unga zoom qilish
+      if (selectedDriver?.lastLocation) {
+        map.flyTo(
+          [selectedDriver.lastLocation.lat, selectedDriver.lastLocation.lng],
+          15,
+          { duration: 1.5 }
+        )
+        return
+      }
 
-    if (validLocations.length > 0 && (!initialized || shouldCenter)) {
-      const bounds = L.latLngBounds(
-        validLocations.map(d => [d.lastLocation.lat, d.lastLocation.lng])
-      )
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 })
-      setInitialized(true)
-    }
-  }, [locations, selectedDriver, shouldCenter, map, initialized])
+      // Faqat birinchi marta (initialized=false) YOKI shouldCenter=true bo'lganda
+      const validLocations = locations?.filter(d => d.lastLocation) || []
 
-  return null
+      if (validLocations.length > 0 && (!initialized || shouldCenter)) {
+        const bounds = L.latLngBounds(
+          validLocations.map(d => [d.lastLocation.lat, d.lastLocation.lng])
+        )
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 })
+        setInitialized(true)
+      }
+    }, [locations, selectedDriver, shouldCenter, map, initialized])
+
+    return null
+  } catch (error) {
+    console.error('MapCenterUpdater error:', error)
+    return null
+  }
 }
 
 // Shofyor uchun custom marker yaratish (ism bilan)
@@ -569,38 +576,47 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200" style={{ height: '400px' }}>
-              <MapContainer center={[39.7747, 64.4286]} zoom={6} style={{ height: '100%', width: '100%' }}>
-                <TileLayer
-                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                  url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                />
-                <MapCenterUpdater locations={driverLocations} selectedDriver={selectedDriver} shouldCenter={shouldCenterMap} />
-                {driverLocations.filter(d => d.lastLocation).map((driver) => (
-                  <Marker
-                    key={driver._id}
-                    position={[driver.lastLocation.lat, driver.lastLocation.lng]}
-                    icon={createDriverIcon(driver.fullName, driver.status)}
-                  >
-                    <Popup>
-                      <div className="text-center p-3 min-w-[160px]">
-                        <div className={`w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 ${driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-amber-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                          }`}>
-                          {driver.fullName?.charAt(0)}
+              {driverLocations.length > 0 ? (
+                <MapContainer center={[39.7747, 64.4286]} zoom={6} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                  />
+                  <MapCenterUpdater locations={driverLocations} selectedDriver={selectedDriver} shouldCenter={shouldCenterMap} />
+                  {driverLocations.filter(d => d.lastLocation).map((driver) => (
+                    <Marker
+                      key={driver._id}
+                      position={[driver.lastLocation.lat, driver.lastLocation.lng]}
+                      icon={createDriverIcon(driver.fullName, driver.status)}
+                    >
+                      <Popup>
+                        <div className="text-center p-3 min-w-[160px]">
+                          <div className={`w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 ${driver.status === 'busy' ? 'bg-gradient-to-br from-orange-500 to-amber-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                            }`}>
+                            {driver.fullName?.charAt(0)}
+                          </div>
+                          <p className="font-bold text-gray-900">{driver.fullName}</p>
+                          <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
+                          <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                            }`}>
+                            {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
+                          </span>
+                          {driver.lastLocation?.accuracy && (
+                            <p className="text-xs text-gray-400 mt-1">±{Math.round(driver.lastLocation.accuracy)}m</p>
+                          )}
                         </div>
-                        <p className="font-bold text-gray-900">{driver.fullName}</p>
-                        <p className="text-gray-500 text-sm">{driver.phone || ''}</p>
-                        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
-                          }`}>
-                          {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
-                        </span>
-                        {driver.lastLocation?.accuracy && (
-                          <p className="text-xs text-gray-400 mt-1">±{Math.round(driver.lastLocation.accuracy)}m</p>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center bg-gray-50">
+                  <div className="text-center">
+                    <MapPin size={32} className="mx-auto mb-2 text-gray-300" />
+                    <p className="text-gray-400 text-sm">Shofyorlar joylashuvini yuklash...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -678,54 +694,63 @@ export default function Dashboard() {
 
           {/* Full Screen Map */}
           <div className="absolute inset-0" style={{ zIndex: 99998 }}>
-            <MapContainer
-              center={[39.7747, 64.4286]}
-              zoom={6}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              />
-              <MapCenterUpdater locations={driverLocations} selectedDriver={selectedDriver} shouldCenter={shouldCenterMap} />
-              {driverLocations.filter(d => d.lastLocation).map((driver) => (
-                <Marker
-                  key={driver._id}
-                  position={[driver.lastLocation.lat, driver.lastLocation.lng]}
-                  icon={createDriverIcon(driver.fullName, driver.status)}
-                >
-                  <Popup>
-                    <div className="text-center p-4 min-w-[200px]">
-                      <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-xl mb-3 ${driver.status === 'busy'
-                        ? 'bg-gradient-to-br from-orange-500 to-amber-600'
-                        : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                        }`}>
-                        {driver.fullName?.charAt(0)}
-                      </div>
-                      <p className="font-bold text-gray-900 text-lg">{driver.fullName}</p>
-                      <p className="text-gray-500">{driver.phone || 'Telefon yo\'q'}</p>
-                      <span className={`inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
-                        }`}>
-                        {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
-                      </span>
-                      {driver.lastLocation?.accuracy && (
-                        <p className={`mt-3 text-sm font-medium ${driver.lastLocation.accuracy < 50 ? 'text-emerald-600' :
-                          driver.lastLocation.accuracy < 100 ? 'text-amber-600' : 'text-red-600'
+            {driverLocations.length > 0 ? (
+              <MapContainer
+                center={[39.7747, 64.4286]}
+                zoom={6}
+                style={{ height: '100%', width: '100%' }}
+                zoomControl={false}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                />
+                <MapCenterUpdater locations={driverLocations} selectedDriver={selectedDriver} shouldCenter={shouldCenterMap} />
+                {driverLocations.filter(d => d.lastLocation).map((driver) => (
+                  <Marker
+                    key={driver._id}
+                    position={[driver.lastLocation.lat, driver.lastLocation.lng]}
+                    icon={createDriverIcon(driver.fullName, driver.status)}
+                  >
+                    <Popup>
+                      <div className="text-center p-4 min-w-[200px]">
+                        <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center text-white font-bold text-xl mb-3 ${driver.status === 'busy'
+                          ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                          : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                           }`}>
-                          Aniqlik: ±{Math.round(driver.lastLocation.accuracy)}m
-                        </p>
-                      )}
-                      {driver.lastLocation?.speed > 0 && (
-                        <p className="text-sm text-blue-600 mt-1">
-                          Tezlik: {Math.round(driver.lastLocation.speed * 3.6)} km/h
-                        </p>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+                          {driver.fullName?.charAt(0)}
+                        </div>
+                        <p className="font-bold text-gray-900 text-lg">{driver.fullName}</p>
+                        <p className="text-gray-500">{driver.phone || 'Telefon yo\'q'}</p>
+                        <span className={`inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-medium ${driver.status === 'busy' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                          {driver.status === 'busy' ? 'Marshrutda' : 'Bo\'sh'}
+                        </span>
+                        {driver.lastLocation?.accuracy && (
+                          <p className={`mt-3 text-sm font-medium ${driver.lastLocation.accuracy < 50 ? 'text-emerald-600' :
+                            driver.lastLocation.accuracy < 100 ? 'text-amber-600' : 'text-red-600'
+                            }`}>
+                            Aniqlik: ±{Math.round(driver.lastLocation.accuracy)}m
+                          </p>
+                        )}
+                        {driver.lastLocation?.speed > 0 && (
+                          <p className="text-sm text-blue-600 mt-1">
+                            Tezlik: {Math.round(driver.lastLocation.speed * 3.6)} km/h
+                          </p>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <MapPin size={48} className="mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-300 text-lg">Xarita yuklash...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>,
         document.body

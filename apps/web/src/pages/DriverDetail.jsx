@@ -1,10 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { 
-  ArrowLeft, User, Phone, Truck, Route, 
-  Calendar, Wallet, TrendingUp, CheckCircle, Clock, 
-  Activity, ChevronRight, X, Play, Gauge, Fuel, Globe, Flag, CircleDot, Circle, Droplet
+import {
+  AlertCircle, ArrowLeft, Building2, Calendar, Car, CheckCircle, Circle, CircleDot, Clock, Droplet, FileText, Fuel, MapPin, Navigation, Package, Pencil, Phone, Route, Shield, TrendingDown, TrendingUp, Truck, User, Utensils, Wallet, Wrench, X, Plus, Activity, ChevronRight, Play, Gauge, Globe, Flag, Trash2, Filter
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -12,6 +10,7 @@ import { useAuthStore } from '../store/authStore'
 import { useAlert, DriverDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 import { useSocket } from '../hooks/useSocket'
+import { ExpenseModal } from '../components/flightDetail/AllModals'
 
 export default function DriverDetail() {
   const { id } = useParams()
@@ -20,27 +19,38 @@ export default function DriverDetail() {
   const alert = useAlert()
   const isDemoMode = isDemo()
   const { socket } = useSocket()
-  
+
   const [driver, setDriver] = useState(null)
   const [flights, setFlights] = useState([])
   const [vehicle, setVehicle] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showFlightModal, setShowFlightModal] = useState(false)
-  
+  const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [expenseLoading, setExpenseLoading] = useState(false)
+
   useEffect(() => {
-    if (showFlightModal) {
+    if (showFlightModal || showExpenseModal) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
-  }, [showFlightModal])
+  }, [showFlightModal, showExpenseModal])
 
   const [flightForm, setFlightForm] = useState({
-    startOdometer: '', startFuel: '', fromCity: '', toCity: '',
-    payment: '', givenBudget: '', fromCoords: null, toCoords: null,
-    flightType: 'domestic', fuelType: 'metan', fuelUnit: 'kub'
+    startOdometer: '',
+    startFuel: '',
+    fromCity: '',
+    toCity: '',
+    payment: '',
+    givenBudget: '',
+    fromCoords: null,
+    toCoords: null,
+    flightType: 'domestic',
+    fuelType: 'metan',
+    fuelUnit: 'kub'
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
@@ -50,14 +60,15 @@ export default function DriverDetail() {
       setLoading(false)
       return
     }
-    
+
     if (showLoader) setLoading(true)
     setError(null)
     try {
       // 🚀 Parallel so'rovlar - tezroq yuklash
+      const driverUrl = `/drivers/${id}`
       const [driverRes, flightsRes] = await Promise.all([
-        api.get(`/drivers/${id}`),
-        api.get('/flights', { params: { driverId: id, limit: 20 } }) // Faqat oxirgi 20 ta
+        api.get(driverUrl),
+        api.get('/flights', { params: { driverId: id, limit: 20 } })
       ])
       const driverData = driverRes.data.data
       setDriver(driverData)
@@ -69,7 +80,7 @@ export default function DriverDetail() {
       } else {
         setError({
           type: err.isNetworkError ? 'network' : 'generic',
-          message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
+          message: err.userMessage || "Ma'lumotlarni yuklashda xatolik"
         })
       }
     } finally {
@@ -78,7 +89,7 @@ export default function DriverDetail() {
   }, [id])
 
   useEffect(() => { fetchData() }, [fetchData])
-  
+
   useEffect(() => {
     if (!socket) return
     const handleFlightUpdate = (data) => {
@@ -115,6 +126,7 @@ export default function DriverDetail() {
   }, [socket, id, fetchData])
 
   if (loading) return <DriverDetailSkeleton />
+  if (loading) return <DriverDetailSkeleton />
 
   if (error) {
     if (error.type === 'notfound') {
@@ -132,7 +144,6 @@ export default function DriverDetail() {
       </div>
     )
   }
-
   const handleStartFlight = async (e) => {
     e.preventDefault()
     if (isDemoMode) {
@@ -162,12 +173,103 @@ export default function DriverDetail() {
     }
     const fromCity = flightForm.fromCity
     const toCity = flightForm.toCity
+
+    // 🚀 Optimistic update - haydovchini band qilish va xarajatlarni o'chirish
+    const beforeExpenses = driver.expenses?.filter(exp => exp.timing === 'before') || []
+    const beforeExpensesTotal = beforeExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
+    const newBalance = Math.max(0, (driver.currentBalance || 0) - beforeExpensesTotal)
+
+    setDriver(prev => ({
+      ...prev,
+      status: 'busy',
+      currentBalance: newBalance,
+      expenses: prev.expenses?.filter(exp => exp.timing !== 'before') || []
+    }))
+
     setShowFlightModal(false)
-    setFlightForm({ startOdometer: '', startFuel: '', fromCity: '', toCity: '', payment: '', givenBudget: '', fromCoords: null, toCoords: null, flightType: 'domestic', fuelType: 'metan', fuelUnit: 'kub' })
+    setFlightForm({
+      startOdometer: '',
+      startFuel: '',
+      fromCity: '',
+      toCity: '',
+      payment: '',
+      givenBudget: '',
+      fromCoords: null,
+      toCoords: null,
+      flightType: 'domestic',
+      fuelType: 'metan',
+      fuelUnit: 'kub'
+    })
     showToast.success(`Mashrut ochilmoqda: ${fromCity} → ${toCity}`)
     api.post('/flights', payload)
       .then((res) => navigate(`/dashboard/flights/${res.data.data._id}`))
-      .catch((err) => showToast.error(err.response?.data?.message || 'Xatolik yuz berdi'))
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+        // Revert on error
+        fetchData(false)
+      })
+  }
+
+  const activeFlight = flights.find(f => f.status === 'active')
+
+  const handleAddExpense = async (expenseData) => {
+    if (isDemoMode) {
+      alert.info('Demo rejim', 'Demo versiyada ishlamaydi')
+      return
+    }
+
+    setExpenseLoading(true)
+    try {
+      if (editingExpense) {
+        // Optimistic update for edit
+        const oldAmountUZS = editingExpense.amount || 0
+        const newAmountUZS = expenseData.amount || 0
+        const amountDiff = newAmountUZS - oldAmountUZS
+
+        setDriver(prev => ({
+          ...prev,
+          expenses: prev.expenses?.map(e =>
+            e._id === editingExpense._id ? { ...e, ...expenseData } : e
+          ) || []
+        }))
+
+        // Update existing expense
+        await api.put(`/drivers/${id}/expenses/${editingExpense._id}`, {
+          ...expenseData,
+          timing: editingExpense.timing // Keep original timing
+        })
+        showToast.success('Xarajat yangilandi')
+      } else {
+        // Add new expense - reys boshlanmaganda haydovchiga xarajat qo'shish
+        const tempId = `temp_${Date.now()}`
+        const newExpense = {
+          ...expenseData,
+          _id: tempId,
+          date: new Date().toISOString()
+        }
+
+        // Optimistic update for add
+        setDriver(prev => ({
+          ...prev,
+          expenses: [...(prev.expenses || []), newExpense]
+        }))
+
+        await api.post(`/drivers/${id}/add-expense`, {
+          ...expenseData,
+          timing: expenseData.timing || 'before'  // Reys boshlanmaganda 'before' bo'ladi
+        })
+        showToast.success('Xarajat qo\'shildi')
+      }
+      setEditingExpense(null)
+      setShowExpenseModal(false)
+      // Optimistic update yetarli - fetchData chaqirilmaslik
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+      // Revert on error
+      fetchData(false)
+    } finally {
+      setExpenseLoading(false)
+    }
   }
 
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
@@ -188,7 +290,6 @@ export default function DriverDetail() {
 
   const currentStatus = driverStatusConfig[driver.status] || driverStatusConfig.available
   const StatusIcon = currentStatus.icon
-  const activeFlight = flights.find(f => f.status === 'active')
 
 
   return (
@@ -197,10 +298,10 @@ export default function DriverDetail() {
       <div className="relative overflow-hidden bg-gradient-to-r from-[#2d2d44] to-[#1a1a2e] text-white p-5 sm:p-6 rounded-2xl border border-white/10">
         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl -mr-24 -mt-24"></div>
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl -ml-20 -mb-20"></div>
-        
+
         <div className="relative">
-          <button 
-            onClick={() => navigate('/dashboard/drivers')} 
+          <button
+            onClick={() => navigate('/dashboard/drivers')}
             className="mb-4 flex items-center gap-2 text-slate-400 hover:text-white transition"
           >
             <ArrowLeft size={18} />
@@ -230,9 +331,9 @@ export default function DriverDetail() {
             </div>
           </div>
 
-          {/* Action Card - inside header */}
+          {/* Action Card-inside header */}
           {activeFlight ? (
-            <div 
+            <div
               onClick={() => navigate(`/dashboard/flights/${activeFlight._id}`)}
               className="mt-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-4 cursor-pointer hover:from-emerald-600 hover:to-teal-600 transition shadow-lg"
             >
@@ -254,7 +355,7 @@ export default function DriverDetail() {
               </div>
             </div>
           ) : driver.status !== 'busy' && (
-            <div 
+            <div
               onClick={() => setShowFlightModal(true)}
               className="mt-5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 cursor-pointer hover:from-blue-600 hover:to-indigo-600 transition shadow-lg"
             >
@@ -298,25 +399,25 @@ export default function DriverDetail() {
                 <p className="text-sm text-gray-500 mt-2">Kutilmoqda</p>
               </div>
             </div>
-            
-            {/* Joriy balans - haydovchidagi pul */}
+
+            {/* Joriy balans-haydovchidagi pul */}
             {driver.currentBalance !== undefined && (
-              <div className={`mt-4 p-4 rounded-xl ${driver.currentBalance > 0 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'bg-slate-100 border border-slate-200'}`}>
+              <div className={`mt-4 p-4 rounded-xl ${driver.currentBalance > 0 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'bg-slate-100 border border-slate-200'} `}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Wallet className="w-6 h-6" />
                     <div>
-                      <p className={`text-sm ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-500'}`}>Haydovchidagi pul</p>
-                      <p className={`text-2xl font-bold ${driver.currentBalance > 0 ? 'text-white' : 'text-slate-600'}`}>{formatMoney(driver.currentBalance || 0)} so'm</p>
+                      <p className={`text-sm ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-500'} `}>Haydovchidagi pul</p>
+                      <p className={`text-2xl font-bold ${driver.currentBalance > 0 ? 'text-white' : 'text-slate-600'} `}>{formatMoney(driver.currentBalance || 0)} so'm</p>
                     </div>
                   </div>
-                  <p className={`text-xs ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-400'}`}>
+                  <p className={`text-xs ${driver.currentBalance > 0 ? 'text-purple-200' : 'text-slate-400'} `}>
                     {driver.currentBalance > 0 ? 'Avvalgi marshrutdan qolgan' : 'Qoldiq yo\'q'}
                   </p>
                 </div>
               </div>
             )}
-            
+
             {/* Marshrutlardan ulushlar */}
             {flights.filter(f => f.status === 'completed' && f.driverProfitAmount > 0).length > 0 && (
               <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
@@ -333,7 +434,7 @@ export default function DriverDetail() {
                 </div>
               </div>
             )}
-            
+
             <div className="mt-5 p-5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-between">
               <div>
                 <p className="text-blue-200 text-sm">Jami daromad</p>
@@ -367,43 +468,39 @@ export default function DriverDetail() {
                   const remaining = (flight.driverOwes || 0) - paidAmount
                   const isPaid = flight.driverPaymentStatus === 'paid'
                   const isPartial = flight.driverPaymentStatus === 'partial'
-                  
+
                   return (
-                  <div 
-                    key={flight._id} 
-                    onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
-                    className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition border border-gray-100"
-                  >
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      flight.status === 'active' ? 'bg-orange-500' : 
-                      flight.status === 'completed' ? 'bg-emerald-500' : 'bg-gray-400'
-                    }`}>
-                      <Route size={18} className="text-white" />
+                    <div
+                      key={flight._id}
+                      onClick={() => navigate(`/dashboard/flights/${flight._id}`)}
+                      className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition border border-gray-100"
+                    >
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${flight.status === 'active' ? 'bg-orange-500' :
+                        flight.status === 'completed' ? 'bg-emerald-500' : 'bg-gray-400'} `}>
+                        <Route size={18} className="text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{flight.name || 'Marshrut'}</p>
+                        <p className="text-sm text-gray-500">{formatDate(flight.createdAt)} • {flight.totalDistance || 0} km</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className={`text-sm font-medium ${flight.status === 'active' ? 'text-orange-600' :
+                          flight.status === 'completed' ? 'text-emerald-600' : 'text-gray-500'} `}>
+                          {flight.status === 'active' ? 'Faol' : flight.status === 'completed' ? 'Yopilgan' : 'Bekor'}
+                        </span>
+                        {flight.driverProfitAmount > 0 && (
+                          <p className="text-sm font-bold text-purple-600">Ulush: +{formatMoney(flight.driverProfitAmount)}</p>
+                        )}
+                        {hasDebt && !isPaid && (
+                          <p className={`text-xs ${isPartial ? 'text-amber-600' : 'text-red-500'} `}>
+                            {isPartial ? `Qoldi: ${formatMoney(remaining)} ` : `Beradi: ${formatMoney(flight.driverOwes)} `}
+                          </p>
+                        )}
+                        {isPaid && flight.driverOwes > 0 && (
+                          <p className="text-xs text-emerald-600">✓ To'langan</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{flight.name || 'Marshrut'}</p>
-                      <p className="text-sm text-gray-500">{formatDate(flight.createdAt)} • {flight.totalDistance || 0} km</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <span className={`text-sm font-medium ${
-                        flight.status === 'active' ? 'text-orange-600' : 
-                        flight.status === 'completed' ? 'text-emerald-600' : 'text-gray-500'
-                      }`}>
-                        {flight.status === 'active' ? 'Faol' : flight.status === 'completed' ? 'Yopilgan' : 'Bekor'}
-                      </span>
-                      {flight.driverProfitAmount > 0 && (
-                        <p className="text-sm font-bold text-purple-600">Ulush: +{formatMoney(flight.driverProfitAmount)}</p>
-                      )}
-                      {hasDebt && !isPaid && (
-                        <p className={`text-xs ${isPartial ? 'text-amber-600' : 'text-red-500'}`}>
-                          {isPartial ? `Qoldi: ${formatMoney(remaining)}` : `Beradi: ${formatMoney(flight.driverOwes)}`}
-                        </p>
-                      )}
-                      {isPaid && flight.driverOwes > 0 && (
-                        <p className="text-xs text-emerald-600">✓ To'langan</p>
-                      )}
-                    </div>
-                  </div>
                   )
                 })}
               </div>
@@ -419,13 +516,23 @@ export default function DriverDetail() {
         {/* Right Column */}
         <div className="space-y-5">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <User size={20} className="text-white" />
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <User size={20} className="text-white" />
+                </div>
+                <h2 className="font-bold text-gray-900 text-lg">Ma'lumotlar</h2>
               </div>
-              <h2 className="font-bold text-gray-900 text-lg">Ma'lumotlar</h2>
+              <button
+                onClick={() => setShowExpenseModal(true)}
+                className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition flex items-center gap-2 border border-purple-200 hover:border-purple-300"
+                title="Xarajat qo'shish"
+              >
+                <Plus size={18} />
+                <span className="text-sm font-medium">Xarajat qo'shish</span>
+              </button>
             </div>
-            
+
             {/* Telefon */}
             <div className="p-5 bg-gray-50 rounded-2xl flex items-center gap-4 mb-4 border border-gray-100">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -458,6 +565,138 @@ export default function DriverDetail() {
                 </div>
               </div>
             )}
+
+            {/* Xarajatlar-Zamonaviy dizayn */}
+            {driver.expenses && driver.expenses.length > 0 && (
+              <div className="mt-5 pt-5 border-t border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-4 text-lg">💰 Xarajatlar</h3>
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  {driver.expenses.slice(-50).reverse().map((exp, idx) => {
+                    // EXPENSE_CATEGORIES dan label olish
+                    const expenseLabel = (() => {
+                      const labels = {
+                        'fuel': "Yoqilg'i", 'fuel_metan': 'Metan', 'fuel_propan': 'Propan',
+                        'fuel_benzin': 'Benzin', 'fuel_diesel': 'Dizel', 'food': 'Ovqat',
+                        'toll': "Yo'l to'lovi", 'wash': 'Moyka', 'fine': 'Jarima',
+                        'repair_small': "Mayda ta'mir", 'repair_major': "Katta ta'mir",
+                        'oil': 'Moy almashtirish', 'filter': 'Filtr', 'filter_air': 'Havo filtri',
+                        'filter_oil': 'Moy filtri', 'filter_cabin': 'Salon filtri',
+                        'filter_gas': 'Gaz filtri', 'tire': 'Shina', 'accident': 'Avariya',
+                        'insurance': "Sug'urta", 'border': 'Chegara', 'border_customs': 'Bojxona',
+                        'border_transit': 'Tranzit', 'border_insurance': "Chegara sug'urta",
+                        'border_other': 'Chegara boshqa', 'other': 'Boshqa'
+                      }
+                      return labels[exp.type] || exp.type
+                    })()
+
+                    // Icon va rang
+                    const getExpenseIcon = (type) => {
+                      const icons = {
+                        'fuel': { icon: Fuel, color: '#3b82f6' },
+                        'fuel_metan': { icon: CircleDot, color: '#3b82f6' },
+                        'fuel_propan': { icon: Circle, color: '#eab308' },
+                        'fuel_benzin': { icon: Droplet, color: '#ef4444' },
+                        'fuel_diesel': { icon: Droplet, color: '#3b82f6' },
+                        'food': { icon: Utensils, color: '#f97316' },
+                        'toll': { icon: Car, color: '#6366f1' },
+                        'wash': { icon: Droplet, color: '#06b6d4' },
+                        'fine': { icon: FileText, color: '#ef4444' },
+                        'repair_small': { icon: Wrench, color: '#f59e0b' },
+                        'repair_major': { icon: Wrench, color: '#dc2626' },
+                        'oil': { icon: Droplet, color: '#8b5cf6' },
+                        'filter': { icon: Filter, color: '#10b981' }, // Filter icon needs import or use generic
+                        'filter_air': { icon: Filter, color: '#10b981' },
+                        'filter_oil': { icon: Droplet, color: '#8b5cf6' },
+                        'filter_cabin': { icon: Filter, color: '#14b8a6' },
+                        'filter_gas': { icon: CircleDot, color: '#f59e0b' },
+                        'tire': { icon: Circle, color: '#1f2937' },
+                        'accident': { icon: AlertCircle, color: '#ef4444' },
+                        'insurance': { icon: Shield, color: '#10b981' },
+                        'border': { icon: Navigation, color: '#8b5cf6' },
+                        'border_customs': { icon: Building2, color: '#6366f1' },
+                        'border_transit': { icon: Truck, color: '#f59e0b' },
+                        'border_insurance': { icon: Shield, color: '#10b981' },
+                        'border_other': { icon: MapPin, color: '#64748b' },
+                        'other': { icon: Package, color: '#64748b' }
+                      }
+                      return icons[type] || { icon: Package, color: '#64748b' }
+                    }
+
+                    const { icon: Icon, color } = getExpenseIcon(exp.type)
+
+                    return (
+                      <div
+                        key={exp._id || idx}
+                        className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Icon */}
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                            style={{ background: `linear-gradient(135deg, ${color}20, ${color}40)` }}>
+                            <Icon size={24} style={{ color: color }} />
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div>
+                                <p className="font-bold text-gray-900 text-base">{expenseLabel}</p>
+                                <p className="text-sm text-gray-500">
+                                  📅 {new Date(exp.date).toLocaleDateString('uz-UZ', {
+                                    day: 'numeric', month: 'long', year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                              <p className="font-bold text-red-600 text-lg">-{formatMoney(exp.amount)} so'm</p>
+                            </div>
+
+                            {/* Description */}
+                            {exp.description && (
+                              <p className="text-sm text-gray-600 mb-2 bg-white/60 p-2 rounded-lg">
+                                💬 {exp.description}
+                              </p>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  // Edit funksiyasi-ExpenseModal ochish
+                                  setEditingExpense(exp)
+                                  setShowExpenseModal(true)
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+                              >
+                                <Pencil size={14} />
+                                Tahrirlash
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm("Xarajatni o'chirishni xohlaysizmi?")) {
+                                    try {
+                                      // Delete API call
+                                      await api.delete(`/drivers/${id}/expenses/${exp._id}`)
+                                      showToast.success("Xarajat o'chirildi")
+                                      fetchData(false)
+                                    } catch (err) {
+                                      showToast.error("Xatolik yuz berdi")
+                                    }
+                                  }
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium shadow-sm"
+                              >
+                                <Trash2 size={14} />
+                                O'chirish
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -465,12 +704,12 @@ export default function DriverDetail() {
 
       {/* Marshrut ochish Modal */}
       {showFlightModal && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[9999] bg-black/90 overflow-y-auto"
           onClick={() => setShowFlightModal(false)}
         >
           <div className="min-h-full flex items-center justify-center p-4">
-            <div 
+            <div
               className="relative bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
@@ -492,7 +731,7 @@ export default function DriverDetail() {
               </div>
 
               <form onSubmit={handleStartFlight} className="p-6 space-y-5">
-                {/* Avvalgi qoldiq - agar bor bo'lsa */}
+                {/* Avvalgi qoldiq-agar bor bo'lsa */}
                 {driver.currentBalance > 0 && (
                   <div className="p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl border border-purple-500/30">
                     <div className="flex items-center justify-between">
@@ -523,11 +762,9 @@ export default function DriverDetail() {
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'domestic' })}
-                      className={`p-4 rounded-xl border-2 transition ${
-                        flightForm.flightType === 'domestic'
-                          ? 'border-green-500 bg-green-500/20 text-white'
-                          : 'border-white/10 bg-white/5 text-slate-400'
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition ${flightForm.flightType === 'domestic'
+                        ? 'border-green-500 bg-green-500/20 text-white'
+                        : 'border-white/10 bg-white/5 text-slate-400'} `}
                     >
                       <Flag size={28} className="mx-auto" />
                       <p className="font-medium text-base mt-1">Mahalliy</p>
@@ -535,11 +772,9 @@ export default function DriverDetail() {
                     <button
                       type="button"
                       onClick={() => setFlightForm({ ...flightForm, flightType: 'international' })}
-                      className={`p-4 rounded-xl border-2 transition ${
-                        flightForm.flightType === 'international'
-                          ? 'border-blue-500 bg-blue-500/20 text-white'
-                          : 'border-white/10 bg-white/5 text-slate-400'
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition ${flightForm.flightType === 'international'
+                        ? 'border-blue-500 bg-blue-500/20 text-white'
+                        : 'border-white/10 bg-white/5 text-slate-400'} `}
                     >
                       <Globe size={28} className="mx-auto" />
                       <p className="font-medium text-base mt-1">Xalqaro</p>
@@ -587,13 +822,11 @@ export default function DriverDetail() {
                         key={fuel.value}
                         type="button"
                         onClick={() => setFlightForm({ ...flightForm, fuelType: fuel.value, fuelUnit: fuel.unit })}
-                        className={`p-3 rounded-xl border text-center transition ${
-                          flightForm.fuelType === fuel.value
-                            ? 'border-emerald-500 bg-emerald-500/20 text-white'
-                            : 'border-white/10 bg-white/5 text-slate-400'
-                        }`}
+                        className={`p-3 rounded-xl border text-center transition ${flightForm.fuelType === fuel.value
+                          ? 'border-emerald-500 bg-emerald-500/20 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400'} `}
                       >
-                        <fuel.Icon size={24} className={`mx-auto ${fuel.color}`} />
+                        <fuel.Icon size={24} className={`mx-auto ${fuel.color} `} />
                         <p className="text-xs mt-1">{fuel.label}</p>
                       </button>
                     ))}
@@ -646,8 +879,8 @@ export default function DriverDetail() {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="w-full py-4 text-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
                 >
                   <Play size={20} /> Marshrutni boshlash
@@ -657,6 +890,20 @@ export default function DriverDetail() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Xarajat qo'shish Modal */}
+      {showExpenseModal && (
+        <ExpenseModal
+          flight={null}
+          selectedLeg={null}
+          editingExpense={editingExpense}
+          onClose={() => {
+            setShowExpenseModal(false)
+            setEditingExpense(null)
+          }}
+          onSubmit={handleAddExpense}
+        />
       )}
     </div>
   )

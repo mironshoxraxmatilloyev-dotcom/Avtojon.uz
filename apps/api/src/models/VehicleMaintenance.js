@@ -45,14 +45,13 @@ const OilChangeSchema = new mongoose.Schema({
   nextChangeOdometer: { type: Number },
   nextChangeDate: { type: Date },
   // Moy filtri
-  filterChanged: { type: Boolean, default: false },
-  filterCost: { type: Number, default: 0 },
+  oilFilterCost: { type: Number, default: 0 },
   // Havo filtri
-  airFilterChanged: { type: Boolean, default: false },
   airFilterCost: { type: Number, default: 0 },
-  // Yoqilg'i filtri
-  fuelFilterChanged: { type: Boolean, default: false },
-  fuelFilterCost: { type: Number, default: 0 },
+  // Salarka filtri
+  cabinFilterCost: { type: Number, default: 0 },
+  // Gaz filtri
+  gasFilterCost: { type: Number, default: 0 },
   note: { type: String }
 }, { timestamps: true })
 

@@ -68,6 +68,7 @@ export const EXPENSE_CATEGORIES = [
   { value: 'repair_small', label: "Mayda ta'mir", iconName: 'Wrench', color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500', expenseClass: 'light' },
   // Katta xarajatlar - biznesmen hisobidan (shofyor oyligiga ta'sir qilmaydi)
   { value: 'oil', label: 'Moy almashtirish', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', bgColor: 'bg-yellow-600', expenseClass: 'heavy', hasOdometer: true },
+  { value: 'filter', label: 'Filtr', iconName: 'Filter', color: 'from-blue-600 to-cyan-600', bgColor: 'bg-blue-600', expenseClass: 'heavy' },
   { value: 'repair_major', label: "Katta ta'mir", iconName: 'Wrench', color: 'from-red-600 to-rose-700', bgColor: 'bg-red-600', expenseClass: 'heavy' },
   { value: 'tire', label: 'Shina', iconName: 'Circle', color: 'from-slate-600 to-slate-800', bgColor: 'bg-slate-600', expenseClass: 'heavy' },
   { value: 'accident', label: 'Avariya', iconName: 'Shield', color: 'from-rose-600 to-red-700', bgColor: 'bg-rose-600', expenseClass: 'heavy' },
@@ -92,6 +93,14 @@ export const BORDER_TYPES = [
   { value: 'border_other', label: 'Boshqa', iconName: 'FileText' }
 ]
 
+// Filtr turlari
+export const FILTER_TYPES = [
+  { value: 'filter_oil', label: 'Moy filtri', iconName: 'Droplet' },
+  { value: 'filter_air', label: 'Havo filtri', iconName: 'Wind' },
+  { value: 'filter_cabin', label: 'Salarka filtri', iconName: 'Wind' },
+  { value: 'filter_gas', label: 'Gaz filtri', iconName: 'CircleDot' }
+]
+
 // Yoqilg'i turlari
 export const FUEL_TYPES = [
   { value: 'fuel_metan', label: 'Metan', iconName: 'CircleDot', iconColor: 'text-green-500', unit: 'kub' },
@@ -103,7 +112,8 @@ export const FUEL_TYPES = [
 // Display uchun barcha turlar
 export const EXPENSE_TYPES = [
   ...FUEL_TYPES.map(f => ({ ...f, color: 'from-amber-500 to-orange-500', expenseClass: 'light' })),
-  { value: 'oil', label: 'Moy', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', expenseClass: 'light', hasOdometer: true },
+  { value: 'oil', label: 'Moy', iconName: 'Droplet', color: 'from-yellow-600 to-amber-600', expenseClass: 'heavy', hasOdometer: true },
+  { value: 'filter', label: 'Filtr', iconName: 'Filter', color: 'from-blue-600 to-cyan-600', expenseClass: 'heavy' },
   { value: 'food', label: 'Ovqat', iconName: 'Utensils', color: 'from-green-500 to-emerald-500', expenseClass: 'light' },
   { value: 'toll', label: "Yo'l to'lovi", iconName: 'Car', color: 'from-blue-500 to-indigo-500', expenseClass: 'light' },
   { value: 'wash', label: 'Moyka', iconName: 'Droplet', color: 'from-cyan-500 to-blue-500', expenseClass: 'light' },

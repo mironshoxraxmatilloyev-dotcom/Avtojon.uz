@@ -76,7 +76,7 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
         <div className="space-y-3">
           <h3 className="text-lg font-bold text-gray-900">Tarix</h3>
           {changes.map(c => {
-            const totalCost = (c.cost || 0) + (c.filterCost || 0) + (c.airFilterCost || 0) + (c.fuelFilterCost || 0)
+            const totalCost = (c.cost || 0) + (c.oilFilterCost || 0) + (c.airFilterCost || 0) + (c.cabinFilterCost || 0) + (c.gasFilterCost || 0)
             return (
               <div
                 key={c._id}
@@ -118,8 +118,8 @@ export const OilTab = memo(({ data, onAdd, onEdit, onDelete, onVoiceAdd }) => {
 
 // Oil Detail Modal
 const OilDetailModal = memo(({ oil, onClose, onEdit, onDelete }) => {
-  const totalCost = (oil.cost || 0) + (oil.filterCost || 0) + (oil.airFilterCost || 0) + (oil.fuelFilterCost || 0)
-  const hasFilters = oil.filterChanged || oil.airFilterChanged || oil.fuelFilterChanged
+  const totalCost = (oil.cost || 0) + (oil.oilFilterCost || 0) + (oil.airFilterCost || 0) + (oil.cabinFilterCost || 0) + (oil.gasFilterCost || 0)
+  const hasFilters = oil.oilFilterCost || oil.airFilterCost || oil.cabinFilterCost || oil.gasFilterCost
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -187,22 +187,28 @@ const OilDetailModal = memo(({ oil, onClose, onEdit, onDelete }) => {
               <div className="py-2">
                 <p className="text-gray-500 text-sm mb-2">Almashtirilgan filtrlar</p>
                 <div className="flex flex-wrap gap-2">
-                  {oil.filterChanged && (
+                  {oil.oilFilterCost && (
                     <div className="px-3 py-1.5 bg-blue-50 rounded-lg">
                       <span className="text-blue-700 text-sm font-medium">Moy filtri</span>
-                      {oil.filterCost > 0 && <span className="text-blue-500 text-xs ml-2">{fmt(oil.filterCost)} so'm</span>}
+                      {oil.oilFilterCost > 0 && <span className="text-blue-500 text-xs ml-2">{fmt(oil.oilFilterCost)} so'm</span>}
                     </div>
                   )}
-                  {oil.airFilterChanged && (
+                  {oil.airFilterCost && (
                     <div className="px-3 py-1.5 bg-cyan-50 rounded-lg">
                       <span className="text-cyan-700 text-sm font-medium">Havo filtri</span>
                       {oil.airFilterCost > 0 && <span className="text-cyan-500 text-xs ml-2">{fmt(oil.airFilterCost)} so'm</span>}
                     </div>
                   )}
-                  {oil.fuelFilterChanged && (
+                  {oil.cabinFilterCost && (
                     <div className="px-3 py-1.5 bg-purple-50 rounded-lg">
-                      <span className="text-purple-700 text-sm font-medium">Yoqilg'i filtri</span>
-                      {oil.fuelFilterCost > 0 && <span className="text-purple-500 text-xs ml-2">{fmt(oil.fuelFilterCost)} so'm</span>}
+                      <span className="text-purple-700 text-sm font-medium">Salarka filtri</span>
+                      {oil.cabinFilterCost > 0 && <span className="text-purple-500 text-xs ml-2">{fmt(oil.cabinFilterCost)} so'm</span>}
+                    </div>
+                  )}
+                  {oil.gasFilterCost && (
+                    <div className="px-3 py-1.5 bg-green-50 rounded-lg">
+                      <span className="text-green-700 text-sm font-medium">Gaz filtri</span>
+                      {oil.gasFilterCost > 0 && <span className="text-green-500 text-xs ml-2">{fmt(oil.gasFilterCost)} so'm</span>}
                     </div>
                   )}
                 </div>

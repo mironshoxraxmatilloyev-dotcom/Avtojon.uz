@@ -96,8 +96,8 @@ const driverSchema = new mongoose.Schema({
   },
   // To'lov tarixi
   salaryPayments: [{
-    amount: { 
-      type: Number, 
+    amount: {
+      type: Number,
       required: true,
       min: [0, 'To\'lov salbiy bo\'lishi mumkin emas']
     },
@@ -124,18 +124,74 @@ const driverSchema = new mongoose.Schema({
     heading: { type: Number, min: 0, max: 360 },
     updatedAt: Date,
     deviceTimestamp: Date
+  },
+  // Shofyor xarajatlari (reys boshlanishidan oldin, davomida, yopilgandan keyin)
+  expenses: [{
+    flightId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Flight',
+      default: null
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: [0, 'Xarajat salbiy bo\'lishi mumkin emas']
+    },
+    type: {
+      type: String,
+      // Barcha xarajat turlari - constants.js bilan bir xil
+      enum: [
+        // Yoqilg'i turlari
+        'fuel', 'fuel_metan', 'fuel_propan', 'fuel_benzin', 'fuel_diesel',
+        // Yengil xarajatlar
+        'food', 'toll', 'wash', 'fine', 'repair_small', 'other',
+        // Katta xarajatlar
+        'repair_major', 'tire', 'accident', 'insurance', 'oil',
+        // Filtr turlari
+        'filter', 'filter_air', 'filter_oil', 'filter_cabin', 'filter_gas',
+        // Chegara xarajatlari
+        'border', 'border_customs', 'border_transit', 'border_insurance', 'border_other'
+      ],
+      default: 'other'
+    },
+    // Xarajat qo'shilgan vaqti
+    timing: {
+      type: String,
+      enum: ['before', 'during', 'after'],
+      default: 'during'
+    },
+    description: String,
+    date: { type: Date, default: Date.now }
+  }],
+  // Jami xarajatlar (reys boshlanishidan oldin)
+  totalExpensesBefore: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  // Jami xarajatlar (reys davomida)
+  totalExpensesDuring: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  // Jami xarajatlar (reys yopilgandan keyin)
+  totalExpensesAfter: {
+    type: Number,
+    default: 0,
+    min: 0
   }
 }, { timestamps: true });
 
 // Hash password
-driverSchema.pre('save', async function(next) {
+driverSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 8); // 8 rounds - tezroq
   next();
 });
 
 // Compare password
-driverSchema.methods.comparePassword = async function(candidatePassword) {
+driverSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

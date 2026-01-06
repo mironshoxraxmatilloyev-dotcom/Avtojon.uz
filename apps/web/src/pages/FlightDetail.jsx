@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, CheckCircle, X,
+  ArrowLeft, CheckCircle, X, Trash2,
   Truck, User, Calendar, Sparkles, Zap, Wallet
 } from 'lucide-react'
 import api from '../services/api'
@@ -18,6 +18,8 @@ import {
   formatMoney
 } from '../components/flightDetail'
 import FuelConsumptionCard from '../components/flightDetail/FuelConsumptionCard'
+import BeforeExpensesCard from '../components/flightDetail/BeforeExpensesCard'
+import PostExpensesCard from '../components/flightDetail/PostExpensesCard'
 import {
   LegModal,
   ExpenseModal,
@@ -28,6 +30,7 @@ import {
   FlightEditModal,
   LegEditModal
 } from '../components/flightDetail/AllModals'
+import FlightExpensesModal from '../components/flightDetail/FlightExpensesModal'
 
 export default function FlightDetail() {
   const { id } = useParams()
@@ -42,6 +45,7 @@ export default function FlightDetail() {
   // Modals
   const [showLegModal, setShowLegModal] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [showFlightExpensesModal, setShowFlightExpensesModal] = useState(false)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [showPlatonModal, setShowPlatonModal] = useState(false)
@@ -99,7 +103,7 @@ export default function FlightDetail() {
       // ID larni string ga o'girish va solishtirish
       const eventFlightId = data.flight?._id?.toString()
       const currentFlightId = id?.toString()
-      
+
       if (eventFlightId && eventFlightId === currentFlightId) {
         // Deep copy qilish - React state yangilanishini ta'minlash
         const newFlight = JSON.parse(JSON.stringify(data.flight))
@@ -113,7 +117,7 @@ export default function FlightDetail() {
     const handleCompleted = (data) => {
       const eventFlightId = data.flight?._id?.toString()
       const currentFlightId = id?.toString()
-      
+
       if (eventFlightId && eventFlightId === currentFlightId) {
         const newFlight = JSON.parse(JSON.stringify(data.flight))
         setFlight(newFlight)
@@ -125,7 +129,7 @@ export default function FlightDetail() {
       // ID larni string ga o'girish va solishtirish
       const eventFlightId = data.flight?._id?.toString()
       const currentFlightId = id?.toString()
-      
+
       if (eventFlightId && eventFlightId === currentFlightId) {
         // Deep copy qilish - React state yangilanishini ta'minlash
         const newFlight = JSON.parse(JSON.stringify(data.flight))
@@ -133,13 +137,13 @@ export default function FlightDetail() {
         showToast.success('Haydovchi xarajatni tasdiqladi')
       }
     }
-    
+
     // Barcha kerakli eventlarni tinglash
     socket.on('flight-updated', handleUpdate)
     socket.on('flight-completed', handleCompleted) // Alohida handler
     socket.on('flight-confirmed', handleUpdate)
     socket.on('expense-confirmed', handleExpenseConfirmed)
-    
+
     return () => {
       socket.off('flight-updated', handleUpdate)
       socket.off('flight-completed', handleCompleted)
@@ -163,6 +167,10 @@ export default function FlightDetail() {
     setSelectedLegForExpense({ leg, index: idx })
     setEditingExpense(null)
     setShowExpenseModal(true)
+  }
+
+  const handleViewFlightExpenses = () => {
+    setShowFlightExpensesModal(true)
   }
 
   const handleEditExpense = (expense) => {
@@ -209,12 +217,36 @@ export default function FlightDetail() {
     api.put(`/flights/${id}/cancel`).then(res => res.data?.data && setFlight(res.data.data)).catch(() => fetchFlight())
   }
 
+  const handleDeleteFlight = async () => {
+    const confirmed = await alert.confirm({ title: "O'chirish", message: "Marshrutni butunlay o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.", type: "danger" })
+    if (!confirmed) return
+
+    try {
+      await api.delete(`/flights/${id}`)
+      showToast.success('Marshrut o\'chirildi')
+      navigate('/dashboard/drivers')
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
+
   // Hisob-kitoblar
+  // Reys oldidan xarajatlarni ajratish
+  const beforeExpenses = (flight.expenses || []).filter(e => e.timing === 'before')
+  const beforeExpensesTotal = beforeExpenses.reduce((sum, e) => sum + (e.amountInUZS || e.amount || 0), 0)
+
+  // Reysdan keyingi xarajatlar
+  const afterExpenses = (flight.expenses || []).filter(e => e.timing === 'after')
+  const afterExpensesTotal = afterExpenses.reduce((sum, e) => sum + (e.amountInUZS || e.amount || 0), 0)
+
   const borderExpenses = flight.borderCrossingsTotalUZS || (flight.borderCrossingsTotalUSD ? Math.round(flight.borderCrossingsTotalUSD * 12800) : 0)
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
-  const allExpenses = (flight.totalExpenses || 0) + borderExpenses + platonExpenses
+
+  // Jami xarajatlar (reys oldidan + davomida + chegara + platon)
+  const allExpenses = beforeExpensesTotal + (flight.totalExpenses || 0) + borderExpenses + platonExpenses
+
   const totalIncome = flight.totalIncome || ((flight.totalPayment || 0) + (flight.totalGivenBudget || 0))
-  const netProfit = totalIncome - allExpenses // Sof foyda (jami kirim - xarajatlar)
+  const netProfit = totalIncome - allExpenses // Sof foyda (jami kirim - barcha xarajatlar)
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -308,6 +340,14 @@ export default function FlightDetail() {
                 <p className={`text-xs mt-1 ${netProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
                   {netProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
                 </p>
+                {/* Reys oldidan xarajatlar ko'rsatish */}
+                {beforeExpensesTotal > 0 && (
+                  <div className="mt-2 pt-2 border-t border-white/10">
+                    <p className="text-xs text-red-300">
+                      📍 Reys oldidan: -{formatMoney(beforeExpensesTotal)}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               // Yopilgan mashrut - sof foyda (shofyor ulushi ayirilgan)
@@ -349,6 +389,15 @@ export default function FlightDetail() {
 
         <OdometerFuelCard flight={flight} onEdit={() => setShowFlightEditModal(true)} />
 
+        {/* Reys oldidan xarajatlar */}
+        {beforeExpenses.length > 0 && (
+          <BeforeExpensesCard
+            expenses={beforeExpenses}
+            onEdit={handleEditExpense}
+            onDelete={handleDeleteExpense}
+          />
+        )}
+
         {/* Yoqilg'i sarflanishi statistikasi */}
         <FuelConsumptionCard flight={flight} />
 
@@ -363,6 +412,7 @@ export default function FlightDetail() {
           onEditPayment={handleEditPayment}
           selectedLegIndex={selectedLegIndex}
           onSelectedLegChange={setSelectedLegIndex}
+          onViewFlightExpenses={handleViewFlightExpenses}
         />
 
         <InternationalSection
@@ -373,10 +423,36 @@ export default function FlightDetail() {
 
         {/* Moliyaviy xulosa - faqat yopilgan reyslar uchun */}
         {!isActive && (
-          <FinancialSummary 
-            flight={flight} 
-            onCollectPayment={() => setShowDriverPaymentModal(true)}
-          />
+          <>
+            <FinancialSummary
+              flight={flight}
+              onCollectPayment={() => setShowDriverPaymentModal(true)}
+            />
+
+            {/* Reysdan keyingi xarajatlar */}
+            <PostExpensesCard
+              expenses={afterExpenses}
+              onEdit={handleEditExpense}
+              onDelete={handleDeleteExpense}
+            />
+
+            {/* Reysdan keyin xarajat qo'shish tugmasi */}
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  setSelectedLegForExpense(null)
+                  setEditingExpense(null)
+                  setShowExpenseModal(true)
+                }}
+                className="w-full py-4 bg-white border-2 border-dashed border-purple-300 text-purple-600 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-purple-50 transition-colors"
+              >
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-xl">+</span>
+                </div>
+                Reysdan keyin xarajat qo'shish
+              </button>
+            </div>
+          </>
         )}
 
         {/* Action Buttons */}
@@ -397,6 +473,14 @@ export default function FlightDetail() {
             >
               <X size={18} />
               Marshrutni bekor qilish
+            </button>
+
+            <button
+              onClick={handleDeleteFlight}
+              className="w-full py-4 bg-white text-red-600 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 border border-red-100 hover:bg-red-50 transition-colors mt-2"
+            >
+              <Trash2 size={18} />
+              O'chirish
             </button>
           </div>
         )}
@@ -455,28 +539,50 @@ export default function FlightDetail() {
             if (editingExpense) {
               const oldAmountUZS = editingExpense.amountInUZS || editingExpense.amount || 0
               const newAmountUZS = data.amountInUZS || data.amount || 0
-              setFlight(prev => ({
-                ...prev,
-                expenses: prev.expenses?.map(e =>
-                  e._id === editingExpense._id ? { ...e, ...data } : e
-                ) || [],
-                totalExpenses: (prev.totalExpenses || 0) - oldAmountUZS + newAmountUZS
-              }))
+              const amountDiff = newAmountUZS - oldAmountUZS
+
+              setFlight(prev => {
+                const newTotalExpenses = (prev.totalExpenses || 0) + amountDiff
+                const newNetProfit = (prev.totalIncome || 0) - newTotalExpenses
+
+                return {
+                  ...prev,
+                  expenses: prev.expenses?.map(e =>
+                    e._id === editingExpense._id ? { ...e, ...data } : e
+                  ) || [],
+                  totalExpenses: newTotalExpenses,
+                  netProfit: newNetProfit,
+                  businessProfit: newNetProfit
+                }
+              })
               // Background da serverga yuborish
-              api.put(`/flights/${id}/expenses/${editingExpense._id}`, data)
-                .then(res => res.data?.data && setFlight(res.data.data))
+              api.put(`/flights/${id}/expenses/${editingExpense._id}`, {
+                ...data,
+                timing: editingExpense.timing // Keep original timing
+              })
                 .catch(() => fetchFlight(false))
             } else {
               const tempId = `temp_${Date.now()}`
-              const newExpense = { ...data, _id: tempId, createdAt: new Date().toISOString() }
-              setFlight(prev => ({
-                ...prev,
-                expenses: [...(prev.expenses || []), newExpense],
-                totalExpenses: (prev.totalExpenses || 0) + (Number(data.amountInUZS) || Number(data.amount) || 0)
-              }))
+              // Agar reys yopilgan bo'lsa, timing = 'after'
+              const timing = !isActive ? 'after' : 'during'
+
+              const newExpense = { ...data, _id: tempId, createdAt: new Date().toISOString(), timing }
+              const amountUZS = Number(data.amountInUZS) || Number(data.amount) || 0
+
+              setFlight(prev => {
+                const newTotalExpenses = (prev.totalExpenses || 0) + amountUZS
+                const newNetProfit = (prev.totalIncome || 0) - newTotalExpenses
+
+                return {
+                  ...prev,
+                  expenses: [...(prev.expenses || []), newExpense],
+                  totalExpenses: newTotalExpenses,
+                  netProfit: newNetProfit,
+                  businessProfit: newNetProfit
+                }
+              })
               // Background da serverga yuborish
-              api.post(`/flights/${id}/expenses`, data)
-                .then(res => res.data?.data && setFlight(res.data.data))
+              api.post(`/flights/${id}/expenses`, { ...data, timing })
                 .catch(() => fetchFlight(false))
             }
 
@@ -517,7 +623,13 @@ export default function FlightDetail() {
 
             // Background da serverga yuborish
             api.put(`/flights/${id}/complete`, data)
-              .then(res => res.data?.data && setFlight(res.data.data))
+              .then(res => {
+                if (res.data?.data) {
+                  setFlight(res.data.data)
+                  // Page refresh - status'ni yangilash uchun
+                  setTimeout(() => fetchFlight(false), 500)
+                }
+              })
               .catch(() => fetchFlight(false))
           }}
         />

@@ -552,6 +552,37 @@ export default function Flights() {
       })
   }
 
+  // Reysni to'liq o'chirish (faqat faol reyslar uchun)
+  const handleDeleteFlight = async (flightId) => {
+    const flight = flights.find(f => f._id === flightId)
+    if (!flight) return
+
+    const confirmed = await alert.confirm({
+      title: "Reysni to'liq o'chirish",
+      message: `"${flight.name || 'Bu mashrut'}" ni to'liq o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi va reys MongoDB dan ham o'chiriladi.`,
+      confirmText: "Ha, o'chirish",
+      cancelText: "Yo'q",
+      type: "danger"
+    })
+
+    if (!confirmed) return
+
+    // 🚀 OPTIMISTIC UPDATE - UI dan darhol o'chirish
+    setFlights(prev => prev.filter(f => f._id !== flightId))
+    setExpandedFlight(null)
+    showToast.success('Reys o\'chirildi')
+
+    // Fonda API
+    api.delete(`/flights/${flightId}`)
+      .then((res) => {
+        showToast.success(res.data?.message || 'Reys o\'chirildi')
+      })
+      .catch((err) => {
+        showToast.error(err.response?.data?.message || 'Reysni o\'chirishda xatolik')
+        fetchData()
+      })
+  }
+
   const statusConfig = {
     active: { label: 'Faol', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
     completed: { label: 'Yopilgan', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' },
@@ -962,14 +993,25 @@ export default function Flights() {
                         Yopish
                       </button>
                     </div>
-                    {/* Bekor qilish tugmasi */}
-                    <button
-                      onClick={() => handleCancelFlight(flight._id)}
-                      className="w-full py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
-                    >
-                      <X size={16} />
-                      Marshrutni bekor qilish
-                    </button>
+                    {/* Bekor qilish va o'chirish tugmalari */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCancelFlight(flight._id)}
+                        className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 text-sm border border-red-200"
+                      >
+                        <X size={16} />
+                        Bekor qilish
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFlight(flight._id)}
+                        className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2 text-sm"
+                      >
+                        <Trash2 size={16} />
+                        O'chirish
+                      </button>
+                    </div>
+                      </button>
+                    </div>
                     {/* Xalqaro marshrut uchun qo'shimcha tugmalar */}
                     {flight.flightType === 'international' && (
                       <div className="flex flex-col sm:flex-row gap-2">
