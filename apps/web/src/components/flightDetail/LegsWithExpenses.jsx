@@ -4,7 +4,7 @@ import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney, isHeavyExpense } from '
 
 // Icon mapping
 const ICONS = {
-  Fuel, Utensils, Wrench, Car, Navigation, FileText, Package, 
+  Fuel, Utensils, Wrench, Car, Navigation, FileText, Package,
   Building2, Truck, Shield, CircleDot, Circle, Droplet
 }
 
@@ -33,20 +33,22 @@ export default function LegsWithExpenses({
   onDeleteExpense,
   onAddPayment,
   onEditPayment,
+  onEditLeg,
+  onDeleteLeg,
   selectedLegIndex: externalSelectedLegIndex,
   onSelectedLegChange,
   onViewFlightExpenses
 }) {
   const [internalSelectedLegIndex, setInternalSelectedLegIndex] = useState(0)
-  
+
   // Tashqaridan boshqarilsa tashqaridagi, aks holda ichki state
   const selectedLegIndex = externalSelectedLegIndex !== undefined ? externalSelectedLegIndex : internalSelectedLegIndex
   const setSelectedLegIndex = onSelectedLegChange || setInternalSelectedLegIndex
-  
+
   const selectedLeg = flight.legs?.[selectedLegIndex]
 
-  const legExpenses = flight.expenses?.filter(exp => 
-    exp.legIndex === selectedLegIndex || 
+  const legExpenses = flight.expenses?.filter(exp =>
+    exp.legIndex === selectedLegIndex ||
     (exp.legId && exp.legId.toString() === selectedLeg?._id?.toString())
   ) || []
 
@@ -75,8 +77,8 @@ export default function LegsWithExpenses({
           </div>
         </div>
         {isActive && (
-          <button 
-            onClick={onAddLeg} 
+          <button
+            onClick={onAddLeg}
             className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-indigo-600 active:scale-[0.98] transition-all"
           >
             <Plus size={18} /> Bosqich
@@ -92,22 +94,20 @@ export default function LegsWithExpenses({
               const isSelected = selectedLegIndex === idx
               const isCompleted = leg.status === 'completed'
               const legExp = flight.expenses?.filter(e => e.legIndex === idx) || []
-              
+
               return (
                 <button
                   key={leg._id || idx}
                   onClick={() => setSelectedLegIndex(idx)}
-                  className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all flex-shrink-0 ${
-                    isSelected 
-                      ? 'bg-indigo-500 text-white shadow-lg' 
+                  className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all flex-shrink-0 ${isSelected
+                      ? 'bg-indigo-500 text-white shadow-lg'
                       : isCompleted
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                  }`}
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    }`}
                 >
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                    isSelected ? 'bg-white/20' : isCompleted ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
-                  }`}>
+                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${isSelected ? 'bg-white/20' : isCompleted ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
+                    }`}>
                     {isCompleted ? <CheckCircle2 size={14} /> : idx + 1}
                   </span>
                   <div className="text-left">
@@ -121,9 +121,8 @@ export default function LegsWithExpenses({
                     )}
                   </div>
                   {legExp.length > 0 && (
-                    <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                      isSelected ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'
-                    }`}>{legExp.length}</span>
+                    <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${isSelected ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'
+                      }`}>{legExp.length}</span>
                   )}
                 </button>
               )
@@ -138,9 +137,8 @@ export default function LegsWithExpenses({
           {/* Leg Info */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
             <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg ${
-                selectedLeg.status === 'completed' ? 'bg-emerald-500' : 'bg-indigo-500'
-              }`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg ${selectedLeg.status === 'completed' ? 'bg-emerald-500' : 'bg-indigo-500'
+                }`}>
                 {selectedLeg.status === 'completed' ? <CheckCircle2 size={20} /> : selectedLegIndex + 1}
               </div>
               <div>
@@ -160,33 +158,55 @@ export default function LegsWithExpenses({
                 </div>
               </div>
             </div>
-            
-            {/* Payment */}
-            {selectedLeg.payment > 0 ? (
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-50 px-5 py-3 rounded-xl border border-emerald-200">
-                  <p className="text-xs text-emerald-600 font-medium">Mijozdan to'lov</p>
-                  <p className="text-2xl font-bold text-emerald-600">+{formatMoney(selectedLeg.payment)}</p>
+
+            <div className="flex items-center gap-3">
+              {/* Payment */}
+              {selectedLeg.payment > 0 ? (
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-50 px-5 py-3 rounded-xl border border-emerald-200">
+                    <p className="text-xs text-emerald-600 font-medium">Mijozdan to'lov</p>
+                    <p className="text-2xl font-bold text-emerald-600">+{formatMoney(selectedLeg.payment)}</p>
+                  </div>
+                  {isActive && (
+                    <button
+                      onClick={() => onEditPayment(selectedLeg)}
+                      className="px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-600 active:scale-[0.98] transition-all"
+                      title="To'lovni tahrirlash"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                  )}
                 </div>
-                {isActive && (
-                  <button 
-                    onClick={() => onEditPayment(selectedLeg)} 
-                    className="px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-600 active:scale-[0.98] transition-all"
-                    title="To'lovni tahrirlash"
+              ) : isActive && (
+                <button
+                  onClick={() => onAddPayment(selectedLeg)}
+                  className="px-5 py-3 bg-emerald-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-emerald-600 active:scale-[0.98] transition-all"
+                >
+                  <DollarSign size={20} />
+                  To'lov olish
+                </button>
+              )}
+
+              {/* Edit/Delete Leg Buttons */}
+              {isActive && (
+                <div className="flex items-center gap-2 border-l border-slate-200 pl-3 ml-2">
+                  <button
+                    onClick={() => onEditLeg(selectedLeg)}
+                    className="p-3 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                    title="Bosqichni tahrirlash"
                   >
-                    <Pencil size={18} />
+                    <Pencil size={20} />
                   </button>
-                )}
-              </div>
-            ) : isActive && (
-              <button 
-                onClick={() => onAddPayment(selectedLeg)} 
-                className="px-5 py-3 bg-emerald-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-emerald-600 active:scale-[0.98] transition-all"
-              >
-                <DollarSign size={20} />
-                To'lov olish
-              </button>
-            )}
+                  <button
+                    onClick={() => onDeleteLeg(selectedLeg._id)}
+                    className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    title="Bosqichni o'chirish"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Xarajatlar Header */}
@@ -204,15 +224,15 @@ export default function LegsWithExpenses({
             </div>
             {isActive && (
               <div className="flex gap-2">
-                <button 
-                  onClick={() => onAddExpense(selectedLeg, selectedLegIndex)} 
+                <button
+                  onClick={() => onAddExpense(selectedLeg, selectedLegIndex)}
                   className="px-4 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-orange-600 active:scale-[0.98] transition-all"
                 >
                   <Plus size={18} /> Qo'shish
                 </button>
                 {flight.expenses && flight.expenses.length > 0 && (
-                  <button 
-                    onClick={onViewFlightExpenses} 
+                  <button
+                    onClick={onViewFlightExpenses}
                     className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-indigo-600 active:scale-[0.98] transition-all"
                   >
                     <FileText size={18} /> Ko'rish ({flight.expenses.length})
@@ -231,7 +251,7 @@ export default function LegsWithExpenses({
                   {Object.entries(groupedExpenses).map(([type, data]) => {
                     const cat = EXPENSE_CATEGORIES.find(c => c.value === type) || { iconName: 'Package', label: type, color: 'from-gray-500 to-gray-600' }
                     const Icon = CATEGORY_ICONS[type] || Package
-                    
+
                     return (
                       <div key={type} className={`bg-gradient-to-br ${cat.color} p-4 rounded-xl text-white relative overflow-hidden`}>
                         <div className="absolute -right-2 -bottom-2 opacity-10">
@@ -315,8 +335,8 @@ export default function LegsWithExpenses({
               <p className="text-slate-600 font-semibold mb-1">Bu bosqichda xarajat yo'q</p>
               <p className="text-slate-400 text-sm mb-4">Xarajatlarni qo'shish uchun tugmani bosing</p>
               {isActive && (
-                <button 
-                  onClick={() => onAddExpense(selectedLeg, selectedLegIndex)} 
+                <button
+                  onClick={() => onAddExpense(selectedLeg, selectedLegIndex)}
                   className="px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-orange-600 active:scale-[0.98] transition-all"
                 >
                   <Plus size={20} /> Xarajat qo'shish

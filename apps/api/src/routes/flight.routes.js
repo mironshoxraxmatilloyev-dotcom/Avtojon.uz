@@ -258,7 +258,7 @@ router.post('/', protect, businessOnly, async (req, res) => {
 
     // 🚀 Haydovchining reys boshlanmasdan oldingi xarajatlarini olish
     const beforeExpenses = (driver.expenses || []).filter(exp => exp.timing === 'before');
-    
+
     // Reys boshlanishidan oldin qo'shilgan xarajatlar jami
     const beforeExpensesTotal = beforeExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
@@ -289,20 +289,25 @@ router.post('/', protect, businessOnly, async (req, res) => {
       legs: [],
       // 🚀 Reys boshlanmasdan oldingi xarajatlarni reysga ko'chirish
       // MUHIM: Driver.expenses'dan o'chirilmaydi, faqat flight'ga qo'shiladi
-      expenses: beforeExpenses.map(exp => ({
-        type: exp.type,
-        expenseClass: 'light',
-        timing: 'before', // Reys boshlanishidan oldin
-        amount: exp.amount,
-        currency: 'UZS',
-        amountInUSD: Math.round(exp.amount / 12800 * 100) / 100,
-        amountInUZS: exp.amount,
-        exchangeRate: 1,
-        description: exp.description || 'Reys boshlanishidan oldingi xarajat',
-        date: exp.date || new Date(),
-        legIndex: 0,
-        legId: null
-      }))
+      expenses: beforeExpenses.map(exp => {
+        const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
+        const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
+
+        return {
+          type: exp.type,
+          expenseClass: isHeavy ? 'heavy' : 'light',
+          timing: 'before', // Reys boshlanishidan oldin
+          amount: exp.amount,
+          currency: 'UZS',
+          amountInUSD: Math.round(exp.amount / 12800 * 100) / 100,
+          amountInUZS: exp.amount,
+          exchangeRate: 1,
+          description: exp.description || 'Reys boshlanishidan oldingi xarajat',
+          date: exp.date || new Date(),
+          legIndex: 0,
+          legId: null
+        };
+      })
     };
 
     // Birinchi buyurtma (ixtiyoriy)
@@ -322,15 +327,11 @@ router.post('/', protect, businessOnly, async (req, res) => {
 
     const flight = await Flight.create(flightData);
 
-    // 🚀 Haydovchidan "before" xarajatlarni o'chirish va jami xarajatlarni yangilash
-    if (beforeExpenses.length > 0) {
-      driver.expenses = driver.expenses.filter(exp => exp.timing !== 'before');
-      driver.totalExpensesBefore = 0;
-      await driver.save();
-    }
-
-    // Shofyorni band qilish
-    await Driver.findByIdAndUpdate(driverId, { status: 'busy' });
+    // 🚀 Haydovchidan "before" xarajatlarni o'chirish, statusni band qilish va jami xarajatlarni yangilash
+    driver.expenses = driver.expenses.filter(exp => exp.timing !== 'before');
+    driver.totalExpensesBefore = 0;
+    driver.status = 'busy';
+    await driver.save();
 
     const populatedFlight = await Flight.findById(flight._id)
       .populate('driver', 'fullName phone currentBalance')
@@ -724,8 +725,8 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     if (driver) {
       // Eski xarajat yengil bo'lsa, driver.expenses dan o'chirish
       if (!oldIsHeavy) {
-        driver.expenses = driver.expenses.filter(exp => 
-          !(exp.flightId && exp.flightId.toString() === flight._id.toString() && 
+        driver.expenses = driver.expenses.filter(exp =>
+          !(exp.flightId && exp.flightId.toString() === flight._id.toString() &&
             exp.date.getTime() === oldExpense.date.getTime())
         );
 
@@ -1029,7 +1030,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
 
       // Shofyor beradigan pul = Biznesmen foydasi
       flight.driverOwes = flight.businessProfit;
-      
+
       // DEBUG - Hisoblash tekshirish
       console.log('🔍 Hisoblash:', {
         previousBalance,
@@ -1045,10 +1046,10 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
 
       // Jami kirim
       flight.totalIncome = totalIncome;
-      
+
       // Sof foyda (barcha xarajatlar bilan)
       flight.netProfit = netProfit;
-      
+
       // Jami xarajatlar
       flight.totalExpenses = Math.round(totalExpensesUZS);
 
@@ -1136,7 +1137,7 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       //
       // driverOwes = biznesmenga berishi kerak pul (netProfit - driverProfitAmount)
       // currentBalance = haydovchida qoladigan pul (previousBalance + netProfit - driverProfitAmount)
-      
+
       const newBalance = previousBalance + netProfit - (flight.driverProfitAmount || 0);
       driver.currentBalance = Math.max(0, newBalance);
 
@@ -1592,6 +1593,100 @@ router.post('/:id/waypoint', protect, businessOnly, async (req, res) => {
       io.to(`driver-${flight.driver}`).emit('flight-updated', {
         flight: populatedFlight,
         message: `Yangi nuqta qo'shildi: ${city}`
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
+    res.json({ success: true, data: populatedFlight });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Bosqich (Leg) o'chirish
+router.delete('/:id/legs/:legId', protect, businessOnly, async (req, res) => {
+  try {
+    const flight = await Flight.findById(req.params.id);
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    // Bosqichni topish va o'chirish
+    const legIndex = flight.legs.findIndex(l => l._id.toString() === req.params.legId);
+    if (legIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Bosqich topilmadi' });
+    }
+
+    flight.legs.splice(legIndex, 1);
+
+    // Totallarni qayta hisoblash
+    flight.totalPayment = flight.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+    flight.totalGivenBudget = flight.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);
+    flight.totalDistance = flight.legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
+
+    await flight.save();
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: 'Bosqich o\'chirildi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
+    res.json({ success: true, data: populatedFlight });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Bosqich (Leg) tahrirlash
+router.put('/:id/legs/:legId', protect, businessOnly, async (req, res) => {
+  try {
+    const { fromCity, toCity, payment, givenBudget, distance, fromCoords, toCoords } = req.body;
+
+    const flight = await Flight.findById(req.params.id);
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    const leg = flight.legs.id(req.params.legId);
+    if (!leg) {
+      return res.status(404).json({ success: false, message: 'Bosqich topilmadi' });
+    }
+
+    // Ma'lumotlarni yangilash
+    if (fromCity) leg.fromCity = fromCity;
+    if (toCity) leg.toCity = toCity;
+    if (payment !== undefined) leg.payment = Number(payment);
+    if (givenBudget !== undefined) leg.givenBudget = Number(givenBudget);
+    if (distance !== undefined) leg.distance = Number(distance);
+    if (fromCoords) leg.fromCoords = fromCoords;
+    if (toCoords) leg.toCoords = toCoords;
+
+    // Totallarni qayta hisoblash
+    flight.totalPayment = flight.legs.reduce((sum, l) => sum + (l.payment || 0), 0);
+    flight.totalGivenBudget = flight.legs.reduce((sum, l) => sum + (l.givenBudget || 0), 0);
+    flight.totalDistance = flight.legs.reduce((sum, l) => sum + (l.distance || 0), 0);
+
+    await flight.save();
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: 'Bosqich yangilandi'
       });
       io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
     }

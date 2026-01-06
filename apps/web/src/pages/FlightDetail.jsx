@@ -48,6 +48,7 @@ export default function FlightDetail() {
   const [showFlightExpensesModal, setShowFlightExpensesModal] = useState(false)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [editingLeg, setEditingLeg] = useState(null)
   const [showPlatonModal, setShowPlatonModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showDriverPaymentModal, setShowDriverPaymentModal] = useState(false)
@@ -217,6 +218,40 @@ export default function FlightDetail() {
     api.put(`/flights/${id}/cancel`).then(res => res.data?.data && setFlight(res.data.data)).catch(() => fetchFlight())
   }
 
+  const handleDeleteLeg = async (legId) => {
+    const confirmed = await alert.confirm({
+      title: "Bosqichni o'chirish",
+      message: "Ushbu bosqichni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+      type: "danger"
+    })
+    if (!confirmed) return
+
+    try {
+      const res = await api.delete(`/flights/${id}/legs/${legId}`)
+      if (res.data?.data) {
+        setFlight(res.data.data)
+        showToast.success('Bosqich o\'chirildi')
+      }
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
+
+  const handleUpdateLeg = async (data) => {
+    if (!editingLeg) return
+
+    try {
+      const res = await api.put(`/flights/${id}/legs/${editingLeg._id}`, data)
+      if (res.data?.data) {
+        setFlight(res.data.data)
+        showToast.success('Bosqich yangilandi')
+        setEditingLeg(null)
+      }
+    } catch (err) {
+      showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+    }
+  }
+
   const handleDeleteFlight = async () => {
     const confirmed = await alert.confirm({ title: "O'chirish", message: "Marshrutni butunlay o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.", type: "danger" })
     if (!confirmed) return
@@ -243,7 +278,8 @@ export default function FlightDetail() {
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
 
   // Jami xarajatlar (reys oldidan + davomida + chegara + platon)
-  const allExpenses = beforeExpensesTotal + (flight.totalExpenses || 0) + borderExpenses + platonExpenses
+  // Jami xarajatlar (backend da hammasi hisoblangan: reys oldidan + davomida + chegara + platon)
+  const allExpenses = flight.totalExpenses || 0
 
   const totalIncome = flight.totalIncome || ((flight.totalPayment || 0) + (flight.totalGivenBudget || 0))
   const netProfit = totalIncome - allExpenses // Sof foyda (jami kirim - barcha xarajatlar)
@@ -410,6 +446,8 @@ export default function FlightDetail() {
           onDeleteExpense={handleDeleteExpense}
           onAddPayment={handleAddPayment}
           onEditPayment={handleEditPayment}
+          onEditLeg={setEditingLeg}
+          onDeleteLeg={handleDeleteLeg}
           selectedLegIndex={selectedLegIndex}
           onSelectedLegChange={setSelectedLegIndex}
           onViewFlightExpenses={handleViewFlightExpenses}
@@ -524,6 +562,14 @@ export default function FlightDetail() {
         />
       )}
 
+      {editingLeg && (
+        <LegEditModal
+          leg={editingLeg}
+          onClose={() => setEditingLeg(null)}
+          onSubmit={handleUpdateLeg}
+        />
+      )}
+
       {showExpenseModal && (
         <ExpenseModal
           flight={flight}
@@ -604,9 +650,13 @@ export default function FlightDetail() {
             // Hisob-kitob
             const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
             const totalExpenses = flight.totalExpenses || 0
+            const lightExpenses = flight.lightExpenses || 0
             const netProfit = totalIncome - totalExpenses
             const percent = data.driverProfitPercent || 0
-            const driverProfitAmount = netProfit > 0 && percent > 0 ? Math.round(netProfit * percent / 100) : 0
+
+            // MUHIM: Shofyor ulushi yengil foydadan (katta xarajatlar ayirilmagan) hisoblanadi
+            const basis = totalIncome - lightExpenses
+            const driverProfitAmount = basis > 0 && percent > 0 ? Math.round(basis * percent / 100) : 0
             const businessProfit = netProfit - driverProfitAmount
 
             // 🚀 Optimistic update - shofyor ulushi bilan

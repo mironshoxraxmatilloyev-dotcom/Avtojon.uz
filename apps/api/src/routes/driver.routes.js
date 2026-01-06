@@ -300,11 +300,15 @@ router.post('/:id/add-expense', protect, businessOnly, async (req, res) => {
     }
 
     // Xarajat qo'shish
+    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
+    const actualExpenseClass = HEAVY_EXPENSE_TYPES.includes(type) ? 'heavy' : 'light';
+
     driver.expenses = driver.expenses || [];
     driver.expenses.push({
       flightId: flightId || null,
       amount,
       type: type || 'other',
+      expenseClass: actualExpenseClass,
       timing: timing || 'during',
       description,
       date: new Date()

@@ -492,7 +492,9 @@ flightSchema.pre('save', function (next) {
 
   this.expenses.forEach(exp => {
     // Xarajat turini aniqlash
-    const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
+    // MUHIM: Ba'zi xarajatlar har doim "katta" (heavy) hisoblanadi
+    const isHeavyType = HEAVY_EXPENSE_TYPES.includes(exp.type) || (exp.type && exp.type.startsWith('filter_'));
+    const isHeavy = isHeavyType || exp.expenseClass === 'heavy';
 
     // Faqat amountInUZS ishlatamiz (amount ishlatmayamiz)
     const amountUZS = exp.amountInUZS || 0;
@@ -555,11 +557,15 @@ flightSchema.pre('save', function (next) {
     this.businessProfit = this.netProfit; // Sof foyda = netProfit (zarar bo'lsa manfiy)
     this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
   } else if (this.status === 'completed') {
-    // Yopilgan mashrutlar uchun - yangi netProfit asosida qayta hisoblash
+    // Yopilgan mashrutlar uchun - shofyor ulushini hisoblash
+    // MUHIM: Shofyor ulushi "yengil" foydadan hisoblanadi (katta xarajatlar ayirilmagan holda)
+    // Basis = Jami kirim - Yengil xarajatlar
+    const basis = this.totalIncome - this.lightExpenses;
     const percent = this.driverProfitPercent || 0;
+
     // Agar foyda bo'lsa va foiz belgilangan bo'lsa
-    if (this.netProfit > 0 && percent > 0) {
-      this.driverProfitAmount = Math.round(this.netProfit * percent / 100);
+    if (basis > 0 && percent > 0) {
+      this.driverProfitAmount = Math.round(basis * percent / 100);
     } else {
       this.driverProfitAmount = 0;
     }

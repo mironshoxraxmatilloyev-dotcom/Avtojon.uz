@@ -699,9 +699,10 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
 
   // Jami kirim (avvalgi qoldiq bilan)
   const totalIncome = previousBalance + (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
-  const borderExpenses = flight.borderCrossingsTotalUZS || (flight.borderCrossingsTotalUSD ? Math.round(flight.borderCrossingsTotalUSD * 12800) : 0)
-  const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
-  const allExpenses = (flight.totalExpenses || 0) + borderExpenses + platonExpenses
+
+  // MUHIM: totalExpenses ichida allaqachon chegara va platon xarajatlari bor (backend'dan kelgan)
+  const allExpenses = flight.totalExpenses || 0
+  const lightExpenses = flight.lightExpenses || 0
   const netProfit = totalIncome - allExpenses
 
   // USD da hisoblash (xalqaro reyslar uchun)
@@ -712,11 +713,15 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
   const percent = Number(form.driverProfitPercent) || 0
 
   // So'm da
-  const driverShare = Math.round(netProfit * percent / 100)
+  // MUHIM: Shofyor ulushi yengil foydadan (katta xarajatlar ayirilmagan) hisoblanadi
+  const basis = totalIncome - lightExpenses
+  const driverShare = Math.round(basis * percent / 100)
   const driverOwes = netProfit - driverShare
 
   // USD da
-  const driverShareUSD = isInternational ? Math.round(netProfitUSD * percent / 100 * 100) / 100 : 0
+  const lightExpensesUSD = isInternational ? (flight.lightExpensesUSD || Math.round(lightExpenses / uzsToUsdRate * 100) / 100) : 0
+  const basisUSD = totalIncomeUSD - lightExpensesUSD
+  const driverShareUSD = isInternational ? Math.round(basisUSD * percent / 100 * 100) / 100 : 0
   const driverOwesUSD = isInternational ? Math.round((netProfitUSD - driverShareUSD) * 100) / 100 : 0
 
   const handleSubmit = useCallback((e) => {
