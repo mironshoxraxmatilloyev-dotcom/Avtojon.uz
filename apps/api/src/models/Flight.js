@@ -558,9 +558,9 @@ flightSchema.pre('save', function (next) {
     this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
   } else if (this.status === 'completed') {
     // Yopilgan mashrutlar uchun - shofyor ulushini hisoblash
-    // MUHIM: Shofyor ulushi "yengil" foydadan hisoblanadi (katta xarajatlar ayirilmagan holda)
-    // Basis = Jami kirim - Yengil xarajatlar
-    const basis = this.totalIncome - this.lightExpenses;
+    // MUHIM: Shofyor ulushi JAMI KIRIMDAN hisoblanadi (reysdan tusgan umumiy foydadan)
+    // Basis = Jami kirim (reys davomida olingan pul)
+    const basis = this.totalIncome;
     const percent = this.driverProfitPercent || 0;
 
     // Agar foyda bo'lsa va foiz belgilangan bo'lsa

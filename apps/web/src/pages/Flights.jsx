@@ -314,11 +314,13 @@ export default function Flights() {
     e.preventDefault()
 
     const driverPercent = Number(completeForm.driverProfitPercent) || 0
+    // MUHIM: Shofyor ulushi JAMI KIRIMDAN hisoblanadi (reysdan tusgan umumiy foydadan)
+    const totalIncome = (selectedFlight.totalPayment || 0) + (selectedFlight.totalGivenBudget || 0)
+    const driverAmount = totalIncome > 0 ? Math.round(totalIncome * driverPercent / 100) : 0
     const profit = (selectedFlight.totalPayment || 0) - (selectedFlight.totalExpenses || 0)
-    const driverAmount = profit > 0 ? Math.round(profit * driverPercent / 100) : 0
 
-    const confirmMessage = profit > 0 && driverPercent > 0
-      ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nFoyda: ${formatMoney(profit)} so'm\nHaydovchiga (${driverPercent}%): ${formatMoney(driverAmount)} so'm`
+    const confirmMessage = totalIncome > 0 && driverPercent > 0
+      ? `${selectedFlight.name} reysini yopishni xohlaysizmi?\n\nJami kirim: ${formatMoney(totalIncome)} so'm\nHaydovchiga (${driverPercent}%): ${formatMoney(driverAmount)} so'm\nBiznesmenning sof foydasidan: ${formatMoney(profit - driverAmount)} so'm`
       : `${selectedFlight.name} reysini yopishni xohlaysizmi?`
 
     const confirmed = await alert.confirm({
@@ -1296,15 +1298,23 @@ export default function Flights() {
                 {/* Summary */}
                 <div className="bg-white/5 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Jami to'lov:</span>
+                    <span className="text-slate-400">Jami to'lov (mijozdan):</span>
                     <span className="text-green-400 font-bold">{formatMoney(selectedFlight.totalPayment)} so'm</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Yo'l xarajati (berilgan):</span>
+                    <span className="text-blue-400 font-bold">{formatMoney(selectedFlight.totalGivenBudget)} so'm</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Jami kirim:</span>
+                    <span className="text-cyan-400 font-bold">{formatMoney((selectedFlight.totalPayment || 0) + (selectedFlight.totalGivenBudget || 0))} so'm</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Jami xarajat:</span>
                     <span className="text-red-400 font-bold">{formatMoney(selectedFlight.totalExpenses)} so'm</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
-                    <span className="text-white font-semibold">Foyda:</span>
+                    <span className="text-white font-semibold">Sof foyda:</span>
                     <span className={`font-bold ${selectedFlight.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {formatMoney(selectedFlight.profit)} so'm
                     </span>
@@ -1314,7 +1324,7 @@ export default function Flights() {
                 {/* Haydovchi ulushi - har doim ko'rsatiladi */}
                 <div className={`bg-gradient-to-r ${selectedFlight.profit > 0 ? 'from-emerald-500/10 to-teal-500/10 border-emerald-500/20' : 'from-red-500/10 to-orange-500/10 border-red-500/20'} rounded-xl p-4 border`}>
                   <label className={`block text-sm font-medium mb-2 ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                    Haydovchiga foydadan necha % berasiz?
+                    Haydovchiga jami kirimdan necha % berasiz?
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -1332,10 +1342,11 @@ export default function Flights() {
                     <div className={`mt-3 p-3 rounded-lg flex items-center justify-between ${selectedFlight.profit > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
                       <span className={`text-sm ${selectedFlight.profit > 0 ? 'text-emerald-300' : 'text-red-300'}`}>Haydovchiga:</span>
                       <span className={`font-bold ${selectedFlight.profit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {selectedFlight.profit > 0
-                          ? `${formatMoney(Math.round(selectedFlight.profit * Number(completeForm.driverProfitPercent) / 100))} so'm`
-                          : "0 so'm (zarar bo'lgani uchun)"
-                        }
+                        {(() => {
+                          const totalIncome = (selectedFlight.totalPayment || 0) + (selectedFlight.totalGivenBudget || 0)
+                          const driverAmount = totalIncome > 0 ? Math.round(totalIncome * Number(completeForm.driverProfitPercent) / 100) : 0
+                          return `${formatMoney(driverAmount)} so'm`
+                        })()}
                       </span>
                     </div>
                   )}
