@@ -7,13 +7,9 @@ import {
   Menu,
   X,
   BarChart3,
-  ChevronRight,
-  Sparkles,
-  Settings,
-  User as UserIcon,
-  ShieldCheck
+  Sparkles
 } from 'lucide-react'
-import { useState, createContext, useContext, useEffect, memo, useRef } from 'react'
+import { useState, createContext, useContext, useEffect, useRef } from 'react'
 import { BusinessSubscriptionBlocker } from '../subscription/SubscriptionBlocker'
 import api from '../../services/api'
 
@@ -27,39 +23,7 @@ const navItems = [
   { path: '/dashboard/reports', icon: BarChart3, label: 'Hisobotlar', description: 'Statistika va grafiklar' },
 ]
 
-const secondaryNavItems = [
-  { path: '/dashboard/profile', icon: UserIcon, label: 'Profil', description: 'Shaxsiy ma\'lumotlar' },
-  { path: '/dashboard/settings', icon: Settings, label: 'Sozlamalar', description: 'Ilova sozlamalari' },
-  { path: '/dashboard/subscription', icon: ShieldCheck, label: 'Obuna', description: 'Tarif va to\'lovlar' },
-]
-
-// 🚀 Optimized nav item with memo
-const AnimatedNavItem = memo(function AnimatedNavItem({ path, icon: Icon, label, description, isActive, onClick }) {
-  return (
-    <NavLink
-      to={path}
-      end={path === '/dashboard'}
-      onClick={onClick}
-      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 ${isActive
-        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-        : 'text-slate-400 hover:bg-white/5 hover:text-white'
-        }`}
-    >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-white/5'
-        }`}>
-        <Icon size={18} />
-      </div>
-      <div className="flex-1">
-        <p className="font-medium text-sm">{label}</p>
-        <p className={`text-xs ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>{description}</p>
-      </div>
-      <ChevronRight
-        size={16}
-        className={`transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}
-      />
-    </NavLink>
-  )
-})
+// Secondary nav items removed - not needed for business panel
 
 export default function DashboardLayout() {
   const { user, logout, isDemo } = useAuthStore()
@@ -260,31 +224,7 @@ export default function DashboardLayout() {
             })}
           </div>
 
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">Boshqa</p>
-          <div className="space-y-1">
-            {secondaryNavItems.map(({ path, icon: Icon, label, description }) => {
-              const isActive = location.pathname === path
-              return (
-                <NavLink
-                  key={path}
-                  to={path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                    }`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-white/5'}`}>
-                    <Icon size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{label}</p>
-                    <p className={`text-[10px] truncate ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>{description}</p>
-                  </div>
-                </NavLink>
-              )
-            })}
-          </div>
+
         </nav>
 
         {/* Logout Button */}
