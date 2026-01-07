@@ -59,30 +59,33 @@ const ModalWrapper = memo(({ children, onClose, size = 'lg' }) => {
 // ============================================
 // LEG MODAL - Yangi bosqich qo'shish
 // ============================================
-export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOpenLocationPicker }) {
+export const LegModal = memo(function LegModal({ flight, editingLeg, onClose, onSubmit, onOpenLocationPicker }) {
   const lastLeg = flight.legs?.[flight.legs.length - 1]
   const isLocal = flight?.flightType !== 'international' // Mahalliy mashrut
   const [form, setForm] = useState({
-    fromCity: lastLeg?.toCity || '',
-    toCity: '',
-    givenBudget: '',
-    distance: '',
-    fromCoords: lastLeg?.toCoords || null,
-    toCoords: null
+    fromCity: editingLeg?.fromCity || lastLeg?.toCity || '',
+    toCity: editingLeg?.toCity || '',
+    givenBudget: editingLeg?.givenBudget?.toString() || '',
+    distance: editingLeg?.distance?.toString() || '',
+    fromCoords: editingLeg?.fromCoords || lastLeg?.toCoords || null,
+    toCoords: editingLeg?.toCoords || null,
+    note: editingLeg?.note || ''
   })
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
     if (!form.toCity?.trim()) return
     onSubmit({
+      ...editingLeg,
       fromCity: form.fromCity || lastLeg?.toCity || '',
       toCity: form.toCity.trim(),
       fromCoords: form.fromCoords,
       toCoords: form.toCoords,
       givenBudget: Number(form.givenBudget) || 0,
-      distance: Number(form.distance) || 0
+      distance: Number(form.distance) || 0,
+      note: form.note
     })
-  }, [form, lastLeg, onSubmit])
+  }, [form, lastLeg, onSubmit, editingLeg])
 
   return createPortal(
     <ModalWrapper onClose={onClose} size="lg">
@@ -95,7 +98,7 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
                 <Route className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Yangi bosqich</h2>
+                <h2 className="text-xl font-bold text-white">{editingLeg ? 'Bosqichni tahrirlash' : 'Yangi bosqich'}</h2>
                 <p className="text-emerald-400/80 text-sm mt-0.5 flex items-center gap-1">
                   {isLocal ? <><Flag size={14} /> Mahalliy yo'nalish</> : <><Globe size={14} /> Xalqaro yo'nalish</>}
                 </p>
@@ -173,13 +176,23 @@ export const LegModal = memo(function LegModal({ flight, onClose, onSubmit, onOp
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Izoh (ixtiyoriy)</label>
+            <textarea
+              value={form.note}
+              onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors min-h-[80px] resize-none"
+              placeholder="Bosqich bo'yicha qo'shimcha izohlar..."
+            />
+          </div>
+
           <button
             type="submit"
             disabled={!form.toCity?.trim()}
             className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-500/30 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={22} />
-            Bosqich qo'shish
+            {editingLeg ? 'Saqlash' : 'Bosqich qo\'shish'}
           </button>
         </form>
       </div>
@@ -1501,7 +1514,8 @@ export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit 
     toCity: leg?.toCity || '',
     payment: leg?.payment?.toString() || '',
     givenBudget: leg?.givenBudget?.toString() || '',
-    distance: leg?.distance?.toString() || ''
+    distance: leg?.distance?.toString() || '',
+    note: leg?.note || ''
   })
 
   const handleSubmit = useCallback((e) => {
@@ -1511,7 +1525,8 @@ export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit 
       toCity: form.toCity,
       payment: Number(form.payment) || 0,
       givenBudget: Number(form.givenBudget) || 0,
-      distance: Number(form.distance) || 0
+      distance: Number(form.distance) || 0,
+      note: form.note
     })
   }, [form, onSubmit])
 
@@ -1587,7 +1602,6 @@ export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit 
             />
             <p className="text-amber-400/70 text-xs mt-1">Haydovchiga berilgan yo'l puli</p>
           </div>
-
           {/* Masofa */}
           <div>
             <label className="block text-sm font-semibold text-slate-400 mb-2">Masofa (km)</label>
@@ -1597,6 +1611,16 @@ export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit 
               onChange={e => setForm(f => ({ ...f, distance: e.target.value }))}
               className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
               placeholder="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-2">Izoh (ixtiyoriy)</label>
+            <textarea
+              value={form.note}
+              onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors min-h-[80px] resize-none"
+              placeholder="Bosqich bo'yicha qo'shimcha izohlar..."
             />
           </div>
 

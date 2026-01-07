@@ -321,7 +321,8 @@ router.post('/', protect, businessOnly, async (req, res) => {
         givenBudget: firstLeg.givenBudget || 0, // Faqat biznesmen berilgan pul
         distance: firstLeg.distance || 0,
         status: 'in_progress',
-        startedAt: new Date()
+        startedAt: new Date(),
+        note: firstLeg.note || ''
       });
     }
 
@@ -1652,7 +1653,7 @@ router.delete('/:id/legs/:legId', protect, businessOnly, async (req, res) => {
 // Bosqich (Leg) tahrirlash
 router.put('/:id/legs/:legId', protect, businessOnly, async (req, res) => {
   try {
-    const { fromCity, toCity, payment, givenBudget, distance, fromCoords, toCoords } = req.body;
+    const { fromCity, toCity, payment, givenBudget, distance, fromCoords, toCoords, note } = req.body;
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
@@ -1672,6 +1673,7 @@ router.put('/:id/legs/:legId', protect, businessOnly, async (req, res) => {
     if (distance !== undefined) leg.distance = Number(distance);
     if (fromCoords) leg.fromCoords = fromCoords;
     if (toCoords) leg.toCoords = toCoords;
+    if (note !== undefined) leg.note = note;
 
     // Totallarni qayta hisoblash
     flight.totalPayment = flight.legs.reduce((sum, l) => sum + (l.payment || 0), 0);

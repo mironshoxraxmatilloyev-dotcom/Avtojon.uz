@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, CheckCircle, X, Trash2,
-  Truck, User, Calendar, Sparkles, Zap, Wallet
+  Truck, User, Calendar, Sparkles, Zap, Wallet,
+  FileText, Pencil, Plus
 } from 'lucide-react'
 import api from '../services/api'
 import { showToast } from '../components/Toast'
@@ -399,6 +400,41 @@ export default function FlightDetail() {
           </div>
         </div>
       </div>
+
+      {/* Flight Notes - Agar bor bo'lsa yoki faol reys bo'lsa */}
+      {(flight.notes || isActive) && (
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm group relative">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <FileText size={20} className="text-indigo-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Marshrut bo'yicha umumiy izoh</p>
+                {isActive && (
+                  <button
+                    onClick={() => setShowFlightEditModal(true)}
+                    className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    title="Izohni tahrirlash"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+              </div>
+              {flight.notes ? (
+                <p className="text-white text-base leading-relaxed">{flight.notes}</p>
+              ) : (
+                <button
+                  onClick={() => setShowFlightEditModal(true)}
+                  className="text-slate-500 text-sm hover:text-indigo-400 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus size={14} /> Izoh qo'shish
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="space-y-4">

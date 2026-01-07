@@ -50,7 +50,8 @@ export default function DriverDetail() {
     toCoords: null,
     flightType: 'domestic',
     fuelType: 'metan',
-    fuelUnit: 'kub'
+    fuelUnit: 'kub',
+    note: ''
   })
 
   const fetchData = useCallback(async (showLoader = true) => {
@@ -168,7 +169,8 @@ export default function DriverDetail() {
         fromCoords: flightForm.fromCoords,
         toCoords: flightForm.toCoords,
         payment: Number(flightForm.payment) || 0,
-        givenBudget: Number(flightForm.givenBudget) || 0
+        givenBudget: Number(flightForm.givenBudget) || 0,
+        note: flightForm.note
       }
     }
     const fromCity = flightForm.fromCity
@@ -198,7 +200,8 @@ export default function DriverDetail() {
       toCoords: null,
       flightType: 'domestic',
       fuelType: 'metan',
-      fuelUnit: 'kub'
+      fuelUnit: 'kub',
+      note: ''
     })
     showToast.success(`Mashrut ochilmoqda: ${fromCity} → ${toCity}`)
     api.post('/flights', payload)
@@ -804,10 +807,12 @@ export default function DriverDetail() {
                       value={flightForm.startFuel}
                       onChange={(e) => setFlightForm({ ...flightForm, startFuel: e.target.value })}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="100"
+                      placeholder="0"
                     />
                   </div>
                 </div>
+
+
 
                 <div>
                   <label className="block text-base text-emerald-200 mb-2">Yoqilg'i turi</label>
@@ -876,7 +881,20 @@ export default function DriverDetail() {
                         placeholder="200,000"
                       />
                     </div>
+
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">
+                    <FileText size={14} className="inline mr-1" /> Izoh (ixtiyoriy)
+                  </label>
+                  <textarea
+                    value={flightForm.note}
+                    onChange={(e) => setFlightForm({ ...flightForm, note: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-emerald-500 focus:outline-none min-h-[80px] resize-none"
+                    placeholder="Marshrut bo'yicha qo'shimcha izohlar..."
+                  />
                 </div>
 
                 <button

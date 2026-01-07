@@ -100,10 +100,10 @@ export default function LegsWithExpenses({
                   key={leg._id || idx}
                   onClick={() => setSelectedLegIndex(idx)}
                   className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all flex-shrink-0 ${isSelected
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : isCompleted
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    ? 'bg-indigo-500 text-white shadow-lg'
+                    : isCompleted
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
                     }`}
                 >
                   <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${isSelected ? 'bg-white/20' : isCompleted ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
@@ -147,13 +147,32 @@ export default function LegsWithExpenses({
                   <ArrowRight size={18} className="text-indigo-400" />
                   <span>{selectedLeg.toCity?.split(',')[0]}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-400 mt-1">
-                  <span>{selectedLeg.distance || 0} km masofa</span>
-                  {selectedLeg.givenBudget > 0 && (
-                    <>
-                      <span>•</span>
-                      <span className="text-blue-500 font-medium">Yo'l xarajati: {formatMoney(selectedLeg.givenBudget)}</span>
-                    </>
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="flex items-center gap-3 text-sm text-slate-400">
+                    <span>{selectedLeg.distance || 0} km masofa</span>
+                    {selectedLeg.givenBudget > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="text-blue-500 font-medium">Yo'l xarajati: {formatMoney(selectedLeg.givenBudget)}</span>
+                      </>
+                    )}
+                  </div>
+                  {selectedLeg.note && (
+                    <div className="group/note relative">
+                      <p className="text-sm text-slate-500 italic bg-slate-50 px-3 py-1.5 rounded-lg border-l-4 border-indigo-400 mt-1 pr-10">
+                        <FileText size={14} className="inline mr-1.5 text-indigo-400" />
+                        {selectedLeg.note}
+                      </p>
+                      {isActive && (
+                        <button
+                          onClick={() => onEditLeg(selectedLeg)}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-md transition-all opacity-0 group-hover/note:opacity-100"
+                          title="Izohni tahrirlash"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
