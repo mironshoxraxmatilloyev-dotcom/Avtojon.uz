@@ -133,10 +133,12 @@ const expenseSchema = new mongoose.Schema({
     enum: [
       // Yoqilg'i
       'fuel', 'fuel_benzin', 'fuel_diesel', 'fuel_gas', 'fuel_metan', 'fuel_propan',
-      // Yengil xarajatlar
+      // Kichik xarajatlar
       'food', 'toll', 'wash', 'fine', 'repair_small',
       // Katta xarajatlar (shofyor oyligiga ta'sir qilmaydi)
       'repair_major', 'tire', 'accident', 'insurance', 'oil',
+      // Filtr turlari
+      'filter', 'filter_oil', 'filter_air', 'filter_cabin', 'filter_gas',
       // Chegara
       'border', 'border_customs', 'border_transit', 'border_insurance', 'border_other',
       // Eski turlar (backward compatibility)

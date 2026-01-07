@@ -131,10 +131,10 @@ export const UpgradeModal = memo(({ onClose, canClose }) => {
           {/* Price */}
           <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-200">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-slate-600 text-sm">Oylik obuna</span>
+              <span className="text-slate-600 text-sm">Har bir mashina uchun</span>
               <div className="text-right">
-                <span className="text-2xl font-bold text-slate-900">99,000</span>
-                <span className="text-slate-500 text-sm ml-1">so'm</span>
+                <span className="text-2xl font-bold text-slate-900">10,000</span>
+                <span className="text-slate-500 text-sm ml-1">so'm/oy</span>
               </div>
             </div>
             
@@ -164,49 +164,61 @@ export const UpgradeModal = memo(({ onClose, canClose }) => {
   )
 })
 
-export const ExpiredView = memo(({ showModal, setShowModal }) => (
-  <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-    <div className="text-center max-w-sm w-full">
-      <div className="relative mb-8">
-        <div className="w-24 h-24 bg-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-red-500/30">
-          <AlertTriangle className="w-12 h-12 text-white" />
-        </div>
-      </div>
-
-      <h1 className="text-2xl font-bold text-slate-900 mb-2">Obuna tugadi</h1>
-      <p className="text-slate-500 mb-8">Davom ettirish uchun obunani yangilang</p>
-      
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-          <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center">
-            <Crown className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-left">
-            <h3 className="font-bold text-slate-900">Pro tarif</h3>
-            <p className="text-slate-500 text-sm">Barcha imkoniyatlar</p>
-          </div>
-          <div className="ml-auto text-right">
-            <span className="text-xl font-bold text-slate-900">99K</span>
-            <span className="text-slate-500 text-xs">/oy</span>
+export const ExpiredView = memo(({ showModal, setShowModal }) => {
+  const navigate = useNavigate()
+  
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="text-center max-w-sm w-full">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 bg-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-red-500/30">
+            <AlertTriangle className="w-12 h-12 text-white" />
           </div>
         </div>
 
-        <button
-          onClick={() => window.location.href = `tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}
-          className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-transform"
-        >
-          <Phone size={20} />
-          {SUPPORT_PHONE}
-        </button>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Obuna tugadi</h1>
+        <p className="text-slate-500 mb-8">Davom ettirish uchun obunani yangilang</p>
+        
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+            <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center">
+              <Crown className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-slate-900">Pro tarif</h3>
+              <p className="text-slate-500 text-sm">Barcha imkoniyatlar</p>
+            </div>
+            <div className="ml-auto text-right">
+              <span className="text-xl font-bold text-slate-900">10K</span>
+              <span className="text-slate-500 text-xs">/mashina/oy</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate('/payment')}
+            className="w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-transform mb-3"
+          >
+            <CreditCard size={20} />
+            Online to'lash
+          </button>
+          
+          <button
+            onClick={() => window.location.href = `tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}
+            className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 rounded-xl"
+          >
+            <Phone size={18} />
+            {SUPPORT_PHONE}
+          </button>
+        </div>
+        
+        <p className="text-xs text-slate-400 mt-4">
+          Telegram: <span className="text-indigo-500 font-semibold">@avtojon_support</span>
+        </p>
       </div>
-      
-      <p className="text-xs text-slate-400 mt-4">
-        Telegram: <span className="text-indigo-500 font-semibold">@avtojon_support</span>
-      </p>
+      {showModal && <UpgradeModal onClose={() => setShowModal(false)} canClose={false} />}
     </div>
-    {showModal && <UpgradeModal onClose={() => setShowModal(false)} canClose={false} />}
-  </div>
-))
+  )
+})
 
 const Feature = ({ icon: Icon, text }) => (
   <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
