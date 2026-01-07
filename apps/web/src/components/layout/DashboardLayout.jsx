@@ -9,6 +9,9 @@ import {
   BarChart3,
   ChevronRight,
   Sparkles,
+  Settings,
+  User as UserIcon,
+  ShieldCheck
 } from 'lucide-react'
 import { useState, createContext, useContext, useEffect, memo, useRef } from 'react'
 import { BusinessSubscriptionBlocker } from '../subscription/SubscriptionBlocker'
@@ -21,10 +24,13 @@ export const useSidebar = () => useContext(SidebarContext)
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', description: 'Umumiy statistika' },
   { path: '/dashboard/drivers', icon: Users, label: 'Haydovchilar', description: 'Haydovchilar ro\'yxati' },
-  // { path: '/dashboard/flights', icon: Route, label: 'Reyslar', description: 'Faol va tugatilgan' },
-  // { path: '/dashboard/trips', icon: Route, label: 'Eski reyslar', description: 'Barcha reyslar' },
-  // { path: '/dashboard/salaries', icon: Calculator, label: 'Maoshlar', description: 'Moliya boshqaruvi' },
   { path: '/dashboard/reports', icon: BarChart3, label: 'Hisobotlar', description: 'Statistika va grafiklar' },
+]
+
+const secondaryNavItems = [
+  { path: '/dashboard/profile', icon: UserIcon, label: 'Profil', description: 'Shaxsiy ma\'lumotlar' },
+  { path: '/dashboard/settings', icon: Settings, label: 'Sozlamalar', description: 'Ilova sozlamalari' },
+  { path: '/dashboard/subscription', icon: ShieldCheck, label: 'Obuna', description: 'Tarif va to\'lovlar' },
 ]
 
 // 🚀 Optimized nav item with memo
@@ -34,24 +40,22 @@ const AnimatedNavItem = memo(function AnimatedNavItem({ path, icon: Icon, label,
       to={path}
       end={path === '/dashboard'}
       onClick={onClick}
-      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 ${
-        isActive 
-          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30' 
-          : 'text-slate-400 hover:bg-white/5 hover:text-white'
-      }`}
+      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 ${isActive
+        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+        }`}
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-        isActive ? 'bg-white/20' : 'bg-white/5'
-      }`}>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-white/5'
+        }`}>
         <Icon size={18} />
       </div>
       <div className="flex-1">
         <p className="font-medium text-sm">{label}</p>
         <p className={`text-xs ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>{description}</p>
       </div>
-      <ChevronRight 
-        size={16} 
-        className={`transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} 
+      <ChevronRight
+        size={16}
+        className={`transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}
       />
     </NavLink>
   )
@@ -93,7 +97,7 @@ export default function DashboardLayout() {
           setDriverCount(res.data.data?.length || 1)
         }
       })
-      .catch(() => {})
+      .catch(() => { })
 
     // Serverdan subscription tekshirish
     api
@@ -101,12 +105,12 @@ export default function DashboardLayout() {
       .then((res) => {
         if (!isMounted.current) return
         const userData = res.data.data
-        
+
         console.log('[DashboardLayout] User subscription data:', userData?.subscription)
-        
+
         // checkSubscription metodidan kelgan ma'lumot
         const subInfo = userData?.subscriptionInfo || userData?.subscription
-        
+
         if (subInfo?.isExpired) {
           console.log('[DashboardLayout] Subscription expired!')
           setSubscriptionExpired(true)
@@ -165,8 +169,8 @@ export default function DashboardLayout() {
       {!sidebarOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
-            <button 
-              onClick={() => setSidebarOpen(true)} 
+            <button
+              onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
             >
               <Menu size={22} className="text-gray-700" />
@@ -184,10 +188,10 @@ export default function DashboardLayout() {
       )}
 
       {/* Sidebar - fixed height, no scroll */}
-      <aside 
+      <aside
         className={`fixed top-0 bottom-0 left-0 z-40 w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 transform transition-all duration-300 ease-out lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ 
-          height: '100vh', 
+        style={{
+          height: '100vh',
           overflow: 'hidden',
           touchAction: 'none',
           overscrollBehavior: 'none'
@@ -228,9 +232,9 @@ export default function DashboardLayout() {
         </div>
 
         {/* Navigation - no scroll */}
-        <nav className="flex-1 px-4 py-2" style={{ overflow: 'hidden', touchAction: 'none' }}>
+        <nav className="flex-1 px-4 py-2 overflow-y-auto custom-scrollbar">
           <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">Asosiy</p>
-          <div className="space-y-1">
+          <div className="space-y-1 mb-6">
             {navItems.map(({ path, icon: Icon, label, description }) => {
               const isActive = location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path))
               return (
@@ -239,11 +243,36 @@ export default function DashboardLayout() {
                   to={path}
                   end={path === '/dashboard'}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25' 
-                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                  }`}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-white/5'}`}>
+                    <Icon size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{label}</p>
+                    <p className={`text-[10px] truncate ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>{description}</p>
+                  </div>
+                </NavLink>
+              )
+            })}
+          </div>
+
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">Boshqa</p>
+          <div className="space-y-1">
+            {secondaryNavItems.map(({ path, icon: Icon, label, description }) => {
+              const isActive = location.pathname === path
+              return (
+                <NavLink
+                  key={path}
+                  to={path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-white/5'}`}>
                     <Icon size={16} />
@@ -271,7 +300,7 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50 pb-20 lg:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="p-4 sm:p-6 pt-16 lg:pt-6 animate-fadeIn">
           <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
             <Outlet />
@@ -279,11 +308,35 @@ export default function DashboardLayout() {
         </div>
       </main>
 
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-gray-100 pb-safe">
+        <div className="flex items-center justify-around px-2 py-2">
+          {navItems.map(({ path, icon: Icon, label }) => {
+            const isActive = location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path))
+            return (
+              <NavLink
+                key={path}
+                to={path}
+                end={path === '/dashboard'}
+                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all ${isActive ? 'text-blue-600' : 'text-slate-400'
+                  }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive ? 'bg-blue-50' : 'bg-transparent'
+                  }`}>
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] font-bold ${isActive ? 'opacity-100' : 'opacity-60'}`}>{label}</span>
+              </NavLink>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-30 lg:hidden" 
-          onClick={() => setSidebarOpen(false)} 
+        <div
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
         />
       )}
     </div>

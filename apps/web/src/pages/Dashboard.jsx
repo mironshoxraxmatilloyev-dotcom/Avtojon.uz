@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Route, MapPin, RefreshCw, ArrowUpRight, Calendar, Zap, Play, X } from 'lucide-react'
+import { Route, MapPin, RefreshCw, ArrowUpRight, Calendar, Zap, Play, X, Users, Truck, Wallet } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -326,7 +326,7 @@ export default function Dashboard() {
             ...prev,
             totalExpenses: expensesRes.data.data?.totalAmount || 0
           }))
-        }).catch(() => {})
+        }).catch(() => { })
 
       } catch (err) {
         console.error('Stats error:', err)
@@ -454,7 +454,42 @@ export default function Dashboard() {
 
       </AnimatedCard>
 
-      {/* Faol marshrutlar (yangi tizim - flights) */}
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <AnimatedStatCard
+          delay={0.1}
+          title="Haydovchilar"
+          value={stats.drivers}
+          icon={Users}
+          color="blue"
+          description={`${stats.busyDrivers} ta band, ${stats.freeDrivers} ta bo'sh`}
+        />
+        <AnimatedStatCard
+          delay={0.2}
+          title="Mashinalar"
+          value={stats.vehicles}
+          icon={Truck}
+          color="purple"
+          description="Jami texnikalar"
+        />
+        <AnimatedStatCard
+          delay={0.3}
+          title="Faol reyslar"
+          value={stats.activeTrips}
+          icon={Route}
+          color="emerald"
+          description="Hozir yo'lda"
+        />
+        <AnimatedStatCard
+          delay={0.4}
+          title="Xarajatlar"
+          value={formatMoney(stats.totalExpenses)}
+          icon={Wallet}
+          color="orange"
+          description="Shu oyda"
+          suffix="so'm"
+        />
+      </div>
       {activeFlights.length > 0 && (
         <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200/60">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
@@ -645,22 +680,20 @@ export default function Dashboard() {
                     className="p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-all border border-transparent hover:border-gray-200"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${
-                        flight.status === 'active' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
-                        flight.status === 'completed' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
-                        'bg-gradient-to-br from-gray-400 to-gray-500'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${flight.status === 'active' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
+                          flight.status === 'completed' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
+                            'bg-gradient-to-br from-gray-400 to-gray-500'
+                        }`}>
                         {flight.driver?.fullName?.charAt(0) || '?'}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 text-sm truncate">{flight.driver?.fullName || 'Noma\'lum'}</p>
                         <p className="text-xs text-gray-500 truncate">{flight.name || 'Yangi marshrut'}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-medium flex-shrink-0 ${
-                        flight.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                        flight.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-medium flex-shrink-0 ${flight.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                          flight.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                            'bg-gray-100 text-gray-600'
+                        }`}>
                         {flight.status === 'active' ? 'Faol' : flight.status === 'completed' ? 'Tugadi' : 'Kutilmoqda'}
                       </span>
                     </div>
@@ -761,7 +794,7 @@ export default function Dashboard() {
         <PaymentModal
           leg={selectedLegForPayment}
           isEditing={isEditingPayment}
-          onClose={() => { 
+          onClose={() => {
             setShowPaymentModal(false)
             setSelectedLegForPayment(null)
             setSelectedFlightForPayment(null)
