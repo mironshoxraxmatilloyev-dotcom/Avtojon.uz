@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Route, MapPin, RefreshCw, ArrowUpRight, Calendar, Zap, Play, X, Users, Truck, Wallet } from 'lucide-react'
+import { Route, MapPin, RefreshCw, ArrowUpRight, Calendar, Zap, Play, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -9,7 +9,7 @@ import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import { useSocket } from '../hooks/useSocket'
 import { showToast } from '../components/Toast'
-import { PageWrapper, AnimatedCard, AnimatedStatCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
+import { PageWrapper, AnimatedCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
 import { PaymentModal } from '../components/flightDetail/AllModals'
 
 
@@ -454,42 +454,7 @@ export default function Dashboard() {
 
       </AnimatedCard>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <AnimatedStatCard
-          delay={0.1}
-          title="Haydovchilar"
-          value={stats.drivers}
-          icon={Users}
-          color="blue"
-          description={`${stats.busyDrivers} ta band, ${stats.freeDrivers} ta bo'sh`}
-        />
-        <AnimatedStatCard
-          delay={0.2}
-          title="Mashinalar"
-          value={stats.vehicles}
-          icon={Truck}
-          color="purple"
-          description="Jami texnikalar"
-        />
-        <AnimatedStatCard
-          delay={0.3}
-          title="Faol reyslar"
-          value={stats.activeTrips}
-          icon={Route}
-          color="emerald"
-          description="Hozir yo'lda"
-        />
-        <AnimatedStatCard
-          delay={0.4}
-          title="Xarajatlar"
-          value={formatMoney(stats.totalExpenses)}
-          icon={Wallet}
-          color="orange"
-          description="Shu oyda"
-          suffix="so'm"
-        />
-      </div>
+
       {activeFlights.length > 0 && (
         <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200/60">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
