@@ -10,6 +10,7 @@ import { showToast } from '../components/Toast'
 import { useAlert, FlightDetailSkeleton, NetworkError, NotFoundError } from '../components/ui'
 import LocationPicker from '../components/LocationPicker'
 import { connectSocket, joinBusinessRoom } from '../services/socket'
+import { useSocket } from '../hooks/useSocket'
 import { useAuthStore } from '../store/authStore'
 import {
   OdometerFuelCard,
@@ -64,6 +65,8 @@ export default function FlightDetail() {
 
   // Fetch flight
   const fetchFlight = useCallback(async (showLoader = true) => {
+    console.log('[FlightDetail] Fetching flight with ID:', id)
+    
     if (id?.startsWith('temp_')) {
       setError({ type: 'notfound', message: 'Bu mashrut hali saqlanmagan' })
       setLoading(false)
@@ -72,9 +75,12 @@ export default function FlightDetail() {
     if (showLoader && !flight) setLoading(true)
     setError(null)
     try {
+      console.log('[FlightDetail] Making API request to:', `/flights/${id}`)
       const res = await api.get(`/flights/${id}`)
+      console.log('[FlightDetail] API response:', res.data)
       setFlight(res.data.data)
     } catch (err) {
+      console.error('[FlightDetail] API error:', err)
       if (err.response?.status === 404 || err.response?.status === 400) {
         setError({ type: 'notfound', message: 'Mashrut topilmadi' })
       } else {
@@ -278,12 +284,42 @@ export default function FlightDetail() {
   const borderExpenses = flight.borderCrossingsTotalUZS || (flight.borderCrossingsTotalUSD ? Math.round(flight.borderCrossingsTotalUSD * 12800) : 0)
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
 
-  // Jami xarajatlar (reys oldidan + davomida + chegara + platon)
-  // Jami xarajatlar (backend da hammasi hisoblangan: reys oldidan + davomida + chegara + platon)
+  // Jami xarajatlar (backend dan kelgan)
   const allExpenses = flight.totalExpenses || 0
 
-  const totalIncome = flight.totalIncome || ((flight.totalPayment || 0) + (flight.totalGivenBudget || 0))
-  const netProfit = totalIncome - allExpenses // Sof foyda (jami kirim - barcha xarajatlar)
+  // Jami kirim (avvalgi qoldiq bilan)
+  const previousBalance = flight.previousBalance || 0
+  
+  // MUHIM: Faqat naqd to'lovlar shofyor qo'liga tushadi
+  const cashPayments = (flight.legs || []).reduce((sum, leg) => {
+    return sum + (leg.paymentType === 'cash' ? (leg.payment || 0) : 0)
+  }, 0)
+  
+  // Peritsena to'lovlar firma hisobida qoladi
+  const peritsenaPayments = (flight.legs || []).reduce((sum, leg) => {
+    return sum + (leg.paymentType === 'peritsena' ? (leg.payment || 0) : 0)
+  }, 0)
+  
+  const totalIncome = previousBalance + cashPayments + peritsenaPayments + (flight.totalGivenBudget || 0)
+  
+  // Peritsena firma xarajatlari
+  const peritsenaFee = flight.totalPeritsenaFee || 0
+  
+  // Sof foyda (Peritsena xarajatlari ayirilgan)
+  const netProfit = totalIncome - allExpenses - peritsenaFee
+
+  // Debug
+  console.log('[FlightDetail] Calculations:', {
+    previousBalance,
+    cashPayments,
+    peritsenaPayments,
+    peritsenaFee,
+    totalGivenBudget: flight.totalGivenBudget,
+    totalIncome,
+    allExpenses,
+    netProfit,
+    'flight.totalPeritsenaFee': flight.totalPeritsenaFee
+  })
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -355,10 +391,12 @@ export default function FlightDetail() {
               <p className="text-amber-300/70 text-xs mt-1">Yo'l uchun</p>
             </div>
 
-            {/* 2. Mijozdan olingan */}
+            {/* 2. Mijozdan olingan (naqd + peritsena) */}
             <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-500/30">
-              <p className="text-emerald-400 font-bold text-xl sm:text-2xl">+{formatMoney(flight.totalPayment || 0)}</p>
-              <p className="text-emerald-300/70 text-xs mt-1">Mijozdan</p>
+              <p className="text-emerald-400 font-bold text-xl sm:text-2xl">+{formatMoney(cashPayments + peritsenaPayments)}</p>
+              <p className="text-emerald-300/70 text-xs mt-1">
+                Mijozdan ({formatMoney(cashPayments)} naqd + {formatMoney(peritsenaPayments)} peritsena)
+              </p>
             </div>
 
             {/* 3. Sarflangan */}
@@ -367,33 +405,39 @@ export default function FlightDetail() {
               <p className="text-red-300/70 text-xs mt-1">Sarflangan</p>
             </div>
 
-            {/* 4. Sof foyda / Shofyor beradi */}
+            {/* 4. Sof foyda */}
             {isActive ? (
-              // Faol marshrut - sof foyda ko'rsatish (hali shofyor ulushi noma'lum)
+              // Faol marshrut - sof foyda ko'rsatish
               <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
                 <p className={`font-bold text-xl sm:text-2xl ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
                   {netProfit >= 0 ? '+' : ''}{formatMoney(netProfit)}
                 </p>
                 <p className={`text-xs mt-1 ${netProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  {netProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
+                  Sof foyda
                 </p>
+                {/* Peritsena firma xarajatlari ko'rsatish */}
+                {peritsenaFee > 0 && (
+                  <p className="text-blue-300/50 text-xs mt-1">
+                    Firma xarajati: -{formatMoney(peritsenaFee)}
+                  </p>
+                )}
                 {/* Reys oldidan xarajatlar ko'rsatish */}
                 {beforeExpensesTotal > 0 && (
                   <div className="mt-2 pt-2 border-t border-white/10">
                     <p className="text-xs text-red-300">
-                      📍 Reys oldidan: -{formatMoney(beforeExpensesTotal)}
+                      Reys oldidan: -{formatMoney(beforeExpensesTotal)}
                     </p>
                   </div>
                 )}
               </div>
             ) : (
-              // Yopilgan mashrut - sof foyda (shofyor ulushi ayirilgan)
-              <div className={`rounded-xl p-4 border ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
-                <p className={`font-bold text-xl sm:text-2xl ${(flight.businessProfit || flight.driverOwes || 0) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                  {(flight.businessProfit || flight.driverOwes || 0) >= 0 ? '+' : ''}{formatMoney(flight.businessProfit || flight.driverOwes || netProfit)}
+              // Yopilgan mashrut - biznes foydasi
+              <div className={`rounded-xl p-4 border ${(flight.businessProfit || netProfit) >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+                <p className={`font-bold text-xl sm:text-2xl ${(flight.businessProfit || netProfit) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {(flight.businessProfit || netProfit) >= 0 ? '+' : ''}{formatMoney(flight.businessProfit || netProfit)}
                 </p>
                 <p className="text-xs mt-1 text-blue-300/70">
-                  Sof foyda {flight.driverProfitPercent ? `(${flight.driverProfitPercent}% ayirilgan)` : ''}
+                  Biznes foydasi {flight.driverProfitPercent ? `(${flight.driverProfitPercent}% ayirilgan)` : ''}
                 </p>
               </div>
             )}
@@ -726,20 +770,22 @@ export default function FlightDetail() {
           leg={selectedLegForPayment}
           isEditing={isEditingPayment}
           onClose={() => { setShowPaymentModal(false); setSelectedLegForPayment(null); setIsEditingPayment(false) }}
-          onSubmit={(payment) => {
+          onSubmit={(data) => {
             // 🚀 Modal ni darhol yopish
             setShowPaymentModal(false)
             showToast.success(isEditingPayment ? 'To\'lov yangilandi' : 'To\'lov saqlandi')
 
-            // 🚀 Optimistic update
+            // 🚀 Yangi format: { payment, paymentType, transferFeePercent }
             const legId = selectedLegForPayment._id
             const oldPayment = selectedLegForPayment.payment || 0
-            const newPayment = Number(payment) || 0
+            const newPayment = typeof data === 'object' ? (data.payment || 0) : Number(data) || 0
+            const paymentType = typeof data === 'object' ? (data.paymentType || 'cash') : 'cash'
+            const transferFeePercent = typeof data === 'object' ? (data.transferFeePercent || 0) : 0
 
             setFlight(prev => ({
               ...prev,
               legs: prev.legs?.map(l =>
-                l._id === legId ? { ...l, payment: newPayment } : l
+                l._id === legId ? { ...l, payment: newPayment, paymentType, transferFeePercent } : l
               ) || [],
               totalPayment: (prev.totalPayment || 0) - oldPayment + newPayment
             }))
@@ -748,7 +794,8 @@ export default function FlightDetail() {
             setIsEditingPayment(false)
 
             // Background da serverga yuborish
-            api.put(`/flights/${id}/legs/${legId}/payment`, { payment })
+            const payload = typeof data === 'object' ? data : { payment: data }
+            api.put(`/flights/${id}/legs/${legId}/payment`, payload)
               .then(res => res.data?.data && setFlight(res.data.data))
               .catch(() => fetchFlight(false))
           }}

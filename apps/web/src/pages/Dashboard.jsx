@@ -765,23 +765,25 @@ export default function Dashboard() {
             setSelectedFlightForPayment(null)
             setIsEditingPayment(false)
           }}
-          onSubmit={(payment) => {
+          onSubmit={(data) => {
             // 🚀 Modal ni darhol yopish
             setShowPaymentModal(false)
             showToast.success(isEditingPayment ? 'To\'lov yangilandi' : 'To\'lov saqlandi')
 
-            // 🚀 Optimistic update
+            // 🚀 Yangi format: { payment, paymentType, transferFeePercent }
             const legId = selectedLegForPayment._id
             const flightId = selectedFlightForPayment._id
             const oldPayment = selectedLegForPayment.payment || 0
-            const newPayment = Number(payment) || 0
+            const newPayment = typeof data === 'object' ? (data.payment || 0) : Number(data) || 0
+            const paymentType = typeof data === 'object' ? (data.paymentType || 'cash') : 'cash'
+            const transferFeePercent = typeof data === 'object' ? (data.transferFeePercent || 0) : 0
 
             setActiveFlights(prev => prev.map(f => {
               if (f._id === flightId) {
                 return {
                   ...f,
                   legs: f.legs?.map(l =>
-                    l._id === legId ? { ...l, payment: newPayment } : l
+                    l._id === legId ? { ...l, payment: newPayment, paymentType, transferFeePercent } : l
                   ) || [],
                   totalPayment: (f.totalPayment || 0) - oldPayment + newPayment
                 }
@@ -794,7 +796,7 @@ export default function Dashboard() {
                 return {
                   ...f,
                   legs: f.legs?.map(l =>
-                    l._id === legId ? { ...l, payment: newPayment } : l
+                    l._id === legId ? { ...l, payment: newPayment, paymentType, transferFeePercent } : l
                   ) || [],
                   totalPayment: (f.totalPayment || 0) - oldPayment + newPayment
                 }
@@ -807,7 +809,8 @@ export default function Dashboard() {
             setIsEditingPayment(false)
 
             // Background da serverga yuborish
-            api.put(`/flights/${flightId}/legs/${legId}/payment`, { payment })
+            const payload = typeof data === 'object' ? data : { payment: data }
+            api.put(`/flights/${flightId}/legs/${legId}/payment`, payload)
               .then(res => {
                 if (res.data?.data) {
                   setActiveFlights(prev => prev.map(f => f._id === flightId ? res.data.data : f))

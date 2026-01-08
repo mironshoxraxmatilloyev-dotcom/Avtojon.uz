@@ -25,11 +25,44 @@ export default function FlightHeader({ flight, navigate }) {
   const sarflangan = flight.totalExpenses || 0
   const qoldiq = yolPuli - sarflangan
   
+  // Peritsena to'lovlar va firma xarajatlari
+  const peritsenaPayment = flight.totalPeritsenaPayment || 0
+  const peritsenaFee = flight.totalPeritsenaFee || 0
+  const peritsenaFeeUSD = flight.totalPeritsenaFeeUSD || 0
+  
   // Backend'dan kelayotgan qiymatlarni ishlatamiz
+  // MUHIM: netProfit allaqachon Peritsena xarajatlari ayirilgan
   const netProfit = flight.netProfit || 0
+  
+  // Agar backend da Peritsena xarajatlari ayirilmagan bo'lsa, frontend da ayiramiz
+  const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
+  const totalExpenses = flight.totalExpenses || 0
+  const calculatedNetProfit = totalIncome - totalExpenses - peritsenaFee
+  
+  // Sof foyda uchun to'g'ri qiymatni tanlash
+  const actualNetProfit = calculatedNetProfit
+  
   const businessProfit = flight.businessProfit || 0
   const driverProfitAmount = flight.driverProfitAmount || 0
   const driverOwes = flight.driverOwes || 0
+  
+  // DEBUG - Peritsena ma'lumotlarini ko'rish
+  console.log('🔍 FlightHeader - Peritsena ma\'lumotlari:', {
+    peritsenaPayment,
+    peritsenaFee,
+    totalIncome,
+    totalExpenses,
+    netProfit,
+    calculatedNetProfit,
+    actualNetProfit,
+    businessProfit,
+    'flight.status': flight.status,
+    'flight.totalPayment': flight.totalPayment,
+    'flight.totalPeritsenaPayment': flight.totalPeritsenaPayment,
+    'flight.totalPeritsenaFee': flight.totalPeritsenaFee,
+    'flight.netProfit': flight.netProfit,
+    'flight.businessProfit': flight.businessProfit
+  })
   
   // DEBUG
   console.log('🔍 Hisob-kitob:', {
@@ -96,6 +129,9 @@ export default function FlightHeader({ flight, navigate }) {
           <div className="bg-emerald-500/20 backdrop-blur-sm rounded-xl p-3 border border-emerald-500/30">
             <p className="text-emerald-400 text-lg sm:text-xl font-bold">+{formatMoney(mijozPuli)}</p>
             <p className="text-emerald-300/70 text-[10px] sm:text-xs">Mijozdan</p>
+            {peritsenaPayment > 0 && (
+              <p className="text-emerald-300/50 text-[9px]">Peritsena: {formatMoney(peritsenaPayment)}</p>
+            )}
           </div>
 
           {/* 2. Yo'l uchun to'lov */}
@@ -127,25 +163,31 @@ export default function FlightHeader({ flight, navigate }) {
             <p className={`text-[10px] sm:text-xs ${qoldiq >= 0 ? 'text-cyan-300/70' : 'text-rose-300/70'}`}>Qoldiq</p>
           </div>
 
-          {/* 5. Sof foyda (zarar bo'lsa manfiy) */}
-          <div className={`backdrop-blur-sm rounded-xl p-3 border ${businessProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+          {/* 5. Sof foyda (Peritsena xarajatlari ayirilgan) */}
+          <div className={`backdrop-blur-sm rounded-xl p-3 border ${actualNetProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
             {isInternational ? (
               <>
-                <p className={`text-lg sm:text-xl font-bold ${businessProfitUSD >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                  {businessProfitUSD >= 0 ? '+' : ''}{formatUSD(businessProfitUSD)}
+                <p className={`text-lg sm:text-xl font-bold ${flight.netProfitUSD >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {flight.netProfitUSD >= 0 ? '+' : ''}{formatUSD(flight.netProfitUSD || 0)}
                 </p>
-                <p className={`text-[10px] sm:text-xs ${businessProfitUSD >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  {businessProfitUSD >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
+                <p className={`text-[10px] sm:text-xs ${flight.netProfitUSD >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                  {flight.netProfitUSD >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
                 </p>
+                {peritsenaFeeUSD > 0 && (
+                  <p className="text-blue-300/50 text-[9px]">Firma: -{formatUSD(peritsenaFeeUSD)}</p>
+                )}
               </>
             ) : (
               <>
-                <p className={`text-lg sm:text-xl font-bold ${businessProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                  {businessProfit >= 0 ? '+' : ''}{formatMoney(businessProfit)}
+                <p className={`text-lg sm:text-xl font-bold ${actualNetProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                  {actualNetProfit >= 0 ? '+' : ''}{formatMoney(actualNetProfit)}
                 </p>
-                <p className={`text-[10px] sm:text-xs ${businessProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
-                  {businessProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
+                <p className={`text-[10px] sm:text-xs ${actualNetProfit >= 0 ? 'text-blue-300/70' : 'text-rose-300/70'}`}>
+                  {actualNetProfit >= 0 ? '📈 Sof foyda' : '📉 Zarar'}
                 </p>
+                {peritsenaFee > 0 && (
+                  <p className="text-blue-300/50 text-[9px]">Firma: -{formatMoney(peritsenaFee)}</p>
+                )}
               </>
             )}
           </div>

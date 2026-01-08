@@ -102,6 +102,27 @@ const legSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'To\'lov salbiy bo\'lishi mumkin emas']
   },
+  // To'lov turi:
+  // 'cash' = naqd (haydovchi qo'lida)
+  // 'transfer' = perevozka (kartadan, haydovchi qo'lida)
+  // 'peritsena' = bank o'tkazmasi (haydovchi qo'lida EMAS, firma xarajatlari %)
+  paymentType: {
+    type: String,
+    enum: ['cash', 'transfer', 'peritsena'],
+    default: 'cash'
+  },
+  // Perevozka/Peritsena uchun firma xarajatlari foizi (masalan: 10%)
+  transferFeePercent: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  // Firma xarajatlariga ketgan summa (avtomatik hisoblanadi)
+  transferFeeAmount: {
+    type: Number,
+    default: 0
+  },
   givenBudget: {
     type: Number,
     default: 0,
@@ -327,6 +348,9 @@ const flightSchema = new mongoose.Schema({
 
   // Hisob-kitob
   totalPayment: { type: Number, default: 0 }, // Jami to'lov (mijozdan)
+  totalCashPayment: { type: Number, default: 0 }, // Naqd to'lovlar (haydovchi qo'lida)
+  totalPeritsenaPayment: { type: Number, default: 0 }, // Peritsena to'lovlar (haydovchi qo'lida emas)
+  totalPeritsenaFee: { type: Number, default: 0 }, // Peritsena dan firma xarajatlari
   totalGivenBudget: { type: Number, default: 0 }, // Jami berilgan yo'l xarajati
   totalExpenses: { type: Number, default: 0 }, // Jami sarflangan (xarajatlar) - so'm da
   totalExpensesUSD: { type: Number, default: 0 }, // Jami xarajatlar USD da
@@ -404,8 +428,19 @@ const flightSchema = new mongoose.Schema({
   driverPayments: [{
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
-    note: { type: String, default: '' }
+    note: { type: String, default: '' },
+    isPeritsena: { type: Boolean, default: false }, // Peritsena to'lovi ekanligi
+    companyFeePercent: { type: Number, default: 10 }, // Firma ulushi %
+    companyFeeAmount: { type: Number, default: 0 },  // Firma uchun ajratilgan summa
+    driverAmount: { type: Number, default: 0 }       // Haydovchiga tegishli summa
   }],
+
+  // Peritsena to'lovlari bo'yicha statistikalar
+  peritsenaStats: {
+    totalAmount: { type: Number, default: 0 },       // Jami Peritsena to'lovlari
+    companyEarnings: { type: Number, default: 0 },   // Firma daromadi
+    driverEarnings: { type: Number, default: 0 }     // Haydovchi daromadi
+  },
 
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
@@ -471,6 +506,34 @@ flightSchema.pre('save', function (next) {
 
   // Jami to'lov (mijozdan)
   this.totalPayment = this.legs.reduce((sum, leg) => sum + (leg.payment || 0), 0);
+
+  // Naqd to'lovlar (haydovchi qo'lida) - cash va transfer
+  this.totalCashPayment = this.legs.reduce((sum, leg) => {
+    if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+      return sum + (leg.payment || 0);
+    }
+    return sum;
+  }, 0);
+
+  // Peritsena to'lovlar (haydovchi qo'lida emas)
+  this.totalPeritsenaPayment = this.legs.reduce((sum, leg) => {
+    if (leg.paymentType === 'peritsena') {
+      return sum + (leg.payment || 0);
+    }
+    return sum;
+  }, 0);
+
+  // Peritsena dan firma xarajatlari (har bir leg uchun hisoblab qo'yish)
+  let totalPeritsenaFee = 0;
+  this.legs.forEach(leg => {
+    if (leg.paymentType === 'peritsena' && leg.transferFeePercent > 0) {
+      leg.transferFeeAmount = Math.round((leg.payment || 0) * leg.transferFeePercent / 100);
+      totalPeritsenaFee += leg.transferFeeAmount;
+    } else {
+      leg.transferFeeAmount = 0;
+    }
+  });
+  this.totalPeritsenaFee = totalPeritsenaFee;
 
   // Jami berilgan budget
   this.totalGivenBudget = this.legs.reduce((sum, leg) => sum + (leg.givenBudget || 0), 0);

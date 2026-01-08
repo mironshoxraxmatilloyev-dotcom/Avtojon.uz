@@ -1,5 +1,5 @@
 import { formatMoney } from './constants'
-import { Wallet, CheckCircle, Clock, AlertCircle, ArrowRight } from 'lucide-react'
+import { Wallet, CheckCircle, Clock, AlertCircle, ArrowRight, Building2 } from 'lucide-react'
 
 export default function FinancialSummary({ flight, onCollectPayment }) {
   const isInternational = flight?.flightType === 'international'
@@ -11,6 +11,11 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
   // Jami kirim (avvalgi qoldiq bilan)
   const totalIncome = flight.totalIncome || (previousBalance + flight.totalPayment + flight.totalGivenBudget)
   const driverOwes = flight.driverOwes || flight.businessProfit || 0
+
+  // Peritsena ma'lumotlari
+  const totalPeritsenaPayment = flight.totalPeritsenaPayment || 0
+  const totalPeritsenaFee = flight.totalPeritsenaFee || 0
+  const totalCashPayment = flight.totalCashPayment || 0
 
   // To'lov holati
   const driverPaidAmount = flight.driverPaidAmount || 0
@@ -67,6 +72,42 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
         <p className="text-slate-400 text-xs mb-3">
           💱 Kurs: 1 USD = {formatMoney(flight.exchangeRateAtClose)} so'm
         </p>
+      )}
+
+      {/* Peritsena ma'lumotlari - agar bor bo'lsa */}
+      {totalPeritsenaPayment > 0 && (
+        <div className="bg-purple-500/10 rounded-lg p-3 mb-3 border border-purple-500/20">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 size={16} className="text-purple-400" />
+            <span className="text-purple-300 text-sm font-semibold">Peritsena to'lovlari</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div>
+              <p className="text-slate-400 text-xs">Jami peritsena</p>
+              <p className="text-purple-400 font-bold">
+                {isInternational ? `$${formatUSD(flight.totalPeritsenaPaymentUSD || 0)}` : formatMoney(totalPeritsenaPayment)}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs">Firma xarajati</p>
+              <p className="text-red-400 font-bold">
+                -{isInternational ? `$${formatUSD(flight.totalPeritsenaFeeUSD || 0)}` : formatMoney(totalPeritsenaFee)}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs">Sof summa</p>
+              <p className="text-emerald-400 font-bold">
+                {isInternational 
+                  ? `$${formatUSD((flight.totalPeritsenaPaymentUSD || 0) - (flight.totalPeritsenaFeeUSD || 0))}`
+                  : formatMoney(totalPeritsenaPayment - totalPeritsenaFee)
+                }
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-amber-400/70 mt-2">
+            ⚠️ Peritsena puli haydovchi qo'lida deb hisoblanmaydi, firma xarajatlari ayiriladi
+          </p>
+        </div>
       )}
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

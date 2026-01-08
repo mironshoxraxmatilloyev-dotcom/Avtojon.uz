@@ -82,6 +82,11 @@ app.use('/api/maintenance', vehicleMaintenanceRoutes);
 app.use('/api/currency', currencyRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/payments', require('./routes/payment.routes'));
+
+// Peritsena to'lovlari
+app.use('/api/peritsena', require('./routes/peritsena.routes'));
+
+// SMS routes
 app.use('/api/sms', require('./routes/sms.routes'));
 
 // Health check

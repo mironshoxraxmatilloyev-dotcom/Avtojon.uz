@@ -128,6 +128,50 @@ export default function FlightModal({ show, onClose, onSubmit, form, setForm, se
                                     className="w-full px-3 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:border-green-500 focus:outline-none"
                                     placeholder="200 000" />
                             </div>
+                            
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1 sm:mb-1.5">Mijozdan to'lov (som)</label>
+                                <input type="text" inputMode="numeric" value={formatNumber(form.payment)}
+                                    onChange={(e) => setForm({ ...form, payment: e.target.value.replace(/\s/g, '') })}
+                                    className="w-full px-3 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:border-green-500 focus:outline-none"
+                                    placeholder="500 000" />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1.5 sm:mb-2">To'lov turi</label>
+                                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                                    <button type="button" onClick={() => setForm({ ...form, paymentType: 'cash' })}
+                                        className={`p-2 sm:p-2.5 rounded-lg border text-center ${form.paymentType === 'cash' ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
+                                        <span className="text-xs sm:text-sm font-medium">💵 Naqd</span>
+                                    </button>
+                                    <button type="button" onClick={() => setForm({ ...form, paymentType: 'transfer' })}
+                                        className={`p-2 sm:p-2.5 rounded-lg border text-center ${form.paymentType === 'transfer' ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
+                                        <span className="text-xs sm:text-sm font-medium">💳 Karta</span>
+                                    </button>
+                                    <button type="button" onClick={() => setForm({ ...form, paymentType: 'peritsena' })}
+                                        className={`p-2 sm:p-2.5 rounded-lg border text-center ${form.paymentType === 'peritsena' ? 'border-green-500 bg-green-500/20 text-white' : 'border-white/10 bg-white/5 text-slate-400'}`}>
+                                        <span className="text-xs sm:text-sm font-medium">🏦 Peritsena</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {(form.paymentType === 'transfer' || form.paymentType === 'peritsena') && (
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-1 sm:mb-1.5">
+                                        Firma xarajatlari (%)
+                                        {form.paymentType === 'peritsena' && <span className="text-amber-400 ml-1">- Peritsena</span>}
+                                    </label>
+                                    <input type="number" value={form.transferFeePercent || ''}
+                                        onChange={(e) => setForm({ ...form, transferFeePercent: e.target.value })}
+                                        className="w-full px-3 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:border-green-500 focus:outline-none"
+                                        placeholder="10" min="0" max="100" />
+                                    {form.payment && form.transferFeePercent && (
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            Firma xarajati: {formatNumber(Math.round((form.payment.replace(/\s/g, '') || 0) * (form.transferFeePercent || 0) / 100))} som
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 

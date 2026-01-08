@@ -4,7 +4,7 @@ import {
   X, Route, Map, DollarSign, CheckCircle, Wallet, TrendingUp, TrendingDown,
   Calculator, Percent, ArrowRight, Sparkles, Fuel, Utensils, Wrench, Car,
   Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet,
-  Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown
+  Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown, Banknote, CreditCard
 } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
 import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, FILTER_TYPES, formatMoney } from './constants'
@@ -710,32 +710,76 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
   // Avvalgi marshrutdan qolgan pul
   const previousBalance = flight.previousBalance || 0
 
+  // MUHIM: Faqat naqd to'lovlar va yo'l uchun berilgan pul shofyor qo'liga tushadi
+  const cashPayments = (flight.legs || []).reduce((sum, leg) => {
+    return sum + (leg.paymentType === 'cash' ? (leg.payment || 0) : 0)
+  }, 0)
+  
+  // Peritsena to'lovlar firma hisobida qoladi
+  const peritsenaPayments = (flight.legs || []).reduce((sum, leg) => {
+    return sum + (leg.paymentType === 'peritsena' ? (leg.payment || 0) : 0)
+  }, 0)
+
   // Jami kirim (avvalgi qoldiq bilan)
-  const totalIncome = previousBalance + (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
+  const totalIncome = previousBalance + cashPayments + peritsenaPayments + (flight.totalGivenBudget || 0)
+  
+  // Shofyor qo'liga tushadigan pul (faqat naqd + yo'l uchun berilgan + avvalgi qoldiq)
+  const driverAccessibleIncome = previousBalance + cashPayments + (flight.totalGivenBudget || 0)
 
   // MUHIM: totalExpenses ichida allaqachon chegara va platon xarajatlari bor (backend'dan kelgan)
   const allExpenses = flight.totalExpenses || 0
   const lightExpenses = flight.lightExpenses || 0
   const netProfit = totalIncome - allExpenses
 
+  const percent = Number(form.driverProfitPercent) || 0
+
+  // So'm da
+  // YANGI LOGIKA: Haydovchi ulushi barcha to'lovlardan hisoblanadi (naqd + peritsena)
+  // Lekin haydovchi berishi kerak faqat naqd to'lovlardan hisoblanadi
+  
+  // 1. Haydovchi ulushi - BARCHA to'lovlardan (totalIncome dan)
+  const totalBasis = totalIncome - lightExpenses
+  const driverShare = Math.round(totalBasis * percent / 100)
+  
+  // 2. Haydovchi berishi kerak - faqat NAQD to'lovlardan
+  const cashBasis = driverAccessibleIncome - lightExpenses
+  const cashNetProfit = cashBasis // Naqd to'lovlardan sof foyda
+  const driverOwes = Math.max(0, cashNetProfit - driverShare) // Peritsena bo'lsa 0 bo'lishi mumkin
+
+  // Debug
+  console.log('[CompleteModal] Calculations:', {
+    previousBalance,
+    cashPayments,
+    peritsenaPayments,
+    totalGivenBudget: flight.totalGivenBudget,
+    totalIncome,
+    driverAccessibleIncome,
+    allExpenses,
+    lightExpenses,
+    netProfit,
+    totalBasis,
+    cashBasis,
+    driverShare,
+    driverOwes
+  })
+
   // USD da hisoblash (xalqaro reyslar uchun)
   const totalIncomeUSD = isInternational ? Math.round(totalIncome / uzsToUsdRate * 100) / 100 : 0
   const allExpensesUSD = isInternational ? (flight.totalExpensesUSD || Math.round(allExpenses / uzsToUsdRate * 100) / 100) : 0
   const netProfitUSD = isInternational ? Math.round((totalIncomeUSD - allExpensesUSD) * 100) / 100 : 0
 
-  const percent = Number(form.driverProfitPercent) || 0
-
-  // So'm da
-  // MUHIM: Shofyor ulushi yengil foydadan (katta xarajatlar ayirilmagan) hisoblanadi
-  const basis = totalIncome - lightExpenses
-  const driverShare = Math.round(basis * percent / 100)
-  const driverOwes = netProfit - driverShare
-
   // USD da
   const lightExpensesUSD = isInternational ? (flight.lightExpensesUSD || Math.round(lightExpenses / uzsToUsdRate * 100) / 100) : 0
-  const basisUSD = totalIncomeUSD - lightExpensesUSD
-  const driverShareUSD = isInternational ? Math.round(basisUSD * percent / 100 * 100) / 100 : 0
-  const driverOwesUSD = isInternational ? Math.round((netProfitUSD - driverShareUSD) * 100) / 100 : 0
+  const totalIncomeUSDForDriver = isInternational ? Math.round(totalIncome / uzsToUsdRate * 100) / 100 : 0
+  const driverAccessibleIncomeUSD = isInternational ? Math.round(driverAccessibleIncome / uzsToUsdRate * 100) / 100 : 0
+  
+  // USD da haydovchi ulushi - barcha to'lovlardan
+  const totalBasisUSD = totalIncomeUSDForDriver - lightExpensesUSD
+  const driverShareUSD = isInternational ? Math.round(totalBasisUSD * percent / 100 * 100) / 100 : 0
+  
+  // USD da haydovchi berishi kerak - faqat naqd to'lovlardan
+  const cashBasisUSD = driverAccessibleIncomeUSD - lightExpensesUSD
+  const driverOwesUSD = isInternational ? Math.max(0, Math.round((cashBasisUSD - driverShareUSD) * 100) / 100) : 0
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
@@ -802,13 +846,23 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
                   <>
                     <p className="text-emerald-400 font-bold text-2xl">+{formatUSD(totalIncomeUSD)}</p>
                     <p className="text-emerald-400/60 text-xs mt-1">≈ {formatMoney(totalIncome)} so'm</p>
+                    {(cashPayments > 0 || peritsenaPayments > 0) && (
+                      <p className="text-emerald-400/60 text-xs">
+                        Naqd: {formatMoney(cashPayments)} | Peritsena: {formatMoney(peritsenaPayments)}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>
                     <p className="text-emerald-400 font-bold text-2xl">+{formatMoney(totalIncome)}</p>
                     {previousBalance > 0 && (
                       <p className="text-emerald-400/60 text-xs mt-1">
-                        {formatMoney(flight.totalPayment + flight.totalGivenBudget)} + {formatMoney(previousBalance)} qoldiq
+                        {formatMoney(cashPayments + peritsenaPayments + (flight.totalGivenBudget || 0))} + {formatMoney(previousBalance)} qoldiq
+                      </p>
+                    )}
+                    {(cashPayments > 0 || peritsenaPayments > 0) && (
+                      <p className="text-emerald-400/60 text-xs">
+                        Naqd: {formatMoney(cashPayments)} | Peritsena: {formatMoney(peritsenaPayments)}
                       </p>
                     )}
                   </>
@@ -861,8 +915,26 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
               <h3 className="text-white font-bold text-lg">Haydovchi ulushi</h3>
             </div>
 
+            {/* Tushuntirish */}
+            {/* <div className="bg-blue-500/10 rounded-xl p-3 mb-4 border border-blue-500/20">
+              <p className="text-blue-300 text-sm">
+                💡 Haydovchi ulushi faqat uning qo'liga tushadigan puldan hisoblanadi:
+              </p>
+              <p className="text-blue-400 text-xs mt-1">
+                • Naqd to'lovlar: {formatMoney(cashPayments)}
+              </p>
+              <p className="text-blue-400 text-xs">
+                • Yo'l uchun berilgan: {formatMoney(flight.totalGivenBudget || 0)}
+              </p>
+              {previousBalance > 0 && (
+                <p className="text-blue-400 text-xs">
+                  • Avvalgi qoldiq: {formatMoney(previousBalance)}
+                </p>
+              )}
+            </div> */}
+
             <div className="grid grid-cols-6 gap-2 mb-5">
-              {[0, 10, 20, 30, 40, 50].map(p => (
+              {[0, 5, 10, 15, 20, 25].map(p => (
                 <button
                   key={p}
                   type="button"
@@ -875,6 +947,20 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
                   {p}%
                 </button>
               ))}
+            </div>
+
+            {/* Custom foiz kiritish */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-slate-400 mb-2">Yoki boshqa foiz kiriting</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={form.driverProfitPercent}
+                onChange={e => setForm(f => ({ ...f, driverProfitPercent: e.target.value }))}
+                className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-purple-500/50 focus:outline-none transition-colors"
+                placeholder="0-100 orasida foiz kiriting"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -944,23 +1030,60 @@ export const CompleteModal = memo(function CompleteModal({ flight, onClose, onSu
 // ============================================
 // PAYMENT MODAL - To'lov olish/tahrirlash (PRO)
 // ============================================
+// TO'LOV TURLARI
+const PAYMENT_TYPES = [
+  { value: 'cash', label: 'Naqd', icon: Banknote, description: 'Haydovchi qo\'lida', color: 'emerald' },
+  { value: 'peritsena', label: 'Peritsena', icon: Building2, description: 'Firma hisobida, shofyor qo\'lida emas', color: 'purple' }
+]
+
 export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit, isEditing = false }) {
   const [payment, setPayment] = useState(isEditing ? String(leg?.payment || 0) : '')
+  const [paymentType, setPaymentType] = useState(leg?.paymentType || 'cash')
+  const [transferFeePercent, setTransferFeePercent] = useState(leg?.transferFeePercent || 10)
   const quickAmounts = [500000, 1000000, 2000000, 3000000, 5000000]
+  const feePercentOptions = [5, 10, 15, 20, 25]
+
+  // Peritsena uchun firma xarajati hisoblash
+  const transferFeeAmount = useMemo(() => {
+    if (paymentType !== 'peritsena' || !payment) return 0
+    return Math.round(Number(payment) * transferFeePercent / 100)
+  }, [payment, paymentType, transferFeePercent])
+
+  // Shofyorga tushadigan summa (peritsena uchun)
+  const netAmount = useMemo(() => {
+    if (paymentType !== 'peritsena' || !payment) return Number(payment) || 0
+    return Number(payment) - transferFeeAmount
+  }, [payment, paymentType, transferFeeAmount])
+
+  const handleSubmit = useCallback(() => {
+    if (!payment) return
+    onSubmit({
+      payment: Number(payment),
+      paymentType,
+      transferFeePercent: paymentType === 'peritsena' ? transferFeePercent : 0
+    })
+  }, [payment, paymentType, transferFeePercent, onSubmit])
+
+  const selectedType = PAYMENT_TYPES.find(t => t.value === paymentType)
+  const colorClasses = {
+    emerald: { bg: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/30', border: 'border-emerald-500', text: 'text-emerald-400' },
+    blue: { bg: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-500/30', border: 'border-blue-500', text: 'text-blue-400' },
+    purple: { bg: 'from-purple-500 to-violet-600', shadow: 'shadow-purple-500/30', border: 'border-purple-500', text: 'text-purple-400' }
+  }
+  const colors = colorClasses[selectedType?.color || 'emerald']
 
   return createPortal(
     <ModalWrapper onClose={onClose} size="md">
       <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl">
-        <div className="relative px-6 py-5 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-transparent to-teal-500/10">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
+        <div className={`relative px-6 py-5 border-b border-white/10 bg-gradient-to-r ${paymentType === 'peritsena' ? 'from-purple-500/10 via-transparent to-violet-500/10' : 'from-emerald-500/10 via-transparent to-teal-500/10'}`}>
           <div className="relative flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
+              <div className={`w-14 h-14 bg-gradient-to-br ${colors.bg} rounded-2xl flex items-center justify-center shadow-xl ${colors.shadow}`}>
                 <DollarSign className="w-7 h-7 text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">{isEditing ? 'To\'lovni tahrirlash' : 'Mijozdan to\'lov'}</h2>
-                <p className="text-emerald-400/80 text-sm mt-0.5 flex items-center gap-1">
+                <p className={`${colors.text} text-sm mt-0.5 flex items-center gap-1`}>
                   {leg.fromCity?.split(',')[0]}
                   <ArrowRight size={14} />
                   {leg.toCity?.split(',')[0]}
@@ -974,6 +1097,59 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit,
         </div>
 
         <div className="p-6 space-y-5">
+          {/* To'lov turi tanlash */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-400 mb-3">To'lov turi</label>
+            <div className="grid grid-cols-2 gap-3">
+              {PAYMENT_TYPES.map(type => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setPaymentType(type.value)}
+                  className={`p-3 rounded-xl border-2 transition-all ${paymentType === type.value
+                    ? `${colorClasses[type.color].border} bg-white/10`
+                    : 'border-white/10 hover:border-white/20'
+                    }`}
+                >
+                  <div className="flex justify-center mb-2">
+                    <type.icon size={24} className={paymentType === type.value ? colorClasses[type.color].text : 'text-slate-400'} />
+                  </div>
+                  <div className={`text-sm font-bold ${paymentType === type.value ? colorClasses[type.color].text : 'text-white'}`}>
+                    {type.label}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{type.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Peritsena uchun firma xarajati foizi */}
+          {paymentType === 'peritsena' && (
+            <div className="bg-purple-500/10 rounded-2xl p-4 border border-purple-500/20">
+              <label className="block text-sm font-semibold text-purple-300 mb-3">
+                Firma xarajati foizi
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {feePercentOptions.map(pct => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setTransferFeePercent(pct)}
+                    className={`py-2 rounded-xl text-sm font-bold transition-all ${transferFeePercent === pct
+                      ? 'bg-purple-500 text-white shadow-lg'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-purple-400/70 mt-2">
+                Bu foiz firma xarajatlariga sarflanadi
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-slate-400 mb-3">Tez tanlash</label>
             <div className="grid grid-cols-5 gap-2">
@@ -983,7 +1159,7 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit,
                   type="button"
                   onClick={() => setPayment(amt.toString())}
                   className={`py-3 rounded-xl text-sm font-bold transition-all ${Number(payment) === amt
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30'
+                    ? `bg-gradient-to-r ${colors.bg} text-white shadow-lg ${colors.shadow}`
                     : 'bg-white/10 text-slate-300 hover:bg-white/20'
                     }`}
                 >
@@ -999,17 +1175,39 @@ export const PaymentModal = memo(function PaymentModal({ leg, onClose, onSubmit,
               type="number"
               value={payment}
               onChange={e => setPayment(e.target.value)}
-              className="w-full px-6 py-6 bg-white/5 border-2 border-white/10 rounded-2xl text-white text-3xl font-bold text-center placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+              className={`w-full px-6 py-6 bg-white/5 border-2 border-white/10 rounded-2xl text-white text-3xl font-bold text-center placeholder-slate-500 focus:${colors.border} focus:outline-none transition-colors`}
               placeholder="0"
               autoFocus
             />
           </div>
 
+          {/* Peritsena uchun hisob-kitob */}
+          {paymentType === 'peritsena' && payment && (
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-400">Jami to'lov:</span>
+                <span className="text-white font-bold">{formatMoney(payment)} so'm</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-purple-400">Firma xarajati ({transferFeePercent}%):</span>
+                <span className="text-purple-400 font-bold">-{formatMoney(transferFeeAmount)} so'm</span>
+              </div>
+              <div className="border-t border-white/10 pt-2 flex justify-between items-center">
+                <span className="text-emerald-400 font-semibold">Sof summa:</span>
+                <span className="text-emerald-400 font-bold">{formatMoney(netAmount)} so'm</span>
+              </div>
+              <p className="text-xs text-amber-400/70 mt-2">
+                <Building2 size={12} className="inline mr-1" />
+                Bu pul firma hisobida saqlanadi
+              </p>
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={() => payment && onSubmit(Number(payment))}
+            onClick={handleSubmit}
             disabled={!payment}
-            className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 shadow-xl shadow-emerald-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
+            className={`w-full py-5 bg-gradient-to-r ${colors.bg} text-white rounded-2xl font-bold text-lg disabled:opacity-50 shadow-xl ${colors.shadow} hover:shadow-2xl transition-all flex items-center justify-center gap-2`}
           >
             <CheckCircle size={22} />
             {isEditing ? 'Saqlash' : 'To\'lovni saqlash'}

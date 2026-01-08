@@ -413,7 +413,7 @@ router.post('/:id/legs', protect, businessOnly, async (req, res) => {
 // Buyurtma uchun to'lov qo'shish/yangilash - TO'LOV KIRITILGANDA BUYURTMA TUGALLANADI
 router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) => {
   try {
-    const { payment } = req.body;
+    const { payment, paymentType, transferFeePercent } = req.body;
 
     const flight = await Flight.findById(req.params.id);
     if (!flight) {
@@ -426,6 +426,20 @@ router.put('/:id/legs/:legId/payment', protect, businessOnly, async (req, res) =
     }
 
     leg.payment = Number(payment) || 0;
+    
+    // To'lov turi: 'cash', 'transfer', 'peritsena'
+    if (paymentType) {
+      leg.paymentType = paymentType;
+    }
+    
+    // Peritsena uchun firma xarajati foizi
+    if (paymentType === 'peritsena' && transferFeePercent !== undefined) {
+      leg.transferFeePercent = Number(transferFeePercent) || 0;
+      // Firma xarajati summasi avtomatik hisoblanadi (Flight model pre-save da)
+    } else if (paymentType !== 'peritsena') {
+      leg.transferFeePercent = 0;
+      leg.transferFeeAmount = 0;
+    }
 
     // To'lov kiritilganda buyurtma (leg) tugallanadi
     if (Number(payment) > 0 && leg.status === 'in_progress') {

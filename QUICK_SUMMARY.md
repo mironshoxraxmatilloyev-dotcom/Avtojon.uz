@@ -78,8 +78,7 @@
    - VoiceVehicleCreator - Ovoz bilan mashina yaratish
    - **Tavsiya**: Qo'shish mumkin (Priority 2)
 
-5. **🌍 Xalqaro Reyslar** (1 ta)
-   - InternationalSection - Xalqaro reyslar bo'limi
+5. 
    - **Tavsiya**: Qo'shish mumkin (Priority 3)
 
 ### 🟢 PAST (Web-Only, Qo'shish Shart Emas)

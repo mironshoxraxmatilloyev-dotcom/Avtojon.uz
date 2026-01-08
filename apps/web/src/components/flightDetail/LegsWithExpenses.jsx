@@ -182,9 +182,38 @@ export default function LegsWithExpenses({
               {/* Payment */}
               {selectedLeg.payment > 0 ? (
                 <div className="flex items-center gap-3">
-                  <div className="bg-emerald-50 px-5 py-3 rounded-xl border border-emerald-200">
-                    <p className="text-xs text-emerald-600 font-medium">Mijozdan to'lov</p>
-                    <p className="text-2xl font-bold text-emerald-600">+{formatMoney(selectedLeg.payment)}</p>
+                  <div className={`px-5 py-3 rounded-xl border ${
+                    selectedLeg.paymentType === 'peritsena' 
+                      ? 'bg-purple-50 border-purple-200' 
+                      : selectedLeg.paymentType === 'transfer'
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-emerald-50 border-emerald-200'
+                  }`}>
+                    <p className={`text-xs font-medium ${
+                      selectedLeg.paymentType === 'peritsena' 
+                        ? 'text-purple-600' 
+                        : selectedLeg.paymentType === 'transfer'
+                          ? 'text-blue-600'
+                          : 'text-emerald-600'
+                    }`}>
+                      {selectedLeg.paymentType === 'peritsena' 
+                        ? '🏦 Peritsena' 
+                        : selectedLeg.paymentType === 'transfer'
+                          ? '💳 Perevozka'
+                          : '💵 Naqd to\'lov'}
+                    </p>
+                    <p className={`text-2xl font-bold ${
+                      selectedLeg.paymentType === 'peritsena' 
+                        ? 'text-purple-600' 
+                        : selectedLeg.paymentType === 'transfer'
+                          ? 'text-blue-600'
+                          : 'text-emerald-600'
+                    }`}>+{formatMoney(selectedLeg.payment)}</p>
+                    {selectedLeg.paymentType === 'peritsena' && selectedLeg.transferFeePercent > 0 && (
+                      <p className="text-xs text-purple-500 mt-1">
+                        Firma: {selectedLeg.transferFeePercent}% = -{formatMoney(selectedLeg.transferFeeAmount || Math.round(selectedLeg.payment * selectedLeg.transferFeePercent / 100))}
+                      </p>
+                    )}
                   </div>
                   {isActive && (
                     <button

@@ -57,10 +57,17 @@ const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Drivers = lazy(() => import('./pages/DriversNew'))
+const Drivers = lazy(() => import('./pages/Drivers'))
 const DriverDetail = lazy(() => import('./pages/DriverDetail'))
 const Flights = lazy(() => import('./pages/Flights'))
-const FlightDetail = lazy(() => import('./pages/FlightDetail'))
+// Temporarily import FlightDetail directly to debug the issue
+import FlightDetail from './pages/FlightDetail'
+// const FlightDetail = lazy(() => 
+//   import('./pages/FlightDetail').catch(err => {
+//     console.error('Failed to load FlightDetail:', err)
+//     return { default: () => <div className="p-4 text-red-500">FlightDetail yuklanmadi. Sahifani yangilang.</div> }
+//   })
+// )
 const Reports = lazy(() => import('./pages/Reports'))
 const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
 const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
