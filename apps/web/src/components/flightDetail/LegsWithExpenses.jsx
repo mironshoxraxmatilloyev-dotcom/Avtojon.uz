@@ -319,57 +319,34 @@ export default function LegsWithExpenses({
                 </div>
               )}
 
-              {/* Expense List */}
+              {/* Expense List - Simplified Format */}
               <div className="space-y-2">
                 {legExpenses.map((expense) => {
                   const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { iconName: 'Package', label: expense.type }
-                  const isFuel = expense.type?.startsWith('fuel_')
-                  const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
                   const IconComp = ICONS[expType.iconName] || Package
-                  const isConfirmed = expense.confirmedByDriver
                   const isHeavy = isHeavyExpense(expense.type) || expense.expenseClass === 'heavy'
 
                   return (
-                    <div key={expense._id} className={`flex items-center gap-4 p-4 rounded-xl group hover:bg-slate-100 transition-colors ${isConfirmed ? 'bg-emerald-50' : isHeavy ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}`}>
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${expType.iconColor ? 'bg-white border border-slate-100' : 'bg-gradient-to-br ' + (expType.color || 'from-gray-500 to-slate-500')}`}>
-                        <IconComp className={`w-6 h-6 ${expType.iconColor || 'text-white'}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
-                          <span>{expType.label}</span>
-                          {isFuel && expense.quantity && (
-                            <span className="text-slate-400 font-normal">• {expense.quantity} {fuelUnit}</span>
-                          )}
-                          {isFuel && expense.odometer && (
-                            <span className="text-blue-500 font-normal text-sm">• {expense.odometer.toLocaleString()} km</span>
-                          )}
-                          {isHeavy && (
-                            <span className="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">🏢 Biznesmen</span>
-                          )}
-                          {isConfirmed ? (
-                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">✓ Tasdiqlangan</span>
-                          ) : (
-                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">⏳ Kutilmoqda</span>
-                          )}
-                        </p>
-                        <p className="text-sm text-slate-400 truncate">
-                          {expense.date && (
-                            <span className="mr-2">📅 {new Date(expense.date).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                          )}
-                          {expense.description && <span>• {expense.description}</span>}
-                        </p>
-                      </div>
-                      <p className={`font-bold text-lg ${isHeavy ? 'text-rose-600' : 'text-red-500'}`}>-{formatMoney(expense.amountInUZS || expense.amount)}</p>
-                      {isActive && (
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => onEditExpense(expense)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg">
-                            <Pencil size={16} />
-                          </button>
-                          <button onClick={() => onDeleteExpense(expense._id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg">
-                            <Trash2 size={16} />
-                          </button>
+                    <div key={expense._id} className={`flex items-center justify-between p-3 rounded-lg group hover:bg-slate-100 transition-colors ${isHeavy ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${expType.iconColor ? 'bg-white border border-slate-100' : 'bg-gradient-to-br ' + (expType.color || 'from-gray-500 to-slate-500')}`}>
+                          <IconComp className={`w-4 h-4 ${expType.iconColor || 'text-white'}`} />
                         </div>
-                      )}
+                        <span className="font-medium text-slate-700">{expType.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${isHeavy ? 'text-rose-600' : 'text-red-500'}`}>-{formatMoney(expense.amountInUZS || expense.amount)}</span>
+                        {isActive && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => onEditExpense(expense)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-md">
+                              <Pencil size={14} />
+                            </button>
+                            <button onClick={() => onDeleteExpense(expense._id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
