@@ -5,7 +5,7 @@ import api from '../services/api'
 
 // Fleet users uchun: 10,000 so'm / mashina / oy
 // Biznesmenlar uchun: 30,000 so'm / mashina / oy
-const PRICE_PER_VEHICLE = 10000
+const PRICE_PER_VEHICLE = 30000 // Biznesmenlar uchun
 
 export default function Payment() {
   const navigate = useNavigate()

@@ -72,8 +72,28 @@ export default function DashboardLayout() {
 
         console.log('[DashboardLayout] User subscription data:', userData?.subscription)
 
-        // checkSubscription metodidan kelgan ma'lumot
+        // Biznesmen yaratilgan sanani tekshirish
+        const registrationDate = userData?.registrationDate || userData?.createdAt
+        if (registrationDate) {
+          const regDate = new Date(registrationDate)
+          const now = new Date()
+          const daysSinceRegistration = Math.floor((now - regDate) / (1000 * 60 * 60 * 24))
+          
+          console.log('[DashboardLayout] Registration date:', registrationDate)
+          console.log('[DashboardLayout] Days since registration:', daysSinceRegistration)
+          
+          // Agar 7 kundan kam bo'lsa - trial davom etmoqda
+          if (daysSinceRegistration < 7) {
+            console.log('[DashboardLayout] Still in trial period')
+            setSubscriptionExpired(false)
+            return
+          }
+        }
+
+        // checkSubscription metodidan kelgan ma'lumot (subscriptionInfo)
         const subInfo = userData?.subscriptionInfo || userData?.subscription
+
+        console.log('[DashboardLayout] Subscription info:', subInfo)
 
         if (subInfo?.isExpired) {
           console.log('[DashboardLayout] Subscription expired!')
@@ -110,6 +130,22 @@ export default function DashboardLayout() {
             return
           }
         }
+
+        // Agar hech qanday subscription ma'lumoti yo'q bo'lsa va 7 kundan ko'p bo'lsa
+        if (!subInfo && !userData?.subscriptionExpiry && !userData?.trialEndsAt && registrationDate) {
+          const regDate = new Date(registrationDate)
+          const now = new Date()
+          const daysSinceRegistration = Math.floor((now - regDate) / (1000 * 60 * 60 * 24))
+          
+          if (daysSinceRegistration >= 7) {
+            console.log('[DashboardLayout] Trial period ended, no subscription found')
+            setSubscriptionExpired(true)
+            return
+          }
+        }
+
+        // Default: subscription active
+        setSubscriptionExpired(false)
       })
       .catch((err) => {
         console.error('[DashboardLayout] Error checking subscription:', err)

@@ -16,7 +16,7 @@ import {
 import api from '../../services/api'
 
 const SUPPORT_PHONE = '+998 88 019 19 09'
-const PRICE_PER_UNIT = 50000
+const PRICE_PER_UNIT = 30000 // Biznesmenlar uchun 30,000 so'm / mashina / oy
 
 const fmt = (n) => new Intl.NumberFormat('uz-UZ').format(n)
 

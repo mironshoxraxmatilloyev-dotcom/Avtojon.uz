@@ -85,16 +85,34 @@ businessmanSchema.methods.comparePassword = async function(candidatePassword) {
 // Obuna holatini tekshirish
 businessmanSchema.methods.checkSubscription = function() {
   const now = new Date();
-  const endDate = this.subscription?.endDate || new Date();
-  const isExpired = now > endDate;
+  
+  // Agar subscription mavjud bo'lsa
+  if (this.subscription && this.subscription.endDate) {
+    const endDate = new Date(this.subscription.endDate);
+    const isExpired = now > endDate;
+    
+    return {
+      plan: this.subscription.plan || 'trial',
+      startDate: this.subscription.startDate,
+      endDate: this.subscription.endDate,
+      isExpired,
+      daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)),
+      msLeft: isExpired ? 0 : endDate - now
+    };
+  }
+  
+  // Agar subscription yo'q bo'lsa, registrationDate dan 7 kun trial
+  const registrationDate = this.registrationDate || this.createdAt || now;
+  const trialEndDate = new Date(registrationDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 kun
+  const isExpired = now > trialEndDate;
   
   return {
-    plan: this.subscription?.plan || 'trial',
-    startDate: this.subscription?.startDate,
-    endDate: this.subscription?.endDate,
+    plan: 'trial',
+    startDate: registrationDate,
+    endDate: trialEndDate,
     isExpired,
-    daysLeft: isExpired ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)),
-    msLeft: isExpired ? 0 : endDate - now
+    daysLeft: isExpired ? 0 : Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24)),
+    msLeft: isExpired ? 0 : trialEndDate - now
   };
 };
 
