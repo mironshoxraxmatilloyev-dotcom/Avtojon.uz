@@ -181,6 +181,12 @@ router.post('/payme', async (req, res) => {
     }
     
     console.log('📤 Response:', JSON.stringify(result))
+    
+    // Agar result da error bor bo'lsa, uni to'g'ri formatda qaytarish
+    if (result && result.error) {
+      return res.json({ error: result.error, id })
+    }
+    
     res.json({ result, id })
     
   } catch (err) {
@@ -246,10 +252,20 @@ async function createTransaction(params) {
     return { error: { code: -31050, message: { uz: 'To\'lov topilmadi', ru: 'Платеж не найден', en: 'Payment not found' } } }
   }
   
+  // To'lov allaqachon bajarilgan bo'lsa
+  if (payment.state === 'performed') {
+    return { error: { code: -31051, message: { uz: 'Allaqachon to\'langan', ru: 'Уже оплачено', en: 'Already paid' } } }
+  }
+  
+  // To'lov bekor qilingan bo'lsa
+  if (payment.state === 'cancelled') {
+    return { error: { code: -31052, message: { uz: 'Bekor qilingan', ru: 'Отменено', en: 'Cancelled' } } }
+  }
+  
   // Agar allaqachon tranzaksiya mavjud
   if (payment.paymeTransactionId) {
     if (payment.paymeTransactionId !== transactionId) {
-      return { error: { code: -31008, message: { uz: 'Boshqa tranzaksiya mavjud', ru: 'Другая транзакция', en: 'Another transaction exists' } } }
+      return { error: { code: -31008, message: { uz: 'Boshqa tranzaksiya mavjud', ru: 'Другая транзакция существует', en: 'Another transaction exists' } } }
     }
     // Mavjud tranzaksiyani qaytarish
     return {
@@ -263,9 +279,10 @@ async function createTransaction(params) {
     return { error: { code: -31001, message: { uz: 'Noto\'g\'ri summa', ru: 'Неверная сумма', en: 'Invalid amount' } } }
   }
   
-  // Yangi tranzaksiya
+  // Yangi tranzaksiya yaratish
   payment.paymeTransactionId = transactionId
   payment.paymeCreateTime = time
+  payment.state = 'created' // State ni aniq belgilash
   await payment.save()
   
   return {

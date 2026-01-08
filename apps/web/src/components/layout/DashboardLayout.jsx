@@ -177,11 +177,10 @@ export default function DashboardLayout() {
             </button>
             <div className="flex items-center gap-2">
               <img src="/main_logo.jpg" alt="Avtojon" className="w-8 h-8 rounded-lg object-cover" />
-              <div className="flex items-baseline">
+              <div className="flex items-baseline gap-0">
                 <span className="font-bold text-gray-900">avto</span>
                 <span className="font-bold text-amber-500">JON</span>
               </div>
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             </div>
           </div>
         </div>
@@ -203,9 +202,8 @@ export default function DashboardLayout() {
             <div className={`flex items-center gap-3 transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
               <img src="/main_logo.jpg" alt="Avtojon" className="w-11 h-11 rounded-xl object-cover shadow-lg" />
               <div>
-                <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
+                <h1 className="text-lg font-bold text-white flex items-center gap-0">
                   <span>avto</span><span className="text-amber-400">JON</span>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 </h1>
                 <p className="text-[10px] text-slate-500">{user?.companyName || 'avtoJON'}</p>
               </div>
