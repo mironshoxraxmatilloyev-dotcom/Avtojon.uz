@@ -5,7 +5,7 @@ import { QuickStats } from './StatsCards'
 
 export function DemoBanner() {
   const navigate = useNavigate()
-  
+
   return (
     <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 sm:p-4 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div className="flex items-center gap-2 sm:gap-3">
@@ -40,11 +40,11 @@ export function HeroHeader({ user, stats }) {
     const date = new Date()
     const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
     const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
-    
+
     const dayName = days[date.getDay()]
     const day = date.getDate()
     const month = months[date.getMonth()]
-    
+
     return `${dayName}, ${day}-${month}`
   }
 

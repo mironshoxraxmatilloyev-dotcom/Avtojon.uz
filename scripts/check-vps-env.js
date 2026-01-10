@@ -1,4 +1,4 @@
-/**
+q/**
  * VPS dagi .env konfiguratsiyasini tekshirish
  */
 

@@ -17,7 +17,8 @@ export default function FlightExpensesModal({ show, flight, onClose, onAddExpens
   const [form, setForm] = useState({
     amount: '',
     type: 'other',
-    description: ''
+    description: '',
+    timing: 'during' // 'before', 'during', 'after'
   })
 
   if (!show) return null;
@@ -36,7 +37,7 @@ export default function FlightExpensesModal({ show, flight, onClose, onAddExpens
       }
 
       setExpenses([...expenses, newExpense])
-      setForm({ amount: '', type: 'other', description: '' })
+      setForm({ amount: '', type: 'other', description: '', timing: 'during' })
     }
 
     const handleRemove = (id) => {
@@ -47,30 +48,22 @@ export default function FlightExpensesModal({ show, flight, onClose, onAddExpens
       e.preventDefault()
 
       if (expenses.length === 0) {
-        alert('Kamida bitta xarajat qo\'shish kerak!')
+        alert('Kamita bitta xarajat qo\'shish kerak!')
         return
       }
 
-      // Har bir xarajatni alohida yuborish
-      const promises = expenses.map(exp =>
+      // Barcha xarajatlarni bir vaqtada yuborish
+      expenses.forEach(exp => {
         onSubmit({
-          amount: Number(exp.amount),
+          amount: exp.amount,
           type: exp.type,
-          description: exp.description,
-          timing: flight ? 'during' : 'before'
+          description: exp.description
         })
-      )
+      })
 
-      // Barcha xarajatlar qo'shilguncha kutish
-      Promise.all(promises)
-        .then(() => {
-          setExpenses([])
-          setForm({ amount: '', type: 'other', description: '' })
-          onClose()
-        })
-        .catch((error) => {
-          console.error('Xarajat qo\'shishda xatolik:', error)
-        })
+      setExpenses([])
+      setForm({ amount: '', type: 'other', description: '', timing: 'during' })
+      onClose()
     }
 
     const getTotal = () => {
@@ -85,10 +78,7 @@ export default function FlightExpensesModal({ show, flight, onClose, onAddExpens
             <div>
               <h2 className="text-lg font-bold text-slate-900">Xarajat qo'shish</h2>
               <p className="text-xs text-slate-500 mt-1">
-                {flight
-                  ? `${flight.name || 'Faol marshrut'} (reys davomida)`
-                  : `${driver?.fullName || 'Haydovchi'} (reys boshlanishidan oldin)`
-                }
+                {flight ? `${flight.name || 'Faol marshrut'} (reys davomida)` : `${driver?.fullName || 'Haydovchi'} (reys boshlanmaganda)`}
               </p>
             </div>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -112,6 +102,21 @@ export default function FlightExpensesModal({ show, flight, onClose, onAddExpens
                   {Object.entries(EXPENSE_CATEGORIES).map(([key, cat]) => (
                     <option key={key} value={key}>{cat.icon} {cat.label}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Vaqti
+                </label>
+                <select
+                  value={form.timing}
+                  onChange={(e) => setForm({ ...form, timing: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+                >
+                  <option value="before">📍 Reys boshlanishidan oldin</option>
+                  <option value="during">🚗 Reys davomida</option>
+                  <option value="after">🏁 Reys tugagandan keyin</option>
                 </select>
               </div>
 

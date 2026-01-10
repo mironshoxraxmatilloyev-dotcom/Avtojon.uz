@@ -123,6 +123,17 @@ const legSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // USD da to'lov (xalqaro reyslar uchun)
+  paymentUSD: {
+    type: Number,
+    default: 0,
+    min: [0, 'USD to\'lov salbiy bo\'lishi mumkin emas']
+  },
+  // USD da firma xarajati (xalqaro reyslar uchun)
+  transferFeeAmountUSD: {
+    type: Number,
+    default: 0
+  },
   givenBudget: {
     type: Number,
     default: 0,
@@ -243,6 +254,13 @@ const expenseSchema = new mongoose.Schema({
   // Qaysi buyurtmaga tegishli
   legId: { type: mongoose.Schema.Types.ObjectId, default: null },
   legIndex: { type: Number, default: null },
+
+  // Kim qo'shgani
+  addedBy: {
+    type: String,
+    enum: ['businessman', 'driver', 'voice', 'system'],
+    default: 'businessman'
+  },
 
   date: { type: Date, default: Date.now }
 }, { _id: true });
@@ -390,6 +408,7 @@ const flightSchema = new mongoose.Schema({
   driverProfitAmountUSD: { type: Number, default: 0 }, // Shofyor ulushi USD da
   businessProfitUSD: { type: Number, default: 0 }, // Biznesmen foydasi USD da
   driverOwesUSD: { type: Number, default: 0 }, // Shofyor beradi USD da
+  totalPeritsenaFeeUSD: { type: Number, default: 0 }, // Peritsena firma xarajatlari USD da
   exchangeRateAtClose: { type: Number, default: 0 }, // Yopilgandagi kurs (1 USD = ? so'm)
 
   // Eski maydonlar (backward compatibility)
@@ -428,19 +447,8 @@ const flightSchema = new mongoose.Schema({
   driverPayments: [{
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
-    note: { type: String, default: '' },
-    isPeritsena: { type: Boolean, default: false }, // Peritsena to'lovi ekanligi
-    companyFeePercent: { type: Number, default: 10 }, // Firma ulushi %
-    companyFeeAmount: { type: Number, default: 0 },  // Firma uchun ajratilgan summa
-    driverAmount: { type: Number, default: 0 }       // Haydovchiga tegishli summa
+    note: { type: String, default: '' }
   }],
-
-  // Peritsena to'lovlari bo'yicha statistikalar
-  peritsenaStats: {
-    totalAmount: { type: Number, default: 0 },       // Jami Peritsena to'lovlari
-    companyEarnings: { type: Number, default: 0 },   // Firma daromadi
-    driverEarnings: { type: Number, default: 0 }     // Haydovchi daromadi
-  },
 
   startedAt: { type: Date, default: Date.now },
   completedAt: Date,
@@ -609,10 +617,11 @@ flightSchema.pre('save', function (next) {
   // 1. Jami kirim = Mijozdan olingan + Yo'l uchun berilgan
   this.totalIncome = this.totalPayment + this.totalGivenBudget;
 
-  // 2. Sof foyda = Jami kirim - Jami xarajatlar
+  // 2. Sof foyda = Jami kirim - Jami xarajatlar - Peritsena firma xarajatlari
+  // MUHIM: Peritsena dan firma xarajatlari ayiriladi
   // MUHIM: Reys boshlanmaganda (active) sof foyda zarar bo'lsa manfiy ko'rsatiladi
   // Reys davomida pul olinsa zarar yopiladi va foyda ortadi
-  this.netProfit = this.totalIncome - this.totalExpenses;
+  this.netProfit = this.totalIncome - this.totalExpenses - this.totalPeritsenaFee;
 
   // 3. Shofyor ulushi va biznesmen foydasi
   // MUHIM: Faol reysda shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi
@@ -622,21 +631,37 @@ flightSchema.pre('save', function (next) {
     this.businessProfit = this.netProfit; // Sof foyda = netProfit (zarar bo'lsa manfiy)
     this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
   } else if (this.status === 'completed') {
-    // Yopilgan mashrutlar uchun - shofyor ulushini hisoblash
-    // MUHIM: Shofyor ulushi JAMI KIRIMDAN hisoblanadi (reysdan tusgan umumiy foydadan)
-    // Basis = Jami kirim (reys davomida olingan pul)
-    const basis = this.totalIncome;
+    // YANGI LOGIKA: Haydovchi ulushi barcha to'lovlardan, berishi kerak faqat naqd to'lovlardan
+    
+    // Naqd to'lovlar (haydovchi qo'liga tushadigan)
+    const cashPayments = this.legs.reduce((sum, leg) => {
+      if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+        return sum + (leg.payment || 0);
+      }
+      return sum;
+    }, 0);
+    
+    // 1. Haydovchi ulushi - BARCHA to'lovlardan hisoblanadi
+    const totalBasis = this.totalIncome;
     const percent = this.driverProfitPercent || 0;
-
-    // Agar foyda bo'lsa va foiz belgilangan bo'lsa
-    if (basis > 0 && percent > 0) {
-      this.driverProfitAmount = Math.round(basis * percent / 100);
+    
+    if (totalBasis > 0 && percent > 0) {
+      this.driverProfitAmount = Math.round(totalBasis * percent / 100);
     } else {
       this.driverProfitAmount = 0;
     }
-
+    
+    // 2. Haydovchi berishi kerak - faqat NAQD to'lovlardan
+    // Naqd kirim = naqd to'lovlar + yo'l uchun berilgan + avvalgi qoldiq
+    const cashIncome = cashPayments + this.totalGivenBudget + (this.previousBalance || 0);
+    const cashNetProfit = cashIncome - this.totalExpenses;
+    
+    // Haydovchi berishi kerak = naqd sof foyda - haydovchi ulushi
+    // Agar peritsena bo'lsa va naqd kam bo'lsa, 0 bo'lishi mumkin
+    this.driverOwes = Math.max(0, cashNetProfit - this.driverProfitAmount);
+    
+    // Biznesmen foydasi = sof foyda - haydovchi ulushi
     this.businessProfit = this.netProfit - this.driverProfitAmount;
-    this.driverOwes = this.businessProfit;
   }
 
   // Mashrut nomi
@@ -644,6 +669,68 @@ flightSchema.pre('save', function (next) {
     const firstCity = this.legs[0].fromCity;
     const lastCity = this.legs[this.legs.length - 1].toCity;
     this.name = `${firstCity} - ${lastCity}`;
+  }
+
+  // ============ XALQARO REYSLAR UCHUN USD HISOBLASH ============
+  if (this.flightType === 'international') {
+    // USD da jami to'lov
+    this.totalPaymentUSD = this.legs.reduce((sum, leg) => sum + (leg.paymentUSD || 0), 0);
+    
+    // USD da jami kirim
+    this.totalIncomeUSD = this.totalPaymentUSD + (this.totalGivenBudgetUSD || 0);
+    
+    // USD da peritsena firma xarajatlari
+    let totalPeritsenaFeeUSD = 0;
+    this.legs.forEach(leg => {
+      if (leg.paymentType === 'peritsena' && leg.transferFeePercent > 0 && leg.paymentUSD) {
+        const feeUSD = (leg.paymentUSD * leg.transferFeePercent / 100);
+        leg.transferFeeAmountUSD = Math.round(feeUSD * 100) / 100;
+        totalPeritsenaFeeUSD += leg.transferFeeAmountUSD;
+      } else {
+        leg.transferFeeAmountUSD = 0;
+      }
+    });
+    this.totalPeritsenaFeeUSD = Math.round(totalPeritsenaFeeUSD * 100) / 100;
+
+    // USD da sof foyda (peritsena xarajatlari ayirilgan)
+    this.netProfitUSD = this.totalIncomeUSD - this.totalExpensesUSD - this.totalPeritsenaFeeUSD;
+
+    // USD da shofyor ulushi va biznesmen foydasi
+    if (this.status === 'active') {
+      this.driverProfitAmountUSD = 0;
+      this.businessProfitUSD = this.netProfitUSD;
+      this.driverOwesUSD = 0;
+    } else if (this.status === 'completed') {
+      // YANGI LOGIKA USD da: Haydovchi ulushi barcha to'lovlardan, berishi kerak faqat naqd to'lovlardan
+      
+      // Naqd to'lovlar USD da
+      const cashPaymentsUSD = this.legs.reduce((sum, leg) => {
+        if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+          return sum + (leg.paymentUSD || 0);
+        }
+        return sum;
+      }, 0);
+      
+      // 1. Haydovchi ulushi - BARCHA to'lovlardan USD da
+      const totalBasisUSD = this.totalIncomeUSD;
+      const percent = this.driverProfitPercent || 0;
+      
+      if (totalBasisUSD > 0 && percent > 0) {
+        this.driverProfitAmountUSD = Math.round(totalBasisUSD * percent / 100 * 100) / 100;
+      } else {
+        this.driverProfitAmountUSD = 0;
+      }
+      
+      // 2. Haydovchi berishi kerak - faqat NAQD to'lovlardan USD da
+      const cashIncomeUSD = cashPaymentsUSD + (this.totalGivenBudgetUSD || 0) + ((this.previousBalance || 0) / 12800);
+      const cashNetProfitUSD = cashIncomeUSD - this.totalExpensesUSD;
+      
+      // Haydovchi berishi kerak USD da = naqd sof foyda - haydovchi ulushi
+      this.driverOwesUSD = Math.max(0, Math.round((cashNetProfitUSD - this.driverProfitAmountUSD) * 100) / 100);
+      
+      // Biznesmen foydasi USD da
+      this.businessProfitUSD = Math.round((this.netProfitUSD - this.driverProfitAmountUSD) * 100) / 100;
+    }
   }
 
   next();

@@ -65,7 +65,7 @@ AVTOJON
 
 | Mashinalar soni | Narx (mashina/oy) | Jami oylik |
 |-----------------|-------------------|------------|
-| 1 ta | 20,000 so'm | 20,000 so'm |
+| 1 ta | 20,000 so'm | 20,000 so'm |  
 | 3 ta | 20,000 so'm | 60,000 so'm |
 | 5 ta | 20,000 so'm | 100,000 so'm |
 | 10 ta | 20,000 so'm | 200,000 so'm |
