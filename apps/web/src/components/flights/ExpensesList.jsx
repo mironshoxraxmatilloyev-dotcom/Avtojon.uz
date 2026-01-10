@@ -77,6 +77,14 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900 text-sm">{type.label}</span>
+              {/* Katta xarajatlar uchun Biznesmen belgisi */}
+              {(expense.amount >= 1000000 || expense.amountInUSD >= 100) && (
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded font-semibold">Biznesmen</span>
+              )}
+              {/* Reys boshlanganda qo'shilgan xarajatlar uchun zarar belgisi */}
+              {expense.timing === 'before' && (
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">Zarar</span>
+              )}
               <span className="font-bold text-red-600 text-sm">-{formatMoney(expense.amount)}</span>
             </div>
             
@@ -90,19 +98,13 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
               </div>
             )}
             
-            {/* Kim qo'shgani ma'lumoti */}
+            {/* Tasdiqlash ma'lumotlari */}
             <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
-              👤 {
-                expense.addedBy === 'voice' ? 'Ovoz orqali' : 
-                expense.addedBy === 'driver' ? 'Haydovchi tomonidan' : 
-                expense.addedBy === 'system' ? 'Tizim tomonidan' :
-                'Biznesmen tomonidan'
-              } qo'shilgan
               {expense.confirmedByDriver && (
-                <span className="text-emerald-600 ml-2">✅ Tasdiqlangan</span>
+                <span className="text-emerald-600">✅ Tasdiqlangan</span>
               )}
               {!expense.confirmedByDriver && (
-                <span className="text-amber-600 ml-2">⏳ Kutilmoqda</span>
+                <span className="text-amber-600">⏳ Kutilmoqda</span>
               )}
             </div>
             

@@ -18,26 +18,27 @@ html, body, #root {
 
 /* 🔥 iOS Safari - fixed element scroll fix */
 html {
-  overflow: hidden;
+  overflow-x: hidden;
   height: 100%;
 }
 
 body {
-  overflow: hidden;
+  overflow-x: hidden;
   height: 100%;
-  position: fixed;
   width: 100%;
 }
 
-/* Landing page scroll qilsin, boshqalar uchun overflow hidden */
-body:has(.landing-page) {
+/* Landing page scroll qilsin */
+body:has(.landing-page),
+body.landing-scroll {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   position: static !important;
   height: auto !important;
 }
 
-body:not(:has(.landing-page)) {
+/* Boshqa sahifalar uchun overflow hidden */
+body:not(:has(.landing-page)):not(.landing-scroll) {
   overflow: hidden;
   position: fixed;
   width: 100%;

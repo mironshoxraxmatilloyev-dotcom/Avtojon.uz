@@ -150,7 +150,17 @@ export default function ActiveFlightCard({ flight, onConfirmExpense, t }) {
                     <View style={styles.expenseLeft}>
                       <Icon name={info.icon} size={16} color={info.color} />
                       <View style={styles.expenseInfo}>
-                        <Text style={styles.expenseLabel}>{info.label}</Text>
+                        <View style={styles.expenseHeader}>
+                          <Text style={styles.expenseLabel}>{info.label}</Text>
+                          {/* Katta xarajatlar uchun Biznesmen belgisi */}
+                          {(exp.amount >= 1000000 || exp.amountInUSD >= 100) && (
+                            <Text style={styles.businessmanBadge}>Biznesmen</Text>
+                          )}
+                          {/* Reys boshlanganda qo'shilgan xarajatlar uchun zarar belgisi */}
+                          {exp.timing === 'before' && (
+                            <Text style={styles.damageBadge}>Zarar</Text>
+                          )}
+                        </View>
                         {exp.description && (
                           <Text style={styles.expenseDesc} numberOfLines={1}>
                             {exp.description}
@@ -463,10 +473,34 @@ const styles = StyleSheet.create({
   expenseInfo: {
     flex: 1,
   },
+  expenseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
   expenseLabel: {
     color: COLORS.slate700,
     fontSize: 12,
     fontWeight: '500',
+  },
+  businessmanBadge: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: COLORS.red600,
+    backgroundColor: COLORS.red50,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  damageBadge: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: COLORS.red600,
+    backgroundColor: COLORS.red50,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
   },
   expenseDesc: {
     color: COLORS.slate400,
