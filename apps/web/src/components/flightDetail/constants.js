@@ -144,3 +144,52 @@ export const isHeavyExpense = (type) => getExpenseClass(type) === 'heavy'
 
 // Pul formatlash
 export const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
+
+// Sana formatlash - timezone muammolarini hal qilish uchun
+export const formatDateTime = (date) => {
+  if (!date) return '-'
+  
+  // Date obyektini yaratish - timezone offset muammosini hal qilish
+  let d
+  if (typeof date === 'string') {
+    // ISO string bo'lsa, to'g'ridan-to'g'ri Date obyektiga aylantirish
+    d = new Date(date)
+  } else {
+    d = new Date(date)
+  }
+  
+  // Agar sana noto'g'ri bo'lsa
+  if (isNaN(d.getTime())) return '-'
+  
+  const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
+
+  const day = d.getDate()
+  const month = months[d.getMonth()]
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+
+  return `${day}-${month}, ${year} • ${hours}:${minutes}`
+}
+
+// Faqat sana formatlash (vaqtsiz)
+export const formatDate = (date) => {
+  if (!date) return '-'
+  
+  let d
+  if (typeof date === 'string') {
+    d = new Date(date)
+  } else {
+    d = new Date(date)
+  }
+  
+  if (isNaN(d.getTime())) return '-'
+  
+  const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
+  
+  const day = d.getDate()
+  const month = months[d.getMonth()]
+  const year = d.getFullYear()
+  
+  return `${day}-${month}, ${year}`
+}

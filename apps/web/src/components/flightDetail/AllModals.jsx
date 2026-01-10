@@ -10,6 +10,21 @@ import AddressAutocomplete from '../AddressAutocomplete'
 import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, FILTER_TYPES, formatMoney } from './constants'
 import VoiceRecorder from '../VoiceRecorder'
 
+// Sana input uchun format (timezone muammosini hal qilish)
+const formatDateForInput = (date) => {
+  if (!date) return new Date().toISOString().split('T')[0]
+  
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0]
+  
+  // Local timezone da sana olish (UTC offset muammosini hal qilish)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}`
+}
+
 // Icon mapping
 const ICONS = {
   Fuel, Utensils, Wrench, Car, Navigation, FileText, Package,
@@ -218,7 +233,7 @@ export const ExpenseModal = memo(function ExpenseModal({ flight, selectedLeg, ed
     odometer: editingExpense?.odometer?.toString() || '',
     tireNumber: editingExpense?.tireNumber?.toString() || '',
     timing: editingExpense?.timing || 'during', // 'before', 'during', 'after'
-    date: editingExpense?.date ? new Date(editingExpense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+    date: editingExpense?.date ? formatDateForInput(editingExpense.date) : formatDateForInput(new Date())
   }))
 
   const [rates, setRates] = useState(null)

@@ -1,21 +1,5 @@
 import { AlertCircle, Pencil, Trash2, Clock, Fuel, Utensils, Wrench, Car, Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet, Filter, MapPin } from 'lucide-react'
-import { EXPENSE_CATEGORIES } from './constants'
-
-const formatDateTime = (date) => {
-    if (!date) return '-'
-    const d = new Date(date)
-    const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
-
-    const day = d.getDate()
-    const month = months[d.getMonth()]
-    const year = d.getFullYear()
-    const hours = String(d.getHours()).padStart(2, '0')
-    const minutes = String(d.getMinutes()).padStart(2, '0')
-
-    return `${day}-${month}, ${year} • ${hours}:${minutes}`
-}
-
-const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
+import { EXPENSE_CATEGORIES, formatMoney, formatDateTime } from './constants'
 
 export default function PostExpensesCard({ expenses, onEdit, onDelete, onAdd }) {
     // Agar xarajatlar bo'lmasa ham, onAdd bor bo'lsa ko'rsatamiz (bo'sh holatda)

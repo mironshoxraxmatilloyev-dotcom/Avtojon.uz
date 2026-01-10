@@ -32,9 +32,11 @@ async function addDriversToAzizbek() {
         phone: '998901111111',
         licenseNumber: 'AA1234567',
         paymentType: 'per_trip',
-        perTripRate: 150000,
+        perTripRate: 15, // Foiz sifatida
         businessman: azizbek._id,
-        isActive: true
+        isActive: true,
+        username: 'sardor_driver',
+        password: 'test123'
       },
       {
         fullName: 'Bobur Toshmatov',
@@ -43,16 +45,20 @@ async function addDriversToAzizbek() {
         paymentType: 'salary',
         baseSalary: 3000000,
         businessman: azizbek._id,
-        isActive: true
+        isActive: true,
+        username: 'bobur_driver',
+        password: 'test123'
       },
       {
         fullName: 'Jasur Rahimov',
         phone: '998903333333',
         licenseNumber: 'CC3456789', 
         paymentType: 'per_trip',
-        perTripRate: 200000,
+        perTripRate: 20, // Foiz sifatida
         businessman: azizbek._id,
-        isActive: true
+        isActive: true,
+        username: 'jasur_driver',
+        password: 'test123'
       }
     ]
 

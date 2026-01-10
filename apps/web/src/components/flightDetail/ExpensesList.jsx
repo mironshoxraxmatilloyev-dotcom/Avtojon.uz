@@ -1,5 +1,5 @@
 import { Wallet, Plus, Pencil, Trash2, Fuel, TrendingUp, TrendingDown, Minus, Package } from 'lucide-react'
-import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney } from './constants'
+import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney, formatDate, formatDateTime } from './constants'
 
 export default function ExpensesList({
   flight,
@@ -66,6 +66,7 @@ export default function ExpensesList({
             <FuelConsumptionStats flight={flight} fuelExpenses={fuelExpenses} />
           )}
 
+          {/* Leg ga tegishli xarajatlar */}
           {flight.legs?.map((leg, legIdx) => {
             const legExpenses = expenses.filter(exp => exp.legIndex === legIdx || (exp.legId && exp.legId.toString() === leg._id?.toString()))
             if (legExpenses.length === 0) return null
@@ -79,6 +80,36 @@ export default function ExpensesList({
                 onAddToLeg={() => onAddExpenseToLeg(leg, legIdx)} flight={flight} />
             )
           })}
+
+          {/* Umumiy xarajatlar (hech qaysi leg ga tegishli bo'lmagan) */}
+          {(() => {
+            const generalExpenses = expenses.filter(exp => 
+              exp.legIndex === undefined && 
+              exp.legIndex !== 0 && 
+              (!exp.legId || !flight.legs?.some(leg => leg._id?.toString() === exp.legId?.toString()))
+            )
+            
+            if (generalExpenses.length > 0) {
+              const generalTotal = generalExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
+              const generalTotalUSD = generalExpenses.reduce((sum, exp) => sum + (exp.amountInUSD || 0), 0)
+              
+              return (
+                <GeneralExpenseGroup 
+                  expenses={generalExpenses}
+                  total={generalTotal} 
+                  totalUSD={generalTotalUSD} 
+                  isInternational={isInternational}
+                  isActive={isActive} 
+                  onEdit={onEditExpense} 
+                  onDelete={onDeleteExpense}
+                  onAdd={onAddExpense}
+                  flight={flight} 
+                />
+              )
+            }
+            return null
+          })()}
+
           <ExpenseSummary expenses={expenses} isInternational={isInternational} />
         </div>
       ) : (
@@ -236,6 +267,38 @@ function FuelConsumptionStats({ flight, fuelExpenses }) {
   )
 }
 
+function GeneralExpenseGroup({ expenses, total, totalUSD, isInternational, isActive, onEdit, onDelete, onAdd, flight }) {
+  const formatUSD = (amount) => `${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+        <h4 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+          <Package size={16} className="text-gray-500" />
+          Umumiy xarajatlar
+        </h4>
+        {isInternational ? (
+          <span className="text-sm font-bold text-red-600">-${formatUSD(totalUSD)}</span>
+        ) : (
+          <span className="text-sm font-bold text-red-600">-{formatMoney(total)}</span>
+        )}
+      </div>
+      <div className="divide-y divide-gray-100">
+        {expenses.map((expense) => (
+          <ExpenseItem key={expense._id} expense={expense} isActive={isActive} onEdit={onEdit} onDelete={onDelete} isInternational={isInternational} flight={flight} allExpenses={expenses} />
+        ))}
+      </div>
+      {isActive && (
+        <div className="px-4 py-2 bg-gray-50 border-t">
+          <button onClick={onAdd} className="w-full py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg flex items-center justify-center gap-1">
+            <Plus size={12} /> Xarajat qo'shish
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LegExpenseGroup({ leg, legIdx, expenses, total, totalUSD, isInternational, isActive, onEdit, onDelete, onAddToLeg, flight }) {
   const formatUSD = (amount) => `${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -325,16 +388,76 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
               <span className="text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">⏳ Kutilmoqda</span>
             )}
           </p>
-          <p className="text-xs text-gray-400 truncate">{expense.description || new Date(expense.date).toLocaleDateString('uz-UZ')}</p>
+          
+          {/* Asosiy ma'lumotlar */}
+          <div className="text-xs text-gray-500 space-y-0.5 mt-1">
+            {/* Sana va vaqt */}
+            <div className="flex items-center gap-2">
+              <span>📅 {formatDateTime(expense.date)}</span>
+              {expense.timing && (
+                <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                  {expense.timing === 'before' ? 'Reys oldidan' : expense.timing === 'after' ? 'Reys keyin' : 'Reys davomida'}
+                </span>
+              )}
+            </div>
+            
+            {/* Tavsif */}
+            {expense.description && (
+              <div>💬 {expense.description}</div>
+            )}
+            
+            {/* Yoqilg'i uchun qo'shimcha ma'lumotlar */}
+            {isFuel && (
+              <div className="space-y-0.5">
+                {expense.stationName && <div>⛽ {expense.stationName}</div>}
+                {expense.odometer && <div>📍 Spidometr: {expense.odometer.toLocaleString()} km</div>}
+                {expense.pricePerUnit && <div>💰 Narx: {formatMoney(expense.pricePerUnit)} / {fuelUnit}</div>}
+                {expense.location?.name && <div>📍 {expense.location.name}</div>}
+              </div>
+            )}
+            
+            {/* Moy almashtirish uchun */}
+            {expense.type === 'oil' && expense.odometer && (
+              <div>📍 Spidometr: {expense.odometer.toLocaleString()} km</div>
+            )}
+            
+            {/* Shina uchun */}
+            {expense.type === 'tire' && (
+              <div className="space-y-0.5">
+                {expense.odometer && <div>📍 Spidometr: {expense.odometer.toLocaleString()} km</div>}
+                {expense.tireNumber && <div>🛞 Shina raqami: {expense.tireNumber}</div>}
+                {expense.tireCount && <div>🔢 Shinalar soni: {expense.tireCount}</div>}
+              </div>
+            )}
+            
+            {/* Chegara xarajatlari uchun */}
+            {expense.borderInfo && (
+              <div>🌍 {expense.borderInfo.fromCountry} → {expense.borderInfo.toCountry}</div>
+            )}
+            
+            {/* Valyuta kursi */}
+            {expense.currency && expense.currency !== 'UZS' && expense.exchangeRate && (
+              <div>💱 Kurs: 1 {expense.currency} = {expense.exchangeRate.toLocaleString()} UZS</div>
+            )}
+          </div>
         </div>
+        
+        {/* Summa */}
         {isInternational && expense.amountInUSD ? (
           <div className="text-right flex-shrink-0">
-            <p className="text-sm font-bold text-red-600">-{formatUSD(expense.amountInUSD)}</p>
+            <p className="text-sm font-bold text-red-600">-${formatUSD(expense.amountInUSD)}</p>
             <p className="text-xs text-gray-400">{currencySymbol}{expense.amount?.toLocaleString()}</p>
           </div>
         ) : (
-          <p className="text-sm font-bold text-red-600 flex-shrink-0">-{formatMoney(expense.amount)}</p>
+          <div className="text-right flex-shrink-0">
+            <p className="text-sm font-bold text-red-600">-{formatMoney(expense.amountInUZS || expense.amount)}</p>
+            {expense.currency && expense.currency !== 'UZS' && (
+              <p className="text-xs text-gray-400">{currencySymbol}{expense.amount?.toLocaleString()}</p>
+            )}
+          </div>
         )}
+        
+        {/* Tugmalar */}
         {isActive && (
           <div className="flex gap-0.5 flex-shrink-0">
             <button onClick={() => onEdit(expense)} className="p-1 text-gray-400 hover:text-blue-500 rounded"><Pencil size={12} /></button>
@@ -345,16 +468,21 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
 
       {/* Yoqilg'i sarflanishi */}
       {fuelStats && fuelStats.distance > 0 && (
-        <div className="mt-2 ml-11 flex items-center gap-3 text-xs">
-          <span className="text-gray-400">
-            📍 {expense.odometer?.toLocaleString()} km
-            <span className="text-emerald-600 ml-1">(+{fuelStats.distance.toLocaleString()} km)</span>
-          </span>
-          {fuelStats.consumption > 0 && (
-            <span className={`font-semibold px-2 py-0.5 rounded ${fuelStats.consumption >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-              {fuelStats.consumption} km/{fuelUnit}
-            </span>
-          )}
+        <div className="mt-2 ml-11 p-2 bg-blue-50 rounded-lg">
+          <div className="text-xs text-blue-700 space-y-1">
+            <div className="font-medium">⛽ Yoqilg'i sarflanishi:</div>
+            <div className="flex items-center gap-4">
+              <span>📏 Masofa: {fuelStats.distance.toLocaleString()} km</span>
+              {fuelStats.consumption > 0 && (
+                <span>📊 Sarflanish: {fuelStats.consumption} km/{fuelUnit}</span>
+              )}
+            </div>
+            {fuelStats.prevOdometer && (
+              <div className="text-xs text-gray-500">
+                {fuelStats.isFirst ? 'Mashrut boshidan' : 'Oldingi to\'ldirishdan'}: {fuelStats.prevOdometer.toLocaleString()} km
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

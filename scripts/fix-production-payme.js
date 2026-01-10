@@ -1,0 +1,41 @@
+/**
+ * Production Payme konfiguratsiyasini tuzatish
+ */
+
+console.log('🔧 Production Payme konfiguratsiyasini tuzatish')
+console.log('')
+console.log('VPS da quyidagi amallarni bajaring:')
+console.log('')
+console.log('1. VPS ga ulanish:')
+console.log('   ssh root@avtojon.uz')
+console.log('')
+console.log('2. .env faylini tahrirlash:')
+console.log('   cd /var/www/avtojon/apps/api')
+console.log('   nano .env')
+console.log('')
+console.log('3. Quyidagi qatorlarni tekshiring/yangilang:')
+console.log('   PAYME_SANDBOX=true')
+console.log('   PAYME_MERCHANT_ID=695371d43fdb81100b9bca16')
+console.log('   PAYME_KEY=Tm3HWQH5u8JdubSPV@owRdRcv@miUeEi2IUy')
+console.log('   PAYME_TEST_KEY=s')
+console.log('   FRONTEND_URL=https://avtojon.uz')
+console.log('')
+console.log('4. API ni qayta ishga tushirish:')
+console.log('   pm2 restart avtojon-api')
+console.log('')
+console.log('5. Loglarni tekshirish:')
+console.log('   pm2 logs avtojon-api --lines 20')
+console.log('')
+console.log('6. Test qilish:')
+console.log('   curl https://avtojon.uz/api/health')
+console.log('')
+console.log('Keyin yana test qiling!')
+
+// Test uchun to'g'ri auth header
+const testKey = 's'
+const auth = Buffer.from(`Paycom:${testKey}`).toString('base64')
+console.log('')
+console.log('🔑 Test uchun auth header:')
+console.log(`   Authorization: Basic ${auth}`)
+console.log('')
+console.log('Bu header Payme sandbox da ishlatiladi.')

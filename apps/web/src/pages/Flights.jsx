@@ -213,6 +213,20 @@ export default function Flights() {
 
   const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
   const formatDate = (date) => date ? new Date(date).toLocaleDateString('uz-UZ') : '-'
+  const formatDateTime = (date) => {
+    if (!date) return '-'
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return '-'
+    
+    const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
+    const day = d.getDate()
+    const month = months[d.getMonth()]
+    const year = d.getFullYear()
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    
+    return `${day}-${month}, ${year} • ${hours}:${minutes}`
+  }
 
   // Yangi buyurtma qo'shish
   const handleAddLeg = (e) => {
@@ -787,27 +801,73 @@ export default function Flights() {
                   </p>
                   <div className="space-y-2">
                     {flight.expenses?.map((exp) => (
-                      <div key={exp._id} className="bg-white p-3 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {(() => {
-                            const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
-                            const IconComponent = expType?.Icon || Package
-                            return <IconComponent size={20} className={expType?.color || 'text-gray-500'} />
-                          })()}
-                          <div>
-                            <p className="font-medium">{EXPENSE_TYPES.find(t => t.value === exp.type)?.label}</p>
-                            {exp.description && <p className="text-xs text-gray-400">{exp.description}</p>}
+                      <div key={exp._id} className="bg-white p-3 rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            {(() => {
+                              const expType = EXPENSE_TYPES.find(t => t.value === exp.type)
+                              const IconComponent = expType?.Icon || Package
+                              return <IconComponent size={20} className={expType?.color || 'text-gray-500'} />
+                            })()}
+                            <div>
+                              <p className="font-medium">{EXPENSE_TYPES.find(t => t.value === exp.type)?.label}</p>
+                              {exp.description && <p className="text-xs text-gray-400">{exp.description}</p>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-red-600">-{formatMoney(exp.amount)}</p>
+                            {flight.status === 'active' && (
+                              <button
+                                onClick={() => handleDeleteExpense(flight._id, exp._id)}
+                                className="p-1 text-gray-400 hover:text-red-500"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-red-600">-{formatMoney(exp.amount)}</p>
-                          {flight.status === 'active' && (
-                            <button
-                              onClick={() => handleDeleteExpense(flight._id, exp._id)}
-                              className="p-1 text-gray-400 hover:text-red-500"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                        
+                        {/* Qo'shimcha ma'lumotlar - doimo ko'rinadigan */}
+                        <div className="text-xs text-gray-500 space-y-1 ml-8 mt-2 p-2 bg-gray-50 rounded-lg">
+                          {/* Debug ma'lumot */}
+                          <div className="text-red-500 font-bold">DEBUG: Xarajat ID: {exp._id}</div>
+                          
+                          {/* Sana */}
+                          <div className="flex items-center gap-2">
+                            <span>📅 {exp.date ? new Date(exp.date).toLocaleDateString('uz-UZ') + ' ' + new Date(exp.date).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : 'Sana ko\'rsatilmagan'}</span>
+                            {exp.timing && (
+                              <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                                {exp.timing === 'before' ? 'Reys oldidan' : exp.timing === 'after' ? 'Reys keyin' : 'Reys davomida'}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Yoqilg'i uchun qo'shimcha ma'lumotlar */}
+                          {exp.type?.startsWith('fuel_') && (
+                            <div className="space-y-0.5">
+                              {exp.stationName && <div>⛽ {exp.stationName}</div>}
+                              {exp.odometer && <div>📍 Spidometr: {exp.odometer.toLocaleString()} km</div>}
+                              {exp.quantity && <div>🛢️ Miqdor: {exp.quantity} {(exp.type === 'fuel_metan' || exp.type === 'fuel_propan') ? 'kub' : 'litr'}</div>}
+                              {exp.pricePerUnit && <div>💰 Narx: {formatMoney(exp.pricePerUnit)} / {(exp.type === 'fuel_metan' || exp.type === 'fuel_propan') ? 'kub' : 'litr'}</div>}
+                            </div>
+                          )}
+                          
+                          {/* Moy almashtirish uchun */}
+                          {exp.type === 'oil' && exp.odometer && (
+                            <div>📍 Spidometr: {exp.odometer.toLocaleString()} km</div>
+                          )}
+                          
+                          {/* Shina uchun */}
+                          {exp.type === 'tire' && (
+                            <div className="space-y-0.5">
+                              {exp.odometer && <div>📍 Spidometr: {exp.odometer.toLocaleString()} km</div>}
+                              {exp.tireNumber && <div>🛞 Shina raqami: {exp.tireNumber}</div>}
+                            </div>
+                          )}
+                          
+                          {/* Valyuta kursi */}
+                          {exp.currency && exp.currency !== 'UZS' && exp.exchangeRate && (
+                            <div>💱 Kurs: 1 {exp.currency} = {exp.exchangeRate.toLocaleString()} UZS</div>
                           )}
                         </div>
                       </div>

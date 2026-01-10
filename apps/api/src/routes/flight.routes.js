@@ -9,6 +9,9 @@ const { protect, businessOnly } = require('../middleware/auth');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { validateObjectId } = require('../utils/validators');
 
+// Katta xarajat turlari (shofyor oyligiga ta'sir qilmaydi)
+const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
+
 // ObjectId validatsiya funksiyasi
 const isValidObjectId = (id) => {
   if (!id) return false;
@@ -486,7 +489,9 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       // Xarajat turi (yengil/katta)
       expenseClass,
       // Xarajat qo'shilgan vaqti: 'before' = reys boshlanishidan oldin, 'during' = davomida, 'after' = tugagandan keyin
-      timing
+      timing,
+      // Sana
+      date
     } = req.body;
 
     const flight = await Flight.findById(req.params.id);
@@ -569,7 +574,7 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       description,
       legIndex: actualLegIndex,
       legId: actualLegId,
-      date: new Date()
+      date: date ? new Date(date) : new Date()
     };
 
     // Chegara xarajatlari uchun
@@ -1880,6 +1885,76 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
         status: flight.driverPaymentStatus
       }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Xarajatni o'chirish
+router.delete('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) => {
+  try {
+    const flight = await Flight.findById(req.params.id);
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Mashrut topilmadi' });
+    }
+
+    const expenseIndex = flight.expenses.findIndex(e => e._id.toString() === req.params.expenseId);
+    if (expenseIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Xarajat topilmadi' });
+    }
+
+    // O'chiriladigan xarajat ma'lumotlarini saqlash
+    const deletedExpense = flight.expenses[expenseIndex];
+    const deletedAmountInUZS = deletedExpense.amountInUZS || deletedExpense.amount || 0;
+    const deletedTiming = deletedExpense.timing || 'during';
+    const deletedType = deletedExpense.type;
+
+    // Xarajatni o'chirish
+    flight.expenses.splice(expenseIndex, 1);
+    await flight.save();
+
+    // 🚀 MUHIM: Driver.expenses dan ham o'chirish (faqat yengil xarajatlar)
+    const HEAVY_EXPENSE_TYPES = ['repair_major', 'tire', 'accident', 'insurance', 'oil'];
+    const isHeavyExpense = HEAVY_EXPENSE_TYPES.includes(deletedType) || deletedExpense.expenseClass === 'heavy';
+
+    if (!isHeavyExpense) {
+      const driver = await Driver.findById(flight.driver);
+      if (driver) {
+        // Driver.expenses dan o'chirish
+        driver.expenses = driver.expenses.filter(exp =>
+          !(exp.flightId && exp.flightId.toString() === flight._id.toString() &&
+            exp.date.getTime() === deletedExpense.date.getTime() &&
+            exp.type === deletedType)
+        );
+
+        // Xarajat vaqti bo'yicha jami xarajatlarni yangilash
+        if (deletedTiming === 'before') {
+          driver.totalExpensesBefore = Math.max(0, (driver.totalExpensesBefore || 0) - deletedAmountInUZS);
+        } else if (deletedTiming === 'after') {
+          driver.totalExpensesAfter = Math.max(0, (driver.totalExpensesAfter || 0) - deletedAmountInUZS);
+        } else {
+          driver.totalExpensesDuring = Math.max(0, (driver.totalExpensesDuring || 0) - deletedAmountInUZS);
+        }
+
+        await driver.save();
+      }
+    }
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar - xarajat o'chirildi
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: 'Xarajat o\'chirildi'
+      });
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+    }
+
+    res.json({ success: true, data: populatedFlight });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

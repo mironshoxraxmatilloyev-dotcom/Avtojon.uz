@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Fuel, MapPin, CircleDot, Circle, Droplet, Utensils, Wrench, Car, FileText, Package, Wallet } from 'lucide-react'
+import { formatMoney, formatDate, formatDateTime } from './constants'
 
 // Xarajat turlari - Lucide iconlar bilan
 const EXPENSE_TYPES = {
@@ -13,8 +14,6 @@ const EXPENSE_TYPES = {
   fine: { Icon: FileText, color: 'from-purple-500 to-violet-500', iconColor: 'text-purple-500', label: 'Jarima' },
   other: { Icon: Package, color: 'from-gray-500 to-slate-500', iconColor: 'text-gray-500', label: 'Boshqa' }
 }
-
-const formatMoney = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0'
 
 export default function LegExpenses({ 
   legs, 
@@ -138,40 +137,93 @@ export default function LegExpenses({
                       const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
                       
                       return (
-                        <div key={expense._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50">
-                          <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center flex-shrink-0`}>
-                            <expType.Icon size={18} className="text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">
-                              {expType.label}
-                              {isFuel && expense.quantity && (
-                                <span className="text-gray-500 font-normal ml-1">• {expense.quantity} {fuelUnit}</span>
-                              )}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate">
-                              {expense.description || expense.stationName || new Date(expense.date).toLocaleDateString('uz-UZ')}
-                            </p>
-                          </div>
-                          <p className="text-sm font-bold text-red-600 flex-shrink-0">
-                            -{formatMoney(expense.amountInUZS || expense.amount)}
-                          </p>
-                          {isActive && (
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); onEditExpense(expense) }}
-                                className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition"
-                              >
-                                <Pencil size={14} />
-                              </button>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); onDeleteExpense(expense._id) }}
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                        <div key={expense._id} className="px-3 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-start gap-3">
+                            <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center flex-shrink-0`}>
+                              <expType.Icon size={18} className="text-white" />
                             </div>
-                          )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {expType.label}
+                                  {isFuel && expense.quantity && (
+                                    <span className="text-gray-500 font-normal ml-1">• {expense.quantity} {fuelUnit}</span>
+                                  )}
+                                </p>
+                                <p className="text-sm font-bold text-red-600 flex-shrink-0">
+                                  -{formatMoney(expense.amountInUZS || expense.amount)}
+                                </p>
+                              </div>
+                              
+                              {/* Qo'shimcha ma'lumotlar */}
+                              <div className="mt-1 space-y-1">
+                                {/* Sana */}
+                                <div className="text-xs text-gray-500">
+                                  📅 {formatDateTime(expense.date)}
+                                  {expense.timing && (
+                                    <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                                      {expense.timing === 'before' ? 'Reys oldidan' : expense.timing === 'after' ? 'Reys keyin' : 'Reys davomida'}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Tavsif */}
+                                {expense.description && (
+                                  <div className="text-xs text-gray-500">💬 {expense.description}</div>
+                                )}
+                                
+                                {/* Yoqilg'i uchun qo'shimcha ma'lumotlar */}
+                                {isFuel && (
+                                  <div className="text-xs text-gray-500 space-y-0.5">
+                                    {expense.stationName && <div>⛽ {expense.stationName}</div>}
+                                    {expense.odometer && <div>📍 Spidometr: {expense.odometer.toLocaleString()} km</div>}
+                                    {expense.pricePerUnit && <div>💰 Narx: {formatMoney(expense.pricePerUnit)} / {fuelUnit}</div>}
+                                    {expense.location?.name && <div>📍 {expense.location.name}</div>}
+                                  </div>
+                                )}
+                                
+                                {/* Moy almashtirish uchun */}
+                                {expense.type === 'oil' && expense.odometer && (
+                                  <div className="text-xs text-gray-500">📍 Spidometr: {expense.odometer.toLocaleString()} km</div>
+                                )}
+                                
+                                {/* Shina uchun */}
+                                {expense.type === 'tire' && (
+                                  <div className="text-xs text-gray-500 space-y-0.5">
+                                    {expense.odometer && <div>📍 Spidometr: {expense.odometer.toLocaleString()} km</div>}
+                                    {expense.tireNumber && <div>🛞 Shina raqami: {expense.tireNumber}</div>}
+                                  </div>
+                                )}
+                                
+                                {/* Chegara xarajatlari uchun */}
+                                {expense.borderInfo && (
+                                  <div className="text-xs text-gray-500">🌍 {expense.borderInfo.fromCountry} → {expense.borderInfo.toCountry}</div>
+                                )}
+                                
+                                {/* Valyuta kursi */}
+                                {expense.currency && expense.currency !== 'UZS' && expense.exchangeRate && (
+                                  <div className="text-xs text-gray-500">💱 Kurs: 1 {expense.currency} = {expense.exchangeRate.toLocaleString()} UZS</div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {isActive && (
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); onEditExpense(expense) }}
+                                  className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); onDeleteExpense(expense._id) }}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )
                     })}
