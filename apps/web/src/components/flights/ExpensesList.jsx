@@ -90,6 +90,22 @@ function ExpenseItem({ expense, onEdit, onDelete, isActive, formatMoney }) {
               </div>
             )}
             
+            {/* Kim qo'shgani ma'lumoti */}
+            <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+              👤 {
+                expense.addedBy === 'voice' ? 'Ovoz orqali' : 
+                expense.addedBy === 'driver' ? 'Haydovchi tomonidan' : 
+                expense.addedBy === 'system' ? 'Tizim tomonidan' :
+                'Biznesmen tomonidan'
+              } qo'shilgan
+              {expense.confirmedByDriver && (
+                <span className="text-emerald-600 ml-2">✅ Tasdiqlangan</span>
+              )}
+              {!expense.confirmedByDriver && (
+                <span className="text-amber-600 ml-2">⏳ Kutilmoqda</span>
+              )}
+            </div>
+            
             {expense.description && (
               <p className="text-[10px] sm:text-xs text-gray-500 mt-1 truncate">{expense.description}</p>
             )}

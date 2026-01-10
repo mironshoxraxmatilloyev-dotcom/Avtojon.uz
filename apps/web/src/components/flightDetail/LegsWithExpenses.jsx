@@ -319,7 +319,7 @@ export default function LegsWithExpenses({
                 </div>
               )}
 
-              {/* Expense List - Simplified Format */}
+              {/* Expense List - Detailed Format with addedBy info */}
               <div className="space-y-2">
                 {legExpenses.map((expense) => {
                   const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { iconName: 'Package', label: expense.type }
@@ -327,25 +327,60 @@ export default function LegsWithExpenses({
                   const isHeavy = isHeavyExpense(expense.type) || expense.expenseClass === 'heavy'
 
                   return (
-                    <div key={expense._id} className={`flex items-center justify-between p-3 rounded-lg group hover:bg-slate-100 transition-colors ${isHeavy ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${expType.iconColor ? 'bg-white border border-slate-100' : 'bg-gradient-to-br ' + (expType.color || 'from-gray-500 to-slate-500')}`}>
-                          <IconComp className={`w-4 h-4 ${expType.iconColor || 'text-white'}`} />
-                        </div>
-                        <span className="font-medium text-slate-700">{expType.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold ${isHeavy ? 'text-rose-600' : 'text-red-500'}`}>-{formatMoney(expense.amountInUZS || expense.amount)}</span>
-                        {isActive && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => onEditExpense(expense)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-md">
-                              <Pencil size={14} />
-                            </button>
-                            <button onClick={() => onDeleteExpense(expense._id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md">
-                              <Trash2 size={14} />
-                            </button>
+                    <div key={expense._id} className={`p-3 rounded-lg group hover:bg-slate-100 transition-colors ${isHeavy ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${expType.iconColor ? 'bg-white border border-slate-100' : 'bg-gradient-to-br ' + (expType.color || 'from-gray-500 to-slate-500')}`}>
+                            <IconComp className={`w-4 h-4 ${expType.iconColor || 'text-white'}`} />
                           </div>
-                        )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-700">{expType.label}</span>
+                              {expense.confirmedByDriver ? (
+                                <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">✓ Tasdiqlangan</span>
+                              ) : (
+                                <span className="text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">⏳ Kutilmoqda</span>
+                              )}
+                            </div>
+                            {/* Kim qo'shgani ma'lumoti - faqat ovoz va haydovchi uchun */}
+                            <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                              {expense.addedBy === 'voice' && (
+                                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                  🎤 Ovoz orqali qo'shilgan
+                                </span>
+                              )}
+                              {expense.addedBy === 'driver' && (
+                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                  👨‍💼 Haydovchi tomonidan qo'shilgan
+                                </span>
+                              )}
+                              {isHeavy && expense.addedBy === 'businessman' && (
+                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                                  🏢 Biznesmen
+                                </span>
+                              )}
+                              {expense.date && (
+                                <span>📅 {new Date(expense.date).toLocaleDateString('uz-UZ')} {new Date(expense.date).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>
+                              )}
+                            </div>
+                            {expense.description && (
+                              <div className="text-xs text-slate-500 mt-1">💬 {expense.description}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold ${isHeavy ? 'text-rose-600' : 'text-red-500'}`}>-{formatMoney(expense.amountInUZS || expense.amount)}</span>
+                          {isActive && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => onEditExpense(expense)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-md">
+                                <Pencil size={14} />
+                              </button>
+                              <button onClick={() => onDeleteExpense(expense._id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )

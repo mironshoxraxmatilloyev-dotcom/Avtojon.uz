@@ -574,6 +574,7 @@ router.post('/:id/expenses', protect, businessOnly, async (req, res) => {
       description,
       legIndex: actualLegIndex,
       legId: actualLegId,
+      addedBy: 'businessman', // Kim qo'shgani
       date: date ? new Date(date) : new Date()
     };
 
@@ -716,7 +717,7 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     const oldTiming = oldExpense.timing || 'during';
     const oldType = oldExpense.type;
 
-    // Mavjud xarajatni yangilash
+    // Mavjud xarajatni yangilash (addedBy maydonini saqlab qolish)
     if (type !== undefined) flight.expenses[expenseIndex].type = type;
     if (amount !== undefined) flight.expenses[expenseIndex].amount = Number(amount);
     if (description !== undefined) flight.expenses[expenseIndex].description = description;
@@ -728,6 +729,7 @@ router.put('/:id/expenses/:expenseId', protect, businessOnly, async (req, res) =
     if (stationName !== undefined) flight.expenses[expenseIndex].stationName = stationName;
     if (location !== undefined) flight.expenses[expenseIndex].location = location;
     if (date !== undefined) flight.expenses[expenseIndex].date = new Date(date);
+    // addedBy maydonini saqlab qolish (yangilanmasin)
 
     // Valyuta ma'lumotlarini yangilash
     if (currency !== undefined) flight.expenses[expenseIndex].currency = currency;

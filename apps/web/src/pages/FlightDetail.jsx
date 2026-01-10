@@ -72,12 +72,13 @@ export default function FlightDetail() {
       setLoading(false)
       return
     }
-    if (showLoader && !flight) setLoading(true)
+    if (showLoader) setLoading(true)
     setError(null)
     try {
       console.log('[FlightDetail] Making API request to:', `/flights/${id}`)
       const res = await api.get(`/flights/${id}`)
       console.log('[FlightDetail] API response:', res.data)
+      console.log('[FlightDetail] Expenses:', res.data.data.expenses)
       setFlight(res.data.data)
     } catch (err) {
       console.error('[FlightDetail] API error:', err)
@@ -89,7 +90,7 @@ export default function FlightDetail() {
     } finally {
       setLoading(false)
     }
-  }, [id, flight])
+  }, [id])
 
   useEffect(() => { fetchFlight() }, [id])
 

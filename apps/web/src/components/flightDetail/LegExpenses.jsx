@@ -138,6 +138,9 @@ export default function LegExpenses({
                       
                       return (
                         <div key={expense._id} className="px-3 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                          {/* Debug: expense obyektini console ga chiqarish */}
+                          {console.log('LegExpenses expense:', expense)}
+                          
                           <div className="flex items-start gap-3">
                             <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center flex-shrink-0`}>
                               <expType.Icon size={18} className="text-white" />
@@ -164,6 +167,21 @@ export default function LegExpenses({
                                     <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-xs">
                                       {expense.timing === 'before' ? 'Reys oldidan' : expense.timing === 'after' ? 'Reys keyin' : 'Reys davomida'}
                                     </span>
+                                  )}
+                                </div>
+                                
+                                {/* Kim qo'shgani */}
+                                <div className="text-xs text-gray-500">
+                                  👤 {
+                                    expense.addedBy === 'voice' ? 'Ovoz orqali' : 
+                                    expense.addedBy === 'driver' ? 'Haydovchi tomonidan' : 
+                                    'Biznesmen tomonidan'
+                                  } qo'shilgan
+                                  {expense.confirmedByDriver && expense.confirmedAt && (
+                                    <span className="ml-2 text-emerald-600">✅ {formatDateTime(expense.confirmedAt)} da tasdiqlangan</span>
+                                  )}
+                                  {!expense.confirmedByDriver && (
+                                    <span className="ml-2 text-amber-600">⏳ Haydovchi tasdiqini kutmoqda</span>
                                   )}
                                 </div>
                                 

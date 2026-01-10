@@ -336,6 +336,10 @@ function LegExpenseGroup({ leg, legIdx, expenses, total, totalUSD, isInternation
 
 function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, flight, allExpenses }) {
   const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { iconName: 'Package', label: expense.type, color: 'from-gray-400 to-gray-500' }
+  
+  // Icon komponentini olish
+  const IconComponent = expType.iconName ? require('lucide-react')[expType.iconName] : Package
+  
   const isFuel = expense.type?.startsWith('fuel_')
   const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
   const formatUSD = (amount) => `${(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -374,13 +378,23 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
   return (
     <div className={`px-3 py-2 hover:bg-gray-50 ${isConfirmed ? 'bg-emerald-50/50' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center text-sm flex-shrink-0`}>{expType.icon}</div>
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${expType.color} flex items-center justify-center text-sm flex-shrink-0`}>
+          <IconComponent size={16} className="text-white" />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5 flex-wrap">
             <span>{expType.label}</span>
             {isFuel && expense.quantity && <span className="text-gray-500">- {expense.quantity} {fuelUnit}</span>}
             {expense.currency && expense.currency !== 'UZS' && (
               <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{expense.currency}</span>
+            )}
+            {/* Katta xarajatlar uchun Biznesmen belgisi */}
+            {(expense.amount >= 1000000 || expense.amountInUSD >= 100) && (
+              <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-semibold">Biznesmen</span>
+            )}
+            {/* Reys boshlanganda qo'shilgan xarajatlar uchun zarar belgisi */}
+            {expense.timing === 'before' && (
+              <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Zarar</span>
             )}
             {isConfirmed ? (
               <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">✓ Tasdiqlangan</span>
@@ -398,6 +412,16 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
                 <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
                   {expense.timing === 'before' ? 'Reys oldidan' : expense.timing === 'after' ? 'Reys keyin' : 'Reys davomida'}
                 </span>
+              )}
+            </div>
+            
+            {/* Tasdiqlash ma'lumotlari */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {expense.confirmedByDriver && expense.confirmedAt && (
+                <span className="text-emerald-600">✅ {formatDateTime(expense.confirmedAt)} da tasdiqlangan</span>
+              )}
+              {!expense.confirmedByDriver && (
+                <span className="text-amber-600">⏳ Haydovchi tasdiqini kutmoqda</span>
               )}
             </div>
             

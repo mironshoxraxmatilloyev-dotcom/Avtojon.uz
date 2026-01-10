@@ -92,6 +92,22 @@ export default function BeforeExpensesCard({ expenses, onEdit, onDelete }) {
                         <span>📅</span>
                         {formatDateTime(exp.date)}
                       </p>
+                      {/* Kim qo'shgani ma'lumoti */}
+                      <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                        <span>👤</span>
+                        {
+                          exp.addedBy === 'voice' ? 'Ovoz orqali' : 
+                          exp.addedBy === 'driver' ? 'Haydovchi tomonidan' : 
+                          exp.addedBy === 'system' ? 'Tizim tomonidan' :
+                          'Biznesmen tomonidan'
+                        } qo'shilgan
+                        {exp.confirmedByDriver && (
+                          <span className="text-emerald-600 ml-2">✅ Tasdiqlangan</span>
+                        )}
+                        {!exp.confirmedByDriver && (
+                          <span className="text-amber-600 ml-2">⏳ Kutilmoqda</span>
+                        )}
+                      </p>
                     </div>
 
                     {/* Amount - O'ng tomonda */}
