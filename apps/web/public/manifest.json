@@ -1,0 +1,54 @@
+{
+  "name": "Avtojon - Yuk tashish boshqaruvi",
+  "short_name": "Avtojon",
+  "description": "O'zbekistondagi eng zamonaviy yuk tashish boshqaruv tizimi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "uz",
+  "icons": [
+    {
+      "src": "/main_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/main_logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/main_logo.jpg",
+      "sizes": "180x180",
+      "type": "image/jpeg"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/main_logo.jpg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reyslar",
+      "short_name": "Reyslar",
+      "url": "/flights",
+      "icons": [{ "src": "/main_logo.jpg", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=uz.avtojon.app"
+    }
+  ],
+  "prefer_related_applications": false
+}

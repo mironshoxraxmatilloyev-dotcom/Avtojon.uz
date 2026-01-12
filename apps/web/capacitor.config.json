@@ -1,0 +1,22 @@
+{
+  "appId": "uz.avtojon.app",
+  "appName": "Avtojon",
+  "webDir": "dist",
+  "server": {
+    "url": "https://avtojon.uz",
+    "cleartext": false
+  },
+  "plugins": {
+    "Geolocation": {
+      "permissions": ["location", "coarseLocation"]
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#6d28d9"
+    }
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

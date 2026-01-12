@@ -1,0 +1,119 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+apps/api/.env
+apps/api/.env.production
+apps/web/.env
+apps/mobile/.env
+
+# Secret files
+token
+*.key
+*.pem
+*.secret
+
+# Kiro IDE
+.kiro/
+
+# Nested repo (agar mavjud bo'lsa)
+Avtojon.uz/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# OS
+.DS_Store
+Thumbs.db
+*.DS_Store
+
+# Turbo
+.turbo/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Testing
+coverage/
+.jest/
+
+# Misc
+*.tgz
+.yarn-integrity
+
+# ==========================================
+# MOBILE APP - GitHub'ga yuklanmaydi
+# ==========================================
+apps/mobile/
+
+# ==========================================
+# WEB CAPACITOR ANDROID - GitHub'ga yuklanmaydi
+# ==========================================
+apps/web/android/
+
+# ==========================================
+# ANDROID SMS GATEWAY
+# ==========================================
+apps/android-sms-gateway/.gradle/
+apps/android-sms-gateway/build/
+apps/android-sms-gateway/app/build/
+apps/android-sms-gateway/local.properties
+apps/android-sms-gateway/gradle/wrapper/gradle-wrapper.jar
+
+# APK/AAB files (umuman)
+*.apk
+*.aab
+*.dex
+*.class
+*.ap_
+*.apks
+
+# LEKIN: Web downloads papkasidagi APK saqlansin (yuklab olish uchun)
+!apps/web/public/downloads/
+!apps/web/public/downloads/*.apk
+
+# Android release/signing files
+*.keystore
+*.jks
+release/
+signed/
