@@ -192,6 +192,8 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
       };
     });
 
+    // TUZATILDI: Barcha marshrutlarni qaytarish (qarz bor yoki to'langan)
+    // Faqat driverOwes > 0 bo'lgan marshrutlarni olish (qarz bo'lgan marshrutlar)
     let filteredFlights = processedFlights.filter(f => f.driverOwes > 0);
 
     if (status === 'pending') {
@@ -199,9 +201,16 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
     } else if (status === 'paid') {
       filteredFlights = filteredFlights.filter(f => f.driverPaymentStatus === 'paid');
     }
+    // Agar filter 'all' bo'lsa, barcha marshrutlar qaytariladi (pending va paid)
 
-    const totalDebt = filteredFlights.reduce((sum, f) => f.driverPaymentStatus !== 'paid' ? sum + (f.driverOwes || 0) : sum, 0);
-    const paidAmount = filteredFlights.reduce((sum, f) => f.driverPaymentStatus === 'paid' ? sum + (f.driverOwes || 0) : sum, 0);
+    // TUZATILDI: Qolgan qarzni to'g'ri hisoblash
+    const totalDebt = filteredFlights.reduce((sum, f) => {
+      if (f.driverPaymentStatus === 'paid') return sum;
+      const remaining = (f.driverOwes || 0) - (f.driverPaidAmount || 0);
+      return sum + Math.max(0, remaining);
+    }, 0);
+    
+    const paidAmount = filteredFlights.reduce((sum, f) => sum + (f.driverPaidAmount || 0), 0);
 
     res.json({
       success: true,
@@ -1799,31 +1808,41 @@ router.put('/:id/driver-payment', protect, businessOnly, async (req, res) => {
 // Haydovchidan pul olish (qisman yoki to'liq)
 router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
   try {
+    console.log('[DriverPayment] Request body:', req.body)
+    console.log('[DriverPayment] Flight ID:', req.params.id)
+    console.log('[DriverPayment] User ID:', req.user?._id)
+    console.log('[DriverPayment] User role:', req.user?.role)
+    
     const { amount, note } = req.body;
 
     if (!amount || amount <= 0) {
+      console.log('[DriverPayment] Invalid amount:', amount)
       return res.status(400).json({ success: false, message: 'Summa kiritilmagan' });
     }
 
     const flight = await Flight.findOne({ _id: req.params.id, user: req.user._id });
     if (!flight) {
+      console.log('[DriverPayment] Flight not found for user:', req.user._id)
       return res.status(404).json({ success: false, message: 'Reys topilmadi' });
     }
 
-    if (flight.status !== 'completed') {
-      return res.status(400).json({ success: false, message: 'Faqat yopilgan reyslar uchun to\'lov qabul qilinadi' });
+    // TUZATILDI: active va completed reyslar uchun to'lov qabul qilinadi
+    if (!['active', 'completed'].includes(flight.status)) {
+      console.log('[DriverPayment] Flight status not valid:', flight.status)
+      return res.status(400).json({ success: false, message: 'Faqat faol va yopilgan reyslar uchun to\'lov qabul qilinadi' });
     }
 
     const totalOwed = flight.driverOwes || 0;
     const previouslyPaid = flight.driverPaidAmount || 0;
     const remainingBefore = totalOwed - previouslyPaid;
 
-    if (amount > remainingBefore) {
-      return res.status(400).json({
-        success: false,
-        message: `Qolgan qarz ${remainingBefore.toLocaleString()} so'm. Bundan ko'p qabul qilib bo'lmaydi.`
-      });
-    }
+    // TUZATILDI: Istalgan miqdorda pul olish mumkin (cheklovsiz)
+    // if (amount > remainingBefore) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: `Qolgan qarz ${remainingBefore.toLocaleString()} so'm. Bundan ko'p qabul qilib bo'lmaydi.`
+    //   });
+    // }
 
     // To'lovni qo'shish
     if (!flight.driverPayments) {

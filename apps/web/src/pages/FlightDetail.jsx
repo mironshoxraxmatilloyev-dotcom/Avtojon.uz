@@ -844,6 +844,10 @@ export default function FlightDetail() {
           flight={flight}
           onClose={() => setShowDriverPaymentModal(false)}
           onSubmit={(data) => {
+            // Debug
+            console.log('[DriverPayment] Sending:', data)
+            console.log('[DriverPayment] Flight ID:', id)
+            
             // 🚀 Modal ni darhol yopish
             setShowDriverPaymentModal(false)
             showToast.success('To\'lov qabul qilindi')
@@ -865,8 +869,16 @@ export default function FlightDetail() {
 
             // Background da serverga yuborish
             api.post(`/flights/${id}/driver-payment`, data)
-              .then(res => res.data?.data && setFlight(res.data.data))
-              .catch(() => fetchFlight(false))
+              .then(res => {
+                console.log('[DriverPayment] Success:', res.data)
+                if (res.data?.data) setFlight(res.data.data)
+              })
+              .catch(err => {
+                console.error('[DriverPayment] Error:', err)
+                console.error('[DriverPayment] Response:', err.response?.data)
+                showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
+                fetchFlight(false)
+              })
           }}
         />
       )}
