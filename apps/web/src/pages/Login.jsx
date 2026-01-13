@@ -315,7 +315,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.98]"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -325,6 +325,22 @@ export default function Login() {
                       <ArrowRight size={18} />
                     </>
                   )}
+                </button>
+
+                {/* Demo Account */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsername('demo')
+                    setPassword('demo123')
+                    setTimeout(() => {
+                      document.querySelector('form').requestSubmit()
+                    }, 100)
+                  }}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                >
+                  <Zap size={16} />
+                  Demo hisobga kirish
                 </button>
               </form>
 

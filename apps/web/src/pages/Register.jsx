@@ -15,10 +15,28 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const { register, loading } = useAuthStore()
   const navigate = useNavigate()
   const alert = useAlert()
   const passwordRef = useRef(null)
+
+  // Parol kuchini hisoblash
+  const getPasswordStrength = (password) => {
+    if (!password) return { strength: 0, label: '', color: '' }
+    let strength = 0
+    if (password.length >= 6) strength++
+    if (password.length >= 8) strength++
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++
+    if (/\d/.test(password)) strength++
+    if (/[^a-zA-Z\d]/.test(password)) strength++
+
+    if (strength <= 2) return { strength: 33, label: 'Zaif', color: 'bg-red-500' }
+    if (strength <= 3) return { strength: 66, label: 'O\'rtacha', color: 'bg-amber-500' }
+    return { strength: 100, label: 'Kuchli', color: 'bg-emerald-500' }
+  }
+
+  const passwordStrength = getPasswordStrength(form.password)
 
   const validateField = (name, value) => {
     if (name === 'fullName') {
@@ -61,6 +79,11 @@ export default function Register() {
 
     if (Object.keys(newErrors).length > 0) {
       alert.warning("Ogohlantirish", Object.values(newErrors)[0])
+      return
+    }
+
+    if (!agreedToTerms) {
+      alert.warning("Ogohlantirish", "Shartlar va qoidalarga rozilik bildiring")
       return
     }
 
@@ -232,13 +255,56 @@ export default function Register() {
                       <AlertCircle size={12} /> {errors.password}
                     </p>
                   )}
+                  {/* Parol kuchi ko'rsatkichi */}
+                  {form.password && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-500">Parol kuchi:</span>
+                        <span className={`text-xs font-medium ${
+                          passwordStrength.label === 'Zaif' ? 'text-red-500' :
+                          passwordStrength.label === 'O\'rtacha' ? 'text-amber-500' :
+                          'text-emerald-500'
+                        }`}>
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                          style={{ width: `${passwordStrength.strength}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Shartlar va qoidalar */}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-emerald-500 border-slate-300 rounded focus:ring-emerald-500"
+                  />
+                  <label htmlFor="terms" className="text-sm text-slate-600">
+                    Men{' '}
+                    <Link to="/terms" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                      foydalanish shartlari
+                    </Link>
+                    {' '}va{' '}
+                    <Link to="/privacy" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                      maxfiylik siyosati
+                    </Link>
+                    ga roziman
+                  </label>
                 </div>
 
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors active:scale-[0.98]"
+                  disabled={loading || !agreedToTerms}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98]"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
