@@ -47,11 +47,26 @@ export const initOilForm = (odo = '') => ({
   oilFilterCost: undefined, airFilterCost: undefined, cabinFilterCost: undefined, gasFilterCost: undefined
 })
 export const initTireForm = (odo = '') => ({ 
-  position: TIRE_POSITIONS[0], brand: '', model: '', size: '', dotNumber: '', serialNumber: '', installDate: today(), 
-  installOdometer: '', expectedLifeKm: '', cost: '' 
+  position: TIRE_POSITIONS[0], 
+  brand: '', 
+  model: '', 
+  size: '', 
+  dotNumber: '', 
+  serialNumber: '', 
+  installDate: today(), 
+  installOdometer: odo || '', 
+  expectedLifeKm: '80000', 
+  cost: '' 
 })
 export const initBulkTireForm = (odo = '') => ({
-  brand: '', model: '', size: '', dotNumber: '', serialNumber: '', count: '4', cost: '', installOdometer: ''
+  brand: '', 
+  model: '', 
+  size: '', 
+  dotNumber: '', 
+  serialNumber: '', 
+  count: '4', 
+  cost: '', 
+  installOdometer: odo || ''
 })
 export const initServiceForm = (odo = '') => ({ 
   type: SERVICE_TYPES[0], date: today(), odometer: '', cost: '', description: '', serviceName: '' 

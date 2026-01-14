@@ -342,6 +342,8 @@ router.post('/refresh', asyncHandler(async (req, res) => {
     const getUserById = async (id, role) => {
         if (role === 'admin') {
             return User.findById(id).select('-password');
+        } else if (role === 'business') {
+            return Businessman.findById(id).select('-password');
         } else if (role === 'driver') {
             return Driver.findById(id).select('-password');
         }

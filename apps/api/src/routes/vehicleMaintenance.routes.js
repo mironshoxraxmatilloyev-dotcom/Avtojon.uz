@@ -11,21 +11,40 @@ const getBusinessmanId = (req) => {
     hasDriver: !!req.driver,
     hasUser: !!req.user,
     userRole: req.userRole,
-    userId: req.user?._id
+    userId: req.user?._id,
+    businessmanId: req.businessman?._id,
+    driverUserId: req.driver?.user
   })
   
-  if (req.businessman) return req.businessman._id
-  if (req.driver) return req.driver.user
-  if (req.user) return req.user._id
+  if (req.businessman) {
+    console.log('✅ Returning businessman._id:', req.businessman._id)
+    return req.businessman._id
+  }
+  if (req.driver) {
+    console.log('✅ Returning driver.user:', req.driver.user)
+    return req.driver.user
+  }
+  if (req.user) {
+    console.log('✅ Returning user._id:', req.user._id)
+    return req.user._id
+  }
+  console.log('❌ No ID found')
   return null
 }
 
 // Helper: Mashina ownership tekshirish
 const checkVehicleOwnership = async (vehicleId, userId) => {
-  const vehicle = await Vehicle.findOne({ _id: vehicleId, user: userId, isActive: true })
-    .select('_id currentOdometer oilChangeIntervalKm serviceIntervalKm')
-    .lean()
-  return vehicle
+  try {
+    console.log('🔍 checkVehicleOwnership:', { vehicleId, userId })
+    const vehicle = await Vehicle.findOne({ _id: vehicleId, user: userId, isActive: true })
+      .select('_id currentOdometer oilChangeIntervalKm serviceIntervalKm fuelType')
+      .lean()
+    console.log('🔍 Vehicle found:', !!vehicle)
+    return vehicle
+  } catch (err) {
+    console.error('❌ checkVehicleOwnership error:', err.message)
+    return null
+  }
 }
 
 // Helper: Ogohlantirish yaratish/yangilash
@@ -221,8 +240,14 @@ const validateMaintenanceData = (type, data, currentOdometer = 0) => {
   if (type === 'tire') {
     if (!data.brand) errors.push('Shina brendi majburiy')
     if (!data.position) errors.push('Shina pozitsiyasi majburiy')
+    // size majburiy emas
     if (data.cost && Number(data.cost) < 0) errors.push('Narx salbiy bo\'lishi mumkin emas')
     if (data.expectedLifeKm && Number(data.expectedLifeKm) > 500000) errors.push('Kutilgan umr juda katta')
+    // installOdometer majburiy emas, lekin agar berilgan bo'lsa tekshirish
+    if (data.installOdometer !== undefined && data.installOdometer !== null && data.installOdometer !== '') {
+      const odo = Number(data.installOdometer)
+      if (isNaN(odo) || odo < 0) errors.push('O\'rnatish km noto\'g\'ri')
+    }
   }
   
   if (type === 'service') {
@@ -573,44 +598,67 @@ router.get('/vehicles/:vehicleId/tires', protect, async (req, res) => {
     const { vehicleId } = req.params
     const businessmanId = getBusinessmanId(req)
     
+    console.log('📤 Tires GET request:', { vehicleId, businessmanId })
+    
+    if (!businessmanId) {
+      console.error('❌ BusinessmanId not found in request')
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi aniqlanmadi' })
+    }
+    
     // Ownership tekshirish
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    console.log('📤 Vehicle ownership check:', { vehicleId, businessmanId, found: !!vehicle })
+    
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
     }
     
+    console.log('📤 Fetching tires for vehicle:', vehicleId)
+    
     const tires = await Tire.find({ vehicle: vehicleId })
-      .select('position brand model size cost installDate installOdometer expectedLifeKm status')
+      .select('position brand model size cost installDate installOdometer expectedLifeKm status dotNumber serialNumber')
       .sort({ position: 1 })
       .lean()
+      .catch(err => {
+        console.error('❌ Tire.find error:', err.message, err.stack)
+        throw err
+      })
+    
+    console.log('📤 Found tires:', tires.length)
     
     const currentOdo = vehicle.currentOdometer || 0
     
     // Har bir shina uchun qolgan km va holatni hisoblash
     const tiresWithStatus = tires.map(tire => {
-      const usedKm = Math.max(0, currentOdo - (tire.installOdometer || 0))
-      const expectedLife = tire.expectedLifeKm || 80000
-      const remainingKm = Math.max(0, expectedLife - usedKm)
-      
-      // Vaqt bo'yicha eskirish
-      const installDate = new Date(tire.installDate)
-      const ageYears = (Date.now() - installDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-      const ageWearPercent = Math.min(100, Math.round((ageYears / 5) * 100))
-      const kmWearPercent = Math.min(100, Math.round((usedKm / expectedLife) * 100))
-      
-      let status = tire.status
-      // Avtomatik holat aniqlash
-      const maxWear = Math.max(ageWearPercent, kmWearPercent)
-      if (maxWear >= 90 || remainingKm <= 0) status = 'worn'
-      else if (maxWear >= 70 || remainingKm <= 10000) status = 'used'
-      
-      return { ...tire, usedKm, remainingKm, calculatedStatus: status }
+      try {
+        const usedKm = Math.max(0, currentOdo - (tire.installOdometer || 0))
+        const expectedLife = tire.expectedLifeKm || 80000
+        const remainingKm = Math.max(0, expectedLife - usedKm)
+        
+        // Vaqt bo'yicha eskirish
+        const installDate = new Date(tire.installDate)
+        const ageYears = (Date.now() - installDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        const ageWearPercent = Math.min(100, Math.round((ageYears / 5) * 100))
+        const kmWearPercent = Math.min(100, Math.round((usedKm / expectedLife) * 100))
+        
+        let status = tire.status
+        // Avtomatik holat aniqlash
+        const maxWear = Math.max(ageWearPercent, kmWearPercent)
+        if (maxWear >= 90 || remainingKm <= 0) status = 'worn'
+        else if (maxWear >= 70 || remainingKm <= 10000) status = 'used'
+        
+        return { ...tire, usedKm, remainingKm, calculatedStatus: status }
+      } catch (err) {
+        console.error('❌ Error processing tire:', tire._id, err.message)
+        return { ...tire, usedKm: 0, remainingKm: 0, calculatedStatus: 'used' }
+      }
     })
     
+    console.log('✅ Tires GET success:', tiresWithStatus.length)
     res.json({ success: true, data: tiresWithStatus })
   } catch (err) {
-    console.error('❌ Tires GET error:', err.message)
-    res.status(500).json({ success: false, message: err.message })
+    console.error('❌ Tires GET error:', err.message, err.stack)
+    res.status(500).json({ success: false, message: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined })
   }
 })
 
@@ -621,8 +669,17 @@ router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
     const businessmanId = getBusinessmanId(req)
     const { _id, ...body } = req.body
     
+    console.log('📤 Tire POST request:', { vehicleId, businessmanId, body })
+    
+    if (!businessmanId) {
+      console.error('❌ BusinessmanId not found in request')
+      return res.status(401).json({ success: false, message: 'Foydalanuvchi aniqlanmadi' })
+    }
+    
     // Ownership tekshirish
     const vehicle = await checkVehicleOwnership(vehicleId, businessmanId)
+    console.log('📤 Vehicle ownership check:', { vehicleId, businessmanId, found: !!vehicle })
+    
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Mashina topilmadi' })
     }
@@ -630,14 +687,19 @@ router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
     // Validatsiya
     const errors = validateMaintenanceData('tire', body, vehicle.currentOdometer)
     if (errors.length > 0) {
+      console.log('📤 Validation errors:', errors)
       return res.status(400).json({ success: false, message: errors.join(', ') })
     }
+    
+    console.log('📤 Creating tire:', body)
     
     const tire = await Tire.create({
       ...body,
       vehicle: vehicleId,
       businessman: businessmanId
     })
+    
+    console.log('✅ Tire created:', tire._id)
     
     // Shu pozitsiyadagi eski shina alertini o'chirish
     if (body.position) {
@@ -651,8 +713,8 @@ router.post('/vehicles/:vehicleId/tires', protect, async (req, res) => {
     
     res.status(201).json({ success: true, data: tire })
   } catch (err) {
-    console.error('❌ Tire POST error:', err.message)
-    res.status(500).json({ success: false, message: err.message })
+    console.error('❌ Tire POST error:', err.message, err.stack)
+    res.status(500).json({ success: false, message: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined })
   }
 })
 

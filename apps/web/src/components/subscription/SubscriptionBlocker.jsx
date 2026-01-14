@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import api from '../../services/api'
 
-const SUPPORT_PHONE = '+998 88 019 19 09'
+const SUPPORT_PHONE = '+99888 019 91 19'
 const PRICE_PER_UNIT = 30000 // Biznesmenlar uchun 30,000 so'm / mashina / oy
 
 const fmt = (n) => new Intl.NumberFormat('uz-UZ').format(n)
@@ -111,7 +111,7 @@ export function FleetSubscriptionBlocker({ vehicleCount = 1 }) {
             </a>
 
             <p className="text-xs text-slate-400 text-center mt-4">
-              Telegram: <span className="text-orange-500 font-medium">@avtojon_support</span>
+              Telegram: <span className="text-orange-500 font-medium">@Murodjon_PM</span>
             </p>
           </div>
         </div>

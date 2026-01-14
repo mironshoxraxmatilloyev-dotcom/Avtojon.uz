@@ -29,7 +29,9 @@ const Input = memo(({ label, type = 'text', value, onChange, placeholder, error 
     }
   }
 
-  const displayValue = isNumber ? formatNumber(value) : value
+  // value ni har doim string qilish (undefined yoki null bo'lmasligi uchun)
+  const safeValue = value ?? ''
+  const displayValue = isNumber ? formatNumber(safeValue) : safeValue
 
   return (
     <div>
@@ -53,7 +55,7 @@ const Select = memo(({ label, value, onChange, options }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
     <select
-      value={value}
+      value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
     >
@@ -66,7 +68,7 @@ const Textarea = memo(({ label, value, onChange }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
     <textarea
-      value={value}
+      value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       rows={2}
       className="w-full px-3 py-2.5 text-base bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"

@@ -156,8 +156,8 @@ Yakka mashina egalari uchun avtopark boshqaruvi.
 
 - **Website:** avtojon.uz
 - **Email:** info@avtojon.uz
-- **Telefon:** +998 88 019 19 09
-- **Telegram:** @avtojon_support
+- **Telefon:** +998 88 019 91 19
+- **Telegram:** @Murodjon_PM
 
 ---
 

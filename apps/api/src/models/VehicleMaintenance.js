@@ -66,15 +66,7 @@ const TireSchema = new mongoose.Schema({
   // Format: width/aspectRatio R diameter
   // Misol: 205 (kenglik mm), 55 (balandlik %), R (radial), 16 (diametr inches)
   size: { 
-    type: String, 
-    required: true,
-    validate: {
-      validator: function(v) {
-        // Format: XXX/XXRXX (masalan: 205/55R16)
-        return /^\d{3}\/\d{2}R\d{2}$/.test(v)
-      },
-      message: 'Shina raqami noto\'g\'ri format: 205/55R16 kabi bo\'lishi kerak'
-    }
+    type: String
   },
   // DOT raqami - shina ishlab chiqarish sanasi va joyi
   // Format: XXXX (masalan: 1520 = 15-chi hafta, 2020-yil)
@@ -83,7 +75,7 @@ const TireSchema = new mongoose.Schema({
   serialNumber: { type: String },
   cost: { type: Number, default: 0 },
   installDate: { type: Date, default: Date.now },
-  installOdometer: { type: Number, required: true },
+  installOdometer: { type: Number, default: 0 },
   expectedLifeKm: { type: Number, default: 80000 },
   status: { type: String, enum: ['new', 'used', 'worn', 'replaced'], default: 'new' },
   replacedDate: Date,

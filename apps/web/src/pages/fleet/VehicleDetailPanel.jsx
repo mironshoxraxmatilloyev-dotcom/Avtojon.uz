@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Crown, AlertTriangle, X, Zap, Truck, BarChart3, Fuel, Droplets, Circle, Wrench, RefreshCw, DollarSign, Sparkles } from 'lucide-react'
+import { ArrowLeft, Crown, AlertTriangle, X, Zap, Truck, BarChart3, Fuel, Droplets, Circle, Wrench, RefreshCw, DollarSign, Sparkles, Menu } from 'lucide-react'
 import api from '../../services/api'
 import { useAlert } from '../../components/ui'
 import {
@@ -52,6 +52,7 @@ export default function VehicleDetailPanel() {
   const [subscription, setSubscription] = useState(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [timeLeft, setTimeLeft] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar state
 
 
   useEffect(() => {
@@ -701,11 +702,39 @@ export default function VehicleDetailPanel() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#f8fafc' }}>
-      {/* PRO Sidebar - Desktop - Fixed, NO scroll */}
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* PRO Sidebar - Desktop & Mobile */}
       <aside 
-        className="hidden lg:flex lg:flex-col w-[260px] bg-white border-r border-slate-200/60 z-40"
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, overflow: 'hidden' }}
+        className={`
+          lg:flex lg:flex-col w-[280px] bg-white border-r border-slate-200/60 z-50
+          fixed left-0 top-0 bottom-0 overflow-hidden
+          transition-transform duration-300 ease-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
       >
+        {/* Mobile Close Button */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <Truck className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-900">Menu</span>
+          </div>
+          <button 
+            onClick={() => setSidebarOpen(false)} 
+            className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
         {/* Back Button */}
         <div className="flex-shrink-0 p-4 border-b border-slate-100">
           <button onClick={() => navigate('/fleet')} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium transition-colors group">
@@ -730,7 +759,14 @@ export default function VehicleDetailPanel() {
         {/* Navigation - NO scroll */}
         <nav className="flex-1 p-3 space-y-1 overflow-hidden">
           {NAV_ITEMS.map(item => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setModal(null); setEditId(null) }}
+            <button 
+              key={item.id} 
+              onClick={() => { 
+                setActiveTab(item.id); 
+                setModal(null); 
+                setEditId(null);
+                setSidebarOpen(false); // Close sidebar on mobile
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === item.id
                 ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/25'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -746,7 +782,7 @@ export default function VehicleDetailPanel() {
         {/* Subscription - Fixed at bottom */}
         {subscription?.plan === 'trial' && (
           <div className="flex-shrink-0 p-4 border-t border-slate-100 bg-white">
-            <button onClick={() => setShowUpgradeModal(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-semibold border border-amber-200">
+            <button onClick={() => { setShowUpgradeModal(true); setSidebarOpen(false); }} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-semibold border border-amber-200">
               <Crown size={18} />
               <span>{timeLeft} qoldi</span>
             </button>
@@ -757,7 +793,7 @@ export default function VehicleDetailPanel() {
 
       {/* Main Content - scrollable with bottom padding for nav */}
       <main 
-        className="lg:ml-[260px] overflow-y-auto lg:pb-8 pb-32"
+        className="lg:ml-[280px] overflow-y-auto lg:pb-8 pb-32"
         style={{ 
           height: '100vh', 
           WebkitOverflowScrolling: 'touch',
@@ -769,7 +805,15 @@ export default function VehicleDetailPanel() {
           <div className="px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-                <button onClick={() => navigate('/fleet')} className="lg:hidden p-1.5 sm:p-2 text-slate-500 hover:text-slate-900 flex-shrink-0">
+                {/* Burger Menu - Mobile Only */}
+                <button 
+                  onClick={() => setSidebarOpen(true)} 
+                  className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all flex-shrink-0"
+                >
+                  <Menu size={20} />
+                </button>
+                
+                <button onClick={() => navigate('/fleet')} className="hidden sm:block lg:hidden p-1.5 sm:p-2 text-slate-500 hover:text-slate-900 flex-shrink-0">
                   <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
                 </button>
                 <div className="lg:hidden w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25 flex-shrink-0">
@@ -921,10 +965,10 @@ const UpgradeModal = ({ onClose }) => (
             <Zap className="w-5 h-5 text-emerald-500" />
             <span className="text-slate-700 font-medium">{f}</span>
           </div>
-        ))}
+        ))}s
         <a href="tel:+998880191909" className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25">
           <Sparkles className="w-5 h-5" />
-          +998 88 019 19 09
+          +99888 019 91 19
         </a>
       </div>
     </div>
