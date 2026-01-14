@@ -4,7 +4,7 @@ import {
   X, Route, Map, DollarSign, CheckCircle, Wallet, TrendingUp, TrendingDown,
   Calculator, Percent, ArrowRight, Sparkles, Fuel, Utensils, Wrench, Car,
   Navigation, FileText, Package, Building2, Truck, Shield, CircleDot, Circle, Droplet,
-  Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown, Banknote, CreditCard
+  Mic, Globe, Flag, Gauge, Calendar, ArrowUpDown, Banknote, CreditCard, MapPin, Activity
 } from 'lucide-react'
 import AddressAutocomplete from '../AddressAutocomplete'
 import { EXPENSE_CATEGORIES, FUEL_TYPES, BORDER_TYPES, FILTER_TYPES, formatMoney } from './constants'
@@ -1743,108 +1743,211 @@ export const LegEditModal = memo(function LegEditModal({ leg, onClose, onSubmit 
     })
   }, [form, onSubmit])
 
+  // Hisoblashlar
+  const totalIncome = (Number(form.payment) || 0) + (Number(form.givenBudget) || 0)
+  const hasChanges = form.fromCity !== leg?.fromCity || 
+                     form.toCity !== leg?.toCity || 
+                     Number(form.payment) !== leg?.payment ||
+                     Number(form.givenBudget) !== leg?.givenBudget ||
+                     Number(form.distance) !== leg?.distance ||
+                     form.note !== leg?.note
+
   return createPortal(
-    <ModalWrapper onClose={onClose} size="lg">
-      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl max-h-[95vh] overflow-hidden">
-        <div className="relative px-6 py-5 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-transparent to-teal-500/10">
-          <div className="relative flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30">
-                <Route className="w-7 h-7 text-white" />
+    <ModalWrapper onClose={onClose} size="xl">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl max-h-[95vh] overflow-hidden flex flex-col">
+        {/* Header - Enhanced gradient with better spacing */}
+        <div className="relative px-6 sm:px-8 py-6 border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent flex-shrink-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-50" />
+          <div className="relative flex justify-between items-start">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30 ring-4 ring-emerald-500/10">
+                <Route className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Buyurtmani tahrirlash</h2>
-                <p className="text-emerald-400/80 text-sm mt-0.5">{leg?.fromCity?.split(',')[0]} → {leg?.toCity?.split(',')[0]}</p>
+                <h2 className="text-2xl font-bold text-white mb-1.5">Buyurtmani tahrirlash</h2>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-emerald-400 font-semibold">{leg?.fromCity?.split(',')[0] || 'Boshlang\'ich'}</span>
+                  <ArrowRight size={16} className="text-slate-500" />
+                  <span className="text-teal-400 font-semibold">{leg?.toCity?.split(',')[0] || 'Manzil'}</span>
+                </div>
               </div>
             </div>
-            <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
+            <button 
+              onClick={onClose} 
+              className="w-11 h-11 flex items-center justify-center hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all active:scale-95"
+            >
               <X size={22} />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Manzillar */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Qayerdan</label>
-              <input
-                type="text"
-                value={form.fromCity}
-                onChange={e => setForm(f => ({ ...f, fromCity: e.target.value }))}
-                className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
-                placeholder="Boshlang'ich manzil"
+        {/* Content - Scrollable with better spacing */}
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+            {/* Manzillar - 2 column on large screens */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                  <MapPin size={16} className="text-emerald-400" />
+                  Qayerdan
+                </label>
+                <input
+                  type="text"
+                  value={form.fromCity}
+                  onChange={e => setForm(f => ({ ...f, fromCity: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                  placeholder="Boshlang'ich manzil"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                  <MapPin size={16} className="text-teal-400" />
+                  Qayerga
+                </label>
+                <input
+                  type="text"
+                  value={form.toCity}
+                  onChange={e => setForm(f => ({ ...f, toCity: e.target.value }))}
+                  className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-teal-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                  placeholder="Boradigan manzil"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Moliyaviy ma'lumotlar - 2 column on large screens with enhanced styling */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Mijozdan to'lov */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                  <DollarSign size={16} className="text-emerald-400" />
+                  Mijozdan to'lov
+                </label>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.payment ? formatMoney(form.payment) : ''}
+                    onChange={e => setForm(f => ({ ...f, payment: e.target.value.replace(/\D/g, '') }))}
+                    className="w-full px-5 py-4 pr-20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-2 border-emerald-500/30 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-emerald-500/60 focus:bg-emerald-500/20 focus:outline-none transition-all"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-400 text-sm font-semibold pointer-events-none">so'm</span>
+                </div>
+                <p className="text-emerald-400/60 text-xs flex items-center gap-1">
+                  <TrendingUp size={12} />
+                  Mijoz tomonidan to'lanadigan summa
+                </p>
+              </div>
+
+              {/* Yo'l xarajati */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                  <Wallet size={16} className="text-amber-400" />
+                  Yo'l xarajati
+                </label>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.givenBudget ? formatMoney(form.givenBudget) : ''}
+                    onChange={e => setForm(f => ({ ...f, givenBudget: e.target.value.replace(/\D/g, '') }))}
+                    className="w-full px-5 py-4 pr-20 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-2 border-amber-500/30 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-amber-500/60 focus:bg-amber-500/20 focus:outline-none transition-all"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-5 top-1/2 -translate-y-1/2 text-amber-400 text-sm font-semibold pointer-events-none">so'm</span>
+                </div>
+                <p className="text-amber-400/60 text-xs flex items-center gap-1">
+                  <TrendingDown size={12} />
+                  Haydovchiga berilgan yo'l puli
+                </p>
+              </div>
+            </div>
+
+            {/* Jami kirim - Enhanced info card */}
+            {totalIncome > 0 && (
+              <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border-2 border-blue-500/20 rounded-xl p-5 shadow-lg shadow-blue-500/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center ring-2 ring-blue-500/20">
+                      <Activity size={22} className="text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-xs font-medium mb-0.5">Jami kirim</p>
+                      <p className="text-white text-2xl font-bold">{formatMoney(totalIncome)} <span className="text-blue-400 text-sm">so'm</span></p>
+                    </div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="text-slate-400 text-xs font-medium">Tarkibi</p>
+                    <p className="text-emerald-400 text-sm font-semibold">+{formatMoney(form.payment || 0)}</p>
+                    <p className="text-amber-400 text-sm font-semibold">+{formatMoney(form.givenBudget || 0)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Masofa */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                <Navigation size={16} className="text-blue-400" />
+                Masofa
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={form.distance}
+                  onChange={e => setForm(f => ({ ...f, distance: e.target.value }))}
+                  className="w-full px-5 py-4 pr-16 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-blue-500/50 focus:bg-white/10 focus:outline-none transition-all"
+                  placeholder="0"
+                />
+                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-semibold pointer-events-none">km</span>
+              </div>
+            </div>
+
+            {/* Izoh */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                <FileText size={16} className="text-slate-400" />
+                Izoh (ixtiyoriy)
+              </label>
+              <textarea
+                value={form.note}
+                onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+                className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-base placeholder-slate-500 focus:border-slate-500/50 focus:bg-white/10 focus:outline-none transition-all min-h-[100px] resize-none"
+                placeholder="Bosqich bo'yicha qo'shimcha izohlar..."
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-400 mb-2">Qayerga</label>
-              <input
-                type="text"
-                value={form.toCity}
-                onChange={e => setForm(f => ({ ...f, toCity: e.target.value }))}
-                className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
-                placeholder="Boradigan manzil"
-              />
-            </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Mijozdan to'lov */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-400 mb-2">Mijozdan to'lov (so'm)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={form.payment ? formatMoney(form.payment) : ''}
-              onChange={e => setForm(f => ({ ...f, payment: e.target.value.replace(/\D/g, '') }))}
-              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
-              placeholder="0"
-            />
-            <p className="text-emerald-400/70 text-xs mt-1">Mijoz tomonidan to'lanadigan summa</p>
+        {/* Footer - Enhanced with better button styling */}
+        <div className="border-t border-white/10 p-6 sm:p-8 bg-slate-900/50 backdrop-blur-sm flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 sm:flex-none sm:px-8 py-4 bg-white/5 hover:bg-white/10 border-2 border-white/10 text-slate-300 hover:text-white rounded-xl font-semibold transition-all active:scale-95"
+            >
+              Bekor qilish
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={!hasChanges}
+              className="flex-1 py-4 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-xl font-bold text-lg shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all flex items-center justify-center gap-2 active:scale-95"
+            >
+              <CheckCircle size={22} />
+              Saqlash
+            </button>
           </div>
-
-          {/* Yo'l xarajati */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-400 mb-2">Yo'l xarajati (so'm)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={form.givenBudget ? formatMoney(form.givenBudget) : ''}
-              onChange={e => setForm(f => ({ ...f, givenBudget: e.target.value.replace(/\D/g, '') }))}
-              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-xl font-bold placeholder-slate-500 focus:border-amber-500/50 focus:outline-none transition-colors"
-              placeholder="0"
-            />
-            <p className="text-amber-400/70 text-xs mt-1">Haydovchiga berilgan yo'l puli</p>
-          </div>
-          {/* Masofa */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-400 mb-2">Masofa (km)</label>
-            <input
-              type="number"
-              value={form.distance}
-              onChange={e => setForm(f => ({ ...f, distance: e.target.value }))}
-              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-400 mb-2">Izoh (ixtiyoriy)</label>
-            <textarea
-              value={form.note}
-              onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-              className="w-full px-5 py-4 bg-white/5 border-2 border-white/10 rounded-xl text-white text-lg placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none transition-colors min-h-[80px] resize-none"
-              placeholder="Bosqich bo'yicha qo'shimcha izohlar..."
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-500/30 hover:shadow-2xl transition-all flex items-center justify-center gap-2"
-          >
-            <CheckCircle size={22} />
-            Saqlash
-          </button>
-        </form>
+          {hasChanges && (
+            <p className="text-center text-emerald-400/70 text-xs mt-3 flex items-center justify-center gap-1">
+              <Sparkles size={12} />
+              O'zgarishlar mavjud
+            </p>
+          )}
+        </div>
       </div>
     </ModalWrapper>,
     document.body

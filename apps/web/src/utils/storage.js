@@ -83,16 +83,13 @@ const initCapacitor = async () => {
   try {
     const { Capacitor } = await import('@capacitor/core')
     isNative = Capacitor.isNativePlatform()
-    console.log('[Storage] Platform:', isNative ? 'Native (APK)' : 'Web')
     
     if (isNative) {
       const prefs = await import('@capacitor/preferences')
       Preferences = prefs.Preferences
-      console.log('[Storage] Capacitor Preferences ready')
     }
   } catch (e) {
     // Web da Capacitor yo'q - xato emas
-    console.log('[Storage] Running in web mode')
     isNative = false
   }
   
@@ -110,7 +107,6 @@ export const storage = {
       // 🔥 Native APK - FAQAT Capacitor Preferences
       if (isNative && Preferences) {
         const { value } = await Preferences.get({ key })
-        console.log(`[Storage] Native GET ${key}:`, value ? 'found' : 'empty')
         return value
       }
       
@@ -126,7 +122,6 @@ export const storage = {
       }
       return value
     } catch (e) {
-      console.error('[Storage] Get error:', e)
       return localStorage.getItem(key)
     }
   },
@@ -137,7 +132,6 @@ export const storage = {
       // 🔥 Native APK - FAQAT Capacitor Preferences
       if (isNative && Preferences) {
         await Preferences.set({ key, value: value || '' })
-        console.log(`[Storage] Native SET ${key}`)
         return
       }
       
@@ -145,7 +139,6 @@ export const storage = {
       localStorage.setItem(key, value || '')
       await idbSet(key, value || '')
     } catch (e) {
-      console.error('[Storage] Set error:', e)
       localStorage.setItem(key, value || '')
     }
   },
@@ -156,14 +149,12 @@ export const storage = {
       // 🔥 Native APK - FAQAT Capacitor Preferences
       if (isNative && Preferences) {
         await Preferences.remove({ key })
-        console.log(`[Storage] Native REMOVE ${key}`)
         return
       }
       
       localStorage.removeItem(key)
       await idbRemove(key)
     } catch (e) {
-      console.error('[Storage] Remove error:', e)
       localStorage.removeItem(key)
     }
   },
@@ -176,8 +167,6 @@ export const storage = {
 
 // Auth ma'lumotlarini yuklash
 export async function loadAuthData() {
-  console.log('[Storage] Loading auth data...')
-  
   const [token, refreshToken, userStr] = await Promise.all([
     storage.get('token'),
     storage.get('refreshToken'),
@@ -189,24 +178,15 @@ export async function loadAuthData() {
     try {
       user = JSON.parse(userStr)
     } catch (e) {
-      console.error('[Storage] User parse error:', e)
+      // Parse error
     }
   }
-  
-  console.log('[Storage] Auth loaded:', { 
-    hasToken: !!token, 
-    hasRefreshToken: !!refreshToken,
-    hasUser: !!user,
-    userRole: user?.role 
-  })
   
   return { token, refreshToken, user }
 }
 
 // Auth ma'lumotlarini saqlash
 export async function saveAuthData(token, user, refreshToken = null) {
-  console.log('[Storage] Saving auth data...', { hasToken: !!token, hasUser: !!user })
-  
   const promises = [
     storage.set('token', token),
     storage.set('user', JSON.stringify(user))
@@ -217,18 +197,13 @@ export async function saveAuthData(token, user, refreshToken = null) {
   }
   
   await Promise.all(promises)
-  console.log('[Storage] Auth data saved successfully')
 }
 
 // Auth ma'lumotlarini o'chirish
 export async function clearAuthData() {
-  console.log('[Storage] Clearing auth data...')
-  
   await Promise.all([
     storage.remove('token'),
     storage.remove('refreshToken'),
     storage.remove('user')
   ])
-  
-  console.log('[Storage] Auth data cleared')
 }

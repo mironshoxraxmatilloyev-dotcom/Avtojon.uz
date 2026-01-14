@@ -111,6 +111,19 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
       )}
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Mijozdan to'lov */}
+        <SummaryBox 
+          label="Mijozdan to'lov" 
+          value={isInternational ? formatUSD(flight.totalPaymentUSD || 0) : formatMoney(flight.totalPayment || 0)} 
+          subValue={isInternational ? `≈ ${formatMoney(flight.totalPayment || 0)}` : null}
+          color="blue" 
+        />
+        {/* Yo'l uchun */}
+        <SummaryBox 
+          label="Yo'l uchun berilgan" 
+          value={formatMoney(flight.totalGivenBudget || 0)} 
+          color="cyan" 
+        />
         {/* Avvalgi qoldiq - faqat bor bo'lsa ko'rsatish */}
         {previousBalance > 0 && (
           <SummaryBox 
@@ -122,14 +135,31 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
         <SummaryBox 
           label={previousBalance > 0 ? "Jami kirim (qoldiq bilan)" : "Jami kirim"} 
           value={isInternational ? formatUSD(totalIncomeUSD) : formatMoney(totalIncome)} 
-          subValue={isInternational ? `≈ ${formatMoney(totalIncome)}` : (previousBalance > 0 ? `${formatMoney(flight.totalPayment + flight.totalGivenBudget)} + ${formatMoney(previousBalance)}` : null)}
+          subValue={isInternational ? `≈ ${formatMoney(totalIncome)}` : null}
           color="emerald" 
         />
         <SummaryBox 
-          label="Xarajatlar" 
-          value={isInternational ? `-${formatUSD(totalExpensesUSD)}` : `-${formatMoney(flight.totalExpenses || 0)}`} 
-          subValue={isInternational ? `≈ ${formatMoney(flight.totalExpenses || 0)}` : null}
+          label="Xarajatlar (yengil)" 
+          value={isInternational ? `-${formatUSD(flight.lightExpensesUSD || 0)}` : `-${formatMoney(flight.lightExpenses || 0)}`} 
+          subValue={isInternational ? `≈ ${formatMoney(flight.lightExpenses || 0)}` : null}
           color="red" 
+        />
+        {/* Katta xarajatlar - alohida ko'rsatish */}
+        {(flight.heavyExpenses > 0 || flight.heavyExpensesUSD > 0) && (
+          <SummaryBox 
+            label="Katta xarajatlar (biznesmen)" 
+            value={isInternational ? `-${formatUSD(flight.heavyExpensesUSD || 0)}` : `-${formatMoney(flight.heavyExpenses || 0)}`} 
+            subValue={isInternational ? `≈ ${formatMoney(flight.heavyExpenses || 0)}` : null}
+            color="orange" 
+            tooltip="Ta'mir, shina, sug'urta - biznesmen hisobidan"
+          />
+        )}
+        <SummaryBox 
+          label="Sof foyda" 
+          value={isInternational ? `+${formatUSD(flight.netProfitUSD || 0)}` : `+${formatMoney(flight.netProfit || 0)}`} 
+          subValue={isInternational ? `≈ ${formatMoney(flight.netProfit || 0)}` : null}
+          color="emerald" 
+          highlight={true}
         />
         <SummaryBox 
           label={`Haydovchi ulushi (${flight.driverProfitPercent || 0}%)`} 
@@ -197,19 +227,23 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
   )
 }
 
-function SummaryBox({ label, value, subValue, color, highlight }) {
+function SummaryBox({ label, value, subValue, color, highlight, tooltip }) {
   const colors = {
     emerald: 'text-emerald-400',
     red: 'text-red-400',
     purple: 'text-purple-400',
-    amber: 'text-amber-400'
+    amber: 'text-amber-400',
+    orange: 'text-orange-400',
+    blue: 'text-blue-400',
+    cyan: 'text-cyan-400'
   }
 
   return (
-    <div className={`rounded-lg p-3 text-center ${highlight ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-white/5'}`}>
+    <div className={`rounded-lg p-3 text-center ${highlight ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-white/5'}`} title={tooltip}>
       <p className={`text-xl font-bold ${colors[color]}`}>{value}</p>
       {subValue && <p className="text-xs text-slate-500 mt-0.5">{subValue}</p>}
       <p className={`text-xs mt-1 ${highlight ? 'text-emerald-300' : 'text-slate-400'}`}>{label}</p>
+      {tooltip && <p className="text-xs text-slate-500 mt-1">ℹ️</p>}
     </div>
   )
 }

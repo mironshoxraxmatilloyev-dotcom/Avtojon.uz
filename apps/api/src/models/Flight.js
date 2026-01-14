@@ -585,16 +585,24 @@ flightSchema.pre('save', function (next) {
     }
   });
 
-  // Chegara xarajatlarini ham qo'shish
+  // Chegara xarajatlarini ham qo'shish (yengil xarajat)
   if (this.borderCrossings && this.borderCrossings.length > 0) {
-    totalExpensesUSD += this.borderCrossingsTotalUSD || 0;
-    totalExpensesUZS += this.borderCrossingsTotalUZS || 0;
+    const borderUSD = this.borderCrossingsTotalUSD || 0;
+    const borderUZS = this.borderCrossingsTotalUZS || 0;
+    totalExpensesUSD += borderUSD;
+    totalExpensesUZS += borderUZS;
+    lightExpensesUSD += borderUSD;
+    lightExpensesUZS += borderUZS;
   }
 
-  // Platon xarajatini qo'shish
+  // Platon xarajatini qo'shish (yengil xarajat)
   if (this.platon && this.platon.amountInUSD) {
-    totalExpensesUSD += this.platon.amountInUSD;
-    totalExpensesUZS += Math.round(this.platon.amountInUSD * 12800);
+    const platonUSD = this.platon.amountInUSD;
+    const platonUZS = Math.round(platonUSD * 12800);
+    totalExpensesUSD += platonUSD;
+    totalExpensesUZS += platonUZS;
+    lightExpensesUSD += platonUSD;
+    lightExpensesUZS += platonUZS;
   }
 
   this.totalExpenses = Math.round(totalExpensesUZS);
@@ -617,11 +625,13 @@ flightSchema.pre('save', function (next) {
   // 1. Jami kirim = Mijozdan olingan + Yo'l uchun berilgan
   this.totalIncome = this.totalPayment + this.totalGivenBudget;
 
-  // 2. Sof foyda = Jami kirim - Jami xarajatlar - Peritsena firma xarajatlari
+  // 2. Sof foyda = Jami kirim - FAQAT YENGIL XARAJATLAR - Peritsena firma xarajatlari
+  // MUHIM: Katta xarajatlar (heavy) haydovchi foydasi hisobiga kirmaydi
+  // MUHIM: Katta xarajatlar alohida ko'rsatiladi va biznesmen hisobidan to'lanadi
   // MUHIM: Peritsena dan firma xarajatlari ayiriladi
   // MUHIM: Reys boshlanmaganda (active) sof foyda zarar bo'lsa manfiy ko'rsatiladi
   // Reys davomida pul olinsa zarar yopiladi va foyda ortadi
-  this.netProfit = this.totalIncome - this.totalExpenses - this.totalPeritsenaFee;
+  this.netProfit = this.totalIncome - lightExpensesUZS - this.totalPeritsenaFee;
 
   // 3. Shofyor ulushi va biznesmen foydasi
   // MUHIM: Faol reysda shofyor ulushi hisoblanMAYDI - faqat sof foyda ko'rsatiladi

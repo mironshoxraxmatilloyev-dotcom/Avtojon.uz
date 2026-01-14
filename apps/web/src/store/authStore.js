@@ -16,9 +16,7 @@ export const useAuthStore = create((set, get) => ({
   // App boshlanganda storage dan yuklash - MUHIM!
   initAuth: async () => {
     try {
-      console.log('[Auth] Initializing from persistent storage...')
       const { token, refreshToken, user } = await loadAuthData()
-      console.log('[Auth] Loaded:', { hasToken: !!token, hasUser: !!user })
       
       if (token && user) {
         // Token va user bor - API header ni ham set qilish
@@ -33,7 +31,6 @@ export const useAuthStore = create((set, get) => ({
       })
       return { token, user }
     } catch (e) {
-      console.error('[Auth] Init error:', e)
       set({ initialized: true })
       return { token: null, user: null }
     }
@@ -92,7 +89,6 @@ export const useAuthStore = create((set, get) => ({
   // Demo login uchun - token va user to'g'ridan-to'g'ri set qilish
   setAuth: async (token, user, refreshToken = null) => {
     if (!token || !user) {
-      console.error('setAuth: token yoki user yo\'q')
       return
     }
     await saveAuthData(token, user, refreshToken)

@@ -56,7 +56,7 @@ export default function Payment() {
         setPaymentStatus(data.data)
       }
     } catch (err) {
-      console.error('Status check error:', err)
+      // Error ignored
     } finally {
       setCalculating(false)
     }

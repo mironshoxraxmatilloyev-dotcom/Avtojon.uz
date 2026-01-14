@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Users, CheckCircle, Clock, X, Wallet } from 'lucide-react'
+import { Users, CheckCircle, Clock, X, Wallet, AlertTriangle } from 'lucide-react'
 import api from '../../services/api'
 
 const formatMoney = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0)
@@ -27,12 +27,69 @@ const ModalWrapper = memo(({ children, onClose }) => {
   )
 })
 
+// Confirmation Modal - Tasdiqlash uchun
+const ConfirmationModal = memo(function ConfirmationModal({ title, message, amount, onConfirm, onCancel }) {
+  return createPortal(
+    <ModalWrapper onClose={onCancel}>
+      <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden border border-red-500/20">
+        {/* Header */}
+        <div className="relative px-5 py-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border-b border-red-500/20">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">{title || 'Tasdiqlash'}</h3>
+              <p className="text-red-400/70 text-sm">Bu amalni tasdiqlaysizmi?</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          <p className="text-slate-300 text-base">{message}</p>
+          
+          {amount && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+              <p className="text-slate-400 text-sm mb-1">To'lov summasi</p>
+              <p className="text-red-400 text-2xl font-bold">{formatMoney(amount)} so'm</p>
+            </div>
+          )}
+
+          <p className="text-amber-400/70 text-sm flex items-center gap-2">
+            <AlertTriangle size={14} />
+            Bu amalni bekor qilish mumkin emas
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="p-5 border-t border-slate-700 bg-slate-900/50 flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all active:scale-95"
+          >
+            Bekor qilish
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl transition-all active:scale-95"
+          >
+            Ha, bekor qilish
+          </button>
+        </div>
+      </div>
+    </ModalWrapper>,
+    document.body
+  )
+})
+
 // Qisman to'lov modali - BIR HAYDOVCHINING BARCHA MARSHRUTLARI UCHUN
 const PartialPaymentModal = memo(function PartialPaymentModal({ driverGroup, onClose, onSubmit }) {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [selectedFlightId, setSelectedFlightId] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null) // { paymentIndex, amount }
 
   // Barcha marshrutlardan umumiy qarz va to'lovni hisoblash
   const totalOwed = driverGroup.flights.reduce((sum, f) => sum + (f.driverOwes || 0), 0)
@@ -221,6 +278,32 @@ const PartialPaymentModal = memo(function PartialPaymentModal({ driverGroup, onC
               placeholder="Izoh (ixtiyoriy)"
             />
           </div>
+
+          {/* To'lov tarixi - agar bor bo'lsa */}
+          {selectedFlight && selectedFlight.driverPayments && selectedFlight.driverPayments.length > 0 && (
+            <div className="border-t border-slate-200 pt-4">
+              <p className="text-sm font-medium text-slate-700 mb-2">To'lov tarixi:</p>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {selectedFlight.driverPayments.map((payment, index) => (
+                  <div key={index} className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-emerald-700">{formatMoney(payment.amount)} so'm</p>
+                      <p className="text-xs text-emerald-600">{new Date(payment.date).toLocaleDateString('uz-UZ')}</p>
+                      {payment.note && <p className="text-xs text-slate-500 mt-0.5">{payment.note}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete({ paymentIndex: index, amount: payment.amount })}
+                      className="ml-2 p-1.5 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
+                      title="To'lovni bekor qilish"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submit button - Fixed bottom */}
@@ -234,6 +317,20 @@ const PartialPaymentModal = memo(function PartialPaymentModal({ driverGroup, onC
             {isFullPayment ? 'To\'liq to\'lash' : 'Qisman to\'lash'}
           </button>
         </div>
+
+        {/* Confirmation Modal for Payment Deletion */}
+        {confirmDelete && (
+          <ConfirmationModal
+            title="To'lovni bekor qilish"
+            message="Bu to'lovni bekor qilmoqchimisiz? Summa haydovchining qarziga qaytariladi."
+            amount={confirmDelete.amount}
+            onConfirm={() => {
+              onSubmit(selectedFlightId, { deletePaymentIndex: confirmDelete.paymentIndex })
+              setConfirmDelete(null)
+            }}
+            onCancel={() => setConfirmDelete(null)}
+          />
+        )}
       </div>
     </ModalWrapper>,
     document.body
@@ -268,6 +365,44 @@ export default function DriverDebts() {
     const flight = debts.find(d => d._id === flightId)
     if (!flight) return
 
+    // Agar to'lovni bekor qilish bo'lsa
+    if (data.deletePaymentIndex !== undefined) {
+      try {
+        const response = await api.delete(`/flights/${flightId}/driver-payment/${data.deletePaymentIndex}`)
+        
+        // Muvaffaqiyatli - UI ni yangilash
+        setDebts(prev => prev.map(d => {
+          if (d._id !== flightId) return d
+          const updatedFlight = response.data.data
+          return {
+            ...d,
+            driverPaidAmount: updatedFlight.driverPaidAmount,
+            driverRemainingDebt: updatedFlight.driverRemainingDebt,
+            driverPaymentStatus: updatedFlight.driverPaymentStatus,
+            driverPayments: updatedFlight.driverPayments
+          }
+        }))
+        
+        // Stats'ni yangilash
+        const refundedAmount = response.data.refundedAmount || 0
+        setStats(prev => ({
+          ...prev,
+          totalDebt: prev.totalDebt + refundedAmount,
+          paidAmount: Math.max(0, prev.paidAmount - refundedAmount)
+        }))
+        
+        return
+      } catch (err) {
+        setErrorModal({
+          title: 'Xatolik',
+          message: err.response?.data?.message || 'To\'lovni bekor qilishda xatolik'
+        })
+        fetchDebts()
+        return
+      }
+    }
+
+    // Yangi to'lov qo'shish
     const totalOwed = flight.driverOwes || 0
     const previouslyPaid = flight.driverPaidAmount || 0
     const newPaidAmount = previouslyPaid + data.amount
@@ -275,10 +410,8 @@ export default function DriverDebts() {
     const newStatus = newRemainingDebt <= 0 ? 'paid' : 'partial'
 
     try {
-      console.log('Sending payment data:', { flightId, data })
       // Serverga yuborish
       const response = await api.post(`/flights/${flightId}/driver-payment`, data)
-      console.log('Payment response:', response.data)
       
       // Muvaffaqiyatli - UI ni yangilash
       // TUZATILDI: Faqat marshrutni yangilash, haydovchini o'chirmaslik
@@ -302,8 +435,6 @@ export default function DriverDebts() {
         pendingCount: newStatus === 'paid' ? Math.max(0, prev.pendingCount - 1) : prev.pendingCount
       }))
     } catch (err) {
-      console.error('Payment error:', err)
-      console.error('Error response:', err.response?.data)
       setErrorModal({
         title: 'Xatolik',
         message: err.response?.data?.message || 'Xatolik yuz berdi'

@@ -107,7 +107,7 @@ export default function VehicleDetailPanel() {
         setServices(s.data.data || { services: [], stats: {} })
         setIncomeData(inc.data.data || { incomes: [], stats: {} })
       }
-    } catch (err) { console.error(err) }
+    } catch (err) { /* Error ignored */ }
     finally { if (isMounted.current) setRefreshing(false) }
   }, [id])
 
@@ -151,7 +151,6 @@ export default function VehicleDetailPanel() {
       await api.delete(`/maintenance/${type}/${itemId}`)
       // Muvaffaqiyatli o'chirildi - hech narsa qilish shart emas
     } catch (err) {
-      console.error('O\'chirishda xatolik:', err)
       alert.error('Xatolik', 'O\'chirishda xatolik yuz berdi')
       // Xatolik bo'lsa ma'lumotlarni qayta yuklash
       loadData()
@@ -218,14 +217,11 @@ export default function VehicleDetailPanel() {
     }
 
     setErrors(e)
-    console.log('🔍 Validation:', { type, data, errors: e, isValid: !Object.keys(e).length })
     return !Object.keys(e).length
   }, [vehicle?.currentOdometer])
 
   const handleSubmit = useCallback(async (type, form, endpoint, itemId = null) => {
-    console.log('📤 handleSubmit called:', { type, form, endpoint, itemId })
     if (!validate(type, form)) {
-      console.log('❌ Validation failed')
       return
     }
     console.log('✅ Validation passed')

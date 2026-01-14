@@ -175,8 +175,17 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
     // Har bir mashrut uchun driverOwes ni hisoblash
     const processedFlights = flights.map(f => {
       const totalIncome = (f.totalPayment || 0) + (f.roadMoney || f.totalGivenBudget || 0);
+      
+      // YANGI LOGIKA: Faqat yengil xarajatlar ayiriladi
+      const lightExpenses = f.lightExpenses || 0;
+      const heavyExpenses = f.heavyExpenses || 0;
       const totalExpenses = f.totalExpenses || 0;
-      const netProfit = f.netProfit || f.profit || (totalIncome - totalExpenses);
+      
+      // Sof foyda - faqat yengil xarajatlar ayirilgan
+      // Agar lightExpenses mavjud bo'lsa, uni ishlatamiz
+      // Aks holda, eski logika (backward compatibility)
+      const netProfit = f.netProfit || (totalIncome - lightExpenses);
+      
       const driverProfitAmount = f.driverProfitAmount || 0;
 
       let calculatedDriverOwes = f.driverOwes || f.businessProfit || 0;
@@ -188,7 +197,9 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
         ...f,
         driverOwes: calculatedDriverOwes,
         calculatedNetProfit: netProfit,
-        calculatedTotalIncome: totalIncome
+        calculatedTotalIncome: totalIncome,
+        lightExpenses,
+        heavyExpenses
       };
     });
 
@@ -990,6 +1001,26 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       }
     });
 
+    // Chegara xarajatlarini qo'shish (yengil xarajat)
+    if (flight.borderCrossings && flight.borderCrossings.length > 0) {
+      const borderUZS = flight.borderCrossingsTotalUZS || 0;
+      const borderUSD = flight.borderCrossingsTotalUSD || 0;
+      totalExpensesUZS += borderUZS;
+      totalExpensesUSD += borderUSD;
+      lightExpensesUZS += borderUZS;
+      expensesDuringUZS += borderUZS;
+    }
+
+    // Platon xarajatini qo'shish (yengil xarajat)
+    if (flight.platon && flight.platon.amountInUSD) {
+      const platonUSD = flight.platon.amountInUSD;
+      const platonUZS = Math.round(platonUSD * uzsToUsdRate);
+      totalExpensesUZS += platonUZS;
+      totalExpensesUSD += platonUSD;
+      lightExpensesUZS += platonUZS;
+      expensesDuringUZS += platonUZS;
+    }
+
     // Xalqaro mashrut uchun USD da hisoblash
     if (isInternational) {
       // To'lovni USD ga konvertatsiya
@@ -999,13 +1030,36 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       // Jami kirim USD da
       const totalIncomeUSD = totalPaymentUSD + totalGivenBudgetUSD;
 
-      // Sof foyda USD da
-      const netProfitUSD = totalIncomeUSD - totalExpensesUSD;
+      // Sof foyda USD da - FAQAT YENGIL XARAJATLAR ayiriladi
+      // Katta xarajatlar alohida ko'rsatiladi
+      let lightExpensesUSD = 0;
+      let heavyExpensesUSD = 0;
+      
+      flight.expenses.forEach(exp => {
+        const isHeavy = HEAVY_EXPENSE_TYPES.includes(exp.type) || exp.expenseClass === 'heavy';
+        if (isHeavy) {
+          heavyExpensesUSD += (exp.amountInUSD || 0);
+        } else {
+          lightExpensesUSD += (exp.amountInUSD || 0);
+        }
+      });
+      
+      // Chegara va Platon ham yengil xarajatlar
+      if (flight.borderCrossings && flight.borderCrossings.length > 0) {
+        lightExpensesUSD += (flight.borderCrossingsTotalUSD || 0);
+      }
+      if (flight.platon && flight.platon.amountInUSD) {
+        lightExpensesUSD += flight.platon.amountInUSD;
+      }
+      
+      const netProfitUSD = totalIncomeUSD - lightExpensesUSD;
 
       // USD maydonlarini saqlash
       flight.totalPaymentUSD = Math.round(totalPaymentUSD * 100) / 100;
       flight.totalIncomeUSD = Math.round(totalIncomeUSD * 100) / 100;
       flight.totalExpensesUSD = Math.round(totalExpensesUSD * 100) / 100;
+      flight.lightExpensesUSD = Math.round(lightExpensesUSD * 100) / 100;
+      flight.heavyExpensesUSD = Math.round(heavyExpensesUSD * 100) / 100;
       flight.netProfitUSD = Math.round(netProfitUSD * 100) / 100;
 
       // Shofyor ulushi USD da
@@ -1042,19 +1096,18 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
       const totalIncome = totalPaymentAmount + totalGivenBudgetAmount;
 
       // ============ HISOBLASH ALGORITMI ============
-      // MUHIM: Barcha xarajatlar (before, during, after) jami kirimdan ayiriladi
-      // Sof foyda = Jami kirim - Barcha xarajatlar
-      const netProfit = totalIncome - totalExpensesUZS;
+      // MUHIM: FAQAT YENGIL xarajatlar haydovchi foydasi hisobiga kiradi
+      // Katta xarajatlar alohida ko'rsatiladi va biznesmen hisobidan to'lanadi
+      // Sof foyda = Jami kirim - Yengil xarajatlar
+      const netProfit = totalIncome - lightExpensesUZS;
 
       // Haqiqiy sof foyda = Avvalgi qoldiq + Reys foydasidan
       const totalNetProfit = previousBalance + netProfit;
 
-      // Shofyor ulushi - YENGIL xarajatlar ayirilgan foydadan hisoblanadi
-      // Yengil xarajatlar shofyor hisobidan ayiriladi
-      const netProfitForDriver = totalNetProfit - lightExpensesUZS;
-
-      if (netProfitForDriver > 0 && percent > 0) {
-        flight.driverProfitAmount = Math.round(netProfitForDriver * percent / 100);
+      // Shofyor ulushi - sof foydadan hisoblanadi
+      // Sof foyda allaqachon faqat yengil xarajatlar ayirilgan
+      if (totalNetProfit > 0 && percent > 0) {
+        flight.driverProfitAmount = Math.round(totalNetProfit * percent / 100);
       } else {
         flight.driverProfitAmount = 0;
       }
@@ -1905,6 +1958,76 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
         remaining: flight.driverRemainingDebt,
         status: flight.driverPaymentStatus
       }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Haydovchidan olingan to'lovni bekor qilish (orqaga qaytarish)
+router.delete('/:id/driver-payment/:paymentIndex', protect, businessOnly, async (req, res) => {
+  try {
+    const { id, paymentIndex } = req.params;
+    const index = parseInt(paymentIndex);
+
+    const flight = await Flight.findOne({ _id: id, user: req.user._id });
+    if (!flight) {
+      return res.status(404).json({ success: false, message: 'Reys topilmadi' });
+    }
+
+    if (!flight.driverPayments || !flight.driverPayments[index]) {
+      return res.status(404).json({ success: false, message: 'To\'lov topilmadi' });
+    }
+
+    // To'lovni olish
+    const payment = flight.driverPayments[index];
+    const paymentAmount = payment.amount;
+
+    // To'lovni o'chirish
+    flight.driverPayments.splice(index, 1);
+
+    // Jami to'langan summani yangilash
+    flight.driverPaidAmount = Math.max(0, (flight.driverPaidAmount || 0) - paymentAmount);
+    flight.driverRemainingDebt = (flight.driverOwes || 0) - flight.driverPaidAmount;
+
+    // Status yangilash
+    if (flight.driverPaidAmount === 0) {
+      flight.driverPaymentStatus = 'pending';
+      flight.driverPaymentDate = null;
+    } else if (flight.driverRemainingDebt <= 0) {
+      flight.driverPaymentStatus = 'paid';
+    } else {
+      flight.driverPaymentStatus = 'partial';
+    }
+
+    await flight.save();
+
+    // Haydovchi balansini yangilash
+    const driver = await Driver.findById(flight.driver);
+    if (driver) {
+      driver.currentBalance = flight.driverRemainingDebt || 0;
+      await driver.save();
+    }
+
+    const populatedFlight = await Flight.findById(flight._id)
+      .populate('driver', 'fullName phone currentBalance')
+      .populate('vehicle', 'plateNumber brand');
+
+    // Socket xabar
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`business-${req.user._id}`).emit('flight-updated', { flight: populatedFlight });
+      io.to(`driver-${flight.driver}`).emit('flight-updated', {
+        flight: populatedFlight,
+        message: `${paymentAmount.toLocaleString()} so'm to'lov bekor qilindi`
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'To\'lov bekor qilindi',
+      data: populatedFlight,
+      refundedAmount: paymentAmount
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

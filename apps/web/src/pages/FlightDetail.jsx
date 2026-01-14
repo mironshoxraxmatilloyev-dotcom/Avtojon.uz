@@ -66,7 +66,6 @@ export default function FlightDetail() {
 
   // Fetch flight
   const fetchFlight = useCallback(async (showLoader = true) => {
-    console.log('[FlightDetail] Fetching flight with ID:', id)
     
     if (id?.startsWith('temp_')) {
       setError({ type: 'notfound', message: 'Bu mashrut hali saqlanmagan' })
@@ -76,13 +75,9 @@ export default function FlightDetail() {
     if (showLoader) setLoading(true)
     setError(null)
     try {
-      console.log('[FlightDetail] Making API request to:', `/flights/${id}`)
       const res = await api.get(`/flights/${id}`)
-      console.log('[FlightDetail] API response:', res.data)
-      console.log('[FlightDetail] Expenses:', res.data.data.expenses)
       setFlight(res.data.data)
     } catch (err) {
-      console.error('[FlightDetail] API error:', err)
       if (err.response?.status === 404 || err.response?.status === 400) {
         setError({ type: 'notfound', message: 'Mashrut topilmadi' })
       } else {
@@ -295,7 +290,8 @@ export default function FlightDetail() {
   const platonExpenses = flight.platon?.amountInUZS || (flight.platon?.amountInUSD ? Math.round(flight.platon.amountInUSD * 12800) : 0)
 
   // YANGI: Jami xarajatlar - FAQAT YENGIL XARAJATLAR (katta xarajatlar alohida)
-  const allExpenses = lightExpensesTotal
+  // Chegara va Platon ham yengil xarajatlar hisoblanadi
+  const allExpenses = lightExpensesTotal + borderExpenses + platonExpenses
 
   // Jami kirim (avvalgi qoldiq bilan)
   const previousBalance = flight.previousBalance || 0
@@ -317,21 +313,6 @@ export default function FlightDetail() {
   
   // Sof foyda (Peritsena xarajatlari ayirilgan, KATTA XARAJATLAR AYIRILMAGAN)
   const netProfit = totalIncome - allExpenses - peritsenaFee
-
-  // Debug
-  console.log('[FlightDetail] Calculations:', {
-    previousBalance,
-    cashPayments,
-    peritsenaPayments,
-    peritsenaFee,
-    totalGivenBudget: flight.totalGivenBudget,
-    totalIncome,
-    lightExpensesTotal,
-    majorExpensesTotal,
-    allExpenses,
-    netProfit,
-    'flight.totalPeritsenaFee': flight.totalPeritsenaFee
-  })
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -407,14 +388,24 @@ export default function FlightDetail() {
             <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-500/30">
               <p className="text-emerald-400 font-bold text-xl sm:text-2xl">+{formatMoney(cashPayments + peritsenaPayments)}</p>
               <p className="text-emerald-300/70 text-xs mt-1">
-                Mijozdan ({formatMoney(cashPayments)} naqd + {formatMoney(peritsenaPayments)} peritsena)
+                Mijozdan ({flight.legs?.length || 0} ta reys)
               </p>
+              {peritsenaPayments > 0 && (
+                <p className="text-emerald-300/50 text-xs mt-1">
+                  {formatMoney(cashPayments)} naqd + {formatMoney(peritsenaPayments)} peritsena
+                </p>
+              )}
             </div>
 
-            {/* 3. Sarflangan */}
+            {/* 3. Sarflangan (faqat yengil xarajatlar) */}
             <div className="bg-red-500/20 rounded-xl p-4 border border-red-500/30">
               <p className="text-red-400 font-bold text-xl sm:text-2xl">-{formatMoney(allExpenses)}</p>
-              <p className="text-red-300/70 text-xs mt-1">Sarflangan</p>
+              <p className="text-red-300/70 text-xs mt-1">Sarflangan (yengil)</p>
+              {majorExpensesTotal > 0 && (
+                <p className="text-orange-300/70 text-xs mt-1">
+                  Katta: -{formatMoney(majorExpensesTotal)}
+                </p>
+              )}
             </div>
 
             {/* 4. Sof foyda */}
@@ -844,10 +835,6 @@ export default function FlightDetail() {
           flight={flight}
           onClose={() => setShowDriverPaymentModal(false)}
           onSubmit={(data) => {
-            // Debug
-            console.log('[DriverPayment] Sending:', data)
-            console.log('[DriverPayment] Flight ID:', id)
-            
             // 🚀 Modal ni darhol yopish
             setShowDriverPaymentModal(false)
             showToast.success('To\'lov qabul qilindi')
@@ -870,12 +857,9 @@ export default function FlightDetail() {
             // Background da serverga yuborish
             api.post(`/flights/${id}/driver-payment`, data)
               .then(res => {
-                console.log('[DriverPayment] Success:', res.data)
                 if (res.data?.data) setFlight(res.data.data)
               })
               .catch(err => {
-                console.error('[DriverPayment] Error:', err)
-                console.error('[DriverPayment] Response:', err.response?.data)
                 showToast.error(err.response?.data?.message || 'Xatolik yuz berdi')
                 fetchFlight(false)
               })

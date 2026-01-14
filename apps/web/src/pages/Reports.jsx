@@ -660,7 +660,7 @@ export default function Reports() {
           fuelStats: fuelStatsRes.data.data || null
         })
       } catch (err) {
-        console.error('Reports error:', err)
+        // Error ignored
       } finally {
         setLoading(false)
       }

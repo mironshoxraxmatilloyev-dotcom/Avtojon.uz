@@ -62,28 +62,28 @@ export default function SuperAdminPanel() {
 
   const fetchStats = async () => {
     try { const { data } = await api.get('/super-admin/stats'); setStats(data.data) }
-    catch (err) { console.error(err) }
+    catch (err) { /* Error ignored */ }
     finally { setLoading(false) }
   }
 
   const fetchBusinessmen = async () => {
     try { const { data } = await api.get('/super-admin/businessmen'); setBusinessmen(data.data || []) }
-    catch (err) { console.error(err) }
+    catch (err) { /* Error ignored */ }
   }
 
   const fetchDrivers = async () => {
     try { const { data } = await api.get('/super-admin/drivers'); setDrivers(data.data || []) }
-    catch (err) { console.error(err) }
+    catch (err) { /* Error ignored */ }
   }
 
   const fetchUsers = async () => {
     try { const { data } = await api.get('/super-admin/users'); setUsers(data.data || []) }
-    catch (err) { console.error(err) }
+    catch (err) { /* Error ignored */ }
   }
 
   const fetchVehicles = async () => {
     try { const { data } = await api.get('/super-admin/vehicles'); setVehicles(data.data || []) }
-    catch (err) { console.error(err) }
+    catch (err) { /* Error ignored */ }
   }
 
   const handleSubmit = async (e) => {

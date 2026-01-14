@@ -11,7 +11,6 @@ export const isCredentialAPISupported = () => {
 // Parolni brauzer menejeriga saqlash
 export const saveCredentials = async (username, password) => {
   if (!isCredentialAPISupported()) {
-    console.log('Credential API qo\'llab-quvvatlanmaydi')
     return false
   }
 
@@ -23,10 +22,8 @@ export const saveCredentials = async (username, password) => {
     })
 
     await navigator.credentials.store(credential)
-    console.log('Credentials saved to browser')
     return true
   } catch (error) {
-    console.error('Credential saqlashda xato:', error)
     return false
   }
 }
@@ -51,7 +48,6 @@ export const getStoredCredentials = async () => {
     }
     return null
   } catch (error) {
-    console.error('Credential olishda xato:', error)
     return null
   }
 }
@@ -90,6 +86,6 @@ export const preventAutoSignIn = async () => {
   try {
     await navigator.credentials.preventSilentAccess()
   } catch (error) {
-    console.error('preventSilentAccess xato:', error)
+    // Error ignored
   }
 }

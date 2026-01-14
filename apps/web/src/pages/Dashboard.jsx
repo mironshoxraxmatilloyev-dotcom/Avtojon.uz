@@ -47,7 +47,6 @@ function MapCenterUpdater({ locations, selectedDriver, shouldCenter }) {
 
     return null
   } catch (error) {
-    console.error('MapCenterUpdater error:', error)
     return null
   }
 }
@@ -329,7 +328,6 @@ export default function Dashboard() {
         }).catch(() => { })
 
       } catch (err) {
-        console.error('Stats error:', err)
         setError({
           type: err.isNetworkError ? 'network' : err.isServerError ? 'server' : 'generic',
           message: err.userMessage || 'Ma\'lumotlarni yuklashda xatolik'
