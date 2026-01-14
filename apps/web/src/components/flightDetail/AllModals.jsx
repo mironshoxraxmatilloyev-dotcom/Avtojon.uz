@@ -52,6 +52,8 @@ const ModalWrapper = memo(({ children, onClose, size = 'lg' }) => {
   }
 
   useEffect(() => {
+    // Scroll pozitsiyasini tepaga o'tkazish
+    window.scrollTo(0, 0)
     document.body.style.overflow = 'hidden'
     const handleEsc = (e) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', handleEsc)
@@ -62,9 +64,9 @@ const ModalWrapper = memo(({ children, onClose, size = 'lg' }) => {
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full ${sizes[size]} animate-slide-up sm:animate-scale-in`} onClick={e => e.stopPropagation()}>
+      <div className={`relative w-full ${sizes[size]} animate-slide-up sm:animate-scale-in my-auto`} onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>

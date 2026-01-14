@@ -1126,7 +1126,6 @@ router.put('/:id/complete', protect, businessOnly, async (req, res) => {
         netProfit,
         totalNetProfit,
         lightExpensesUZS,
-        netProfitForDriver,
         driverProfitAmount: flight.driverProfitAmount,
         businessProfit: flight.businessProfit
       });

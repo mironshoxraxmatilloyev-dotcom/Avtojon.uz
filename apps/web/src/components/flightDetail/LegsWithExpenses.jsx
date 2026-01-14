@@ -270,23 +270,13 @@ export default function LegsWithExpenses({
                 )}
               </div>
             </div>
-            {isActive && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onAddExpense(selectedLeg, selectedLegIndex)}
-                  className="px-4 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-orange-600 active:scale-[0.98] transition-all"
-                >
-                  <Plus size={18} /> Qo'shish
-                </button>
-                {flight.expenses && flight.expenses.length > 0 && (
-                  <button
-                    onClick={onViewFlightExpenses}
-                    className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-indigo-600 active:scale-[0.98] transition-all"
-                  >
-                    <FileText size={18} /> Ko'rish ({flight.expenses.length})
-                  </button>
-                )}
-              </div>
+            {isActive && flight.expenses && flight.expenses.length > 0 && (
+              <button
+                onClick={onViewFlightExpenses}
+                className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-indigo-600 active:scale-[0.98] transition-all"
+              >
+                <FileText size={18} /> Ko'rish ({flight.expenses.length})
+              </button>
             )}
           </div>
 
