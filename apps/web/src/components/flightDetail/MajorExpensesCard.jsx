@@ -15,48 +15,9 @@ const MAJOR_EXPENSE_TYPES = {
 }
 
 export default function MajorExpensesCard({ expenses, onEdit, onDelete, onAdd, isActive }) {
+  // Agar katta xarajatlar bo'lmasa, hech narsa ko'rsatmaslik
   if (!expenses || expenses.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
-              <Wrench className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Katta xarajatlar</h3>
-              <p className="text-xs text-slate-500">Ta'mir, shina, sug'urta va boshqalar</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-          <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-            <Wrench className="w-6 h-6 text-slate-400" strokeWidth={2} />
-          </div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">Katta xarajatlar yo'q</p>
-          <p className="text-xs text-slate-500 text-center max-w-xs mb-4">
-            Katta ta'mir, shina, sug'urta kabi xarajatlar bu yerda ko'rsatiladi
-          </p>
-          {isActive && onAdd && (
-            <button
-              onClick={onAdd}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-all flex items-center gap-2 text-sm shadow-sm hover:shadow-md active:scale-95"
-            >
-              <Plus size={16} strokeWidth={2.5} />
-              Xarajat qo'shish
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <p className="text-xs text-amber-800 leading-relaxed">
-            <span className="font-semibold">Eslatma:</span> Katta xarajatlar haydovchi oyligiga ta'sir qilmaydi va alohida hisoblanadi.
-          </p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   const total = expenses.reduce((sum, e) => sum + (e.amountInUZS || e.amount || 0), 0)
@@ -73,15 +34,6 @@ export default function MajorExpensesCard({ expenses, onEdit, onDelete, onAdd, i
             <p className="text-xs text-slate-500">{expenses.length} ta xarajat</p>
           </div>
         </div>
-        {isActive && onAdd && (
-          <button
-            onClick={onAdd}
-            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all active:scale-95"
-            title="Xarajat qo'shish"
-          >
-            <Plus size={20} strokeWidth={2.5} />
-          </button>
-        )}
       </div>
 
       <div className="space-y-2 mb-4">

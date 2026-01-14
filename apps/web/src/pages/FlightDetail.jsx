@@ -525,11 +525,6 @@ export default function FlightDetail() {
           expenses={majorExpenses}
           onEdit={handleEditExpense}
           onDelete={handleDeleteExpense}
-          onAdd={() => {
-            setSelectedLegForExpense(null)
-            setEditingExpense(null)
-            setShowExpenseModal(true)
-          }}
           isActive={isActive}
         />
 
