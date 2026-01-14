@@ -111,20 +111,6 @@ export const UpgradeModal = memo(({ onClose, canClose }) => {
               <X size={18} />
             </button>
           )}
-          
-          {/* Crown icon - visible at top */}
-          <div className="flex justify-center mb-3">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600 rounded-2xl shadow-xl flex items-center justify-center border-4 border-white/20">
-              <Crown className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
-            </div>
-          </div>
-          
-          {/* Premium badge */}
-          <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-[10px] text-white font-bold uppercase tracking-wider">
-              ⭐ Premium
-            </span>
-          </div>
         </div>
 
         {/* Content - scrollable on mobile */}

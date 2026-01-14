@@ -755,10 +755,11 @@ export default function FlightDetail() {
             const driverProfitAmount = basis > 0 && percent > 0 ? Math.round(basis * percent / 100) : 0
             const businessProfit = netProfit - driverProfitAmount
 
-            // 🚀 Optimistic update - shofyor ulushi bilan
+            // 🚀 Optimistic update - shofyor ulushi bilan VA status completed
             setFlight(prev => ({
               ...prev,
               status: 'completed',
+              completedAt: new Date().toISOString(),
               endOdometer: data.endOdometer,
               endFuel: data.endFuel,
               driverProfitPercent: percent,
@@ -772,11 +773,12 @@ export default function FlightDetail() {
               .then(res => {
                 if (res.data?.data) {
                   setFlight(res.data.data)
-                  // Page refresh - status'ni yangilash uchun
-                  setTimeout(() => fetchFlight(false), 500)
                 }
               })
-              .catch(() => fetchFlight(false))
+              .catch(() => {
+                // Xatolik bo'lsa, qayta yuklash
+                fetchFlight(false)
+              })
           }}
         />
       )}

@@ -30,7 +30,7 @@ router.get('/subscription', protect, businessOnly, async (req, res) => {
       // User uchun subscription tekshirish
       const now = new Date();
       const subscription = user.subscription || {};
-      const endDate = subscription.endDate ? new Date(subscription.endDate) : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const endDate = subscription.endDate ? new Date(subscription.endDate) : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       const isExpired = now > endDate;
       
       return res.json({

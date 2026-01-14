@@ -214,109 +214,140 @@ export default function Payment() {
 
   // Asosiy to'lov sahifasi
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-y-auto">
       {/* Header */}
-      <header className="p-4 lg:p-6">
+      <header className="p-4 lg:p-6 sticky top-0 bg-white/80 backdrop-blur-md z-10 border-b border-gray-100">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
         >
           <ArrowLeft size={20} />
           <span>Orqaga</span>
         </button>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 pb-12">
+      <div className="max-w-lg mx-auto px-4 py-8 pb-12">
         {/* Title */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30">
-            <Truck className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-indigo-500/40 animate-pulse">
+            <Truck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Obuna to'lovi</h1>
-          <p className="text-gray-500">Har bir mashina uchun oylik to'lov</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">Obuna to'lovi</h1>
+          <p className="text-gray-600 text-lg">Har bir mashina uchun oylik to'lov</p>
         </div>
 
         {/* Price Card */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
-          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                <Truck className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white rounded-3xl p-6 border-2 border-indigo-100 shadow-xl shadow-indigo-500/10 mb-6">
+          <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <Truck className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Mashinalar soni</p>
+                <p className="font-bold text-gray-900 text-lg">Mashinalar soni</p>
                 <p className="text-sm text-gray-500">{formatPrice(PRICE_PER_VEHICLE)} so'm / mashina</p>
               </div>
             </div>
-            <span className="text-2xl font-bold text-indigo-600">{priceData?.vehicleCount}</span>
+            <span className="text-3xl font-bold text-indigo-600">{priceData?.vehicleCount}</span>
           </div>
 
-          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-emerald-600" />
+          <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Muddat</p>
+                <p className="font-bold text-gray-900 text-lg">Muddat</p>
                 <p className="text-sm text-gray-500">Oylik obuna</p>
               </div>
             </div>
-            <span className="text-lg font-semibold text-gray-700">30 kun</span>
+            <span className="text-xl font-bold text-gray-700">30 kun</span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <p className="text-lg font-semibold text-gray-900">Jami to'lov:</p>
-            <p className="text-3xl font-bold text-indigo-600">
-              {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'} <span className="text-base font-normal text-gray-500">so'm</span>
-            </p>
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-lg font-bold text-gray-700">Jami to'lov:</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'}
+              </p>
+            </div>
+            <p className="text-right text-gray-500 text-sm mt-1">so'm</p>
           </div>
         </div>
 
         {/* Info */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-          <p className="text-sm text-amber-800">
-            <strong>Eslatma:</strong> Birinchi 7 kun bepul! Sinov muddati tugagandan so'ng to'lov talab qilinadi.
-          </p>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-5 mb-6 shadow-lg shadow-amber-500/10">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
+              <span className="text-white text-xl">💡</span>
+            </div>
+            <div>
+              <p className="font-bold text-amber-900 mb-1">Birinchi 7 kun bepul!</p>
+              <p className="text-sm text-amber-800">
+                Sinov muddati tugagandan so'ng to'lov talab qilinadi. Istalgan vaqt bekor qilishingiz mumkin.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Payment Methods */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-gray-400" />
+        <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 mb-6 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <CreditCard className="w-5 h-5 text-white" />
+            </div>
             To'lov usuli
           </h3>
 
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setSelectedProvider('payme')}
-              className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
+              className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all transform hover:scale-105 ${
                 selectedProvider === 'payme'
-                  ? 'border-cyan-500 bg-cyan-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-cyan-500 bg-gradient-to-br from-cyan-50 to-cyan-100 shadow-xl shadow-cyan-500/20'
+                  : 'border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50'
               }`}
             >
-              <span className="text-xl font-bold text-cyan-500">payme</span>
-              <span className="text-xs text-gray-500">Humo, UzCard, Visa</span>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                selectedProvider === 'payme' ? 'bg-white shadow-lg' : 'bg-gray-50'
+              }`}>
+                <span className="text-2xl font-bold text-cyan-500">payme</span>
+              </div>
+              <span className="text-xs text-gray-600 font-medium">Humo, UzCard, Visa</span>
+              {selectedProvider === 'payme' && (
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              )}
             </button>
 
             <button
               onClick={() => setSelectedProvider('click')}
-              className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
+              className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all transform hover:scale-105 ${
                 selectedProvider === 'click'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl shadow-blue-500/20'
+                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
               }`}
             >
-              <span className="text-xl font-bold text-blue-600">CLICK</span>
-              <span className="text-xs text-gray-500">Humo, UzCard, Visa</span>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                selectedProvider === 'click' ? 'bg-white shadow-lg' : 'bg-gray-50'
+              }`}>
+                <span className="text-2xl font-bold text-blue-600">CLICK</span>
+              </div>
+              <span className="text-xs text-gray-600 font-medium">Humo, UzCard, Visa</span>
+              {selectedProvider === 'click' && (
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              )}
             </button>
           </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-center">
-            {error}
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 mb-6 text-red-700 text-center font-semibold shadow-lg shadow-red-500/10">
+            ⚠️ {error}
           </div>
         )}
 
@@ -324,24 +355,48 @@ export default function Payment() {
         <button
           onClick={handlePayment}
           disabled={loading || !selectedProvider}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-indigo-500/30 disabled:shadow-none flex items-center justify-center gap-2"
+          className="w-full py-5 bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 hover:from-indigo-600 hover:via-purple-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl font-bold text-lg transition-all shadow-2xl shadow-indigo-500/40 disabled:shadow-none flex items-center justify-center gap-3 transform hover:scale-[1.02] active:scale-[0.98]"
         >
           {loading ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-6 h-6 animate-spin" />
               Yuklanmoqda...
             </>
           ) : (
             <>
+              <CreditCard className="w-6 h-6" />
               To'lash - {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'} so'm
             </>
           )}
         </button>
 
         {/* Security */}
-        <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 text-sm">
-          <Shield size={16} />
-          <span>Xavfsiz to'lov</span>
+        <div className="flex items-center justify-center gap-3 mt-6 text-gray-500 text-sm">
+          <Shield size={18} className="text-emerald-500" />
+          <span className="font-medium">Xavfsiz to'lov - SSL shifrlangan</span>
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-8 bg-gray-50 rounded-2xl p-5 border border-gray-200">
+          <h4 className="font-bold text-gray-900 mb-3 text-center">Obuna imkoniyatlari</h4>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span>Cheksiz mashinalar va haydovchilar</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span>Reyslarni kuzatish va boshqarish</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span>Moliyaviy hisobotlar va statistika</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span>24/7 texnik yordam</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
