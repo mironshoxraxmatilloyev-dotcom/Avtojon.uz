@@ -122,6 +122,16 @@ export default function SuperAdminPanel() {
     } catch (err) { alert.error('Xatolik', "O'chirishda xatolik") }
   }
 
+  const handleDeleteUser = async (id) => {
+    if (!await alert.confirm({ title: "O'chirish", message: "Rostdan o'chirmoqchimisiz?", type: "danger" })) return
+    try {
+      await api.delete('/super-admin/users/' + id)
+      setUsers(prev => prev.filter(u => u._id !== id))
+      alert.success("O'chirildi", "Foydalanuvchi o'chirildi")
+      fetchStats()
+    } catch (err) { alert.error('Xatolik', "O'chirishda xatolik") }
+  }
+
   const handlePasswordUpdate = async () => {
     if (!newPassword || newPassword.length < 6) {
       alert.warning('Ogohlantirish', 'Parol kamida 6 ta belgi')
@@ -344,6 +354,7 @@ export default function SuperAdminPanel() {
               <div className="flex items-center gap-1.5">
                 <ActionButton icon={Crown} color="violet" onClick={() => setSubscriptionModal({ type: 'users', data: u })} title="Obuna" />
                 <ActionButton icon={Key} color="amber" onClick={() => setPasswordModal(u)} title="Parol" />
+                <ActionButton icon={Trash2} color="red" onClick={() => handleDeleteUser(u._id)} title="O'chirish" />
               </div>
             </div>
           </div>
