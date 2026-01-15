@@ -343,19 +343,6 @@ export default function Login() {
                   Demo hisobga kirish
                 </button>
               </form>
-
-              {/* Divider */}
-              <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-                <p className="text-slate-500">
-                  {t('noAccount')}{' '}
-                  <Link
-                    to="/register"
-                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-                  >
-                    {t('register')}
-                  </Link>
-                </p>
-              </div>
             </div>
           </div>
         </div>

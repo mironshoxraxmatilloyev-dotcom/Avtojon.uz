@@ -115,8 +115,8 @@ export default function Landing() {
 
               <AnimatedText delay={0.3}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link to="/register" className="group inline-flex items-center justify-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700 px-8 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-indigo-500/30 transition-all w-full sm:w-auto">
-                    Bepul boshlash <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <Link to="/login" className="group inline-flex items-center justify-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700 px-8 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-indigo-500/30 transition-all w-full sm:w-auto">
+                    Kirish <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Link>
                   <button type="button" onClick={() => { alert('Video qo\'llanma hali tayyorlanmoqda! Tez orada qo\'shiladi.'); }} className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-lg font-semibold text-slate-700 bg-white border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all w-full sm:w-auto shadow-lg">
                     <Play size={20} className="text-indigo-600" /> Video qo'llanma
@@ -254,8 +254,8 @@ export default function Landing() {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
-                <Link to="/register" className="group inline-flex items-center gap-3 bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transition-all transform hover:scale-105">
-                  Bepul ro'yxatdan o'tish 
+                <Link to="/login" className="group inline-flex items-center gap-3 bg-white text-indigo-600 hover:bg-amber-300 hover:text-indigo-700 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transition-all transform hover:scale-105">
+                  Kirish 
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 

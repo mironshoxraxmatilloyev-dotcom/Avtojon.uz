@@ -55,7 +55,6 @@ function useInitAuth() {
 // 🚀 LAZY LOADING
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
-const Register = lazy(() => import('./pages/Register'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Drivers = lazy(() => import('./pages/Drivers'))
 const DriverDetail = lazy(() => import('./pages/DriverDetail'))
@@ -71,8 +70,6 @@ import FlightDetail from './pages/FlightDetail'
 const Reports = lazy(() => import('./pages/Reports'))
 const DriverHome = lazy(() => import('./pages/driver/DriverHome'))
 const SuperAdminPanel = lazy(() => import('./pages/superadmin/SuperAdminPanel'))
-const FleetDashboard = lazy(() => import('./pages/fleet/FleetDashboard'))
-const VehicleDetailPanel = lazy(() => import('./pages/fleet/VehicleDetailPanel'))
 const Payment = lazy(() => import('./pages/Payment'))
 
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -189,20 +186,6 @@ const BusinessRoute = ({ children }) => {
   if (!token || !isValid) return <Navigate to="/login" replace />
   if (user?.role === 'driver') return <Navigate to="/driver" replace />
   if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
-  if (user?.role === 'admin') return <Navigate to="/fleet" replace />
-  return children
-}
-
-// Protected Route - Fleet (Register qilganlar - admin role)
-const FleetRoute = ({ children }) => {
-  const { user } = useAuthStore()
-  const { isValidating, isValid, token } = useAuthValidation()
-
-  if (isValidating) return <MiniLoader />
-  if (!token || !isValid) return <Navigate to="/login" replace />
-  if (user?.role === 'driver') return <Navigate to="/driver" replace />
-  if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
-  if (user?.role === 'business') return <Navigate to="/dashboard" replace />
   return children
 }
 
@@ -213,7 +196,6 @@ const DriverRoute = ({ children }) => {
 
   if (isValidating) return <MiniLoader />
   if (!token || !isValid) return <Navigate to="/login" replace />
-  if (user?.role === 'admin') return <Navigate to="/fleet" replace />
   if (user?.role === 'business') return <Navigate to="/dashboard" replace />
   if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />
   return children
@@ -243,7 +225,7 @@ function App() {
   }
 
   // Fleet, dashboard, super-admin, driver - o'zlarining layout'lari bor, safe-area-wrapper kerak emas
-  const noWrapperPaths = ['/', '/fleet', '/dashboard', '/super-admin', '/driver']
+  const noWrapperPaths = ['/', '/dashboard', '/super-admin', '/driver']
   const needsWrapper = !noWrapperPaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
 
   return (
@@ -255,10 +237,9 @@ function App() {
             <Routes>
               {/* Public */}
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
 
               {/* Payment */}
-              <Route path="/payment" element={<FleetRoute><Payment /></FleetRoute>} />
+              <Route path="/payment" element={<BusinessRoute><Payment /></BusinessRoute>} />
               <Route path="/payment/success" element={<Payment />} />
               <Route path="/payment/failed" element={<Payment />} />
 
@@ -286,10 +267,6 @@ function App() {
 
             {/* Super Admin */}
             <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminPanel /></SuperAdminRoute>} />
-
-            {/* Fleet - Register qilganlar uchun */}
-            <Route path="/fleet" element={<FleetRoute><FleetDashboard /></FleetRoute>} />
-            <Route path="/fleet/vehicle/:id" element={<FleetRoute><VehicleDetailPanel /></FleetRoute>} />
 
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />
