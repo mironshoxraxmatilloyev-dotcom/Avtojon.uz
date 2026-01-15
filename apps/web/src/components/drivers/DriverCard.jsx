@@ -1,4 +1,4 @@
-import { Phone, Truck, Edit, Trash2, Play, Route, Banknote, Wallet, Coins, Plus } from 'lucide-react'
+import { Phone, Truck, Edit, Trash2, Play, Route, Banknote, Wallet, Coins } from 'lucide-react'
 
 export default function DriverCard({
   driver,
@@ -111,14 +111,6 @@ export default function DriverCard({
           )}
         </div>
         <div className="flex gap-0.5 sm:gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onAddExpense(driver) }}
-            className="px-2 py-1.5 sm:px-3 sm:py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition flex items-center gap-1.5 border border-purple-200 hover:border-purple-300"
-            title="Xarajat qo'shish"
-          >
-            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
-            <span className="text-xs font-medium">Xarajat qo'shish</span>
-          </button>
           {driver.status === 'free' && (
             <button
               onClick={(e) => { e.stopPropagation(); onStartFlight(driver) }}

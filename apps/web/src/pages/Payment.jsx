@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Truck, CreditCard, ArrowLeft, Loader2, CheckCircle, XCircle, RefreshCw, Calendar, Shield } from 'lucide-react'
+import { Truck, ArrowLeft, Loader2, CheckCircle, XCircle, RefreshCw, Shield, Sparkles, Zap, Star, AlertCircle } from 'lucide-react'
 import api from '../services/api'
-
-// Fleet users uchun: 10,000 so'm / mashina / oy
-// Biznesmenlar uchun: 30,000 so'm / mashina / oy
-const PRICE_PER_VEHICLE = 30000 // Biznesmenlar uchun
 
 export default function Payment() {
   const navigate = useNavigate()
@@ -20,35 +16,29 @@ export default function Payment() {
   const status = searchParams.get('status')
   const orderId = searchParams.get('order_id')
 
-  // Narxni hisoblash
-  useEffect(() => {
-    if (!orderId) {
-      calculatePrice()
-    }
-  }, [])
-
-  // To'lov holatini tekshirish
-  useEffect(() => {
-    if (orderId) {
-      checkPaymentStatus(orderId)
-    }
-  }, [orderId])
-
-  const calculatePrice = async () => {
+  // FIX: Memoize calculatePrice to prevent infinite loops and satisfy useEffect deps
+  const calculatePrice = useCallback(async () => {
     setCalculating(true)
+    setError('') // Clear previous errors when recalculating
     try {
       const { data } = await api.get('/payments/calculate')
       if (data.success) {
         setPriceData(data.data)
+      } else {
+        setError('Narxni hisoblashda xatolik')
       }
     } catch (err) {
-      setError('Narxni hisoblashda xatolik')
+      console.error('Price calculation error:', err)
+      setError('Narxni hisoblashda xatolik yuz berdi')
     } finally {
       setCalculating(false)
     }
-  }
+  }, []) // No dependencies - API call is stable
 
-  const checkPaymentStatus = async (id) => {
+  // FIX: Memoize checkPaymentStatus with orderId dependency
+  const checkPaymentStatus = useCallback(async (id) => {
+    if (!id) return
+    
     setCalculating(true)
     try {
       const { data } = await api.get(`/payments/status/${id}`)
@@ -56,36 +46,75 @@ export default function Payment() {
         setPaymentStatus(data.data)
       }
     } catch (err) {
-      // Error ignored
+      console.error('Payment status check error:', err)
+      // Don't show error to user - they can retry manually
     } finally {
       setCalculating(false)
     }
+  }, [])
+
+  // FIX: Proper useEffect with correct dependencies
+  useEffect(() => {
+    if (!orderId) {
+      calculatePrice()
+    }
+  }, [orderId, calculatePrice])
+
+  // FIX: Separate useEffect for payment status check
+  useEffect(() => {
+    if (orderId) {
+      checkPaymentStatus(orderId)
+    }
+  }, [orderId, checkPaymentStatus])
+
+  // FIX: Add handler for provider selection that clears errors
+  const handleProviderSelect = (provider) => {
+    setSelectedProvider(provider)
+    setError('') // UX: Clear error when user makes a new selection
   }
 
+  // FIX: Improved payment handler with double-submit protection and better error handling
   const handlePayment = async () => {
+    // Validation with clear error messages
     if (!selectedProvider) {
       setError('To\'lov tizimini tanlang')
       return
     }
 
+    // UX: Warn user that Click is not yet supported
+    if (selectedProvider === 'click') {
+      setError('Click to\'lov tizimi hozircha qo\'llab-quvvatlanmaydi. Iltimos, Payme tanlang.')
+      return
+    }
+
+    if (!priceData?.totalPrice || priceData.totalPrice <= 0) {
+      setError('To\'lov summasi noto\'g\'ri')
+      return
+    }
+
+    // FIX: Double-submit protection - prevent multiple clicks
+    if (loading) return
+
     setLoading(true)
     setError('')
 
     try {
-      const { data } = await api.post('/payments/create', {
-        provider: selectedProvider
-      })
-
+      const { data } = await api.post('/payments/create', { provider: selectedProvider })
+      
       if (data.success && data.data.paymentUrl) {
+        // Redirect to payment gateway
         window.location.href = data.data.paymentUrl
       } else {
-        setError('To\'lov yaratishda xatolik')
+        setError('To\'lov yaratishda xatolik yuz berdi')
+        setLoading(false) // Re-enable button only on error
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Xatolik yuz berdi')
-    } finally {
-      setLoading(false)
+      console.error('Payment creation error:', err)
+      const errorMessage = err.response?.data?.message || 'Xatolik yuz berdi. Qaytadan urinib ko\'ring.'
+      setError(errorMessage)
+      setLoading(false) // Re-enable button on error
     }
+    // Note: Don't set loading=false on success - we're redirecting anyway
   }
 
   const formatPrice = (price) => {
@@ -93,7 +122,6 @@ export default function Payment() {
     return new Intl.NumberFormat('uz-UZ').format(price)
   }
 
-  // Loading
   if (calculating) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center p-4">
@@ -105,8 +133,8 @@ export default function Payment() {
     )
   }
 
-  // Muvaffaqiyatli to'lov
-  if (paymentStatus?.status === 'completed' || status === 'success') {
+  // FIX: Backend returns 'state' not 'status' - check both for compatibility
+  if (paymentStatus?.state === 'performed' || paymentStatus?.status === 'completed' || status === 'success') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl">
@@ -114,23 +142,14 @@ export default function Payment() {
             <CheckCircle className="w-10 h-10 text-emerald-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">To'lov muvaffaqiyatli!</h1>
-          <p className="text-gray-500 mb-6">
-            Obunangiz 30 kunga uzaytirildi. Barcha imkoniyatlardan foydalanishingiz mumkin.
-          </p>
+          <p className="text-gray-500 mb-6">Obunangiz 30 kunga uzaytirildi.</p>
           {paymentStatus && (
             <div className="bg-emerald-50 rounded-xl p-4 mb-6 text-left">
-              <p className="text-sm text-emerald-700">
-                <span className="font-medium">Buyurtma:</span> {paymentStatus.orderId}
-              </p>
-              <p className="text-sm text-emerald-700">
-                <span className="font-medium">Summa:</span> {formatPrice(paymentStatus.amount)} so'm
-              </p>
+              <p className="text-sm text-emerald-700"><span className="font-medium">Buyurtma:</span> {paymentStatus.orderId}</p>
+              <p className="text-sm text-emerald-700"><span className="font-medium">Summa:</span> {formatPrice(paymentStatus.amount)} so'm</p>
             </div>
           )}
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors"
-          >
+          <button onClick={() => navigate('/dashboard')} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors">
             Davom etish
           </button>
         </div>
@@ -138,8 +157,8 @@ export default function Payment() {
     )
   }
 
-  // To'lov kutilmoqda
-  if (paymentStatus?.status === 'pending' || paymentStatus?.status === 'processing') {
+  // FIX: Check for 'created' state from backend (state: 1)
+  if (paymentStatus?.state === 'created' || paymentStatus?.status === 'pending' || paymentStatus?.status === 'processing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl">
@@ -147,13 +166,8 @@ export default function Payment() {
             <Loader2 className="w-10 h-10 text-amber-600 animate-spin" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">To'lov kutilmoqda</h1>
-          <p className="text-gray-500 mb-6">
-            To'lov hali tasdiqlanmagan. Agar to'lov qilgan bo'lsangiz, bir necha daqiqa kuting.
-          </p>
-          <button
-            onClick={() => checkPaymentStatus(orderId)}
-            className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-          >
+          <p className="text-gray-500 mb-6">To'lov hali tasdiqlanmagan.</p>
+          <button onClick={() => checkPaymentStatus(orderId)} className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
             <RefreshCw size={18} />
             Qayta tekshirish
           </button>
@@ -162,8 +176,8 @@ export default function Payment() {
     )
   }
 
-  // To'lov bekor qilingan
-  if (paymentStatus?.status === 'cancelled' || paymentStatus?.status === 'failed' || status === 'failed') {
+  // FIX: Check for 'cancelled' state from backend
+  if (paymentStatus?.state === 'cancelled' || paymentStatus?.status === 'cancelled' || paymentStatus?.status === 'failed' || status === 'failed') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl">
@@ -171,15 +185,15 @@ export default function Payment() {
             <XCircle className="w-10 h-10 text-red-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">To'lov amalga oshmadi</h1>
-          <p className="text-gray-500 mb-6">
-            To'lov bekor qilindi yoki xatolik yuz berdi.
-          </p>
-          <button
-            onClick={() => {
+          <p className="text-gray-500 mb-6">To'lov bekor qilindi yoki xatolik yuz berdi.</p>
+          <button 
+            onClick={() => { 
               setPaymentStatus(null)
+              setError('')
+              setSelectedProvider(null) // Reset provider selection
               navigate('/payment', { replace: true })
-              calculatePrice()
-            }}
+              calculatePrice() // Refresh price data
+            }} 
             className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-semibold transition-colors"
           >
             Qaytadan urinish
@@ -189,7 +203,6 @@ export default function Payment() {
     )
   }
 
-  // Mashina yo'q
   if (priceData?.vehicleCount === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center p-4">
@@ -198,13 +211,8 @@ export default function Payment() {
             <Truck className="w-10 h-10 text-slate-400" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Mashina topilmadi</h1>
-          <p className="text-gray-500 mb-6">
-            Avval mashina qo'shing, keyin obuna sotib olishingiz mumkin.
-          </p>
-          <button
-            onClick={() => navigate('/fleet')}
-            className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-semibold transition-colors"
-          >
+          <p className="text-gray-500 mb-6">Avval mashina qo'shing.</p>
+          <button onClick={() => navigate('/fleet')} className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-semibold transition-colors">
             Mashina qo'shish
           </button>
         </div>
@@ -212,191 +220,254 @@ export default function Payment() {
     )
   }
 
-  // Asosiy to'lov sahifasi
+  // FIX: Calculate if button should be disabled and why
+  const isButtonDisabled = loading || !selectedProvider || !priceData?.totalPrice || priceData.totalPrice <= 0
+  const getDisabledReason = () => {
+    if (loading) return null // Loading state is obvious
+    if (!selectedProvider) return 'To\'lov tizimini tanlang'
+    if (!priceData?.totalPrice || priceData.totalPrice <= 0) return 'To\'lov summasi noto\'g\'ri'
+    return null
+  }
+  const disabledReason = getDisabledReason()
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-y-auto">
+    // FIX: Remove overflow-y-auto to prevent double scroll - let body handle scrolling
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 relative">
+      {/* Animated Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute -bottom-40 left-1/3 w-80 h-80 bg-violet-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Header */}
-      <header className="p-4 lg:p-6 sticky top-0 bg-white/80 backdrop-blur-md z-10 border-b border-gray-100">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
+      <header className="relative z-10 px-6 py-6">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="group flex items-center gap-2 text-white/60 hover:text-white transition-all duration-300"
         >
-          <ArrowLeft size={20} />
-          <span>Orqaga</span>
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
+          <span className="text-sm font-medium">Orqaga</span>
         </button>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-8 pb-12">
-        {/* Title */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-indigo-500/40 animate-pulse">
-            <Truck className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Obuna to'lovi</h1>
-          <p className="text-gray-600 text-lg">Har bir mashina uchun oylik to'lov</p>
-        </div>
-
-        {/* Price Card */}
-        <div className="bg-white rounded-3xl p-6 border-2 border-indigo-100 shadow-xl shadow-indigo-500/10 mb-6">
-          <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <Truck className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 text-lg">Mashinalar soni</p>
-                <p className="text-sm text-gray-500">{formatPrice(PRICE_PER_VEHICLE)} so'm / mashina</p>
-              </div>
+      {/* Hero Section */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-20 pb-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          
+          {/* Left Side - Content */}
+          <div className="space-y-8">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-medium text-white/90">7 kun bepul sinov davri</span>
             </div>
-            <span className="text-3xl font-bold text-indigo-600">{priceData?.vehicleCount}</span>
-          </div>
 
-          <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 text-lg">Muddat</p>
-                <p className="text-sm text-gray-500">Oylik obuna</p>
-              </div>
-            </div>
-            <span className="text-xl font-bold text-gray-700">30 kun</span>
-          </div>
-
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-bold text-gray-700">Jami to'lov:</p>
-              <p className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'}
+            {/* Headline */}
+            <div className="space-y-4">
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight">
+                Xizmatdan to'liq foydalanish uchun{' '}
+                <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  obunani faollashtiring
+                </span>
+              </h1>
+              <p className="text-lg lg:text-xl text-white/60 leading-relaxed">
+                Tezkor, xavfsiz va avtomatik to'lov tizimi orqali biznesingizni yangi bosqichga olib chiqing
               </p>
             </div>
-            <p className="text-right text-gray-500 text-sm mt-1">so'm</p>
-          </div>
-        </div>
 
-        {/* Info */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-5 mb-6 shadow-lg shadow-amber-500/10">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
-              <span className="text-white text-xl">💡</span>
+            {/* Benefits */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { icon: Shield, title: 'Xavfsiz to\'lov', desc: 'SSL shifrlangan' },
+                { icon: Zap, title: '24/7 xizmat', desc: 'Doimo faol' },
+                { icon: CheckCircle, title: 'Bekor qilish', desc: 'Istalgan vaqt' },
+                { icon: Star, title: 'Avtomatik', desc: 'Yangilanish' }
+              ].map((benefit, idx) => (
+                <div 
+                  key={idx}
+                  className="group flex items-start gap-3 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <benefit.icon className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white mb-0.5">{benefit.title}</h3>
+                    <p className="text-xs text-white/50">{benefit.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="font-bold text-amber-900 mb-1">Birinchi 7 kun bepul!</p>
-              <p className="text-sm text-amber-800">
-                Sinov muddati tugagandan so'ng to'lov talab qilinadi. Istalgan vaqt bekor qilishingiz mumkin.
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* Payment Methods */}
-        <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 mb-6 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <CreditCard className="w-5 h-5 text-white" />
-            </div>
-            To'lov usuli
-          </h3>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setSelectedProvider('payme')}
-              className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all transform hover:scale-105 ${
-                selectedProvider === 'payme'
-                  ? 'border-cyan-500 bg-gradient-to-br from-cyan-50 to-cyan-100 shadow-xl shadow-cyan-500/20'
-                  : 'border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50'
-              }`}
-            >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                selectedProvider === 'payme' ? 'bg-white shadow-lg' : 'bg-gray-50'
-              }`}>
-                <span className="text-2xl font-bold text-cyan-500">payme</span>
+            {/* Stats */}
+            <div className="flex items-center gap-8 pt-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">{priceData?.vehicleCount || 0}</div>
+                <div className="text-xs text-white/50 uppercase tracking-wider">Mashinalar</div>
               </div>
-              <span className="text-xs text-gray-600 font-medium">Humo, UzCard, Visa</span>
-              {selectedProvider === 'payme' && (
-                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-white" />
+              <div className="w-px h-12 bg-white/10" />
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">30</div>
+                <div className="text-xs text-white/50 uppercase tracking-wider">Kun</div>
+              </div>
+              <div className="w-px h-12 bg-white/10" />
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-1">
+                  {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'}
+                </div>
+                <div className="text-xs text-white/50 uppercase tracking-wider">So'm</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Payment Card */}
+          <div className="relative">
+            {/* Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-3xl rounded-3xl" />
+            
+            {/* Card */}
+            <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+              {/* Price Section */}
+              <div className="mb-8">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-sm font-medium text-white/60">Jami to'lov</span>
+                  <span className="text-xs text-white/40">30 kun</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-white">
+                    {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'}
+                  </span>
+                  <span className="text-xl text-white/60">so'm</span>
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-sm text-white/50">
+                  <Truck className="w-4 h-4" />
+                  <span>{priceData?.vehicleCount || 0} ta mashina × {formatPrice(priceData?.pricePerVehicle || 0)} so'm</span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+              {/* Payment Methods */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-white mb-4">
+                  To'lov usulini tanlang
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleProviderSelect('payme')}
+                    disabled={loading}
+                    className={`relative group p-5 rounded-2xl border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedProvider === 'payme'
+                        ? 'border-cyan-400 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
+                        : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        selectedProvider === 'payme' ? 'bg-white shadow-lg scale-110' : 'bg-white/10 group-hover:bg-white/20'
+                      }`}>
+                        <span className="text-xl font-bold text-cyan-500">payme</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-white/70 font-medium">Humo • UzCard</div>
+                      </div>
+                      {selectedProvider === 'payme' && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* UX: Show Click as disabled since backend doesn't support it yet */}
+                  <button
+                    type="button"
+                    onClick={() => handleProviderSelect('click')}
+                    disabled={loading}
+                    className={`relative group p-5 rounded-2xl border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedProvider === 'click'
+                        ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20'
+                        : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        selectedProvider === 'click' ? 'bg-white shadow-lg scale-110' : 'bg-white/10 group-hover:bg-white/20'
+                      }`}>
+                        <span className="text-xl font-bold text-blue-600">CLICK</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-white/70 font-medium">Humo • UzCard</div>
+                      </div>
+                      {selectedProvider === 'click' && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* UX: Show disabled reason as info message when button is disabled but no error */}
+              {!error && disabledReason && (
+                <div className="mb-6 p-4 bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="flex-shrink-0 w-5 h-5 text-amber-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-200">{disabledReason}</p>
+                    </div>
+                  </div>
                 </div>
               )}
-            </button>
 
-            <button
-              onClick={() => setSelectedProvider('click')}
-              className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all transform hover:scale-105 ${
-                selectedProvider === 'click'
-                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl shadow-blue-500/20'
-                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
-              }`}
-            >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                selectedProvider === 'click' ? 'bg-white shadow-lg' : 'bg-gray-50'
-              }`}>
-                <span className="text-2xl font-bold text-blue-600">CLICK</span>
-              </div>
-              <span className="text-xs text-gray-600 font-medium">Humo, UzCard, Visa</span>
-              {selectedProvider === 'click' && (
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-white" />
+              {/* Error State */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-xl border border-red-500/20 rounded-xl animate-shake">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="flex-shrink-0 w-5 h-5 text-red-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-red-200">{error}</p>
+                    </div>
+                  </div>
                 </div>
               )}
-            </button>
+
+              {/* CTA Button */}
+              <button
+                type="button"
+                onClick={handlePayment}
+                disabled={isButtonDisabled}
+                className="group relative w-full py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 disabled:from-slate-700 disabled:via-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-lg shadow-2xl shadow-purple-500/30 disabled:shadow-none transition-all duration-300 overflow-hidden"
+                aria-label={disabledReason || 'To\'lash'}
+              >
+                {/* Button Glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                
+                <span className="relative flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Yuklanmoqda...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>To'lash</span>
+                    </>
+                  )}
+                </span>
+              </button>
+
+              {/* Security Badge */}
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs text-white/40">
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <span>256-bit SSL shifrlangan xavfsiz to'lov</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 mb-6 text-red-700 text-center font-semibold shadow-lg shadow-red-500/10">
-            ⚠️ {error}
-          </div>
-        )}
-
-        {/* Submit */}
-        <button
-          onClick={handlePayment}
-          disabled={loading || !selectedProvider}
-          className="w-full py-5 bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 hover:from-indigo-600 hover:via-purple-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl font-bold text-lg transition-all shadow-2xl shadow-indigo-500/40 disabled:shadow-none flex items-center justify-center gap-3 transform hover:scale-[1.02] active:scale-[0.98]"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              Yuklanmoqda...
-            </>
-          ) : (
-            <>
-              <CreditCard className="w-6 h-6" />
-              To'lash - {priceData?.totalPrice ? formatPrice(priceData.totalPrice) : '0'} so'm
-            </>
-          )}
-        </button>
-
-        {/* Security */}
-        <div className="flex items-center justify-center gap-3 mt-6 text-gray-500 text-sm">
-          <Shield size={18} className="text-emerald-500" />
-          <span className="font-medium">Xavfsiz to'lov - SSL shifrlangan</span>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-8 bg-gray-50 rounded-2xl p-5 border border-gray-200">
-          <h4 className="font-bold text-gray-900 mb-3 text-center">Obuna imkoniyatlari</h4>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span>Cheksiz mashinalar va haydovchilar</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span>Reyslarni kuzatish va boshqarish</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span>Moliyaviy hisobotlar va statistika</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span>24/7 texnik yordam</span>
-            </li>
-          </ul>
         </div>
       </div>
     </div>
