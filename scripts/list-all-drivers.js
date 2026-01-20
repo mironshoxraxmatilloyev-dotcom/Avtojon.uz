@@ -1,48 +1,52 @@
-require('dotenv').config({ path: '.env' });
+require('dotenv').config({ path: './apps/api/.env' });
 const mongoose = require('mongoose');
 
-const driverSchema = new mongoose.Schema({}, { strict: false });
-const Driver = mongoose.model('Driver', driverSchema);
+const MONGODB_URI = process.env.MONGODB_URI;
 
-const flightSchema = new mongoose.Schema({}, { strict: false });
-const Flight = mongoose.model('Flight', flightSchema);
+const driverSchema = new mongoose.Schema({
+  name: String,
+  phone: String,
+  licenseNumber: String,
+  businessmanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Businessman' },
+  balance: { type: Number, default: 0 },
+  createdAt: Date
+}, { collection: 'drivers' });
+
+const businessmanSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  name: String,
+  phone: String,
+  email: String,
+  createdAt: Date
+}, { collection: 'businessmen' });
+
+const Driver = mongoose.model('Driver', driverSchema);
+const Businessman = mongoose.model('Businessman', businessmanSchema);
 
 async function listAllDrivers() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(MONGODB_URI);
     console.log('✅ MongoDB connected\n');
 
-    // Barcha haydovchilarni olish
-    const drivers = await Driver.find({ isActive: true }).lean();
+    // Barcha haydovchilarni balans bo'yicha tartiblash
+    const drivers = await Driver.find({}).sort({ balance: -1 });
     
-    console.log('📊 ALL DRIVERS:\n');
+    console.log('🚗 BARCHA HAYDOVCHILAR:', drivers.length, 'ta');
+    console.log('='.repeat(80));
     
     for (const driver of drivers) {
-      // Haydovchining marshrutlarini sanash
-      const completedFlights = await Flight.countDocuments({ 
-        driver: driver._id, 
-        status: 'completed' 
-      });
+      const businessman = await Businessman.findById(driver.businessmanId);
       
-      const activeFlights = await Flight.countDocuments({ 
-        driver: driver._id, 
-        status: 'active' 
-      });
-
-      console.log(`👤 ${driver.fullName}`);
-      console.log(`   Phone: ${driver.phone || 'N/A'}`);
-      console.log(`   Total Earnings: ${(driver.totalEarnings || 0).toLocaleString()} so'm`);
-      console.log(`   Pending: ${(driver.pendingEarnings || 0).toLocaleString()} so'm`);
-      console.log(`   Flights: ${completedFlights} completed, ${activeFlights} active`);
+      console.log(`👤 ${driver.name} | 💰 ${driver.balance?.toLocaleString() || 0} so'm`);
+      console.log(`   📱 ${driver.phone || 'Tel yo\'q'}`);
+      console.log(`   👔 Businessman: ${businessman?.username || 'Noma\'lum'} (${businessman?.phone || ''})`);
+      console.log(`   🆔 ${driver._id}`);
       console.log('');
     }
 
-    // Jami pending
-    const totalPending = drivers.reduce((sum, d) => sum + (d.pendingEarnings || 0), 0);
-    console.log(`💰 TOTAL PENDING: ${totalPending.toLocaleString()} so'm`);
-
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Xatolik:', error);
   } finally {
     await mongoose.disconnect();
   }

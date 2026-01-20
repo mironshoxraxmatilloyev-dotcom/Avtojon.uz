@@ -752,4 +752,29 @@ flightSchema.index({ driver: 1, status: 1 }); // Shofyor mashrutlari
 flightSchema.index({ user: 1, createdAt: -1 }); // Oxirgi mashrutlar
 flightSchema.index({ status: 1, createdAt: -1 }); // Faol mashrutlar
 
+// 🚀 Virtual field - Haydovchining qo'lidagi pul
+// Bu summa real-time hisoblanadi va frontendda ko'rsatiladi
+flightSchema.virtual('driverCashInHand').get(function() {
+  // Naqd to'lovlar (haydovchi qo'liga tushadigan)
+  const cashPayments = (this.legs || []).reduce((sum, leg) => {
+    if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+      return sum + (leg.payment || 0);
+    }
+    return sum;
+  }, 0);
+  
+  // Avvalgi qoldiq + Naqd to'lovlar + Yo'l uchun berilgan - Xarajatlar - Shofyor oyligi
+  const previousBalance = this.previousBalance || 0;
+  const totalGivenBudget = this.totalGivenBudget || 0;
+  const totalExpenses = this.totalExpenses || 0;
+  const driverProfitAmount = this.driverProfitAmount || 0;
+  
+  // TUZATILDI: Shofyor oyligi ham ayiriladi, chunki u haydovchining haqi
+  return previousBalance + cashPayments + totalGivenBudget - totalExpenses - driverProfitAmount;
+});
+
+// Virtual fieldlarni JSON ga qo'shish
+flightSchema.set('toJSON', { virtuals: true });
+flightSchema.set('toObject', { virtuals: true });
+
 module.exports = mongoose.model('Flight', flightSchema);

@@ -167,7 +167,7 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
     }
 
     const flights = await Flight.find(filter)
-      .populate('driver', 'fullName phone')
+      .populate('driver', 'fullName phone currentBalance')
       .populate('vehicle', 'plateNumber brand')
       .sort({ createdAt: -1 })
       .lean();
@@ -1922,16 +1922,39 @@ router.post('/:id/driver-payment', protect, businessOnly, async (req, res) => {
     await flight.save();
 
     // MUHIM: Haydovchi balansini yangilash
-    // Haydovchida qolgan pul = Sof foyda - Biznesmenga berilgan pul
-    // Ya'ni: netProfit - driverPaidAmount
-    // Bu pul keyingi reysda "avvalgi qoldiq" (previousBalance) sifatida ko'rinadi
+    // Haydovchi pul berganda, uning balansidan ayiriladi
     const driver = await Driver.findById(flight.driver);
     if (driver) {
-      // MUHIM: Haydovchida qolgan pul = Biznesmenga berishi kerak - Biznesmenga bergan
-      // Ya'ni: driverOwes - driverPaidAmount = driverRemainingDebt
-      // Shofyor ulushi (driverProfitAmount) bu yerga kirmaydi - u shofyorniki
-      driver.currentBalance = flight.driverRemainingDebt || 0;
+      // TUZATILDI: Haydovchining balansidan to'langan summa ayiriladi
+      // Eski balans - To'langan summa = Yangi balans
+      const oldBalance = driver.currentBalance || 0;
+      const newBalance = Math.max(0, oldBalance - Number(amount));
+      driver.currentBalance = newBalance;
       await driver.save();
+
+      // MUHIM: Faol reyslarning previousBalance ni yangilash
+      // Agar haydovchining faol reysi bo'lsa, uning previousBalance ni yangilash kerak
+      const activeFlights = await Flight.find({
+        driver: driver._id,
+        status: 'active'
+      });
+
+      if (activeFlights.length > 0) {
+        console.log(`🔄 ${activeFlights.length} ta faol reysning previousBalance ni yangilash...`);
+        
+        for (const activeFlight of activeFlights) {
+          // Eski previousBalance dan to'langan summani ayirish
+          const oldPreviousBalance = activeFlight.previousBalance || 0;
+          const newPreviousBalance = Math.max(0, oldPreviousBalance - Number(amount));
+          
+          console.log(`   Reys: ${activeFlight.name}`);
+          console.log(`   Eski previousBalance: ${oldPreviousBalance.toLocaleString()}`);
+          console.log(`   Yangi previousBalance: ${newPreviousBalance.toLocaleString()}`);
+          
+          activeFlight.previousBalance = newPreviousBalance;
+          await activeFlight.save();
+        }
+      }
     }
 
     const populatedFlight = await Flight.findById(flight._id)
@@ -2004,8 +2027,35 @@ router.delete('/:id/driver-payment/:paymentIndex', protect, businessOnly, async 
     // Haydovchi balansini yangilash
     const driver = await Driver.findById(flight.driver);
     if (driver) {
-      driver.currentBalance = flight.driverRemainingDebt || 0;
+      // TUZATILDI: To'lov bekor qilinganda, haydovchining balansiga qaytariladi
+      const oldBalance = driver.currentBalance || 0;
+      const newBalance = oldBalance + paymentAmount;
+      driver.currentBalance = newBalance;
       await driver.save();
+
+      // MUHIM: Faol reyslarning previousBalance ni yangilash
+      // Agar haydovchining faol reysi bo'lsa, uning previousBalance ni yangilash kerak
+      const activeFlights = await Flight.find({
+        driver: driver._id,
+        status: 'active'
+      });
+
+      if (activeFlights.length > 0) {
+        console.log(`🔄 ${activeFlights.length} ta faol reysning previousBalance ni yangilash...`);
+        
+        for (const activeFlight of activeFlights) {
+          // Eski previousBalance ga to'langan summani qo'shish
+          const oldPreviousBalance = activeFlight.previousBalance || 0;
+          const newPreviousBalance = oldPreviousBalance + paymentAmount;
+          
+          console.log(`   Reys: ${activeFlight.name}`);
+          console.log(`   Eski previousBalance: ${oldPreviousBalance.toLocaleString()}`);
+          console.log(`   Yangi previousBalance: ${newPreviousBalance.toLocaleString()}`);
+          
+          activeFlight.previousBalance = newPreviousBalance;
+          await activeFlight.save();
+        }
+      }
     }
 
     const populatedFlight = await Flight.findById(flight._id)

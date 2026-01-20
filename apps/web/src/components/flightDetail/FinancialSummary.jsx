@@ -17,6 +17,12 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
   const totalPeritsenaFee = flight.totalPeritsenaFee || 0
   const totalCashPayment = flight.totalCashPayment || 0
 
+  // YANGI: Haydovchining qo'lidagi pul (real-time)
+  // Faqat naqd to'lovlar + yo'l uchun berilgan + avvalgi qoldiq - xarajatlar
+  const driverCashInHand = flight.driverCashInHand ?? (
+    previousBalance + totalCashPayment + (flight.totalGivenBudget || 0) - (flight.totalExpenses || 0)
+  )
+
   // To'lov holati
   const driverPaidAmount = flight.driverPaidAmount || 0
   const driverRemainingDebt = flight.driverRemainingDebt ?? (driverOwes - driverPaidAmount)
@@ -152,6 +158,16 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
             subValue={isInternational ? `≈ ${formatMoney(flight.heavyExpenses || 0)}` : null}
             color="orange" 
             tooltip="Ta'mir, shina, sug'urta - biznesmen hisobidan"
+          />
+        )}
+        {/* YANGI: Haydovchining qo'lidagi pul - faol reyslar uchun */}
+        {flight.status === 'active' && (
+          <SummaryBox 
+            label="Haydovchi qo'lida" 
+            value={formatMoney(driverCashInHand)} 
+            color={driverCashInHand >= 0 ? "purple" : "red"}
+            highlight={true}
+            tooltip="Naqd to'lovlar + yo'l uchun - xarajatlar (peritsena qo'shilmaydi)"
           />
         )}
         <SummaryBox 

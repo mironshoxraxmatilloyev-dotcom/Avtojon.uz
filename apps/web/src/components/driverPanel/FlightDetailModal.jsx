@@ -62,9 +62,11 @@ export default function FlightDetailModal({ flight: initialFlight, onClose, onUp
 
   if (!flight) return null
 
-  const totalIncome = (flight.totalPayment || 0) + (flight.roadMoney || flight.totalGivenBudget || 0)
+  // TUZATILDI: totalIncome ga previousBalance qo'shilmaydi
+  const totalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
   const totalExpenses = flight.totalExpenses || 0
-  const netProfit = flight.netProfit || flight.profit || (totalIncome - totalExpenses)
+  // Backend dan kelgan netProfit ishlatiladi (to'g'ri hisoblangan)
+  const netProfit = flight.netProfit !== undefined ? flight.netProfit : (totalIncome - totalExpenses)
   const driverOwes = flight.driverOwes || flight.businessProfit || 0
   const routeName = getFlightRoute(flight, t)
 

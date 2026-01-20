@@ -306,13 +306,18 @@ export default function FlightDetail() {
     return sum + (leg.paymentType === 'peritsena' ? (leg.payment || 0) : 0)
   }, 0)
   
-  const totalIncome = previousBalance + cashPayments + peritsenaPayments + (flight.totalGivenBudget || 0)
+  // TUZATILDI: totalIncome ga previousBalance qo'shilmaydi (u eski reysdan qolgan pul)
+  const totalIncome = cashPayments + peritsenaPayments + (flight.totalGivenBudget || 0)
   
   // Peritsena firma xarajatlari
   const peritsenaFee = flight.totalPeritsenaFee || 0
   
   // Sof foyda (Peritsena xarajatlari ayirilgan, KATTA XARAJATLAR AYIRILMAGAN)
+  // MUHIM: previousBalance bu yerda ishlatilmaydi, chunki u eski reysdan qolgan pul
   const netProfit = totalIncome - allExpenses - peritsenaFee
+  
+  // YANGI: Haydovchining qo'lidagi pul - backend dan keladi
+  const driverCashInHand = flight.driverCashInHand || 0
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -376,8 +381,8 @@ export default function FlightDetail() {
             </div>
           </div>
 
-          {/* Stats Cards - 4 ta asosiy ko'rsatkich */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+          {/* Stats Cards - 5 ta asosiy ko'rsatkich */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-6">
             {/* 1. Yo'l uchun berilgan */}
             <div className="bg-amber-500/20 rounded-xl p-4 border border-amber-500/30">
               <p className="text-amber-400 font-bold text-xl sm:text-2xl">{formatMoney(flight.totalGivenBudget || 0)}</p>
@@ -408,7 +413,20 @@ export default function FlightDetail() {
               )}
             </div>
 
-            {/* 4. Sof foyda */}
+            {/* 4. YANGI: Haydovchining qo'lidagi pul */}
+            <div className={`rounded-xl p-4 border ${driverCashInHand >= 0 ? 'bg-purple-500/20 border-purple-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+              <p className={`font-bold text-xl sm:text-2xl ${driverCashInHand >= 0 ? 'text-purple-400' : 'text-rose-400'}`}>
+                {formatMoney(driverCashInHand)}
+              </p>
+              <p className={`text-xs mt-1 ${driverCashInHand >= 0 ? 'text-purple-300/70' : 'text-rose-300/70'}`}>
+                Haydovchida
+              </p>
+              <p className="text-purple-300/50 text-xs mt-1">
+                {driverCashInHand >= 0 ? 'Berishi kerak' : 'Olishi kerak'}
+              </p>
+            </div>
+
+            {/* 5. Sof foyda */}
             {isActive ? (
               // Faol marshrut - sof foyda ko'rsatish
               <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
