@@ -1,4 +1,4 @@
-import { Users, Truck, Route, CheckCircle, Activity, Clock } from 'lucide-react'
+import { Users, Truck, Route, CheckCircle, Activity, Clock, Fuel, TrendingUp, TrendingDown } from 'lucide-react'
 import { AnimatedStatCard } from '../ui'
 
 export function QuickStats({ stats }) {
@@ -100,7 +100,6 @@ export function FinancialStats({ stats }) {
 }
 
 function FinancialCard({ title, value, subtitle, gradient, shadowColor, subtitleColor, icon }) {
-  const { Fuel, TrendingUp, TrendingDown } = require('lucide-react')
   const icons = { fuel: Fuel, up: TrendingUp, down: TrendingDown }
   const Icon = icons[icon]
   

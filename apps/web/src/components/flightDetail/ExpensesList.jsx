@@ -1,4 +1,5 @@
-import { Wallet, Plus, Pencil, Trash2, Fuel, TrendingUp, TrendingDown, Minus, Package } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
+const { Wallet, Plus, Pencil, Trash2, Fuel, TrendingUp, TrendingDown, Minus, Package } = LucideIcons
 import { EXPENSE_TYPES, EXPENSE_CATEGORIES, formatMoney, formatDate, formatDateTime } from './constants'
 
 export default function ExpensesList({
@@ -338,7 +339,7 @@ function ExpenseItem({ expense, isActive, onEdit, onDelete, isInternational, fli
   const expType = EXPENSE_TYPES.find(t => t.value === expense.type) || { iconName: 'Package', label: expense.type, color: 'from-gray-400 to-gray-500' }
   
   // Icon komponentini olish
-  const IconComponent = expType.iconName ? require('lucide-react')[expType.iconName] : Package
+  const IconComponent = expType.iconName ? LucideIcons[expType.iconName] : Package
   
   const isFuel = expense.type?.startsWith('fuel_')
   const fuelUnit = (expense.type === 'fuel_metan' || expense.type === 'fuel_propan') ? 'kub' : 'litr'
@@ -530,7 +531,7 @@ function ExpenseSummary({ expenses, isInternational }) {
       <div className="flex flex-wrap gap-2">
         {Object.entries(grouped).map(([type, data]) => {
           const expType = EXPENSE_CATEGORIES.find(c => c.value === type) || { iconName: 'Package', label: type }
-          const IconComponent = expType.iconName ? require('lucide-react')[expType.iconName] : Package
+          const IconComponent = expType.iconName ? LucideIcons[expType.iconName] : Package
           return (
             <div key={type} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs">
               <IconComponent size={14} className="text-gray-500" />
