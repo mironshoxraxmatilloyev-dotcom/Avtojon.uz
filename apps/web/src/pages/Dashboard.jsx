@@ -11,6 +11,7 @@ import { useSocket } from '../hooks/useSocket'
 import { showToast } from '../components/Toast'
 import { PageWrapper, AnimatedCard, DashboardSkeleton, NetworkError, ServerError } from '../components/ui'
 import { PaymentModal } from '../components/flightDetail/AllModals'
+import { FinancialStats } from '../components/dashboard/StatsCards'
 
 
 
@@ -85,7 +86,7 @@ const DEMO_DATA = {
   stats: {
     drivers: 8, vehicles: 12, activeTrips: 3, completedTrips: 156,
     totalExpenses: 45000000, pendingTrips: 5, totalBonus: 8500000, totalPenalty: 1200000,
-    busyDrivers: 3, freeDrivers: 5
+    busyDrivers: 3, freeDrivers: 5, driverDebt: 2500000, driverPaid: 7800000
   },
   activeTrips: [
     { _id: 'demo1', driver: { fullName: 'Akmal Karimov' }, vehicle: { plateNumber: '01 A 123 AB' }, startAddress: 'Toshkent', endAddress: 'Samarqand', status: 'in_progress' },
@@ -112,7 +113,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     drivers: 0, vehicles: 0, activeTrips: 0, completedTrips: 0,
     totalExpenses: 0, pendingTrips: 0, totalBonus: 0, totalPenalty: 0,
-    busyDrivers: 0, freeDrivers: 0
+    busyDrivers: 0, freeDrivers: 0, driverDebt: 0, driverPaid: 0
   })
   const [activeFlights, setActiveFlights] = useState([])
   const [recentFlights, setRecentFlights] = useState([])
@@ -292,16 +293,18 @@ export default function Dashboard() {
       try {
         // 🚀 Parallel so'rovlar - tezroq yuklash
         // Faqat kerakli so'rovlar - trips ni olib tashladik (eski tizim)
-        const [driversRes, vehiclesRes, flightsRes] = await Promise.all([
+        const [driversRes, vehiclesRes, flightsRes, driverDebtsRes] = await Promise.all([
           api.get('/drivers'),
           api.get('/vehicles'),
-          api.get('/flights?limit=20') // Faqat oxirgi 20 ta mashrut
+          api.get('/flights?limit=20'), // Faqat oxirgi 20 ta mashrut
+          api.get('/flights/driver-debts').catch(() => ({ data: { stats: { totalDebt: 0, paidAmount: 0 } } })) // Driver debts
         ])
 
         const drivers = driversRes.data.data || []
         const allFlights = flightsRes.data.data || []
         const activeFlightsList = allFlights.filter(f => f.status === 'active')
         const completedFlights = allFlights.filter(f => f.status === 'completed')
+        const driverDebtsStats = driverDebtsRes.data.stats || { totalDebt: 0, paidAmount: 0 }
 
         setStats({
           drivers: drivers.length,
@@ -313,7 +316,10 @@ export default function Dashboard() {
           totalBonus: 0,
           totalPenalty: 0,
           busyDrivers: drivers.filter(d => d.status === 'busy').length,
-          freeDrivers: drivers.filter(d => d.status === 'free' || d.status === 'available').length
+          freeDrivers: drivers.filter(d => d.status === 'free' || d.status === 'available').length,
+          // Driver debts statistikasi qo'shildi
+          driverDebt: driverDebtsStats.totalDebt || 0,
+          driverPaid: driverDebtsStats.paidAmount || 0
         })
         setActiveFlights(activeFlightsList)
         setRecentFlights(allFlights.slice(0, 6))
@@ -751,6 +757,9 @@ export default function Dashboard() {
         </div>,
         document.body
       )}
+
+      {/* Financial Stats */}
+      <FinancialStats stats={stats} />
 
       {/* Payment Modal */}
       {showPaymentModal && selectedLegForPayment && selectedFlightForPayment && (

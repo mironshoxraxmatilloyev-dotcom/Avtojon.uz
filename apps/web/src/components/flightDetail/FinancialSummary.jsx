@@ -11,6 +11,23 @@ export default function FinancialSummary({ flight, onCollectPayment }) {
   // Jami kirim (avvalgi qoldiq bilan)
   const totalIncome = flight.totalIncome || (previousBalance + flight.totalPayment + flight.totalGivenBudget)
   const driverOwes = flight.driverOwes || flight.businessProfit || 0
+  
+  // SIZNING TIZIMINGIZ BO'YICHA: Header da jami ko'rsatish
+  // Haydovchi berishi kerak = Haydovchi qo'lidagi pul + Avvalgi qarzlar
+  const previousDebt = flight.driver?.previousDebt || 0
+  
+  // Agar haydovchi qo'lida pul bor bo'lsa, u ham berishi kerak
+  // Agar qo'lida pul yo'q bo'lsa (manfiy), faqat avvalgi qarzni beradi
+  const totalDriverOwes = Math.max(0, driverCashInHand) + previousDebt
+  
+  // DEBUG - Sizning tizimingiz bo'yicha hisoblash
+  console.log('💰 FinancialSummary - Haydovchi berishi kerak:', {
+    'driverCashInHand (qo\'lidagi pul)': driverCashInHand,
+    'previousDebt (avvalgi qarzlar)': previousDebt,
+    'totalDriverOwes (jami)': totalDriverOwes,
+    'flight.netProfit (sof foyda)': flight.netProfit,
+    'flight.businessProfit (hisobotlar)': flight.businessProfit
+  })
 
   // Peritsena ma'lumotlari
   const totalPeritsenaPayment = flight.totalPeritsenaPayment || 0

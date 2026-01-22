@@ -6,7 +6,7 @@ export function QuickStats({ stats }) {
     { label: 'Faol marshrutlar', value: stats.activeTrips, icon: Activity, color: 'from-orange-400 to-orange-600' },
     { label: 'Yoldagi haydovchilar', value: stats.busyDrivers, icon: Truck, color: 'from-blue-400 to-blue-600' },
     { label: 'Bo\'sh haydovchilar', value: stats.freeDrivers, icon: Users, color: 'from-green-400 to-green-600' },
-    { label: 'Kutilayotgan', value: stats.pendingTrips, icon: Clock, color: 'from-purple-400 to-purple-600' },
+    { label: 'Haydovchilardan olingan', value: new Intl.NumberFormat('uz-UZ').format(stats.driverPaid || 0), icon: Clock, color: 'from-purple-400 to-purple-600' },
   ]
 
   return (
@@ -58,7 +58,7 @@ export function FinancialStats({ stats }) {
   const formatMoney = (n) => new Intl.NumberFormat('uz-UZ').format(n)
   
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
       <FinancialCard
         title="Jami xarajatlar"
         value={formatMoney(stats.totalExpenses)}
@@ -69,22 +69,31 @@ export function FinancialStats({ stats }) {
         icon="fuel"
       />
       <FinancialCard
-        title="Bonuslar"
-        value={`+${formatMoney(stats.totalBonus)}`}
-        subtitle="so'm tejaldi"
+        title="Haydovchilardan olingan"
+        value={formatMoney(stats.driverPaid || 0)}
+        subtitle="so'm olingan"
         gradient="from-emerald-500 via-green-500 to-teal-600"
         shadowColor="shadow-green-500/20"
         subtitleColor="text-green-200"
         icon="up"
       />
       <FinancialCard
-        title="Jarimalar"
-        value={`-${formatMoney(stats.totalPenalty)}`}
-        subtitle="so'm ortiqcha"
+        title="Haydovchi qarzi"
+        value={formatMoney(stats.driverDebt || 0)}
+        subtitle="so'm kutilmoqda"
         gradient="from-amber-500 via-orange-500 to-orange-600"
         shadowColor="shadow-orange-500/20"
         subtitleColor="text-orange-200"
         icon="down"
+      />
+      <FinancialCard
+        title="Bonuslar"
+        value={`+${formatMoney(stats.totalBonus)}`}
+        subtitle="so'm tejaldi"
+        gradient="from-purple-500 via-indigo-500 to-blue-600"
+        shadowColor="shadow-purple-500/20"
+        subtitleColor="text-purple-200"
+        icon="up"
       />
     </div>
   )

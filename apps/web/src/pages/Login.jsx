@@ -331,8 +331,8 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => {
-                    setUsername('demo')
-                    setPassword('demo123')
+                    setUsername('admin')
+                    setPassword('admin123')
                     setTimeout(() => {
                       document.querySelector('form').requestSubmit()
                     }, 100)

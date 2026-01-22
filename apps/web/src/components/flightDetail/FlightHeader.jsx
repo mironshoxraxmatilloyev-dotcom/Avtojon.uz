@@ -2,6 +2,8 @@ import { ArrowLeft, Globe } from 'lucide-react'
 import { formatMoney } from './constants'
 
 export default function FlightHeader({ flight, navigate }) {
+  console.log('🚀 FlightHeader component loaded!', { flight: !!flight })
+  
   const isActive = flight.status === 'active'
   const isInternational = flight?.flightType === 'international'
   
@@ -46,6 +48,23 @@ export default function FlightHeader({ flight, navigate }) {
   const driverProfitAmount = flight.driverProfitAmount || 0
   const driverOwes = flight.driverOwes || 0
   
+  // SIZNING TIZIMINGIZ BO'YICHA: Header da jami ko'rsatish
+  // Haydovchi berishi kerak = Haydovchi qo'lidagi pul + Avvalgi qarzlar
+  const previousDebt = flight.driver?.previousDebt || 0
+  
+  // Agar haydovchi qo'lida pul bor bo'lsa, u ham berishi kerak
+  // Agar qo'lida pul yo'q bo'lsa (manfiy), faqat avvalgi qarzni beradi
+  const totalDriverOwes = Math.max(0, driverCashInHand) + previousDebt
+  
+  // DEBUG - Sizning tizimingiz bo'yicha hisoblash
+  console.log('🎯 SIZNING TIZIMI - Haydovchi berishi kerak:', {
+    'driverCashInHand (qo\'lidagi pul)': driverCashInHand,
+    'previousDebt (avvalgi qarzlar)': previousDebt,
+    'totalDriverOwes (jami header da)': totalDriverOwes,
+    'actualNetProfit (haydovchi qo\'lida)': actualNetProfit,
+    'businessProfit (hisobotlar qismi)': businessProfit
+  })
+  
   // DEBUG - Peritsena ma'lumotlarini ko'rish
   console.log('🔍 FlightHeader - Peritsena ma\'lumotlari:', {
     peritsenaPayment,
@@ -79,6 +98,16 @@ export default function FlightHeader({ flight, navigate }) {
   const sarflanganUSD = flight.totalExpensesUSD || 0
   const driverOwesUSD = flight.driverOwesUSD || 0
   const businessProfitUSD = flight.businessProfitUSD || (flight.netProfitUSD - (flight.driverProfitAmountUSD || 0)) || 0
+
+  // YANGI: Haydovchining qo'lidagi pul (realtime)
+  const driverCashInHand = flight.driverCashInHand || 0
+  
+  // DEBUG - driverCashInHand ni tekshirish
+  console.log('💰 driverCashInHand:', {
+    'flight.driverCashInHand': flight.driverCashInHand,
+    'calculated driverCashInHand': driverCashInHand,
+    'typeof': typeof driverCashInHand
+  })
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-2xl">
@@ -123,8 +152,8 @@ export default function FlightHeader({ flight, navigate }) {
           </div>
         </div>
 
-        {/* 6 ta muhim ko'rsatkich */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {/* 7 ta muhim ko'rsatkich */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
           {/* 1. Mijozdan olingan pul */}
           <div className="bg-emerald-500/20 backdrop-blur-sm rounded-xl p-3 border border-emerald-500/30">
             <p className="text-emerald-400 text-lg sm:text-xl font-bold">+{formatMoney(mijozPuli)}</p>
@@ -192,19 +221,33 @@ export default function FlightHeader({ flight, navigate }) {
             )}
           </div>
 
-          {/* 6. Haydovchi beradi */}
-          <div className="bg-purple-500/20 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30">
-            {isInternational ? (
-              <>
-                <p className="text-purple-400 text-lg sm:text-xl font-bold">{formatUSD(driverOwesUSD)}</p>
-                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Haydovchi beradi</p>
-              </>
-            ) : (
-              <>
-                <p className="text-purple-400 text-lg sm:text-xl font-bold">{formatMoney(driverOwes)}</p>
-                <p className="text-purple-300/70 text-[10px] sm:text-xs">👤 Haydovchi beradi</p>
-              </>
+          {/* 6. Haydovchi berishi kerak (jami qarz) */}
+          <div className={`backdrop-blur-sm rounded-xl p-3 border ${totalDriverOwes > 0 ? 'bg-purple-500/20 border-purple-500/30' : 'bg-emerald-500/20 border-emerald-500/30'}`}>
+            <p className={`text-lg sm:text-xl font-bold ${totalDriverOwes > 0 ? 'text-purple-400' : 'text-emerald-400'}`}>
+              {totalDriverOwes > 0 ? formatMoney(totalDriverOwes) : '0'}
+            </p>
+            <p className={`text-[10px] sm:text-xs ${totalDriverOwes > 0 ? 'text-purple-300/70' : 'text-emerald-300/70'}`}>
+              💳 Berishi kerak
+            </p>
+            {previousDebt > 0 && driverCashInHand > 0 && (
+              <p className="text-purple-300/50 text-[9px]">Eski: {formatMoney(previousDebt)} + Qo'lida: {formatMoney(Math.max(0, driverCashInHand))}</p>
             )}
+            {previousDebt > 0 && driverCashInHand <= 0 && (
+              <p className="text-purple-300/50 text-[9px]">Faqat eski qarz: {formatMoney(previousDebt)}</p>
+            )}
+            {previousDebt <= 0 && driverCashInHand > 0 && (
+              <p className="text-purple-300/50 text-[9px]">Qo'lidagi pul: {formatMoney(driverCashInHand)}</p>
+            )}
+          </div>
+
+          {/* 7. Haydovchi qo'lida (realtime) */}
+          <div className={`backdrop-blur-sm rounded-xl p-3 border ${driverCashInHand >= 0 ? 'bg-orange-500/20 border-orange-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
+            <p className={`text-lg sm:text-xl font-bold ${driverCashInHand >= 0 ? 'text-orange-400' : 'text-rose-400'}`}>
+              {formatMoney(driverCashInHand)}
+            </p>
+            <p className={`text-[10px] sm:text-xs ${driverCashInHand >= 0 ? 'text-orange-300/70' : 'text-rose-300/70'}`}>
+              💰 Qo'lida
+            </p>
           </div>
         </div>
       </div>

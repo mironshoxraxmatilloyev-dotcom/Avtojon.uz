@@ -156,10 +156,10 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
   try {
     const { status, driverId } = req.query;
 
-    // Barcha reyslarni olish (completed va active)
+    // Barcha reyslarni olish (faol va tugallangan)
     const filter = {
       user: req.user._id,
-      status: { $in: ['completed', 'active'] }
+      status: { $in: ['active', 'completed'] }  // Faol va tugallangan reyslar
     };
 
     if (driverId) {

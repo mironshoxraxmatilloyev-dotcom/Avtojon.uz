@@ -777,4 +777,13 @@ flightSchema.virtual('driverCashInHand').get(function() {
 flightSchema.set('toJSON', { virtuals: true });
 flightSchema.set('toObject', { virtuals: true });
 
+// Virtual field: Haydovchi berishi kerak + avvalgi qarz
+flightSchema.virtual('totalDriverOwes').get(function() {
+  // SIZNING TIZIMINGIZ BO'YICHA:
+  // totalDriverOwes = driverOwes (joriy reys) + driver.previousDebt (avvalgi qarzlar)
+  const currentOwes = this.driverOwes || 0;
+  const previousDebt = this.driver?.previousDebt || 0;
+  return currentOwes + previousDebt;
+});
+
 module.exports = mongoose.model('Flight', flightSchema);

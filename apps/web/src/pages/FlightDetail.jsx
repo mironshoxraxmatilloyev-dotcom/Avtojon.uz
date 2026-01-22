@@ -318,6 +318,22 @@ export default function FlightDetail() {
   
   // YANGI: Haydovchining qo'lidagi pul - backend dan keladi
   const driverCashInHand = flight.driverCashInHand || 0
+  
+  // YANGI: Qolgan qarz (to'lanmagan qism) - hisobotlardagi kabi
+  // MUHIM: Hisobotlar qismidagi kabi hisoblash
+  const calculatedTotalIncome = (flight.totalPayment || 0) + (flight.totalGivenBudget || 0)
+  const calculatedLightExpenses = flight.lightExpenses || 0
+  const calculatedNetProfit = flight.netProfit || (calculatedTotalIncome - calculatedLightExpenses)
+  const driverProfitAmount = flight.driverProfitAmount || 0
+  
+  // driverOwes ni hisobotlardagi kabi hisoblash
+  let calculatedDriverOwes = flight.driverOwes || flight.businessProfit || 0
+  if (calculatedDriverOwes === 0 && calculatedNetProfit > 0) {
+    calculatedDriverOwes = calculatedNetProfit - driverProfitAmount
+  }
+  
+  const driverPaidAmount = flight.driverPaidAmount || 0
+  const driverRemainingDebt = Math.max(0, calculatedDriverOwes - driverPaidAmount)
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-4 lg:p-5">
@@ -413,20 +429,7 @@ export default function FlightDetail() {
               )}
             </div>
 
-            {/* 4. YANGI: Haydovchining qo'lidagi pul */}
-            <div className={`rounded-xl p-4 border ${driverCashInHand >= 0 ? 'bg-purple-500/20 border-purple-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
-              <p className={`font-bold text-xl sm:text-2xl ${driverCashInHand >= 0 ? 'text-purple-400' : 'text-rose-400'}`}>
-                {formatMoney(driverCashInHand)}
-              </p>
-              <p className={`text-xs mt-1 ${driverCashInHand >= 0 ? 'text-purple-300/70' : 'text-rose-300/70'}`}>
-                Haydovchida
-              </p>
-              <p className="text-purple-300/50 text-xs mt-1">
-                {driverCashInHand >= 0 ? 'Berishi kerak' : 'Olishi kerak'}
-              </p>
-            </div>
-
-            {/* 5. Sof foyda */}
+            {/* 4. Sof foyda */}
             {isActive ? (
               // Faol marshrut - sof foyda ko'rsatish
               <div className={`rounded-xl p-4 border ${netProfit >= 0 ? 'bg-blue-500/20 border-blue-500/30' : 'bg-rose-500/20 border-rose-500/30'}`}>
@@ -462,6 +465,16 @@ export default function FlightDetail() {
                 </p>
               </div>
             )}
+
+            {/* 5. Qolgan qarz (hisobotlardagi kabi) */}
+            <div className={`rounded-xl p-4 border ${driverRemainingDebt > 0 ? 'bg-red-500/20 border-red-500/30' : 'bg-green-500/20 border-green-500/30'}`}>
+              <p className={`font-bold text-xl sm:text-2xl ${driverRemainingDebt > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                {driverRemainingDebt > 0 ? formatMoney(driverRemainingDebt) : '0'}
+              </p>
+              <p className={`text-xs mt-1 ${driverRemainingDebt > 0 ? 'text-red-300/70' : 'text-green-300/70'}`}>
+                {driverRemainingDebt > 0 ? '💳 Qolgan qarz' : '✅ To\'langan'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
