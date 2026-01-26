@@ -171,12 +171,12 @@ export default function DriverHome() {
   if (error) return <ErrorState error={error} onRetry={() => { setLoading(true); fetchData() }} />
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 overflow-y-auto">
       <NewTripNotification trip={newTripNotification} onClose={() => setNewTripNotification(null)} />
       <DriverHeader user={user} onLogout={handleLogout} />
       <div className="max-w-2xl mx-auto">
         <DriverTabs activeTab={tab} onTabChange={(newTab) => { setTab(newTab); setSelectedFlight(null) }} />
-        <main className="p-4 space-y-4 pb-8">
+        <main className="p-4 space-y-4 pb-8 overflow-y-visible">
           {tab === 'home' && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">

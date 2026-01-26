@@ -164,7 +164,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="bg-slate-50" style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
+    <div className="bg-slate-50 min-h-screen">
       {/* Mobile Header with menu button */}
       {!sidebarOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200">
@@ -191,9 +191,7 @@ export default function DashboardLayout() {
         className={`fixed top-0 bottom-0 left-0 z-40 w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 transform transition-all duration-300 ease-out lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{
           height: '100vh',
-          overflow: 'hidden',
-          touchAction: 'none',
-          overscrollBehavior: 'none'
+          overflow: 'hidden'
         }}
       >
         {/* Logo Section - fixed top */}
@@ -273,8 +271,8 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="lg:ml-72 h-screen overflow-y-auto bg-slate-50 pb-20 lg:pb-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* Main content - optimized scroll */}
+      <main className="lg:ml-72 min-h-screen bg-slate-50 pb-24 lg:pb-6">
         <div className="p-4 sm:p-6 pt-16 lg:pt-6 animate-fadeIn">
           <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
             <Outlet />

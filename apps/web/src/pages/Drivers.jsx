@@ -390,7 +390,7 @@ export default function Drivers() {
     if (error?.type === 'server') return <ServerError onRetry={fetchData} message={error.message} />
 
     return (
-        <div className="space-y-4 sm:space-y-6 pb-8">
+        <div className="space-y-4 sm:space-y-6 pb-12 lg:pb-8 content-with-bottom-nav drivers-page">
             <DriversHeader
                 user={user}
                 drivers={drivers}

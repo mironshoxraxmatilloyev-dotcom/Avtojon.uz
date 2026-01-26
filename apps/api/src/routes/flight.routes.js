@@ -174,7 +174,7 @@ router.get('/driver-debts', protect, businessOnly, async (req, res) => {
 
     // Har bir mashrut uchun driverOwes ni hisoblash
     const processedFlights = flights.map(f => {
-      const totalIncome = (f.totalPayment || 0) + (f.roadMoney || f.totalGivenBudget || 0);
+      const totalIncome = f.totalPayment || 0; // FAQAT mijozdan olingan to'lov (yo'l puli kirmaydi)
       
       // YANGI LOGIKA: Faqat yengil xarajatlar ayiriladi
       const lightExpenses = f.lightExpenses || 0;

@@ -25,17 +25,76 @@ body.landing-scroll #root {
   overflow: visible !important;
 }
 
-/* Boshqa sahifalar uchun overflow hidden */
+/* Dashboard sahifalar uchun - scroll ishlashi kerak */
 body:not(.landing-scroll) {
-  overflow: hidden;
-  position: fixed;
+  overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
-  height: 100%;
+  height: auto;
+  min-height: 100vh;
 }
 
 body:not(.landing-scroll) #root {
-  height: 100%;
-  overflow: hidden;
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+/* 🚀 DRIVER SAHIFASI - SCROLL ISHLASHI KERAK */
+.driver-page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+.driver-page main {
+  overflow: visible !important;
+}
+
+/* Driver sahifasi uchun body va html */
+body:has(.driver-page) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+html:has(.driver-page) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* 🚀 HAYDOVCHILAR SAHIFASI - SCROLL ISHLASHI KERAK */
+.drivers-page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+.drivers-page main {
+  overflow: visible !important;
+}
+
+/* Haydovchilar sahifasi uchun body va html */
+body:has(.drivers-page) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+html:has(.drivers-page) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
 }
 
 /* 🔥 GLOBAL - Bottom Nav HECH QACHON scroll bo'lmasin */
@@ -612,10 +671,22 @@ html[style*="overflow:hidden"] {
 
 /* 🚀 Main content - faqat content scroll bo'lsin */
 .main-content-scroll {
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Haydovchilar sahifasi uchun maxsus scroll */
+.drivers-page .main-content-scroll {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  height: auto !important;
+  min-height: 100vh !important;
 }
 
 /* iOS Safari - address bar yashirilganda ham ishlashi uchun */

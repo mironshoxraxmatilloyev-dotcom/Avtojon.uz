@@ -622,10 +622,12 @@ flightSchema.pre('save', function (next) {
   this.profit = this.totalPayment - this.totalExpenses;
 
   // ============ YANGI HISOB-KITOB TIZIMI ============
-  // 1. Jami kirim = Mijozdan olingan + Yo'l uchun berilgan
-  this.totalIncome = this.totalPayment + this.totalGivenBudget;
+  // 1. Jami kirim = FAQAT mijozdan olingan to'lov (yo'l puli kirimga kirmaydi)
+  // MUHIM: Yo'l puli (totalGivenBudget) shofyor oyligini hisoblashda qatnashmaydi
+  this.totalIncome = this.totalPayment;
 
-  // 2. Sof foyda = Jami kirim - FAQAT YENGIL XARAJATLAR - Peritsena firma xarajatlari
+  // 2. Sof foyda = FAQAT mijozdan olingan to'lov - FAQAT YENGIL XARAJATLAR - Peritsena firma xarajatlari
+  // MUHIM: Yo'l puli sof foydaga ham qo'shilmaydi
   // MUHIM: Katta xarajatlar (heavy) haydovchi foydasi hisobiga kirmaydi
   // MUHIM: Katta xarajatlar alohida ko'rsatiladi va biznesmen hisobidan to'lanadi
   // MUHIM: Peritsena dan firma xarajatlari ayiriladi
@@ -641,18 +643,10 @@ flightSchema.pre('save', function (next) {
     this.businessProfit = this.netProfit; // Sof foyda = netProfit (zarar bo'lsa manfiy)
     this.driverOwes = 0; // Mashrut yopilmaganda qarz yo'q
   } else if (this.status === 'completed') {
-    // YANGI LOGIKA: Haydovchi ulushi barcha to'lovlardan, berishi kerak faqat naqd to'lovlardan
+    // YANGI LOGIKA: Haydovchi ulushi FAQAT mijozdan olingan to'lovlardan
     
-    // Naqd to'lovlar (haydovchi qo'liga tushadigan)
-    const cashPayments = this.legs.reduce((sum, leg) => {
-      if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
-        return sum + (leg.payment || 0);
-      }
-      return sum;
-    }, 0);
-    
-    // 1. Haydovchi ulushi - BARCHA to'lovlardan hisoblanadi
-    const totalBasis = this.totalIncome;
+    // 1. Haydovchi ulushi - FAQAT mijozdan olingan to'lovlardan
+    const totalBasis = this.totalIncome; // Faqat mijozdan olingan
     const percent = this.driverProfitPercent || 0;
     
     if (totalBasis > 0 && percent > 0) {
@@ -661,7 +655,15 @@ flightSchema.pre('save', function (next) {
       this.driverProfitAmount = 0;
     }
     
-    // 2. Haydovchi berishi kerak - faqat NAQD to'lovlardan
+    // 2. Haydovchi berishi kerak - naqd to'lovlardan hisoblanadi
+    // Naqd to'lovlar (haydovchi qo'liga tushadigan)
+    const cashPayments = this.legs.reduce((sum, leg) => {
+      if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+        return sum + (leg.payment || 0);
+      }
+      return sum;
+    }, 0);
+    
     // Naqd kirim = naqd to'lovlar + yo'l uchun berilgan + avvalgi qoldiq
     const cashIncome = cashPayments + this.totalGivenBudget + (this.previousBalance || 0);
     const cashNetProfit = cashIncome - this.totalExpenses;
@@ -686,8 +688,8 @@ flightSchema.pre('save', function (next) {
     // USD da jami to'lov
     this.totalPaymentUSD = this.legs.reduce((sum, leg) => sum + (leg.paymentUSD || 0), 0);
     
-    // USD da jami kirim
-    this.totalIncomeUSD = this.totalPaymentUSD + (this.totalGivenBudgetUSD || 0);
+    // USD da jami kirim = FAQAT mijozdan olingan to'lov (yo'l puli kirmaydi)
+    this.totalIncomeUSD = this.totalPaymentUSD;
     
     // USD da peritsena firma xarajatlari
     let totalPeritsenaFeeUSD = 0;
@@ -711,18 +713,10 @@ flightSchema.pre('save', function (next) {
       this.businessProfitUSD = this.netProfitUSD;
       this.driverOwesUSD = 0;
     } else if (this.status === 'completed') {
-      // YANGI LOGIKA USD da: Haydovchi ulushi barcha to'lovlardan, berishi kerak faqat naqd to'lovlardan
+      // YANGI LOGIKA USD da: Haydovchi ulushi FAQAT mijozdan olingan to'lovlardan
       
-      // Naqd to'lovlar USD da
-      const cashPaymentsUSD = this.legs.reduce((sum, leg) => {
-        if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
-          return sum + (leg.paymentUSD || 0);
-        }
-        return sum;
-      }, 0);
-      
-      // 1. Haydovchi ulushi - BARCHA to'lovlardan USD da
-      const totalBasisUSD = this.totalIncomeUSD;
+      // 1. Haydovchi ulushi - FAQAT mijozdan olingan to'lovlardan USD da
+      const totalBasisUSD = this.totalIncomeUSD; // Faqat mijozdan olingan
       const percent = this.driverProfitPercent || 0;
       
       if (totalBasisUSD > 0 && percent > 0) {
@@ -731,7 +725,15 @@ flightSchema.pre('save', function (next) {
         this.driverProfitAmountUSD = 0;
       }
       
-      // 2. Haydovchi berishi kerak - faqat NAQD to'lovlardan USD da
+      // 2. Haydovchi berishi kerak - naqd to'lovlardan USD da
+      // Naqd to'lovlar USD da
+      const cashPaymentsUSD = this.legs.reduce((sum, leg) => {
+        if (leg.paymentType === 'cash' || leg.paymentType === 'transfer') {
+          return sum + (leg.paymentUSD || 0);
+        }
+        return sum;
+      }, 0);
+      
       const cashIncomeUSD = cashPaymentsUSD + (this.totalGivenBudgetUSD || 0) + ((this.previousBalance || 0) / 12800);
       const cashNetProfitUSD = cashIncomeUSD - this.totalExpensesUSD;
       
